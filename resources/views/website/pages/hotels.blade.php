@@ -254,57 +254,65 @@
                     </div>
                 </div>
 
-                    @for ($i = 0; $i < 20; $i++)
-                    <div class="hotel-item hotel-item--list" data-id="357"
-                        data-lat="-6.142857" data-lng="39.494472">
-                    <div class="row">
-                        <div class="col-4">
-                            <div class="hotel-item__thumbnail">
-                                <div class="add-wishlist-wrapper">
-                                    <a href="#gmz-login-popup" class="add-wishlist gmz-box-popup"
-                                        data-effect="mfp-zoom-in"><i class="fal fa-heart"></i></a>
-                                </div>
-                                <a href="https://www.zanzibarbookings.com/hotel/emerald-dreams-boutique-hotel">
-                                    <img src="https://www.zanzibarbookings.com/storage/2024/02/28/emarald-michamvi-10-1709067414-360x240.jpg"
+                <div class="row">
+                    @for ($i = 0; $i < 18; $i++)
+                    <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
+                        <div class="tour-item tour-item--grid rounded-4" data-plugin="matchHeight" data-id="357"
+                            data-lat="-6.142857" data-lng="39.494472">
+                            <div class="hotel-item__thumbnail position-relative">
+                                <span class="hotel-item__label position-absolute" style="top: 12px; left: 12px; z-index: 2; background: #ff5722; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 14px;">Featured</span>
+                                <a href="https://www.zanzibarbookings.com/hotel/emerald-dreams-boutique-hotel" style="display:block;">
+                                    <img 
+                                        src="https://www.zanzibarbookings.com/storage/2024/02/28/emarald-michamvi-10-1709067414-360x240.jpg"
                                         alt="Emerald Dreams Boutique Hotel"
-                                        onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1566073771259-6a8506099945?w=360&amp;h=240&amp;fit=crop&amp;crop=center';"
-                                        class="loaded">
+                                        loading="eager"
+                                        width="360"
+                                        height="240"
+                                        style="width:100%;height:220px;object-fit:cover;border-radius:12px;"
+                                    />
                                 </a>
-                                <span class="hotel-item__label">Featured</span>
-                                <a class="hotel-item__type"
-                                    href="https://www.zanzibarbookings.com/hotel-search?property_type=67">
+                                <a class="hotel-item__type" href="https://www.zanzibarbookings.com/hotel-search?property_type=67" style="position:absolute;left:12px;bottom:12px;z-index:2;background:#2e8b57;color:#fff;padding:4px 10px;border-radius:5px;font-size:13px;">
                                     Mid range Hotels
                                 </a>
+                                <div class="add-wishlist-wrapper" style="position:absolute;top:12px;right:12px;z-index:2;">
+                                    <a href="#gmz-login-popup" class="add-wishlist gmz-box-popup" data-effect="mfp-zoom-in">
+                                        <i class="fal fa-heart"></i>
+                                    </a>
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-8">
-                            <div class="hotel-item__details">
-                                <div class="star-rating">
-                                    <div class="star-rating"><i class="fa fa-star"></i><i class="fa fa-star"></i><i
-                                            class="fa fa-star"></i></div>
-                                </div>
-                                <h3 class="hotel-item__title">
-                                    <a href="https://www.zanzibarbookings.com/hotel/emerald-dreams-boutique-hotel">Emerald
-                                        Dreams Boutique Hotel</a>
-                                </h3>
-                                <p class="hotel-item__location">
-                                    <i class="fal fa-map-marker-alt mr-2"></i>
-                                    Emerald Dreams Boutique Hotel
-                                </p>
-                                <div class="d-flex justify-content-between align-items-center mt-auto">
-                                    <div class="hotel-item__price">
-                                        <span class="_retail">USD 150.00</span>
-                                        <span class="_unit">night</span>
+                            <div class="hotel-item__details" style="padding-top:18px;">
+                                <div class="star-rating mb-2">
+                                    <div class="star-rating">
+                                        <i class="fa fa-star text-warning"></i>
+                                        <i class="fa fa-star text-warning"></i>
+                                        <i class="fa fa-star text-warning"></i>
+                                        <i class="fa fa-star text-warning"></i>
+                                        <i class="fa fa-star text-muted"></i>
                                     </div>
-                                    <a class="btn btn-primary"
-                                        href="https://www.zanzibarbookings.com/hotel/emerald-dreams-boutique-hotel">View
-                                        Detail </a>
                                 </div>
+                                <h3 class="hotel-item__title" style="font-size:1.25rem;font-weight:600;">
+                                    <a href="https://www.zanzibarbookings.com/hotel/emerald-dreams-boutique-hotel" style="color:#222;text-decoration:none;">Emerald Dreams Boutique Hotel</a>
+                                </h3>
+                                <div class="hotel-item__meta" style="margin:18px 0 12px 0;">
+                                    <div class="i-meta d-flex align-items-center" style="font-size:15px;color:#888;">
+                                        <i class="fal fa-map-marker-alt" style="margin-right:6px;"></i>
+                                        <span>Michamvi, Zanzibar</span>
+                                    </div>
+                                </div>
+                                <div class="hotel-item__price mb-3">
+                                    <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600;">USD 150.00</span>
+                                    <span class="_unit" style="color:#2e8b57;font-size:1rem;">/night</span>
+                                </div>
+                                <a class="btn btn-primary btn-sm hotel-item__view-detail w-100 d-flex justify-content-center align-items-center"
+                                    href="https://www.zanzibarbookings.com/hotel/emerald-dreams-boutique-hotel"
+                                    style="font-size:1rem;padding:8px 0;border-radius:7px;text-align:center;">
+                                    View Detail
+                                </a>
                             </div>
                         </div>
                     </div>
-                </div>
                     @endfor
+                </div>
 
                 <nav>
                     <ul class="pagination">
