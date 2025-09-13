@@ -60,6 +60,14 @@ class WebsiteController extends Controller
         return view('website.pages.cars');
     }
 
+    // viewCar
+    public function viewCar()
+    {
+        return view('website.pages.view_car');
+    }
+    
+
+
     // flights
     public function flights()
     {

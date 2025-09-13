@@ -18,6 +18,9 @@ Route::get('/tours', [WebsiteController::class, 'tours'])->name('tours');
 Route::get('/view/tour', [WebsiteController::class, 'viewTour'])->name('view-tour');
 
 Route::get('/cars', [WebsiteController::class, 'cars'])->name('cars');
+Route::get('/view/car', [WebsiteController::class, 'viewCar'])->name('view-car');
+
+
 Route::get('/flights', [WebsiteController::class, 'flights'])->name('flights');
 
 // Booking routes
