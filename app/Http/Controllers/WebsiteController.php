@@ -38,6 +38,12 @@ class WebsiteController extends Controller
         return view('website.pages.tours');
     }
 
+    // viewTour
+    public function viewTour()
+    {
+        return view('website.pages.view_tour');
+    }
+
     // viewHotel
     public function viewHotel()
     {

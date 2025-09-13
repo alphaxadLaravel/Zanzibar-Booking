@@ -1,4 +1,8 @@
 <link rel="stylesheet" href="{{asset('html/assets/css/header.css')}}" />
+
+{{-- view hotel --}}
+<link rel="stylesheet" href="{{asset('vendors/fotorama-4.6.4/fotorama.css')}}">
+   
 <link rel="stylesheet" href="{{asset('html/assets/vendor/slick-1.8.1/slick.css')}}" />
 <link rel="stylesheet" href="{{asset('vendors/glow-cookies/glowCookies.css')}}" />
 <link rel="stylesheet" href="{{asset('vendors/magnific-popup/magnific-popup.css')}}" />
@@ -15,3 +19,4 @@
         --primary-hover: hsl(175, 67%, 40%);
     }
 </style>
+

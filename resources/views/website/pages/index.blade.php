@@ -213,12 +213,13 @@
     <div class="container">
         <h2 class="section-title mb-20">List Of Hotels</h2>
         <div class="row">
-            @for ($i = 0; $i < 3; $i++) <div class="col-lg-4 col-md-4 col-sm-12">
+            @for ($i = 0; $i < 3; $i++) 
+            <div class="col-lg-4 col-md-4 col-sm-12">
                 <div class="tour-item tour-item--grid" data-plugin="matchHeight">
                     <div class="tour-item__thumbnail position-relative">
                         <span class="tour-item__label position-absolute"
                             style="top: 12px; left: 12px; z-index: 2; background: #ff5722; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 14px;">Featured</span>
-                        <a href="#" style="display:block;">
+                        <a href="{{route('view-hotel')}}" style="display:block;">
                             <img src="https://www.zanzibarbookings.com/storage/2023/09/12/dji-0973-hdr-sky5-3-1694521316-360x240.jpg"
                                 alt="Zanzibar Slave Route &amp; Heritage Tour" loading="eager" width="360" height="240"
                                 style="width:100%;height:220px;object-fit:cover;border-radius:12px;" />
@@ -241,7 +242,7 @@
                             </div>
                         </div>
                         <h3 class="car-item__title" style="font-size:1.25rem;font-weight:600;">
-                            <a href="car/zanzibar-bookings-car-rental-now.html"
+                            <a href="{{route('view-hotel')}}"
                                 style="color:#222;text-decoration:none;">Opera Hotel</a>
                         </h3>
                         <div class="tour-item__meta" style="margin:18px 0 12px 0;">
@@ -256,7 +257,7 @@
                                 <span class="_unit" style="color:#2e8b57;font-size:1rem;">/Night</span>
                             </div>
                             <a class="btn btn-primary btn-sm tour-item__view-detail"
-                                href="#"
+                                href="{{route('view-hotel')}}"
                                 style="font-size:1rem;padding:8px 22px;border-radius:7px;">
                                 View Detail
                             </a>
@@ -316,7 +317,7 @@
                     <div class="tour-item__thumbnail position-relative">
                         <span class="tour-item__label position-absolute"
                             style="top: 12px; left: 12px; z-index: 2; background: #ff5722; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 14px;">Featured</span>
-                        <a href="tour/zanzibar-historical-experience.html" style="display:block;">
+                        <a href="{{route('view-tour')}}" style="display:block;">
                             <img src="https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=360&amp;h=240&amp;fit=crop&amp;crop=center"
                                 alt="Zanzibar Slave Route &amp; Heritage Tour" loading="eager" width="360" height="240"
                                 style="width:100%;height:220px;object-fit:cover;border-radius:12px;" />
@@ -333,7 +334,7 @@
                     </div>
                     <div class="tour-item__details" style="padding-top:18px;">
                         <h3 class="tour-item__title" style="font-size:1.25rem;font-weight:600;">
-                            <a href="tour/zanzibar-historical-experience.html"
+                            <a href="{{route('view-tour')}}"
                                 style="color:#222;text-decoration:none;">Zanzibar Slave Route &amp; Heritage Tour</a>
                         </h3>
                         <div class="tour-item__meta" style="margin:18px 0 12px 0;">
@@ -349,7 +350,7 @@
                                 <span class="_unit" style="color:#2e8b57;font-size:1rem;">/person</span>
                             </div>
                             <a class="btn btn-primary btn-sm tour-item__view-detail"
-                                href="tour/zanzibar-historical-experience.html"
+                                href="{{route('view-tour')}}"
                                 style="font-size:1rem;padding:8px 22px;border-radius:7px;">
                                 View Detail
                             </a>
@@ -422,7 +423,7 @@
                             </div>
                         </div>
                         <h3 class="car-item__title" style="font-size:1.25rem;font-weight:600;">
-                            <a href="car/zanzibar-bookings-car-rental-now.html"
+                            <a href="{{route('view-hotel')}}"
                                 style="color:#222;text-decoration:none;">Landcruiser Prado</a>
                         </h3>
                         <div class="tour-item__meta" style="margin:18px 0 12px 0;">
