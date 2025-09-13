@@ -151,9 +151,7 @@
             <button class="close-btn" onclick="closeWidget()">×</button>
         </div>
         <div class="widget-body">
-            <img style="height: 65px"
-                src="../assets-v2.lottiefiles.com/a/4bf1141e-1167-11ee-8a8b-d7fba4b8c5e1/LbKxL7PDpt.gif" alt="" />
-
+           
             <div class="chat-bubble">
                 <p>
                     Click the button below to chat with <br />
