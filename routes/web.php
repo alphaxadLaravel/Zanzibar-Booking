@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\WebsiteController;
 use Illuminate\Support\Facades\Route;
 
@@ -10,7 +11,6 @@ Route::get('/contact-us', [WebsiteController::class, 'contactUs'])->name('contac
 Route::get('/blog', [WebsiteController::class, 'blog'])->name('blog');
 Route::get('/view/blog', [WebsiteController::class, 'viewBlog'])->name('view-blog');
 
-
 ##### DEALS
 Route::get('/hotels', [WebsiteController::class, 'hotels'])->name('hotels');
 Route::get('/view/hotel', [WebsiteController::class, 'viewHotel'])->name('view-hotel');
@@ -19,8 +19,6 @@ Route::get('/view/tour', [WebsiteController::class, 'viewTour'])->name('view-tou
 
 Route::get('/cars', [WebsiteController::class, 'cars'])->name('cars');
 Route::get('/view/car', [WebsiteController::class, 'viewCar'])->name('view-car');
-
-
 Route::get('/flights', [WebsiteController::class, 'flights'])->name('flights');
 
 // Booking routes
@@ -28,3 +26,93 @@ Route::get('/confirm-booking', [WebsiteController::class, 'confirmBooking'])->na
 Route::post('/process-booking', [WebsiteController::class, 'processBooking'])->name('process.booking');
 
 
+##########################################################################################
+### ADMIN
+Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+
+// Hotels Management
+Route::get('/admin/hotels', [AdminController::class, 'hotels'])->name('admin.hotels');
+Route::get('/admin/hotels/create', [AdminController::class, 'createHotel'])->name('admin.hotels.create');
+Route::post('/admin/hotels/store', [AdminController::class, 'storeHotel'])->name('admin.hotels.store');
+Route::get('/admin/hotels/{id}/edit', [AdminController::class, 'editHotel'])->name('admin.hotels.edit');
+Route::put('/admin/hotels/{id}', [AdminController::class, 'updateHotel'])->name('admin.hotels.update');
+Route::delete('/admin/hotels/{id}', [AdminController::class, 'deleteHotel'])->name('admin.hotels.delete');
+
+// Hotel Rooms Management
+Route::get('/admin/hotels/{hotel_id}/rooms', [AdminController::class, 'hotelRooms'])->name('admin.hotels.rooms');
+Route::get('/admin/hotels/{hotel_id}/rooms/create', [AdminController::class, 'createHotelRoom'])->name('admin.hotels.rooms.create');
+Route::post('/admin/hotels/{hotel_id}/rooms/store', [AdminController::class, 'storeHotelRoom'])->name('admin.hotels.rooms.store');
+Route::get('/admin/hotels/{hotel_id}/rooms/{room_id}/edit', [AdminController::class, 'editHotelRoom'])->name('admin.hotels.rooms.edit');
+Route::put('/admin/hotels/{hotel_id}/rooms/{room_id}', [AdminController::class, 'updateHotelRoom'])->name('admin.hotels.rooms.update');
+Route::delete('/admin/hotels/{hotel_id}/rooms/{room_id}', [AdminController::class, 'deleteHotelRoom'])->name('admin.hotels.rooms.delete');
+Route::get('/admin/hotels/{hotel_id}/rooms/{room_id}/view', [AdminController::class, 'viewHotelRoom'])->name('admin.hotels.rooms.view');
+Route::put('/admin/hotels/{hotel_id}/rooms/{room_id}/availability', [AdminController::class, 'updateRoomAvailability'])->name('admin.hotels.rooms.availability');
+
+// Apartments Management
+Route::get('/admin/apartments', [AdminController::class, 'apartments'])->name('admin.apartments');
+Route::get('/admin/apartments/create', [AdminController::class, 'createApartment'])->name('admin.apartments.create');
+Route::post('/admin/apartments/store', [AdminController::class, 'storeApartment'])->name('admin.apartments.store');
+Route::get('/admin/apartments/{id}/edit', [AdminController::class, 'editApartment'])->name('admin.apartments.edit');
+Route::put('/admin/apartments/{id}', [AdminController::class, 'updateApartment'])->name('admin.apartments.update');
+Route::delete('/admin/apartments/{id}', [AdminController::class, 'deleteApartment'])->name('admin.apartments.delete');
+
+// Cars Management
+Route::get('/admin/cars', [AdminController::class, 'cars'])->name('admin.cars');
+Route::get('/admin/cars/create', [AdminController::class, 'createCar'])->name('admin.cars.create');
+Route::post('/admin/cars/store', [AdminController::class, 'storeCar'])->name('admin.cars.store');
+Route::get('/admin/cars/{id}/edit', [AdminController::class, 'editCar'])->name('admin.cars.edit');
+Route::put('/admin/cars/{id}', [AdminController::class, 'updateCar'])->name('admin.cars.update');
+Route::delete('/admin/cars/{id}', [AdminController::class, 'deleteCar'])->name('admin.cars.delete');
+
+// Tours Management
+Route::get('/admin/tours', [AdminController::class, 'tours'])->name('admin.tours');
+Route::get('/admin/tours/create', [AdminController::class, 'createTour'])->name('admin.tours.create');
+Route::post('/admin/tours/store', [AdminController::class, 'storeTour'])->name('admin.tours.store');
+Route::get('/admin/tours/{id}/edit', [AdminController::class, 'editTour'])->name('admin.tours.edit');
+Route::put('/admin/tours/{id}', [AdminController::class, 'updateTour'])->name('admin.tours.update');
+Route::delete('/admin/tours/{id}', [AdminController::class, 'deleteTour'])->name('admin.tours.delete');
+
+// Blog Management
+Route::get('/admin/blog', [AdminController::class, 'blog'])->name('admin.blog');
+Route::get('/admin/blog/create', [AdminController::class, 'createBlog'])->name('admin.blog.create');
+Route::post('/admin/blog/store', [AdminController::class, 'storeBlog'])->name('admin.blog.store');
+Route::get('/admin/blog/{id}/edit', [AdminController::class, 'editBlog'])->name('admin.blog.edit');
+Route::put('/admin/blog/{id}', [AdminController::class, 'updateBlog'])->name('admin.blog.update');
+Route::delete('/admin/blog/{id}', [AdminController::class, 'deleteBlog'])->name('admin.blog.delete');
+
+// Bookings Management
+Route::get('/admin/bookings', [AdminController::class, 'bookings'])->name('admin.bookings');
+Route::get('/admin/bookings/{id}', [AdminController::class, 'viewBooking'])->name('admin.bookings.view');
+Route::put('/admin/bookings/{id}/status', [AdminController::class, 'updateBookingStatus'])->name('admin.bookings.status');
+
+// Users Management
+Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');
+Route::get('/admin/users/create', [AdminController::class, 'createUser'])->name('admin.users.create');
+Route::post('/admin/users/store', [AdminController::class, 'storeUser'])->name('admin.users.store');
+Route::get('/admin/users/{id}/edit', [AdminController::class, 'editUser'])->name('admin.users.edit');
+Route::put('/admin/users/{id}', [AdminController::class, 'updateUser'])->name('admin.users.update');
+Route::delete('/admin/users/{id}', [AdminController::class, 'deleteUser'])->name('admin.users.delete');
+Route::get('/admin/users/roles', [AdminController::class, 'userRoles'])->name('admin.users.roles');
+
+// Payments Management
+Route::get('/admin/payments', [AdminController::class, 'payments'])->name('admin.payments');
+Route::get('/admin/payments/{id}', [AdminController::class, 'viewPayment'])->name('admin.payments.view');
+
+// Media Management
+Route::get('/admin/media', [AdminController::class, 'media'])->name('admin.media');
+Route::post('/admin/media/upload', [AdminController::class, 'uploadMedia'])->name('admin.media.upload');
+Route::delete('/admin/media/{id}', [AdminController::class, 'deleteMedia'])->name('admin.media.delete');
+
+// Settings Management
+Route::get('/admin/settings/general', [AdminController::class, 'generalSettings'])->name('admin.settings.general');
+Route::put('/admin/settings/general', [AdminController::class, 'updateGeneralSettings'])->name('admin.settings.general.update');
+Route::get('/admin/settings/security', [AdminController::class, 'securitySettings'])->name('admin.settings.security');
+Route::put('/admin/settings/security', [AdminController::class, 'updateSecuritySettings'])->name('admin.settings.security.update');
+
+// Profile Management
+Route::get('/admin/profile', [AdminController::class, 'profile'])->name('admin.profile');
+Route::get('/admin/profile/edit', [AdminController::class, 'editProfile'])->name('admin.profile.edit');
+Route::put('/admin/profile', [AdminController::class, 'updateProfile'])->name('admin.profile.update');
+
+// My Bookings
+Route::get('/admin/my-bookings', [AdminController::class, 'myBookings'])->name('admin.my-bookings');   
