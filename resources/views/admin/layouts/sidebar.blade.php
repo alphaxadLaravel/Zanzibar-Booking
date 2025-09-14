@@ -37,10 +37,9 @@
             <li class="side-nav-item">
                 <a data-bs-toggle="collapse" href="#sidebarHotels" aria-expanded="false" aria-controls="sidebarHotels"
                     class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-eye"></i></span>
+                    <span class="menu-icon"><i class="mdi mdi-hotel"></i></span>
                     <span class="menu-text">Hotels</span>
                     <span class="menu-arrow"></span>
-
                 </a>
                 <div class="collapse" id="sidebarHotels">
                     <ul class="sub-menu">
@@ -51,7 +50,6 @@
                     </ul>
                 </div>
             </li>
-
 
             <!-- CARS v -->
             <li class="side-nav-item">
@@ -75,7 +73,7 @@
             <li class="side-nav-item">
                 <a data-bs-toggle="collapse" href="#sidebarTours" aria-expanded="false" aria-controls="sidebarTours"
                     class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-map"></i></span>
+                    <span class="menu-icon"><i class="mdi mdi-map-marker-radius"></i></span>
                     <span class="menu-text">Tours</span>
                     <span class="menu-arrow"></span>
                 </a>
@@ -93,7 +91,7 @@
             <li class="side-nav-item">
                 <a data-bs-toggle="collapse" href="#sidebarApartments" aria-expanded="false"
                     aria-controls="sidebarApartments" class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-office-building"></i></span>
+                    <span class="menu-icon"><i class="mdi mdi-home-city"></i></span>
                     <span class="menu-text">Apartments</span>
                     <span class="menu-arrow"></span>
                 </a>
@@ -107,12 +105,11 @@
                 </div>
             </li>
 
-
             <!-- BLOG v -->
             <li class="side-nav-item">
                 <a data-bs-toggle="collapse" href="#sidebarBlog" aria-expanded="false" aria-controls="sidebarBlog"
                     class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-notebook"></i></span>
+                    <span class="menu-icon"><i class="mdi mdi-post-outline"></i></span>
                     <span class="menu-text">Blog</span>
                     <span class="menu-arrow"></span>
                 </a>
@@ -159,7 +156,7 @@
             <!-- PAYMENTS -->
             <li class="side-nav-item">
                 <a href="{{ route('admin.payments') }}" class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-credit-card"></i></span>
+                    <span class="menu-icon"><i class="mdi mdi-cash-multiple"></i></span>
                     <span class="menu-text">Payments</span>
                 </a>
             </li>
@@ -167,23 +164,22 @@
             <li class="side-nav-title">Settings</li>
             <li class="side-nav-item">
                 <a href="{{ route('admin.media') }}" class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-folder"></i></span>
+                    <span class="menu-icon"><i class="mdi mdi-image-multiple"></i></span>
                     <span class="menu-text">Media</span>
                 </a>
             </li>
             <li class="side-nav-item">
                 <a href="{{ route('admin.categories') }}" class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-folder"></i></span>
+                    <span class="menu-icon"><i class="mdi mdi-shape-outline"></i></span>
                     <span class="menu-text">Categories</span>
                 </a>
             </li>
             <li class="side-nav-item">
                 <a href="{{ route('admin.media') }}" class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-folder"></i></span>
+                    <span class="menu-icon"><i class="mdi mdi-star-outline"></i></span>
                     <span class="menu-text">Features</span>
                 </a>
             </li>
-
 
             <li class="side-nav-title">Account</li>
 
@@ -208,7 +204,7 @@
             <!-- My Bookings -->
             <li class="side-nav-item">
                 <a href="{{ route('admin.my-bookings') }}" class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-book"></i></span>
+                    <span class="menu-icon"><i class="mdi mdi-book-open-variant"></i></span>
                     <span class="menu-text">My Bookings</span>
                 </a>
             </li>
@@ -217,7 +213,7 @@
             <li class="side-nav-item">
                 <a data-bs-toggle="collapse" href="#sidebarProfile" aria-expanded="false" aria-controls="sidebarProfile"
                     class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-account"></i></span>
+                    <span class="menu-icon"><i class="mdi mdi-account-circle"></i></span>
                     <span class="menu-text">Profile</span>
                     <span class="menu-arrow"></span>
                 </a>
