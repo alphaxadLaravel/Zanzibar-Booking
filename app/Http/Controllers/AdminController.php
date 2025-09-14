@@ -9,7 +9,19 @@ class AdminController extends Controller
     // Dashboard
     public function dashboard()
     {
-        return view('admin.pages.dashboard');
+        // Static counts for UI purposes
+        $stats = [
+            'tours_count' => 24,
+            'hotels_count' => 18,
+            'apartments_count' => 32,
+            'bookings_count' => 156,
+            'cars_count' => 12,
+            'blog_posts_count' => 8,
+            'site_visits_count' => 2847,
+            'total_revenue' => 45250.75,
+        ];
+
+        return view('admin.pages.dashboard', compact('stats'));
     }
 
     // Hotels Management
