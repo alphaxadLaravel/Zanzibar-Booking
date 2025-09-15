@@ -37,7 +37,7 @@
             <li class="side-nav-item">
                 <a data-bs-toggle="collapse" href="#sidebarHotels" aria-expanded="false" aria-controls="sidebarHotels"
                     class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-hotel"></i></span>
+                    <span class="menu-icon"><i class="mdi mdi-city-variant-outline"></i></span>
                     <span class="menu-text">Hotels</span>
                     <span class="menu-arrow"></span>
                 </a>
@@ -163,19 +163,13 @@
 
             <li class="side-nav-title">Settings</li>
             <li class="side-nav-item">
-                <a href="{{ route('admin.media') }}" class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-image-multiple"></i></span>
-                    <span class="menu-text">Media</span>
-                </a>
-            </li>
-            <li class="side-nav-item">
                 <a href="{{ route('admin.categories') }}" class="side-nav-link">
                     <span class="menu-icon"><i class="mdi mdi-shape-outline"></i></span>
                     <span class="menu-text">Categories</span>
                 </a>
             </li>
             <li class="side-nav-item">
-                <a href="{{ route('admin.media') }}" class="side-nav-link">
+                <a href="{{ route('admin.features') }}" class="side-nav-link">
                     <span class="menu-icon"><i class="mdi mdi-star-outline"></i></span>
                     <span class="menu-text">Features</span>
                 </a>

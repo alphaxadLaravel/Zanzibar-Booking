@@ -21,6 +21,7 @@ Categories | {{env('APP_NAME')}}
                         <thead class="">
                             <tr>
                                 <th class="px-3 py-2">#</th>
+                                <th class="px-3 py-2">Image</th>
                                 <th class="px-3 py-2">Category</th>
                                 <th class="px-3 py-2">Type</th>
                                 <th class="px-3 py-2">Status</th>
@@ -32,6 +33,15 @@ Categories | {{env('APP_NAME')}}
                             <tr>
                                 <td class="px-3 py-2">
                                     {{ $loop->iteration }}
+                                </td>
+                                <td class="px-3 py-2">
+                                    @if($category->image)
+                                    <img src="{{ asset('storage/' . $category->image) }}" class="rounded"
+                                        style="width: 45px; height: 45px; object-fit: cover;">
+                                    @else
+                                    <img src="https://media.istockphoto.com/id/1147544807/vector/thumbnail-image-vector-graphic.jpg?s=612x612&w=0&k=20&c=rnCKVbdxqkjlcs3xH87-9gocETqpspHFXu5dIGB4wuM="
+                                        class=" rounded" style="width: 45px; height: 45px; object-fit: cover;">
+                                    @endif
                                 </td>
                                 <td class="px-3 py-2">{{ $category->category }}</td>
                                 <td class="px-3 py-2">
@@ -63,7 +73,8 @@ Categories | {{env('APP_NAME')}}
                                                     </div>
                                                     <form method="POST"
                                                         action="{{ route('admin.categories.update', $category->id) }}"
-                                                        id="editCategoryForm{{ $category->id }}">
+                                                        id="editCategoryForm{{ $category->id }}"
+                                                        enctype="multipart/form-data">
                                                         @csrf
                                                         @method('PUT')
                                                         <div class="modal-body">
@@ -105,9 +116,33 @@ Categories | {{env('APP_NAME')}}
                                                                 <div class="invalid-feedback">{{ $message }}</div>
                                                                 @enderror
                                                             </div>
+
+                                                            <div class="mb-3">
+                                                                <label for="editCategoryImage{{ $category->id }}"
+                                                                    class="form-label">Category Image</label>
+                                                                @if($category->image)
+                                                                <div class="mb-2">
+                                                                    <img src="{{ asset('storage/' . $category->image) }}"
+                                                                        alt="{{ $category->category }}"
+                                                                        class="img-thumbnail"
+                                                                        style="width: 100px; height: 100px; object-fit: cover;">
+                                                                    <div class="form-text">Current image</div>
+                                                                </div>
+                                                                @endif
+                                                                <input type="file"
+                                                                    class="form-control @error('image') is-invalid @enderror"
+                                                                    id="editCategoryImage{{ $category->id }}"
+                                                                    name="image" accept="image/*">
+                                                                <div class="form-text">Optional. Supported formats:
+                                                                    JPEG, PNG, JPG, GIF, SVG. Max size: 2MB</div>
+                                                                @error('image')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                                @enderror
+                                                            </div>
                                                         </div>
                                                         <div class="modal-footer">
-                                                            <button type="submit" class="btn btn-primary" data-loading-text="Updating...">Update
+                                                            <button type="submit" class="btn btn-primary"
+                                                                data-loading-text="Updating...">Update
                                                                 Category</button>
                                                         </div>
                                                     </form>
@@ -115,21 +150,21 @@ Categories | {{env('APP_NAME')}}
                                             </div>
                                         </div>
 
-                                        <button type="button" class="btn btn-sm btn-outline-danger" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#deleteCategoryModal{{ $category->id }}" 
-                                            title="Delete">
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#deleteCategoryModal{{ $category->id }}" title="Delete">
                                             <i class="ti ti-trash"></i>
                                         </button>
-                                        
+
                                         <!-- Delete Confirmation Modal -->
-                                        <div class="modal fade" id="deleteCategoryModal{{ $category->id }}" tabindex="-1"
-                                            aria-labelledby="deleteCategoryModalLabel{{ $category->id }}"
+                                        <div class="modal fade" id="deleteCategoryModal{{ $category->id }}"
+                                            tabindex="-1" aria-labelledby="deleteCategoryModalLabel{{ $category->id }}"
                                             aria-hidden="true">
                                             <div class="modal-dialog">
                                                 <div class="modal-content">
                                                     <div class="modal-header">
-                                                        <h5 class="modal-title" id="deleteCategoryModalLabel{{ $category->id }}">
+                                                        <h5 class="modal-title"
+                                                            id="deleteCategoryModalLabel{{ $category->id }}">
                                                             Confirm Deletion
                                                         </h5>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"
@@ -137,22 +172,27 @@ Categories | {{env('APP_NAME')}}
                                                     </div>
                                                     <div class="modal-body">
                                                         <div class="text-center">
-                                                            <i class="ti ti-alert-triangle text-warning" style="font-size: 3rem;"></i>
+                                                            <i class="ti ti-alert-triangle text-warning"
+                                                                style="font-size: 3rem;"></i>
                                                             <h5 class="mt-3">Are you sure?</h5>
                                                             <p class="text-muted">
-                                                                You are about to delete the category 
-                                                                <strong>"{{ $category->category }}"</strong> ({{ ucfirst($category->type) }}).
+                                                                You are about to delete the category
+                                                                <strong>"{{ $category->category }}"</strong> ({{
+                                                                ucfirst($category->type) }}).
                                                                 <br><br>
                                                                 This action cannot be undone.
                                                             </p>
                                                         </div>
                                                     </div>
                                                     <div class="modal-footer">
-                                                        <form method="POST" action="{{ route('admin.categories.delete', $category->id) }}" 
+                                                        <form method="POST"
+                                                            action="{{ route('admin.categories.delete', $category->id) }}"
                                                             style="display: inline;" id="deleteForm{{ $category->id }}">
                                                             @csrf
                                                             @method('DELETE')
-                                                            <button type="submit" class="btn btn-danger" id="deleteBtn{{ $category->id }}" data-loading-text="Deleting...">
+                                                            <button type="submit" class="btn btn-danger"
+                                                                id="deleteBtn{{ $category->id }}"
+                                                                data-loading-text="Deleting...">
                                                                 <i class="ti ti-trash me-1"></i> Delete Category
                                                             </button>
                                                         </form>
@@ -165,7 +205,7 @@ Categories | {{env('APP_NAME')}}
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="5" class="text-center py-4">No categories found</td>
+                                <td colspan="6" class="text-center py-4">No categories found</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -185,7 +225,7 @@ Categories | {{env('APP_NAME')}}
                 <h5 class="modal-title" id="createCategoryModalLabel">Add New Category</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="POST" action="{{ route('admin.categories.store') }}">
+            <form method="POST" action="{{ route('admin.categories.store') }}" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-body">
                     <div class="mb-3">
@@ -210,6 +250,17 @@ Categories | {{env('APP_NAME')}}
                             <option value="blog" {{ old('type')=='blog' ? 'selected' : '' }}>Blog</option>
                         </select>
                         @error('type')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="createCategoryImage" class="form-label">Category Image</label>
+                        <input type="file" class="form-control @error('image') is-invalid @enderror"
+                            id="createCategoryImage" name="image" accept="image/*">
+                        <div class="form-text">Optional. Supported formats: JPEG, PNG, JPG, GIF, SVG. Max size: 2MB
+                        </div>
+                        @error('image')
                         <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>

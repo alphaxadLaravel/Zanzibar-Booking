@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 
 class CategoriesController extends Controller
 {
@@ -21,6 +22,7 @@ class CategoriesController extends Controller
         $validator = Validator::make($request->all(), [
             'category' => 'required|string|max:255',
             'type' => 'required|in:tour,hotel,car,blog',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -30,9 +32,15 @@ class CategoriesController extends Controller
         }
 
         try {
+            $imagePath = null;
+            if ($request->hasFile('image')) {
+                $imagePath = $request->file('image')->store('categories', 'public');
+            }
+
             Category::create([
                 'category' => $request->category,
                 'type' => $request->type,
+                'image' => $imagePath,
                 'status' => true
             ]);
 
@@ -64,6 +72,7 @@ class CategoriesController extends Controller
         $validator = Validator::make($request->all(), [
             'category' => 'required|string|max:255',
             'type' => 'required|in:tour,hotel,car,blog',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -74,10 +83,24 @@ class CategoriesController extends Controller
 
         try {
             $category = Category::findOrFail($id);
-            $category->update([
+            
+            $updateData = [
                 'category' => $request->category,
                 'type' => $request->type,
-            ]);
+            ];
+
+            // Handle image upload
+            if ($request->hasFile('image')) {
+                // Delete old image if exists
+                if ($category->image && Storage::disk('public')->exists($category->image)) {
+                    Storage::disk('public')->delete($category->image);
+                }
+                
+                // Store new image
+                $updateData['image'] = $request->file('image')->store('categories', 'public');
+            }
+
+            $category->update($updateData);
 
             return redirect()->route('admin.categories')
                 ->with('success', 'Category updated successfully');
@@ -93,6 +116,12 @@ class CategoriesController extends Controller
     {
         try {
             $category = Category::findOrFail($id);
+            
+            // Delete associated image if exists
+            if ($category->image && Storage::disk('public')->exists($category->image)) {
+                Storage::disk('public')->delete($category->image);
+            }
+            
             $category->delete();
 
             return redirect()->route('admin.categories')

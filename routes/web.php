@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CategoriesController;
+use App\Http\Controllers\FeatureController;
 use App\Http\Controllers\WebsiteController;
 use Illuminate\Support\Facades\Route;
 
@@ -118,8 +119,6 @@ Route::put('/admin/profile', [AdminController::class, 'updateProfile'])->name('a
 // My Bookings
 Route::get('/admin/my-bookings', [AdminController::class, 'myBookings'])->name('admin.my-bookings');   
 
-
-
 #############################################################
 
 // Categories Management
@@ -128,3 +127,10 @@ Route::post('/admin/categories/store', [CategoriesController::class, 'store'])->
 Route::get('/admin/categories/{id}/edit', [CategoriesController::class, 'edit'])->name('admin.categories.edit');
 Route::put('/admin/categories/{id}', [CategoriesController::class, 'update'])->name('admin.categories.update');
 Route::delete('/admin/categories/{id}', [CategoriesController::class, 'delete'])->name('admin.categories.delete');
+
+// Features Management
+Route::get('/admin/features', [FeatureController::class, 'index'])->name('admin.features');
+Route::post('/admin/features/store', [FeatureController::class, 'store'])->name('admin.features.store');
+Route::put('/admin/features/{id}', [FeatureController::class, 'update'])->name('admin.features.update');
+Route::delete('/admin/features/{id}', [FeatureController::class, 'destroy'])->name('admin.features.delete');
+Route::put('/admin/features/{id}/toggle-status', [FeatureController::class, 'toggleStatus'])->name('admin.features.toggle-status');

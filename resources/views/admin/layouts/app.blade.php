@@ -8,7 +8,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <link rel="shortcut icon" href="{{asset('logo.png')}}">
-    <link href="{{asset('assets/css/icons.min.css')}}" rel="stylesheet" type="text/css">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css" rel="stylesheet">
     <link href="{{asset('assets/css/vendors.min.css')}}" rel="stylesheet" type="text/css">
     <script src="{{asset('assets/js/config.js')}}"></script>
     <link href="{{asset('assets/css/app.min.css')}}" rel="stylesheet" type="text/css">
@@ -37,7 +37,7 @@
                         {{ session('error') }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
-                @endif
+                    @endif
 
                 </div>
                 @yield('content')
@@ -66,9 +66,11 @@
                     });
                 }
             });
-        });
+        });  
     </script>
 
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/7.4.47/css/materialdesignicons.min.css"
+        rel="stylesheet">
     <script src="{{asset('assets/js/vendors.min.js')}}"></script>
     <script src="{{asset('assets/js/app.js')}}"></script>
     <script src="{{asset('assets/js/pages/dashboard.js')}}"></script>
