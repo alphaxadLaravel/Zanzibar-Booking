@@ -15,6 +15,7 @@ use App\Models\RoomPhotos;
 use Hashids\Hashids;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class DealsController extends Controller
 {
@@ -70,6 +71,7 @@ class DealsController extends Controller
         if ($type === 'tour') {
             $tourIncludes = Features::active()->where('type', 'include')->get();
             $tourExcludes = Features::active()->where('type', 'exclude')->get();
+            
         }
 
         return view('admin.pages.manage_deal', compact('type', 'categories', 'features', 'tourIncludes', 'tourExcludes'));
@@ -128,7 +130,9 @@ class DealsController extends Controller
                     'adult_price' => 'required|numeric|min:0',
                     'child_price' => 'required|numeric|min:0',
                     'tour_includes' => 'nullable|array',
+                    'tour_includes.*' => 'integer|exists:features,id',
                     'tour_excludes' => 'nullable|array',
+                    'tour_excludes.*' => 'integer|exists:features,id',
                 ];
                 break;
         }
@@ -194,10 +198,23 @@ class DealsController extends Controller
 
                     // Handle tour includes
                     if ($request->has('tour_includes')) {
-                        foreach ($request->tour_includes as $include) {
+                        foreach ($request->tour_includes as $featureId) {
+                            // Handle both integer IDs and string names
+                            if (is_numeric($featureId)) {
+                                $featureId = (int) $featureId;
+                            } else {
+                                // If it's a string (feature name), find the feature by name
+                                $feature = Features::where('name', $featureId)->where('type', 'include')->first();
+                                if ($feature) {
+                                    $featureId = $feature->id;
+                                } else {
+                                    continue; // Skip invalid features
+                                }
+                            }
+                            
                             TourInclude::create([
                                 'deal_id' => $deal->id,
-                                'title' => $include,
+                                'feature_id' => $featureId,
                                 'type' => 'include'
                             ]);
                         }
@@ -205,10 +222,23 @@ class DealsController extends Controller
 
                     // Handle tour excludes
                     if ($request->has('tour_excludes')) {
-                        foreach ($request->tour_excludes as $exclude) {
+                        foreach ($request->tour_excludes as $featureId) {
+                            // Handle both integer IDs and string names
+                            if (is_numeric($featureId)) {
+                                $featureId = (int) $featureId;
+                            } else {
+                                // If it's a string (feature name), find the feature by name
+                                $feature = Features::where('name', $featureId)->where('type', 'exclude')->first();
+                                if ($feature) {
+                                    $featureId = $feature->id;
+                                } else {
+                                    continue; // Skip invalid features
+                                }
+                            }
+                            
                             TourInclude::create([
                                 'deal_id' => $deal->id,
-                                'title' => $exclude,
+                                'feature_id' => $featureId,
                                 'type' => 'exclude'
                             ]);
                         }
@@ -295,8 +325,8 @@ class DealsController extends Controller
         switch ($type) {
             case 'tour':
                 $tourData = Tours::where('deal_id', $deal->id)->first();
-                $tourIncludeData = TourInclude::where('deal_id', $deal->id)->where('type', 'include')->get();
-                $tourExcludeData = TourInclude::where('deal_id', $deal->id)->where('type', 'exclude')->get();
+                $tourIncludeData = TourInclude::with('feature')->where('deal_id', $deal->id)->where('type', 'include')->get();
+                $tourExcludeData = TourInclude::with('feature')->where('deal_id', $deal->id)->where('type', 'exclude')->get();
 
                 $typeSpecificData = [
                     'tour' => $tourData,
@@ -376,7 +406,9 @@ class DealsController extends Controller
                     'adult_price' => 'required|numeric|min:0',
                     'child_price' => 'required|numeric|min:0',
                     'tour_includes' => 'nullable|array',
+                    'tour_includes.*' => 'integer|exists:features,id',
                     'tour_excludes' => 'nullable|array',
+                    'tour_excludes.*' => 'integer|exists:features,id',
                 ];
                 break;
         }
@@ -466,10 +498,23 @@ class DealsController extends Controller
                     // Update tour includes
                     TourInclude::where('deal_id', $deal->id)->where('type', 'include')->delete();
                     if ($request->has('tour_includes')) {
-                        foreach ($request->tour_includes as $include) {
+                        foreach ($request->tour_includes as $featureId) {
+                            // Handle both integer IDs and string names
+                            if (is_numeric($featureId)) {
+                                $featureId = (int) $featureId;
+                            } else {
+                                // If it's a string (feature name), find the feature by name
+                                $feature = Features::where('name', $featureId)->where('type', 'include')->first();
+                                if ($feature) {
+                                    $featureId = $feature->id;
+                                } else {
+                                    continue; // Skip invalid features
+                                }
+                            }
+                            
                             TourInclude::create([
                                 'deal_id' => $deal->id,
-                                'title' => $include,
+                                'feature_id' => $featureId,
                                 'type' => 'include'
                             ]);
                         }
@@ -478,10 +523,23 @@ class DealsController extends Controller
                     // Update tour excludes
                     TourInclude::where('deal_id', $deal->id)->where('type', 'exclude')->delete();
                     if ($request->has('tour_excludes')) {
-                        foreach ($request->tour_excludes as $exclude) {
+                        foreach ($request->tour_excludes as $featureId) {
+                            // Handle both integer IDs and string names
+                            if (is_numeric($featureId)) {
+                                $featureId = (int) $featureId;
+                            } else {
+                                // If it's a string (feature name), find the feature by name
+                                $feature = Features::where('name', $featureId)->where('type', 'exclude')->first();
+                                if ($feature) {
+                                    $featureId = $feature->id;
+                                } else {
+                                    continue; // Skip invalid features
+                                }
+                            }
+                            
                             TourInclude::create([
                                 'deal_id' => $deal->id,
-                                'title' => $exclude,
+                                'feature_id' => $featureId,
                                 'type' => 'exclude'
                             ]);
                         }
@@ -912,6 +970,94 @@ class DealsController extends Controller
             return redirect()->route('admin.cars')->with('success', 'Car deleted successfully!');
         } catch (\Exception $e) {
             return redirect()->route('admin.cars')->with('error', 'Failed to delete car: ' . $e->getMessage());
+        }
+    }
+
+    // Tours Management
+    public function tours()
+    {
+        $hashids = new Hashids('MchungajiZanzibarBookings', 10);
+        
+        $tours = Deal::with(['category', 'tours', 'photos'])
+            ->where('type', 'tour')
+            ->whereHas('tours') // Only get deals that have tour data
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
+        return view('admin.pages.tours.index', compact('tours', 'hashids'));
+    }
+
+    public function createTour()
+    {
+        // Redirect to the existing manageDeal method for tour type
+        return $this->manageDeal('tour');
+    }
+
+    public function storeTour(Request $request)
+    {
+        // Redirect to the existing storeDeal method for tour type
+        return $this->storeDeal($request, 'tour');
+    }
+
+    public function editTour($id)
+    {
+        // Redirect to the existing editDeal method for tour type
+        return $this->editDeal($id, 'tour');
+    }
+
+    public function updateTour(Request $request, $id)
+    {
+        // Redirect to the existing updateDeal method for tour type
+        return $this->updateDeal($request, $id, 'tour');
+    }
+
+    public function deleteTour($id)
+    {
+        $hashids = new Hashids('MchungajiZanzibarBookings', 10);
+        $decodedTourId = $hashids->decode($id)[0];
+
+        $tour = Deal::where('type', 'tour')->find($decodedTourId);
+
+        if (!$tour) {
+            return redirect()->back()->with('error', 'Tour not found');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Delete associated tour data
+            if ($tour->tours) {
+                $tour->tours->delete();
+            }
+            
+            // Delete associated tour includes/excludes
+            TourInclude::where('deal_id', $tour->id)->delete();
+            
+            // Delete associated photos
+            foreach ($tour->photos as $photo) {
+                if (Storage::disk('public')->exists($photo->photo)) {
+                    Storage::disk('public')->delete($photo->photo);
+                }
+                $photo->delete();
+            }
+            
+            // Delete cover photo
+            if ($tour->cover_photo && Storage::disk('public')->exists($tour->cover_photo)) {
+                Storage::disk('public')->delete($tour->cover_photo);
+            }
+            
+            // Detach features
+            $tour->features()->detach();
+            
+            // Delete the tour deal
+            $tour->delete();
+
+            DB::commit();
+
+            return redirect()->route('admin.tours')->with('success', 'Tour deleted successfully!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to delete tour: ' . $e->getMessage());
         }
     }
 }

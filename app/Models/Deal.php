@@ -63,9 +63,14 @@ class Deal extends Model
         return $this->hasMany(Room::class);
     }
 
-    public function tour(): HasMany
+    public function tour(): HasOne
     {
-        return $this->hasMany(Tours::class);
+        return $this->hasOne(Tours::class);
+    }
+
+    public function tours(): HasOne
+    {
+        return $this->hasOne(Tours::class);
     }
 
     public function car(): HasOne

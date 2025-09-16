@@ -52,13 +52,6 @@ Route::put('/admin/apartments/{id}', [AdminController::class, 'updateApartment']
 Route::delete('/admin/apartments/{id}', [AdminController::class, 'deleteApartment'])->name('admin.apartments.delete');
 
 
-// Tours Management
-Route::get('/admin/tours', [AdminController::class, 'tours'])->name('admin.tours');
-Route::get('/admin/tours/create', [AdminController::class, 'createTour'])->name('admin.tours.create');
-Route::post('/admin/tours/store', [AdminController::class, 'storeTour'])->name('admin.tours.store');
-Route::get('/admin/tours/{id}/edit', [AdminController::class, 'editTour'])->name('admin.tours.edit');
-Route::put('/admin/tours/{id}', [AdminController::class, 'updateTour'])->name('admin.tours.update');
-Route::delete('/admin/tours/{id}', [AdminController::class, 'deleteTour'])->name('admin.tours.delete');
 
 // Blog Management
 Route::get('/admin/blog', [AdminController::class, 'blog'])->name('admin.blog');
@@ -145,3 +138,11 @@ Route::post('/admin/cars/store', [DealsController::class, 'storeCar'])->name('ad
 Route::get('/admin/cars/{id}/edit', [DealsController::class, 'editCar'])->name('admin.cars.edit');
 Route::put('/admin/cars/{id}', [DealsController::class, 'updateCar'])->name('admin.cars.update');
 Route::delete('/admin/cars/{id}', [DealsController::class, 'deleteCar'])->name('admin.cars.delete');
+
+// Tours Management
+Route::get('/admin/tours', [DealsController::class, 'tours'])->name('admin.tours');
+Route::get('/admin/tours/create', [DealsController::class, 'createTour'])->name('admin.tours.create');
+Route::post('/admin/tours/store', [DealsController::class, 'storeTour'])->name('admin.tours.store');
+Route::get('/admin/tours/{id}/edit', [DealsController::class, 'editTour'])->name('admin.tours.edit');
+Route::put('/admin/tours/{id}', [DealsController::class, 'updateTour'])->name('admin.tours.update');
+Route::delete('/admin/tours/{id}', [DealsController::class, 'deleteTour'])->name('admin.tours.delete');

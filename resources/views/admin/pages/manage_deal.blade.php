@@ -84,9 +84,14 @@
                 @if($type == 'tour')
                 <div class="col-md-4">
                     <label class="form-label">Tour Period <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" name="tour_period"
-                        value="{{ old('tour_period', $typeSpecificData['tour']->period ?? '') }}"
-                        placeholder="e.g. 3 days, 2 nights" required>
+                    <div class="input-group mb-3">
+                        <input type="number" class="form-control" name="tour_period"
+                            value="{{ old('tour_period', $typeSpecificData['tour']->period ?? '') }}"
+                            placeholder="Enter number of days" min="1" required>
+                        <div class="input-group-append">
+                            <span class="input-group-text">DAY(S)</span>
+                        </div>
+                    </div>
                     @error('tour_period')
                     <div class="text-danger">{{ $message }}</div>
                     @enderror
@@ -249,45 +254,7 @@
         @if ($type == 'tour')
         <div class="card mb-4">
             <div class="card-header">
-                <h5>Tour Features</h5>
-            </div>
-            <div class="card-body row g-3">
-                <div class="col-12">
-                    @if($features->count() > 0)
-                    <div class="row">
-                        @foreach($features as $feature)
-                        <div class="col-md-4 mb-2">
-                            <div class="form-check d-flex align-items-center" style="cursor: pointer;">
-                                <input class="form-check-input me-2" type="checkbox" name="features[]"
-                                    value="{{ $feature->id }}" id="feature-{{ $feature->id }}" {{ in_array($feature->id,
-                                old('features', [])) ? 'checked' : '' }}>
-                                <label class="form-check-label d-flex align-items-center"
-                                    for="feature-{{ $feature->id }}" style="cursor: pointer;">
-                                    <i class="mdi {{ $feature->icon }} me-2"
-                                        style="font-size: 1.2rem; cursor: pointer;"></i>
-                                    {{ $feature->name }}
-                                </label>
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
-                    @else
-                    <div class="alert alert-info">
-                        <i class="mdi mdi-information-outline me-2"></i>
-                        No tour features available. <a href="{{ route('admin.features') }}" class="alert-link">Add some
-                            tour features</a> first.
-                    </div>
-                    @endif
-                    @error('features')
-                    <div class="text-danger">{{ $message }}</div>
-                    @enderror
-                </div>
-            </div>
-        </div>
-
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5>Tour Includes</h5>
+                <h5>Tour Includes (Count: {{ $tourIncludes->count() }})</h5>
             </div>
             <div class="card-body row g-3">
                 <div class="col-12">
@@ -297,10 +264,10 @@
                         <div class="col-md-4 mb-2">
                             <div class="form-check d-flex align-items-center" style="cursor: pointer;">
                                 <input class="form-check-input me-2" type="checkbox" name="tour_includes[]"
-                                    value="{{ $include->name }}" id="tour-include-{{ $include->id }}" {{
-                                    in_array($include->name, old('tour_includes',
+                                    value="{{ $include->id }}" id="tour-include-{{ $include->id }}" {{
+                                    in_array($include->id, old('tour_includes',
                                 isset($typeSpecificData['tour_includes']) ?
-                                $typeSpecificData['tour_includes']->pluck('title')->toArray() : [])) ? 'checked' : ''
+                                $typeSpecificData['tour_includes']->pluck('feature_id')->toArray() : [])) ? 'checked' : ''
                                 }}>
                                 <label class="form-check-label d-flex align-items-center"
                                     for="tour-include-{{ $include->id }}" style="cursor: pointer;">
@@ -328,7 +295,7 @@
 
         <div class="card mb-4">
             <div class="card-header">
-                <h5>Tour Excludes</h5>
+                <h5>Tour Excludes (Count: {{ $tourExcludes->count() }})</h5>
             </div>
             <div class="card-body row g-3">
                 <div class="col-12">
@@ -338,10 +305,10 @@
                         <div class="col-md-4 mb-2">
                             <div class="form-check d-flex align-items-center" style="cursor: pointer;">
                                 <input class="form-check-input me-2" type="checkbox" name="tour_excludes[]"
-                                    value="{{ $exclude->name }}" id="tour-exclude-{{ $exclude->id }}" {{
-                                    in_array($exclude->name, old('tour_excludes',
+                                    value="{{ $exclude->id }}" id="tour-exclude-{{ $exclude->id }}" {{
+                                    in_array($exclude->id, old('tour_excludes',
                                 isset($typeSpecificData['tour_excludes']) ?
-                                $typeSpecificData['tour_excludes']->pluck('title')->toArray() : [])) ? 'checked' : ''
+                                $typeSpecificData['tour_excludes']->pluck('feature_id')->toArray() : [])) ? 'checked' : ''
                                 }}>
                                 <label class="form-check-label d-flex align-items-center"
                                     for="tour-exclude-{{ $exclude->id }}" style="cursor: pointer;">

@@ -1,5 +1,9 @@
 @extends('admin.layouts.app')
 
+@php
+use Illuminate\Support\Facades\Storage;
+@endphp
+
 @section('title', 'All Tours')
 
 @section('content')
@@ -17,11 +21,10 @@
         </div>
     </div>
 
-    <!-- Page Content -->
     <div class="row">
         <div class="col-12">
             <div class="card">
-               
+
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-3">
                         <h5 class="card-title mb-0">Tours Management</h5>
@@ -30,62 +33,97 @@
                         </a>
                     </div>
                     <hr>
-                    
+
                     <div class="table-responsive">
                         <table class="table table-striped table-hover">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
-                                    <th>Tour Name</th>
+                                    <th>#</th>
+                                    <th>Cover</th>
+                                    <th>Title</th>
                                     <th>Location</th>
-                                    <th>Duration</th>
+                                    <th>Days</th>
                                     <th>Price</th>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- Sample Data - Replace with actual data from database -->
+                                @forelse($tours as $index => $tour)
                                 <tr>
-                                    <td>1</td>
-                                    <td>City Walking Tour</td>
-                                    <td>New York, USA</td>
-                                    <td>3 hours</td>
-                                    <td>$45/person</td>
+                                    <td>{{ $index + 1 }}</td>
                                     <td>
-                                        <span class="badge bg-success">Active</span>
+                                        @if($tour->cover_photo)
+                                        <img src="{{ Storage::url($tour->cover_photo) }}" alt="Tour Cover"
+                                            style="width: 50px; height: 40px; object-fit: cover; border-radius: 4px;">
+                                        @else
+                                        <div class="bg-light d-flex align-items-center justify-content-center"
+                                            style="width: 50px; height: 40px; border-radius: 4px;">
+                                            <i class="mdi mdi-image text-muted"></i>
+                                        </div>
+                                        @endif
                                     </td>
                                     <td>
-                                        <div class="btn-group" role="group">
-                                            <a href="{{ route('admin.tours.edit', 1) }}" class="btn btn-sm btn-outline-primary">
-                                                <i class="ti ti-edit"></i>
+                                        <div>
+                                            <h6 class="mb-1">{{ $tour->title }}</h6>
+                                            <small class="text-muted">{{ $tour->category->category ?? 'No Category'
+                                                }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="text-muted">
+                                            <i class="mdi mdi-map-marker me-1"></i>
+                                            {{ $tour->location ?? 'Not specified' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {{ $tour->tours->period ?? 'N/A' }}
+                                        DAY(S)
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong class="text-primary">${{ number_format($tour->base_price, 2)
+                                                }}</strong>
+                                            @if($tour->tours)
+                                            <br>
+                                            <small class="text-muted">
+                                                Adult: ${{ number_format($tour->tours->adult_price, 2) }} |
+                                                Child: ${{ number_format($tour->tours->child_price, 2) }}
+                                            </small>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if($tour->status)
+                                        <span class="badge bg-success">Published</span>
+                                        @else
+                                        <span class="badge bg-warning">Draft</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-2">
+                                            <a href="{{ route('admin.manage-deal.edit', [$hashids->encode($tour->id), 'tour']) }}"
+                                                class="btn btn-sm btn-outline-primary" title="Edit Tour">
+                                                <i class="mdi mdi-pencil"></i> Edit
                                             </a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteTour(1)">
-                                                <i class="ti ti-trash"></i>
-                                            </button>
+                                            <a href="{{ route('admin.manage-deal', ['tour', $hashids->encode($tour->id)]) }}"
+                                                class="btn btn-sm btn-outline-info" title="Manage Tour">
+                                                <i class="mdi mdi-cog"></i> Manage Tour
+                                            </a>
                                         </div>
                                     </td>
                                 </tr>
+                                @empty
                                 <tr>
-                                    <td>2</td>
-                                    <td>Mountain Adventure</td>
-                                    <td>Colorado, USA</td>
-                                    <td>Full day</td>
-                                    <td>$120/person</td>
-                                    <td>
-                                        <span class="badge bg-success">Active</span>
-                                    </td>
-                                    <td>
-                                        <div class="btn-group" role="group">
-                                            <a href="{{ route('admin.tours.edit', 2) }}" class="btn btn-sm btn-outline-primary">
-                                                <i class="ti ti-edit"></i>
-                                            </a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteTour(2)">
-                                                <i class="ti ti-trash"></i>
-                                            </button>
+                                    <td colspan="8" class="text-center py-4">
+                                        <div class="text-muted">
+                                            <i class="mdi mdi-tour me-2" style="font-size: 2rem;"></i>
+                                            <p class="mb-0">No tours found</p>
+                                            <small>Create your first tour to get started</small>
                                         </div>
                                     </td>
                                 </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
@@ -95,33 +133,4 @@
     </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirm Delete</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete this tour? This action cannot be undone.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form id="deleteForm" method="POST" style="display: inline;">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Delete</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-function deleteTour(id) {
-    document.getElementById('deleteForm').action = '{{ route("admin.tours.delete", ":id") }}'.replace(':id', id);
-    new bootstrap.Modal(document.getElementById('deleteModal')).show();
-}
-</script>
 @endsection

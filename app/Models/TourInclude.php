@@ -9,12 +9,17 @@ class TourInclude extends Model
 {
     protected $fillable = [
         'deal_id',
-        'title',
+        'feature_id',
         'type'
     ];
 
     public function deal(): BelongsTo
     {
         return $this->belongsTo(Deal::class);
+    }
+
+    public function feature(): BelongsTo
+    {
+        return $this->belongsTo(Features::class);
     }
 }

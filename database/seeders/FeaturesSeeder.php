@@ -12,6 +12,7 @@ class FeaturesSeeder extends Seeder
      */
     public function run(): void
     {
+        // Tour Includes - only what is typically included, no ambiguous or duplicate items
         $tourIncludes = [
             ['name' => 'Accommodation', 'icon' => 'mdi-hotel', 'type' => 'include'],
             ['name' => 'Meals', 'icon' => 'mdi-food', 'type' => 'include'],
@@ -31,11 +32,8 @@ class FeaturesSeeder extends Seeder
             ['name' => 'City Map', 'icon' => 'mdi-map', 'type' => 'include'],
             ['name' => 'Bottled Water', 'icon' => 'mdi-bottle-soda', 'type' => 'include'],
             ['name' => 'First Aid Kit', 'icon' => 'mdi-medical-bag', 'type' => 'include'],
-            ['name' => 'Souvenir', 'icon' => 'mdi-gift', 'type' => 'include'],
             ['name' => 'WiFi On Board', 'icon' => 'mdi-wifi', 'type' => 'include'],
-            ['name' => 'Travel Insurance', 'icon' => 'mdi-shield-account', 'type' => 'include'],
             ['name' => 'Photo Service', 'icon' => 'mdi-camera', 'type' => 'include'],
-            ['name' => 'Laundry Service', 'icon' => 'mdi-washing-machine', 'type' => 'include'],
             ['name' => 'Porter Service', 'icon' => 'mdi-human-wheelchair', 'type' => 'include'],
             ['name' => 'Local Taxes', 'icon' => 'mdi-cash-multiple', 'type' => 'include'],
             ['name' => 'Workshops', 'icon' => 'mdi-school', 'type' => 'include'],
@@ -43,8 +41,6 @@ class FeaturesSeeder extends Seeder
             ['name' => 'Train Tickets', 'icon' => 'mdi-train', 'type' => 'include'],
             ['name' => 'Bike Rental', 'icon' => 'mdi-bike', 'type' => 'include'],
             ['name' => 'Helmets', 'icon' => 'mdi-helmet', 'type' => 'include'],
-            ['name' => 'Toll Fees', 'icon' => 'mdi-road-variant', 'type' => 'include'],
-            ['name' => 'Parking Fees', 'icon' => 'mdi-parking', 'type' => 'include'],
             ['name' => 'Local Experiences', 'icon' => 'mdi-account-group', 'type' => 'include'],
             ['name' => 'Cultural Shows', 'icon' => 'mdi-drama-masks', 'type' => 'include'],
             ['name' => 'Cooking Class', 'icon' => 'mdi-pot-mix', 'type' => 'include'],
@@ -53,6 +49,7 @@ class FeaturesSeeder extends Seeder
             ['name' => 'Wheelchair Access', 'icon' => 'mdi-wheelchair-accessibility', 'type' => 'include'],
         ];
 
+        // Tour Excludes - only what is typically excluded, and also includes some items that may be in both
         $tourExcludes = [
             ['name' => 'Personal Expenses', 'icon' => 'mdi-cash', 'type' => 'exclude'],
             ['name' => 'Travel Insurance', 'icon' => 'mdi-shield-account', 'type' => 'exclude'],
@@ -62,7 +59,7 @@ class FeaturesSeeder extends Seeder
             ['name' => 'Optional Activities', 'icon' => 'mdi-star', 'type' => 'exclude'],
             ['name' => 'International Flights', 'icon' => 'mdi-airplane', 'type' => 'exclude'],
             ['name' => 'Personal Items', 'icon' => 'mdi-bag-personal', 'type' => 'exclude'],
-            ['name' => 'Laundry', 'icon' => 'mdi-washing-machine', 'type' => 'exclude'],
+            ['name' => 'Laundry Service', 'icon' => 'mdi-washing-machine', 'type' => 'exclude'],
             ['name' => 'Phone Calls', 'icon' => 'mdi-phone', 'type' => 'exclude'],
             ['name' => 'Room Service', 'icon' => 'mdi-room-service', 'type' => 'exclude'],
             ['name' => 'Mini Bar', 'icon' => 'mdi-glass-wine', 'type' => 'exclude'],
@@ -77,8 +74,7 @@ class FeaturesSeeder extends Seeder
             ['name' => 'Extra Night', 'icon' => 'mdi-moon-waning-crescent', 'type' => 'exclude'],
             ['name' => 'Lost Items', 'icon' => 'mdi-magnify', 'type' => 'exclude'],
             ['name' => 'Damage Fees', 'icon' => 'mdi-hammer-wrench', 'type' => 'exclude'],
-            ['name' => 'Laundry Service', 'icon' => 'mdi-washing-machine', 'type' => 'exclude'],
-            ['name' => 'Porterage', 'icon' => 'mdi-human-wheelchair', 'type' => 'exclude'],
+            ['name' => 'Porter Service', 'icon' => 'mdi-human-wheelchair', 'type' => 'exclude'],
             ['name' => 'Gratuities', 'icon' => 'mdi-currency-usd', 'type' => 'exclude'],
             ['name' => 'Unspecified Transfers', 'icon' => 'mdi-taxi', 'type' => 'exclude'],
             ['name' => 'Internet Charges', 'icon' => 'mdi-wifi-off', 'type' => 'exclude'],
@@ -89,6 +85,23 @@ class FeaturesSeeder extends Seeder
             ['name' => 'Meals Not Included', 'icon' => 'mdi-food-off', 'type' => 'exclude'],
             ['name' => 'Drinks Not Included', 'icon' => 'mdi-glass-cocktail', 'type' => 'exclude'],
             ['name' => 'Personal Care Items', 'icon' => 'mdi-toothbrush-paste', 'type' => 'exclude'],
+            // Some items that can be both included or excluded depending on the package
+            ['name' => 'Laundry', 'icon' => 'mdi-washing-machine', 'type' => 'exclude'],
+            ['name' => 'Accommodation', 'icon' => 'mdi-hotel', 'type' => 'include'],
+            ['name' => 'Dinner', 'icon' => 'mdi-food-steak', 'type' => 'include'],
+            ['name' => 'Breakfast', 'icon' => 'mdi-food-croissant', 'type' => 'include'],
+            ['name' => 'Lunch', 'icon' => 'mdi-food-variant', 'type' => 'include'],
+            ['name' => 'Snacks', 'icon' => 'mdi-food-apple', 'type' => 'include'],
+            ['name' => 'Beverages', 'icon' => 'mdi-coffee', 'type' => 'include'],
+            ['name' => 'Transport', 'icon' => 'mdi-bus', 'type' => 'include'],
+            ['name' => 'Guide', 'icon' => 'mdi-account-tie', 'type' => 'include'],
+            ['name' => 'Entrance Fees', 'icon' => 'mdi-ticket-confirmation', 'type' => 'include'],
+            ['name' => 'Airport Transfer', 'icon' => 'mdi-airplane', 'type' => 'include'],
+            ['name' => 'Activities', 'icon' => 'mdi-gamepad-variant', 'type' => 'include'],
+            ['name' => 'Equipment', 'icon' => 'mdi-tools', 'type' => 'include'],
+            ['name' => 'Local SIM Card', 'icon' => 'mdi-sim', 'type' => 'include'],
+            ['name' => 'Welcome Drink', 'icon' => 'mdi-glass-cocktail', 'type' => 'include'],
+            ['name' => 'City Map', 'icon' => 'mdi-map', 'type' => 'include'],
         ];
 
         $hotelFeatures = [
@@ -208,47 +221,8 @@ class FeaturesSeeder extends Seeder
             ['name' => 'Balcony View', 'icon' => 'mdi-eye', 'type' => 'apartment'],
         ];
 
-        $tourFeatures = [
-            ['name' => 'Professional Guide', 'icon' => 'mdi-account-tie', 'type' => 'tour'],
-            ['name' => 'Small Group', 'icon' => 'mdi-account-group', 'type' => 'tour'],
-            ['name' => 'Skip the Line', 'icon' => 'mdi-fast-forward', 'type' => 'tour'],
-            ['name' => 'Audio Guide', 'icon' => 'mdi-headphones', 'type' => 'tour'],
-            ['name' => 'Photo Opportunities', 'icon' => 'mdi-camera', 'type' => 'tour'],
-            ['name' => 'Cultural Experience', 'icon' => 'mdi-account-heart', 'type' => 'tour'],
-            ['name' => 'Historical Sites', 'icon' => 'mdi-domain', 'type' => 'tour'],
-            ['name' => 'Local Food Tasting', 'icon' => 'mdi-food', 'type' => 'tour'],
-            ['name' => 'Nature Walks', 'icon' => 'mdi-pine-tree', 'type' => 'tour'],
-            ['name' => 'Wildlife Watching', 'icon' => 'mdi-paw', 'type' => 'tour'],
-            ['name' => 'Boat Tour', 'icon' => 'mdi-ferry', 'type' => 'tour'],
-            ['name' => 'Cycling', 'icon' => 'mdi-bike', 'type' => 'tour'],
-            ['name' => 'Hiking', 'icon' => 'mdi-hiking', 'type' => 'tour'],
-            ['name' => 'Museum Visit', 'icon' => 'mdi-bank', 'type' => 'tour'],
-            ['name' => 'Shopping', 'icon' => 'mdi-cart', 'type' => 'tour'],
-            ['name' => 'Cooking Class', 'icon' => 'mdi-pot-mix', 'type' => 'tour'],
-            ['name' => 'Wine Tasting', 'icon' => 'mdi-glass-wine', 'type' => 'tour'],
-            ['name' => 'Adventure Sports', 'icon' => 'mdi-parachute', 'type' => 'tour'],
-            ['name' => 'Local Market', 'icon' => 'mdi-store', 'type' => 'tour'],
-            ['name' => 'Religious Sites', 'icon' => 'mdi-church', 'type' => 'tour'],
-            ['name' => 'Festival Visit', 'icon' => 'mdi-party-popper', 'type' => 'tour'],
-            ['name' => 'Sunrise Tour', 'icon' => 'mdi-weather-sunset-up', 'type' => 'tour'],
-            ['name' => 'Sunset Tour', 'icon' => 'mdi-weather-sunset-down', 'type' => 'tour'],
-            ['name' => 'Photography Workshop', 'icon' => 'mdi-camera-retake', 'type' => 'tour'],
-            ['name' => 'Bird Watching', 'icon' => 'mdi-bird', 'type' => 'tour'],
-            ['name' => 'Local Music', 'icon' => 'mdi-music', 'type' => 'tour'],
-            ['name' => 'Traditional Dance', 'icon' => 'mdi-drama-masks', 'type' => 'tour'],
-            ['name' => 'Language Support', 'icon' => 'mdi-translate', 'type' => 'tour'],
-            ['name' => 'Child Friendly', 'icon' => 'mdi-baby-face', 'type' => 'tour'],
-            ['name' => 'Wheelchair Accessible', 'icon' => 'mdi-wheelchair-accessibility', 'type' => 'tour'],
-            ['name' => 'Private Tour', 'icon' => 'mdi-account', 'type' => 'tour'],
-            ['name' => 'Group Tour', 'icon' => 'mdi-account-group', 'type' => 'tour'],
-            ['name' => 'Transport Included', 'icon' => 'mdi-bus', 'type' => 'tour'],
-            ['name' => 'Snacks Included', 'icon' => 'mdi-food-apple', 'type' => 'tour'],
-            ['name' => 'Souvenir', 'icon' => 'mdi-gift', 'type' => 'tour'],
-            ['name' => 'First Aid Kit', 'icon' => 'mdi-medical-bag', 'type' => 'tour'],
-        ];
-
         // Combine all features
-        $allFeatures = array_merge($tourIncludes, $tourExcludes, $hotelFeatures, $carFeatures, $apartmentFeatures, $tourFeatures);
+        $allFeatures = array_merge($tourIncludes, $tourExcludes, $hotelFeatures, $carFeatures, $apartmentFeatures);
 
         // Seed all features
         foreach ($allFeatures as $feature) {

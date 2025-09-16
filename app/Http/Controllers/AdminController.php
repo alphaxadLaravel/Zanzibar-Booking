@@ -60,41 +60,6 @@ class AdminController extends Controller
         return redirect()->route('admin.apartments')->with('success', 'Apartment deleted successfully!');
     }
 
-
-    // Tours Management
-    public function tours()
-    {
-        return view('admin.pages.tours.index');
-    }
-
-    public function createTour()
-    {
-        return view('admin.pages.tours.create');
-    }
-
-    public function storeTour(Request $request)
-    {
-        // Add tour creation logic here
-        return redirect()->route('admin.tours')->with('success', 'Tour created successfully!');
-    }
-
-    public function editTour($id)
-    {
-        return view('admin.pages.tours.edit', compact('id'));
-    }
-
-    public function updateTour(Request $request, $id)
-    {
-        // Add tour update logic here
-        return redirect()->route('admin.tours')->with('success', 'Tour updated successfully!');
-    }
-
-    public function deleteTour($id)
-    {
-        // Add tour deletion logic here
-        return redirect()->route('admin.tours')->with('success', 'Tour deleted successfully!');
-    }
-
     // Blog Management
     public function blog()
     {
