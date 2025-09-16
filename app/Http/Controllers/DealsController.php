@@ -10,6 +10,8 @@ use App\Models\Tours;
 use App\Models\Car;
 use App\Models\DealPhotos;
 use App\Models\TourInclude;
+use App\Models\Room;
+use App\Models\RoomPhotos;
 use Hashids\Hashids;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -24,9 +26,32 @@ class DealsController extends Controller
             ->where('type', 'hotel')
             ->orderBy('created_at', 'desc')
             ->get();
-            
-            
+
+
         return view('admin.pages.hotels.index', compact('hotels', 'hashids'));
+    }
+
+    // manageHotel
+    public function manageHotel($id)
+    {
+        $hashids = new Hashids('MchungajiZanzibarBookings', 10);
+        $hotelId = $hashids->decode($id)[0];
+
+        $hotel = Deal::with(['category', 'features', 'photos'])
+            ->where('type', 'hotel')
+            ->find($hotelId);
+
+        if (!$hotel) {
+            return redirect()->back()->with('error', 'Hotel not found');
+        }
+
+        // Get rooms for this hotel
+        $rooms = Room::with('photos')
+            ->where('deal_id', $hotelId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('admin.pages.hotels.manage_hotel', compact('hotel', 'hotelId', 'rooms', 'hashids'));
     }
 
     // manageDeal
@@ -34,19 +59,19 @@ class DealsController extends Controller
     {
         // Filter categories by type and active
         $categories = Category::active()->byType($type)->get();
-        
+
         // Filter features based on deal type
         $features = Features::active()->where('type', $type)->get();
-        
+
         // Get tour includes and excludes for tour type
         $tourIncludes = [];
         $tourExcludes = [];
-        
+
         if ($type === 'tour') {
             $tourIncludes = Features::active()->where('type', 'include')->get();
             $tourExcludes = Features::active()->where('type', 'exclude')->get();
         }
-            
+
         return view('admin.pages.manage_deal', compact('type', 'categories', 'features', 'tourIncludes', 'tourExcludes'));
     }
 
@@ -71,7 +96,7 @@ class DealsController extends Controller
 
         // Type-specific validation rules
         $typeSpecificRules = [];
-        
+
         switch ($type) {
             case 'hotel':
             case 'apartment':
@@ -80,7 +105,7 @@ class DealsController extends Controller
                     'features.*' => 'exists:features,id',
                 ];
                 break;
-                
+
             case 'car':
                 $typeSpecificRules = [
                     'features' => 'nullable|array',
@@ -93,7 +118,7 @@ class DealsController extends Controller
                     'car_contract_document' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 ];
                 break;
-                
+
             case 'tour':
                 $typeSpecificRules = [
                     'features' => 'nullable|array',
@@ -110,7 +135,7 @@ class DealsController extends Controller
 
         // Merge base rules with type-specific rules
         $validationRules = array_merge($baseRules, $typeSpecificRules);
-        
+
         $request->validate($validationRules);
 
         try {
@@ -220,7 +245,6 @@ class DealsController extends Controller
             DB::commit();
 
             return redirect()->route('admin.hotels')->with('success', 'Deal created successfully!');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Failed to create deal: ' . $e->getMessage())->withInput();
@@ -233,26 +257,26 @@ class DealsController extends Controller
         $hashids = new Hashids('MchungajiZanzibarBookings', 10);
         $dealId = $hashids->decode($id)[0];
 
-        
+
         // Find deal with relationships
         $deal = Deal::with(['category', 'features', 'photos'])
             ->where('type', $type)
             ->find($dealId);
-            
+
         if (!$deal) {
             return redirect()->back()->with('error', 'Deal not found');
         }
 
         // Filter categories by type and active
         $categories = Category::active()->byType($type)->get();
-        
+
         // Filter features based on deal type
         $features = Features::active()->where('type', $type)->get();
-        
+
         // Get tour includes and excludes for tour type
         $tourIncludes = [];
         $tourExcludes = [];
-        
+
         if ($type === 'tour') {
             $tourIncludes = Features::active()->where('type', 'include')->get();
             $tourExcludes = Features::active()->where('type', 'exclude')->get();
@@ -265,20 +289,20 @@ class DealsController extends Controller
                 $tourData = Tours::where('deal_id', $deal->id)->first();
                 $tourIncludeData = TourInclude::where('deal_id', $deal->id)->where('type', 'include')->get();
                 $tourExcludeData = TourInclude::where('deal_id', $deal->id)->where('type', 'exclude')->get();
-                
+
                 $typeSpecificData = [
                     'tour' => $tourData,
                     'tour_includes' => $tourIncludeData,
                     'tour_excludes' => $tourExcludeData
                 ];
                 break;
-                
+
             case 'car':
                 $carData = Car::where('deal_id', $deal->id)->first();
                 $typeSpecificData = ['car' => $carData];
                 break;
         }
-        
+
         return view('admin.pages.manage_deal', compact('deal', 'type', 'categories', 'features', 'tourIncludes', 'tourExcludes', 'typeSpecificData'));
     }
 
@@ -286,10 +310,10 @@ class DealsController extends Controller
     public function updateDeal(Request $request, $id, $type)
     {
         $dealId = $id;
-        
+
         // Find the deal
         $deal = Deal::where('type', $type)->find($dealId);
-        
+
         if (!$deal) {
             return redirect()->back()->with('error', 'Deal not found');
         }
@@ -312,7 +336,7 @@ class DealsController extends Controller
 
         // Type-specific validation rules
         $typeSpecificRules = [];
-        
+
         switch ($type) {
             case 'hotel':
             case 'apartment':
@@ -321,7 +345,7 @@ class DealsController extends Controller
                     'features.*' => 'exists:features,id',
                 ];
                 break;
-                
+
             case 'car':
                 $typeSpecificRules = [
                     'features' => 'nullable|array',
@@ -334,7 +358,7 @@ class DealsController extends Controller
                     'car_contract_document' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 ];
                 break;
-                
+
             case 'tour':
                 $typeSpecificRules = [
                     'features' => 'nullable|array',
@@ -351,7 +375,7 @@ class DealsController extends Controller
 
         // Merge base rules with type-specific rules
         $validationRules = array_merge($baseRules, $typeSpecificRules);
-        
+
         $request->validate($validationRules);
 
         try {
@@ -398,7 +422,7 @@ class DealsController extends Controller
                     }
                     $photo->delete();
                 }
-                
+
                 // Add new photos
                 foreach ($request->file('other_images') as $image) {
                     $imagePath = $image->store('deals/photos', 'public');
@@ -495,7 +519,6 @@ class DealsController extends Controller
             DB::commit();
 
             return redirect()->route('admin.hotels')->with('success', 'Deal updated successfully!');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Failed to update deal: ' . $e->getMessage())->withInput();
@@ -504,8 +527,66 @@ class DealsController extends Controller
 
     public function deleteHotel($id)
     {
-        // Add hotel deletion logic here
-        return redirect()->route('admin.hotels')->with('success', 'Hotel deleted successfully!');
+        $hashids = new Hashids('MchungajiZanzibarBookings', 10);
+        $decodedHotelId = $hashids->decode($id)[0];
+
+        $hotel = Deal::where('type', 'hotel')->find($decodedHotelId);
+
+        if (!$hotel) {
+            return redirect()->back()->with('error', 'Hotel not found');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Get all rooms for this hotel
+            $rooms = Room::where('deal_id', $decodedHotelId)->get();
+
+            // Delete room photos and rooms
+            foreach ($rooms as $room) {
+                // Delete room cover photo
+                if ($room->cover_photo && Storage::disk('public')->exists($room->cover_photo)) {
+                    Storage::disk('public')->delete($room->cover_photo);
+                }
+
+                // Delete room photos
+                foreach ($room->photos as $photo) {
+                    if (Storage::disk('public')->exists($photo->photo)) {
+                        Storage::disk('public')->delete($photo->photo);
+                    }
+                    $photo->delete();
+                }
+
+                // Delete the room
+                $room->delete();
+            }
+
+            // Delete hotel cover photo
+            if ($hotel->cover_photo && Storage::disk('public')->exists($hotel->cover_photo)) {
+                Storage::disk('public')->delete($hotel->cover_photo);
+            }
+
+            // Delete hotel photos
+            foreach ($hotel->photos as $photo) {
+                if (Storage::disk('public')->exists($photo->photo)) {
+                    Storage::disk('public')->delete($photo->photo);
+                }
+                $photo->delete();
+            }
+
+            // Detach features
+            $hotel->features()->detach();
+
+            // Delete the hotel
+            $hotel->delete();
+
+            DB::commit();
+
+            return redirect()->route('admin.hotels')->with('success', 'Hotel and all associated data deleted successfully!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to delete hotel: ' . $e->getMessage());
+        }
     }
 
     // Hotel Rooms Management
@@ -551,5 +632,200 @@ class DealsController extends Controller
     {
         // Add room availability update logic here
         return redirect()->route('admin.hotels.rooms.view', [$hotel_id, $room_id])->with('success', 'Room availability updated successfully!');
+    }
+
+    // Room CRUD Methods
+    public function storeRoom(Request $request, $hotel_id)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'number_of_rooms' => 'required|integer|min:1',
+            'price' => 'required|numeric|min:0',
+            'people' => 'required|integer|min:1',
+            'beds' => 'required|integer|min:1',
+            'availability' => 'required|in:0,1',
+            'cover_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif',
+            'other_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif',
+            'description' => 'nullable|string'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Handle cover photo upload
+            $coverPhotoPath = null;
+            if ($request->hasFile('cover_photo')) {
+                $coverPhotoPath = $request->file('cover_photo')->store('rooms/cover', 'public');
+            }
+
+            // Create the room
+            $room = Room::create([
+                'deal_id' => $hotel_id,
+                'title' => $request->title,
+                'number_of_rooms' => $request->number_of_rooms,
+                'price' => $request->price,
+                'people' => $request->people,
+                'beds' => $request->beds,
+                'availability' => (bool) $request->availability,
+                'cover_photo' => $coverPhotoPath,
+                'description' => $request->description,
+                'status' => 1
+            ]);
+
+            // Handle other images
+            if ($request->hasFile('other_images')) {
+                foreach ($request->file('other_images') as $image) {
+                    $imagePath = $image->store('rooms/photos', 'public');
+                    RoomPhotos::create([
+                        'room_id' => $room->id,
+                        'photo' => $imagePath
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return redirect()->back()->with('success', 'Room created successfully!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to create room: ' . $e->getMessage())->withInput();
+        }
+    }
+
+    public function editRoom($hotel_id, $room_id)
+    {
+        $hashids = new Hashids('MchungajiZanzibarBookings', 10);
+        $decodedHotelId = $hashids->decode($hotel_id)[0];
+        $decodedRoomId = $hashids->decode($room_id)[0];
+
+        $hotel = Deal::where('type', 'hotel')->find($decodedHotelId);
+        $room = Room::with('photos')->find($decodedRoomId);
+
+        if (!$hotel || !$room || $room->deal_id != $decodedHotelId) {
+            return redirect()->back()->with('error', 'Room not found');
+        }
+
+        return response()->json([
+            'room' => $room,
+            'photos' => $room->photos
+        ]);
+    }
+
+    public function updateRoom(Request $request, $hotel_id, $room_id)
+    {
+        $hashids = new Hashids('MchungajiZanzibarBookings', 10);
+        $decodedHotelId = $hashids->decode($hotel_id)[0];
+        $decodedRoomId = $hashids->decode($room_id)[0];
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'number_of_rooms' => 'required|integer|min:1',
+            'price' => 'required|numeric|min:0',
+            'people' => 'required|integer|min:1',
+            'beds' => 'required|integer|min:1',
+            'availability' => 'required|in:0,1',
+            'cover_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif',
+            'other_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif',
+            'description' => 'nullable|string'
+        ]);
+
+        $room = Room::find($decodedRoomId);
+
+        if (!$room || $room->deal_id != $decodedHotelId) {
+            return redirect()->back()->with('error', 'Room not found');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Handle cover photo upload
+            $coverPhotoPath = $room->cover_photo; // Keep existing if no new upload
+            if ($request->hasFile('cover_photo')) {
+                // Delete old cover photo if exists
+                if ($room->cover_photo && Storage::disk('public')->exists($room->cover_photo)) {
+                    Storage::disk('public')->delete($room->cover_photo);
+                }
+                $coverPhotoPath = $request->file('cover_photo')->store('rooms/cover', 'public');
+            }
+
+            // Update the room
+            $room->update([
+                'title' => $request->title,
+                'number_of_rooms' => $request->number_of_rooms,
+                'price' => $request->price,
+                'people' => $request->people,
+                'beds' => $request->beds,
+                'availability' => (bool) $request->availability,
+                'cover_photo' => $coverPhotoPath,
+                'description' => $request->description
+            ]);
+
+            // Handle other images
+            if ($request->hasFile('other_images')) {
+                // Delete existing photos
+                foreach ($room->photos as $photo) {
+                    if (Storage::disk('public')->exists($photo->photo)) {
+                        Storage::disk('public')->delete($photo->photo);
+                    }
+                    $photo->delete();
+                }
+
+                // Add new photos
+                foreach ($request->file('other_images') as $image) {
+                    $imagePath = $image->store('rooms/photos', 'public');
+                    RoomPhotos::create([
+                        'room_id' => $room->id,
+                        'photo' => $imagePath
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return redirect()->back()->with('success', 'Room updated successfully!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to update room: ' . $e->getMessage())->withInput();
+        }
+    }
+
+    public function deleteRoom($hotel_id, $room_id)
+    {
+        $hashids = new Hashids('MchungajiZanzibarBookings', 10);
+        $decodedHotelId = $hashids->decode($hotel_id)[0];
+        $decodedRoomId = $hashids->decode($room_id)[0];
+
+        $room = Room::find($decodedRoomId);
+
+        if (!$room || $room->deal_id != $decodedHotelId) {
+            return redirect()->back()->with('error', 'Room not found');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Delete cover photo
+            if ($room->cover_photo && Storage::disk('public')->exists($room->cover_photo)) {
+                Storage::disk('public')->delete($room->cover_photo);
+            }
+
+            // Delete other photos
+            foreach ($room->photos as $photo) {
+                if (Storage::disk('public')->exists($photo->photo)) {
+                    Storage::disk('public')->delete($photo->photo);
+                }
+                $photo->delete();
+            }
+
+            // Delete room
+            $room->delete();
+
+            DB::commit();
+
+            return redirect()->back()->with('success', 'Room deleted successfully!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to delete room: ' . $e->getMessage());
+        }
     }
 }

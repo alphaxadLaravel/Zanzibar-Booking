@@ -81,13 +81,14 @@
                                     </td>
                                     <td>
                                         <a href="{{ route('admin.manage-deal.edit', [$hashids->encode($hotel->id), 'hotel']) }}"
-                                            class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                                            class="btn btn-sm btn-outline-primary me-1" title="Edit Hotel">
                                             <i class="mdi mdi-pencil"></i>
                                         </a>
-                                        <a href="{{ route('admin.hotels.rooms', $hotel->id) }}"
-                                            class="btn btn-sm btn-outline-info" title="View">
+                                        <a href="{{ route('admin.hotels.manage', $hashids->encode($hotel->id)) }}"
+                                            class="btn btn-sm btn-outline-info me-1" title="Manage Hotel">
                                             Manage Hotel
                                         </a>
+                                        
                                     </td>
                                 </tr>
                                 @empty
@@ -113,36 +114,60 @@
     </div>
 </div>
 
-<!-- Delete Modal -->
+<!-- Delete Hotel Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirm Delete</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="ti ti-alert-triangle me-2"></i>Confirm Hotel Deletion
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to delete this hotel? This action cannot be undone.</p>
+                <div class="text-center mb-3">
+                    <i class="ti ti-building-skyscraper" style="font-size: 3rem; color: #dc3545;"></i>
+                </div>
+                <p class="text-center mb-3">Are you sure you want to delete this hotel?</p>
+                <div class="alert alert-danger" role="alert">
+                    <i class="ti ti-alert-circle me-2"></i>
+                    <strong>Critical Warning:</strong> This action will permanently delete:
+                    <ul class="mb-0 mt-2">
+                        <li>Hotel information and details</li>
+                        <li>All rooms and room configurations</li>
+                        <li>Hotel photos and media files</li>
+                        <li>Associated bookings and reservations</li>
+                        <li>Reviews and ratings</li>
+                    </ul>
+                    <strong class="text-danger">This action cannot be undone!</strong>
+                </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="ti ti-x me-1"></i>Cancel
+                </button>
                 <form id="deleteForm" method="POST" style="display: inline;">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Delete</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="ti ti-trash me-1"></i>Delete Hotel
+                    </button>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-{{-- <script>
+<script>
     function deleteHotel(hotelId) {
-    const deleteForm = document.getElementById('deleteForm');
-    deleteForm.action = "{{ route('admin.hotels.delete', '') }}/" + hotelId;
-    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
-    modal.show();
-}
-</script> --}}
+        // Set the form action URL
+        const deleteForm = document.getElementById('deleteForm');
+        deleteForm.action = `/admin/hotels/${hotelId}`;
+        
+        // Show the delete modal
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        deleteModal.show();
+    }
+</script>
 
 @endsection

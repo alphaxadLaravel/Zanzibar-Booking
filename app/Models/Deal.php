@@ -57,6 +57,11 @@ class Deal extends Model
         return $this->hasMany(DealPhotos::class);
     }
 
+    public function rooms(): HasMany
+    {
+        return $this->hasMany(Room::class);
+    }
+
     public function tour(): HasMany
     {
         return $this->hasMany(Tours::class);
