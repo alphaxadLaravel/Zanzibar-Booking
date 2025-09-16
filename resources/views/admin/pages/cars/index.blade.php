@@ -105,7 +105,7 @@ use Illuminate\Support\Facades\Storage;
                                          </button>
                                         <a href="#"
                                             class="btn btn-sm btn-outline-info me-1" title="Manage Car">
-                                            Manage Car
+                                            Preview Car
                                         </a>
                                     </td>
                                 </tr>

@@ -33,6 +33,38 @@ class DealsController extends Controller
         return view('admin.pages.hotels.index', compact('hotels', 'hashids'));
     }
 
+    // Apartments Management
+    public function apartments()
+    {
+        $hashids = new Hashids('MchungajiZanzibarBookings', 10);
+        $apartments = Deal::with('category')
+            ->where('type', 'apartment')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('admin.pages.apartments.index', compact('apartments', 'hashids'));
+    }
+
+    public function createApartment()
+    {
+        return $this->manageDeal('apartment');
+    }
+
+    public function storeApartment(Request $request)
+    {
+        return $this->storeDeal($request, 'apartment');
+    }
+
+    public function editApartment($id)
+    {
+        return $this->editDeal($id, 'apartment');
+    }
+
+    public function updateApartment(Request $request, $id)
+    {
+        return $this->updateDeal($request, $id, 'apartment');
+    }
+
     // manageHotel
     public function manageHotel($id)
     {
@@ -279,7 +311,8 @@ class DealsController extends Controller
             $redirectRoute = match($type) {
                 'car' => 'admin.cars',
                 'tour' => 'admin.tours',
-                'hotel', 'apartment' => 'admin.hotels',
+                'hotel' => 'admin.hotels',
+                'apartment' => 'admin.apartments',
                 default => 'admin.hotels'
             };
             
@@ -589,7 +622,8 @@ class DealsController extends Controller
             $redirectRoute = match($type) {
                 'car' => 'admin.cars',
                 'tour' => 'admin.tours',
-                'hotel', 'apartment' => 'admin.hotels',
+                'hotel' => 'admin.hotels',
+                'apartment' => 'admin.apartments',
                 default => 'admin.hotels'
             };
             
@@ -661,6 +695,48 @@ class DealsController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Failed to delete hotel: ' . $e->getMessage());
+        }
+    }
+
+    public function deleteApartment($id)
+    {
+        $hashids = new Hashids('MchungajiZanzibarBookings', 10);
+        $decodedApartmentId = $hashids->decode($id)[0];
+
+        $apartment = Deal::where('type', 'apartment')->find($decodedApartmentId);
+
+        if (!$apartment) {
+            return redirect()->back()->with('error', 'Apartment not found');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Delete apartment cover photo
+            if ($apartment->cover_photo && Storage::disk('public')->exists($apartment->cover_photo)) {
+                Storage::disk('public')->delete($apartment->cover_photo);
+            }
+
+            // Delete apartment photos
+            foreach ($apartment->photos as $photo) {
+                if (Storage::disk('public')->exists($photo->photo)) {
+                    Storage::disk('public')->delete($photo->photo);
+                }
+                $photo->delete();
+            }
+
+            // Detach features
+            $apartment->features()->detach();
+
+            // Delete the apartment
+            $apartment->delete();
+
+            DB::commit();
+
+            return redirect()->route('admin.apartments')->with('success', 'Apartment and all associated data deleted successfully!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to delete apartment: ' . $e->getMessage());
         }
     }
 

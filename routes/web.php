@@ -44,12 +44,12 @@ Route::get('/admin/hotels/{hotel_id}/rooms/{room_id}/view', [AdminController::cl
 Route::put('/admin/hotels/{hotel_id}/rooms/{room_id}/availability', [AdminController::class, 'updateRoomAvailability'])->name('admin.hotels.rooms.availability');
 
 // Apartments Management
-Route::get('/admin/apartments', [AdminController::class, 'apartments'])->name('admin.apartments');
-Route::get('/admin/apartments/create', [AdminController::class, 'createApartment'])->name('admin.apartments.create');
-Route::post('/admin/apartments/store', [AdminController::class, 'storeApartment'])->name('admin.apartments.store');
-Route::get('/admin/apartments/{id}/edit', [AdminController::class, 'editApartment'])->name('admin.apartments.edit');
-Route::put('/admin/apartments/{id}', [AdminController::class, 'updateApartment'])->name('admin.apartments.update');
-Route::delete('/admin/apartments/{id}', [AdminController::class, 'deleteApartment'])->name('admin.apartments.delete');
+Route::get('/admin/apartments', [DealsController::class, 'apartments'])->name('admin.apartments');
+Route::get('/admin/apartments/create', [DealsController::class, 'createApartment'])->name('admin.apartments.create');
+Route::post('/admin/apartments/store', [DealsController::class, 'storeApartment'])->name('admin.apartments.store');
+Route::get('/admin/apartments/{id}/edit', [DealsController::class, 'editApartment'])->name('admin.apartments.edit');
+Route::put('/admin/apartments/{id}', [DealsController::class, 'updateApartment'])->name('admin.apartments.update');
+Route::delete('/admin/apartments/{id}', [DealsController::class, 'deleteApartment'])->name('admin.apartments.delete');
 
 
 
