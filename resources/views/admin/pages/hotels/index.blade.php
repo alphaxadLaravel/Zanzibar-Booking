@@ -5,125 +5,112 @@
 @section('content')
 <div class="container-fluid">
     <!-- Page Header -->
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box">
-                <div class="page-title-right">
-                    <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Hotels</li>
-                    </ol>
-                </div>
-                <h4 class="page-title">All Hotels</h4>
-            </div>
+    <div class="row align-items-center mb-3">
+        <div class="col d-flex justify-content-between align-items-center flex-wrap">
+            <h4 class="page-title mb-0">All Hotels</h4>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb m-0 bg-transparent p-0">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Hotels</li>
+                </ol>
+            </nav>
         </div>
     </div>
 
-    <!-- Page Content -->
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
-                    <div class="row align-items-center">
-                        <div class="col">
-                            <h5 class="card-title mb-0">Hotels Management</h5>
-                        </div>
-                        <div class="col-auto">
-                            <a href="{{ route('admin.hotels.create') }}" class="btn btn-primary">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h5 class="card-title mb-0">Hotels Management</h5>
+                        <div class="">
+                            <a href="{{ route('admin.manage-deal', 'hotel') }}" class="btn btn-primary">
                                 <i class="ti ti-plus"></i> Add New Hotel
                             </a>
                         </div>
                     </div>
-                </div>
-                <div class="card-body">
-                    <!-- Success Message -->
-                    @if(session('success'))
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            {{ session('success') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    @endif
-
-                    <!-- Hotels Table -->
+                    <hr>
                     <div class="table-responsive">
                         <table class="table table-striped table-hover">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
-                                    <th>Name</th>
+                                    <th>#</th>
+                                    <th>Cover</th>
+                                    <th>Title</th>
                                     <th>Location</th>
-                                    <th>Rating</th>
                                     <th>Price</th>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- Sample Data - Replace with actual data from database -->
+                                @forelse($hotels as $index => $hotel)
                                 <tr>
-                                    <td>1</td>
-                                    <td>Grand Hotel</td>
-                                    <td>New York, USA</td>
+                                    <td>{{ $index + 1 }}</td>
                                     <td>
-                                        <div class="rating">
-                                            <i class="ti ti-star-filled text-warning"></i>
-                                            <i class="ti ti-star-filled text-warning"></i>
-                                            <i class="ti ti-star-filled text-warning"></i>
-                                            <i class="ti ti-star-filled text-warning"></i>
-                                            <i class="ti ti-star text-muted"></i>
-                                            <span class="ms-1">4.0</span>
+                                        @if($hotel->cover_photo)
+                                            <img src="{{ asset('storage/' . $hotel->cover_photo) }}" 
+                                                 alt="{{ $hotel->title }}" 
+                                                 class="rounded" 
+                                                 style="width: 50px; height: 50px; object-fit: cover;">
+                                        @else
+                                            <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                                 style="width: 50px; height: 50px;">
+                                                <i class="ti ti-hotel text-muted"></i>
+                                            </div>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <h6 class="mb-1">{{ $hotel->title }}</h6>
+                                            <small class="text-muted">{{ $hotel->category->category ?? 'N/A' }}</small>
                                         </div>
                                     </td>
-                                    <td>$150/night</td>
                                     <td>
-                                        <span class="badge bg-success">Active</span>
+                                        <div>
+                                            <i class="ti ti-map-pin text-muted me-1"></i>
+                                            {{ $hotel->location ?? 'Not specified' }}
+                                        </div>
+                                    </td>
+                                    <td>${{ number_format($hotel->base_price, 2) }}/night</td>
+                                    <td>
+                                        @if($hotel->status)
+                                            <span class="badge bg-success">Active</span>
+                                        @else
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        @endif
                                     </td>
                                     <td>
                                         <div class="btn-group" role="group">
-                                            <a href="{{ route('admin.hotels.rooms', 1) }}" class="btn btn-sm btn-outline-info" title="Manage Rooms">
+                                            <a href="{{ route('admin.hotels.rooms', $hotel->id) }}"
+                                                class="btn btn-sm btn-outline-info" title="Manage Rooms">
                                                 <i class="ti ti-bed"></i>
                                             </a>
-                                            <a href="{{ route('admin.hotels.edit', 1) }}" class="btn btn-sm btn-outline-primary">
+                                            <a href="{{ route('admin.hotels.edit', $hotel->id) }}"
+                                                class="btn btn-sm btn-outline-primary">
                                                 <i class="ti ti-edit"></i>
                                             </a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteHotel(1)">
+                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                onclick="deleteHotel({{ $hotel->id }})">
                                                 <i class="ti ti-trash"></i>
                                             </button>
                                         </div>
                                     </td>
                                 </tr>
+                                @empty
                                 <tr>
-                                    <td>2</td>
-                                    <td>Beach Resort</td>
-                                    <td>Miami, USA</td>
-                                    <td>
-                                        <div class="rating">
-                                            <i class="ti ti-star-filled text-warning"></i>
-                                            <i class="ti ti-star-filled text-warning"></i>
-                                            <i class="ti ti-star-filled text-warning"></i>
-                                            <i class="ti ti-star-filled text-warning"></i>
-                                            <i class="ti ti-star-filled text-warning"></i>
-                                            <span class="ms-1">5.0</span>
-                                        </div>
-                                    </td>
-                                    <td>$300/night</td>
-                                    <td>
-                                        <span class="badge bg-success">Active</span>
-                                    </td>
-                                    <td>
-                                        <div class="btn-group" role="group">
-                                            <a href="{{ route('admin.hotels.rooms', 2) }}" class="btn btn-sm btn-outline-info" title="Manage Rooms">
-                                                <i class="ti ti-bed"></i>
+                                    <td colspan="7" class="text-center py-4">
+                                        <div class="text-muted">
+                                            <i class="ti ti-hotel fs-1 d-block mb-2"></i>
+                                            <h5>No Hotels Found</h5>
+                                            <p>Start by adding your first hotel.</p>
+                                            <a href="{{ route('admin.manage-deal', 'hotel') }}" class="btn btn-primary">
+                                                <i class="ti ti-plus"></i> Add New Hotel
                                             </a>
-                                            <a href="{{ route('admin.hotels.edit', 2) }}" class="btn btn-sm btn-outline-primary">
-                                                <i class="ti ti-edit"></i>
-                                            </a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteHotel(2)">
-                                                <i class="ti ti-trash"></i>
-                                            </button>
                                         </div>
                                     </td>
                                 </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
@@ -133,7 +120,7 @@
     </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
+<!-- Delete Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -156,10 +143,13 @@
     </div>
 </div>
 
-<script>
-function deleteHotel(id) {
-    document.getElementById('deleteForm').action = '{{ route("admin.hotels.delete", ":id") }}'.replace(':id', id);
-    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+{{-- <script>
+function deleteHotel(hotelId) {
+    const deleteForm = document.getElementById('deleteForm');
+    deleteForm.action = "{{ route('admin.hotels.delete', '') }}/" + hotelId;
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
 }
-</script>
+</script> --}}
+
 @endsection

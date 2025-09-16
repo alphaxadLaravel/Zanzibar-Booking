@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CategoriesController;
+use App\Http\Controllers\DealsController;
 use App\Http\Controllers\FeatureController;
 use App\Http\Controllers\WebsiteController;
 use Illuminate\Support\Facades\Route;
@@ -31,14 +32,6 @@ Route::post('/process-booking', [WebsiteController::class, 'processBooking'])->n
 ##########################################################################################
 ### ADMIN
 Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
-
-// Hotels Management
-Route::get('/admin/hotels', [AdminController::class, 'hotels'])->name('admin.hotels');
-Route::get('/admin/hotels/create', [AdminController::class, 'createHotel'])->name('admin.hotels.create');
-Route::post('/admin/hotels/store', [AdminController::class, 'storeHotel'])->name('admin.hotels.store');
-Route::get('/admin/hotels/{id}/edit', [AdminController::class, 'editHotel'])->name('admin.hotels.edit');
-Route::put('/admin/hotels/{id}', [AdminController::class, 'updateHotel'])->name('admin.hotels.update');
-Route::delete('/admin/hotels/{id}', [AdminController::class, 'deleteHotel'])->name('admin.hotels.delete');
 
 // Hotel Rooms Management
 Route::get('/admin/hotels/{hotel_id}/rooms', [AdminController::class, 'hotelRooms'])->name('admin.hotels.rooms');
@@ -117,7 +110,7 @@ Route::get('/admin/profile/edit', [AdminController::class, 'editProfile'])->name
 Route::put('/admin/profile', [AdminController::class, 'updateProfile'])->name('admin.profile.update');
 
 // My Bookings
-Route::get('/admin/my-bookings', [AdminController::class, 'myBookings'])->name('admin.my-bookings');   
+Route::get('/admin/my-bookings', [AdminController::class, 'myBookings'])->name('admin.my-bookings');
 
 #############################################################
 
@@ -134,3 +127,16 @@ Route::post('/admin/features/store', [FeatureController::class, 'store'])->name(
 Route::put('/admin/features/{id}', [FeatureController::class, 'update'])->name('admin.features.update');
 Route::delete('/admin/features/{id}', [FeatureController::class, 'destroy'])->name('admin.features.delete');
 Route::put('/admin/features/{id}/toggle-status', [FeatureController::class, 'toggleStatus'])->name('admin.features.toggle-status');
+
+// hotels management
+Route::get('/admin/hotels', [DealsController::class, 'hotels'])->name('admin.hotels');
+Route::get('/admin/hotels/create', [DealsController::class, 'createHotel'])->name('admin.hotels.create');
+Route::post('/admin/hotels/store', [DealsController::class, 'storeHotel'])->name('admin.hotels.store');
+Route::get('/admin/hotels/{id}/edit', [DealsController::class, 'editHotel'])->name('admin.hotels.edit');
+Route::put('/admin/hotels/{id}', [DealsController::class, 'updateHotel'])->name('admin.hotels.update');
+Route::delete('/admin/hotels/{id}', [DealsController::class, 'deleteHotel'])->name('admin.hotels.delete');
+
+
+// manage deal
+Route::get('/admin/manage-deal/{type}', [DealsController::class, 'manageDeal'])->name('admin.manage-deal');
+Route::post('/admin/manage-deal/{type}/store', [DealsController::class, 'storeDeal'])->name('admin.manage-deal.store');

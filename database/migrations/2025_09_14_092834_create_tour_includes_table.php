@@ -14,11 +14,12 @@ return new class extends Migration
         Schema::create('tour_includes', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('deal_id');
-            $table->string('title');
-            $table->string('type');
+            $table->unsignedBigInteger('feature_id');
+            $table->string('type')->nullable();
             $table->timestamps();
-
+            
             $table->foreign('deal_id')->references('id')->on('deals')->onDelete('cascade');
+            $table->foreign('feature_id')->references('id')->on('features')->onDelete('cascade');
         });
     }
 

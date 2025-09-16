@@ -26,6 +26,7 @@ class FeatureController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:features,name',
             'icon' => 'required|string|max:255',
+            'type' => 'required|string|in:hotel,include,exclude,car,apartment,tour',
             'status' => 'boolean'
         ]);
 
@@ -38,6 +39,7 @@ class FeatureController extends Controller
         Features::create([
             'name' => $request->name,
             'icon' => $request->icon,
+            'type' => $request->type,
             'status' => $request->has('status') ? 1 : 0
         ]);
 
@@ -56,6 +58,7 @@ class FeatureController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:features,name,' . $id,
             'icon' => 'required|string|max:255',
+            'type' => 'required|string|in:hotel,include,exclude,car,apartment,tour',
             'status' => 'boolean'
         ]);
 
@@ -68,6 +71,7 @@ class FeatureController extends Controller
         $feature->update([
             'name' => $request->name,
             'icon' => $request->icon,
+            'type' => $request->type,
             'status' => $request->has('status') ? 1 : 0
         ]);
 

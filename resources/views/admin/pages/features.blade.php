@@ -23,6 +23,7 @@ Features | {{env('APP_NAME')}}
                             <tr>
                                 <th class="px-3 py-2">#</th>
                                 <th class="px-3 py-2">Feature Name</th>
+                                <th class="px-3 py-2">Type</th>
                                 <th class="px-3 py-2">Icon</th>
                                 <th class="px-3 py-2">Status</th>
                                 <th class="px-3 py-2">Actions</th>
@@ -35,8 +36,11 @@ Features | {{env('APP_NAME')}}
                                 <td class="px-3 py-2">
                                     <span class="fw-medium">{{ $feature->name }}</span>
                                 </td>
+                                <td class="px-3 py-2">
+                                    <span class="badge bg-info">{{ ucfirst($feature->type) }}</span>
+                                </td>
                                 <td class="px-3 py-2 d-flex align-items-center gap-2">
-                                    <i class="mdi mdi-{{ $feature->icon }} fs-2 text-dark"></i>
+                                    <i class="{{ $feature->icon }} fs-2 text-dark"></i>
                                 </td>
                                 <td class="px-3 py-2">
                                     @if($feature->status)
@@ -84,6 +88,24 @@ Features | {{env('APP_NAME')}}
                                                         id="edit_name{{ $feature->id }}" name="name"
                                                         value="{{ $feature->name }}" required>
                                                     @error('name')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label for="edit_type{{ $feature->id }}" class="form-label">Type
+                                                        <span class="text-danger">*</span></label>
+                                                    <select class="form-control @error('type') is-invalid @enderror"
+                                                        id="edit_type{{ $feature->id }}" name="type" required>
+                                                        <option value="">Select Type</option>
+                                                        <option value="hotel" {{ $feature->type == 'hotel' ? 'selected' : '' }}>Hotel</option>
+                                                        <option value="include" {{ $feature->type == 'include' ? 'selected' : '' }}>Include</option>
+                                                        <option value="exclude" {{ $feature->type == 'exclude' ? 'selected' : '' }}>Exclude</option>
+                                                        <option value="car" {{ $feature->type == 'car' ? 'selected' : '' }}>Car</option>
+                                                        <option value="apartment" {{ $feature->type == 'apartment' ? 'selected' : '' }}>Apartment</option>
+                                                        <option value="tour" {{ $feature->type == 'tour' ? 'selected' : '' }}>Tour</option>
+                                                    </select>
+                                                    @error('type')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
@@ -182,6 +204,24 @@ Features | {{env('APP_NAME')}}
                         <input type="text" class="form-control @error('name') is-invalid @enderror" id="create_name"
                             name="name" value="{{ old('name') }}" required>
                         @error('name')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="create_type" class="form-label">Type <span
+                                class="text-danger">*</span></label>
+                        <select class="form-control @error('type') is-invalid @enderror" id="create_type"
+                            name="type" required>
+                            <option value="">Select Type</option>
+                            <option value="hotel" {{ old('type') == 'hotel' ? 'selected' : '' }}>Hotel</option>
+                            <option value="include" {{ old('type') == 'include' ? 'selected' : '' }}>Include</option>
+                            <option value="exclude" {{ old('type') == 'exclude' ? 'selected' : '' }}>Exclude</option>
+                            <option value="car" {{ old('type') == 'car' ? 'selected' : '' }}>Car</option>
+                            <option value="apartment" {{ old('type') == 'apartment' ? 'selected' : '' }}>Apartment</option>
+                            <option value="tour" {{ old('type') == 'tour' ? 'selected' : '' }}>Tour</option>
+                        </select>
+                        @error('type')
                         <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>

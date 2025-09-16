@@ -33,94 +33,44 @@
 
             <li class="side-nav-title">All Services</li>
 
-            <!-- HOTELS v -->
+            <!-- HOTELS -->
             <li class="side-nav-item">
-                <a data-bs-toggle="collapse" href="#sidebarHotels" aria-expanded="false" aria-controls="sidebarHotels"
-                    class="side-nav-link">
+                <a href="{{ route('admin.hotels') }}" class="side-nav-link">
                     <span class="menu-icon"><i class="mdi mdi-city-variant-outline"></i></span>
                     <span class="menu-text">Hotels</span>
-                    <span class="menu-arrow"></span>
                 </a>
-                <div class="collapse" id="sidebarHotels">
-                    <ul class="sub-menu">
-                        <li class="side-nav-item"><a href="{{ route('admin.hotels') }}" class="side-nav-link">All
-                                Hotels</a></li>
-                        <li class="side-nav-item"><a href="{{ route('admin.hotels.create') }}" class="side-nav-link">Add
-                                Hotel</a></li>
-                    </ul>
-                </div>
             </li>
 
-            <!-- CARS v -->
+            <!-- CARS -->
             <li class="side-nav-item">
-                <a data-bs-toggle="collapse" href="#sidebarCars" aria-expanded="false" aria-controls="sidebarCars"
-                    class="side-nav-link">
+                <a href="{{ route('admin.cars') }}" class="side-nav-link">
                     <span class="menu-icon"><i class="mdi mdi-car"></i></span>
                     <span class="menu-text">Cars</span>
-                    <span class="menu-arrow"></span>
                 </a>
-                <div class="collapse" id="sidebarCars">
-                    <ul class="sub-menu">
-                        <li class="side-nav-item"><a href="{{ route('admin.cars') }}" class="side-nav-link">All Cars</a>
-                        </li>
-                        <li class="side-nav-item"><a href="{{ route('admin.cars.create') }}" class="side-nav-link">Add
-                                Car</a></li>
-                    </ul>
-                </div>
             </li>
 
-            <!-- TOURS v -->
+            <!-- TOURS -->
             <li class="side-nav-item">
-                <a data-bs-toggle="collapse" href="#sidebarTours" aria-expanded="false" aria-controls="sidebarTours"
-                    class="side-nav-link">
+                <a href="{{ route('admin.tours') }}" class="side-nav-link">
                     <span class="menu-icon"><i class="mdi mdi-map-marker-radius"></i></span>
                     <span class="menu-text">Tours</span>
-                    <span class="menu-arrow"></span>
                 </a>
-                <div class="collapse" id="sidebarTours">
-                    <ul class="sub-menu">
-                        <li class="side-nav-item"><a href="{{ route('admin.tours') }}" class="side-nav-link">All
-                                Tours</a></li>
-                        <li class="side-nav-item"><a href="{{ route('admin.tours.create') }}" class="side-nav-link">Add
-                                Tour</a></li>
-                    </ul>
-                </div>
             </li>
 
-            <!-- APARTMENTS v -->
+            <!-- APARTMENTS -->
             <li class="side-nav-item">
-                <a data-bs-toggle="collapse" href="#sidebarApartments" aria-expanded="false"
-                    aria-controls="sidebarApartments" class="side-nav-link">
+                <a href="{{ route('admin.apartments') }}" class="side-nav-link">
                     <span class="menu-icon"><i class="mdi mdi-home-city"></i></span>
                     <span class="menu-text">Apartments</span>
-                    <span class="menu-arrow"></span>
                 </a>
-                <div class="collapse" id="sidebarApartments">
-                    <ul class="sub-menu">
-                        <li class="side-nav-item"><a href="{{ route('admin.apartments') }}" class="side-nav-link">All
-                                Apartments</a></li>
-                        <li class="side-nav-item"><a href="{{ route('admin.apartments.create') }}"
-                                class="side-nav-link">Add Apartment</a></li>
-                    </ul>
-                </div>
             </li>
 
-            <!-- BLOG v -->
+            <!-- BLOG -->
             <li class="side-nav-item">
-                <a data-bs-toggle="collapse" href="#sidebarBlog" aria-expanded="false" aria-controls="sidebarBlog"
-                    class="side-nav-link">
+                <a href="{{ route('admin.blog') }}" class="side-nav-link">
                     <span class="menu-icon"><i class="mdi mdi-post-outline"></i></span>
                     <span class="menu-text">Blog</span>
-                    <span class="menu-arrow"></span>
                 </a>
-                <div class="collapse" id="sidebarBlog">
-                    <ul class="sub-menu">
-                        <li class="side-nav-item"><a href="{{ route('admin.blog') }}" class="side-nav-link">All
-                                Posts</a></li>
-                        <li class="side-nav-item"><a href="{{ route('admin.blog.create') }}" class="side-nav-link">Add
-                                Post</a></li>
-                    </ul>
-                </div>
             </li>
 
             <li class="side-nav-title">Manage</li>

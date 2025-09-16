@@ -1,495 +1,599 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Add New Hotel')
+@section('title', 'Add New Deal')
 
 @section('content')
 <div class="container-fluid">
-    <!-- Page Header -->
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box">
-                <div class="page-title-right">
-                    <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('admin.hotels') }}">Hotels</a></li>
-                        <li class="breadcrumb-item active">Add New Hotel</li>
-                    </ol>
-                </div>
-                <h4 class="page-title">Add New Hotel</h4>
-            </div>
-        </div>
-    </div>
 
-    <!-- Step Indicator -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="step-item active clickable" onclick="jumpToStep(1)">
-                            <div class="step-number">1</div>
-                            <div class="step-label">General</div>
-                        </div>
-                        <div class="step-line"></div>
-                        <div class="step-item clickable" onclick="jumpToStep(2)">
-                            <div class="step-number">2</div>
-                            <div class="step-label">Location</div>
-                        </div>
-                        <div class="step-line"></div>
-                        <div class="step-item clickable" onclick="jumpToStep(3)">
-                            <div class="step-number">3</div>
-                            <div class="step-label">Pricing</div>
-                        </div>
-                        <div class="step-line"></div>
-                        <div class="step-item clickable" onclick="jumpToStep(4)">
-                            <div class="step-number">4</div>
-                            <div class="step-label">Amenities</div>
-                        </div>
-                        <div class="step-line"></div>
-                        <div class="step-item clickable" onclick="jumpToStep(5)">
-                            <div class="step-number">5</div>
-                            <div class="step-label">Media</div>
-                        </div>
-                        <div class="step-line"></div>
-                        <div class="step-item clickable" onclick="jumpToStep(6)">
-                            <div class="step-number">6</div>
-                            <div class="step-label">Policies</div>
+    <form id="dealForm" action="{{ route('admin.manage-deal.store', $type) }}" method="POST" enctype="multipart/form-data"
+        autocomplete="off">
+        @csrf
+        <!-- Deal Details Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Deal Details</h5>
+            </div>
+            <div class="card-body row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Title <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="title" value="{{ old('title') }}"
+                        placeholder="Enter deal title">
+                    @error('title')
+                    <div class="text-danger">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Category <span class="text-danger">*</span></label>
+                    <select class="form-select" name="category_id" required>
+                        <option value="">Select Category</option>
+                        @foreach($categories as $category)
+                        <option value="{{ $category->id }}" {{ old('category_id')==$category->id ? 'selected' : '' }}>
+                            {{ $category->category }}
+                        </option>
+                        @endforeach
+                    </select>
+                    @error('category_id')
+                    <div class="text-danger">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Base Price <span class="text-danger">*</span></label>
+                    <div class="input-group mb-3">
+                        <input type="number" class="form-control" name="base_price" value="{{ old('base_price') }}"
+                            step="0.01" placeholder="Enter base price">
+                        <div class="input-group-append">
+                            <span class="input-group-text">USD</span>
                         </div>
                     </div>
+                    @error('base_price')
+                    <div class="text-danger">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="col-md-12">
+                    <label class="form-label">Description</label>
+                    <div>
+                        <textarea id="description" rows="4" class="form-control d-none" name="description"
+                            placeholder="Enter description">{{ old('description') }}</textarea>
+                        <div id="description-editor"></div>
+                    </div>
+                    @error('description')
+                    <div class="text-danger">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label">Policies</label>
+                    <div>
+                        <textarea id="policies" rows="3" class="form-control d-none" name="policies"
+                            placeholder="Enter policies">{{ old('policies') }}</textarea>
+                        <div id="policies-editor"></div>
+                    </div>
+                    @error('policies')
+                    <div class="text-danger">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                {{-- Show Tour Inputs only if $type == "tour" --}}
+                @if($type == 'tour')
+                    <div class="col-md-4">
+                        <label class="form-label">Tour Period <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="tour_period" value="{{ old('tour_period') }}"
+                            placeholder="e.g. 3 days, 2 nights" required>
+                        @error('tour_period')
+                        <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Max People <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" name="max_people" value="{{ old('max_people') }}" min="1"
+                            placeholder="e.g. 10" required>
+                        @error('max_people')
+                        <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Adult Price <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" name="adult_price" value="{{ old('adult_price') }}"
+                            step="0.01" placeholder="e.g. 100.00" required>
+                        @error('adult_price')
+                        <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Child Price <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" name="child_price" value="{{ old('child_price') }}"
+                            step="0.01" placeholder="e.g. 50.00" required>
+                        @error('child_price')
+                        <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+                @endif
+
+                {{-- Show Car Inputs only if $type == "car" --}}
+                @if($type == 'car')
+                    <div class="col-md-4">
+                        <label class="form-label">Car Capacity <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" name="car_capacity" value="{{ old('car_capacity') }}"
+                            min="1" placeholder="e.g. 4" required>
+                        @error('car_capacity')
+                        <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Transmission <span class="text-danger">*</span></label>
+                        <select class="form-control" name="transmission" required>
+                            <option value="">Select Transmission</option>
+                            <option value="manual" {{ old('transmission')=='manual' ? 'selected' : '' }}>Manual</option>
+                            <option value="automatic" {{ old('transmission')=='automatic' ? 'selected' : '' }}>Automatic</option>
+                        </select>
+                        @error('transmission')
+                        <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Fuel <span class="text-danger">*</span></label>
+                        <select class="form-control" name="fuel" required>
+                            <option value="">Select Fuel Type</option>
+                            <option value="petrol" {{ old('fuel')=='petrol' ? 'selected' : '' }}>Petrol</option>
+                            <option value="diesel" {{ old('fuel')=='diesel' ? 'selected' : '' }}>Diesel</option>
+                            <option value="electric" {{ old('fuel')=='electric' ? 'selected' : '' }}>Electric</option>
+                            <option value="hybrid" {{ old('fuel')=='hybrid' ? 'selected' : '' }}>Hybrid</option>
+                        </select>
+                        @error('fuel')
+                        <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Air Condition</label>
+                        <select class="form-control" name="air_condition">
+                            <option value="0" {{ old('air_condition')=='0' ? 'selected' : '' }}>No</option>
+                            <option value="1" {{ old('air_condition')=='1' ? 'selected' : '' }}>Yes</option>
+                        </select>
+                        @error('air_condition')
+                        <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">GPS</label>
+                        <select class="form-control" name="gps">
+                            <option value="0" {{ old('gps')=='0' ? 'selected' : '' }}>No</option>
+                            <option value="1" {{ old('gps')=='1' ? 'selected' : '' }}>Yes</option>
+                        </select>
+                        @error('gps')
+                        <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label">Car Contract Document</label>
+                        <input type="file" class="form-control" name="car_contract_document"
+                            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                    </div>
+                @endif
+
+            </div>
+        </div>
+
+        @if ($type == 'car' || $type == 'hotel' || $type == 'apartment')
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>{{ ucfirst($type) }} Features</h5>
+            </div>
+            <div class="card-body row g-3">
+                <div class="col-12">
+                    @if($features->count() > 0)
+                    <div class="row">
+                        @foreach($features as $feature)
+                        <div class="col-md-4 mb-2">
+                            <div class="form-check d-flex align-items-center" style="cursor: pointer;">
+                                <input class="form-check-input me-2" type="checkbox" name="features[]"
+                                    value="{{ $feature->id }}" id="feature-{{ $feature->id }}" {{ in_array($feature->id,
+                                old('features', [])) ? 'checked' : '' }}>
+                                <label class="form-check-label d-flex align-items-center"
+                                    for="feature-{{ $feature->id }}" style="cursor: pointer;">
+                                    <i class="mdi {{ $feature->icon }} me-2"
+                                        style="font-size: 1.2rem; cursor: pointer;"></i>
+                                    {{ $feature->name }}
+                                </label>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                    @else
+                    <div class="alert alert-info">
+                        <i class="mdi mdi-information-outline me-2"></i>
+                        No {{ $type }} features available. <a href="{{ route('admin.features') }}"
+                            class="alert-link">Add some features</a> first.
+                    </div>
+                    @endif
+                    @error('features')
+                    <div class="text-danger">{{ $message }}</div>
+                    @enderror
                 </div>
             </div>
         </div>
-    </div>
+        @endif
 
-    <!-- Page Content -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Hotel Information - Step 1: General</h5>
-                </div>
-                <div class="card-body">
-                    <form id="hotelForm" action="{{ route('admin.hotels.store') }}" method="POST" enctype="multipart/form-data">
-                        @csrf
-                        
-                        <!-- Step 1: General Information -->
-                        <div class="step-content" id="step1">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="name" class="form-label">Hotel Name <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control @error('name') is-invalid @enderror" 
-                                               id="name" name="name" value="{{ old('name') }}" required>
-                                        @error('name')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="rating" class="form-label">Rating</label>
-                                        <select class="form-select @error('rating') is-invalid @enderror" id="rating" name="rating">
-                                            <option value="">Select Rating</option>
-                                            <option value="1" {{ old('rating') == '1' ? 'selected' : '' }}>1 Star</option>
-                                            <option value="2" {{ old('rating') == '2' ? 'selected' : '' }}>2 Stars</option>
-                                            <option value="3" {{ old('rating') == '3' ? 'selected' : '' }}>3 Stars</option>
-                                            <option value="4" {{ old('rating') == '4' ? 'selected' : '' }}>4 Stars</option>
-                                            <option value="5" {{ old('rating') == '5' ? 'selected' : '' }}>5 Stars</option>
-                                        </select>
-                                        @error('rating')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                            </div>
 
-                            <div class="mb-3">
-                                <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
-                                <textarea class="form-control @error('description') is-invalid @enderror" 
-                                          id="description" name="description" rows="5" required>{{ old('description') }}</textarea>
-                                @error('description')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+        @if ($type == 'tour')
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Tour Features</h5>
+            </div>
+            <div class="card-body row g-3">
+                <div class="col-12">
+                    @if($features->count() > 0)
+                    <div class="row">
+                        @foreach($features as $feature)
+                        <div class="col-md-4 mb-2">
+                            <div class="form-check d-flex align-items-center" style="cursor: pointer;">
+                                <input class="form-check-input me-2" type="checkbox" name="features[]"
+                                    value="{{ $feature->id }}" id="feature-{{ $feature->id }}" {{ in_array($feature->id,
+                                old('features', [])) ? 'checked' : '' }}>
+                                <label class="form-check-label d-flex align-items-center"
+                                    for="feature-{{ $feature->id }}" style="cursor: pointer;">
+                                    <i class="mdi {{ $feature->icon }} me-2"
+                                        style="font-size: 1.2rem; cursor: pointer;"></i>
+                                    {{ $feature->name }}
+                                </label>
                             </div>
                         </div>
-
-                        <!-- Step 2: Location -->
-                        <div class="step-content d-none" id="step2">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="location" class="form-label">Location <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control @error('location') is-invalid @enderror" 
-                                               id="location" name="location" value="{{ old('location') }}" required>
-                                        @error('location')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="address" class="form-label">Full Address <span class="text-danger">*</span></label>
-                                        <textarea class="form-control @error('address') is-invalid @enderror" 
-                                                  id="address" name="address" rows="3" required>{{ old('address') }}</textarea>
-                                        @error('address')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="latitude" class="form-label">Latitude</label>
-                                        <input type="number" class="form-control @error('latitude') is-invalid @enderror" 
-                                               id="latitude" name="latitude" value="{{ old('latitude') }}" step="any">
-                                        @error('latitude')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="longitude" class="form-label">Longitude</label>
-                                        <input type="number" class="form-control @error('longitude') is-invalid @enderror" 
-                                               id="longitude" name="longitude" value="{{ old('longitude') }}" step="any">
-                                        @error('longitude')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Step 3: Pricing -->
-                        <div class="step-content d-none" id="step3">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="price" class="form-label">Price per Night <span class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">$</span>
-                                            <input type="number" class="form-control @error('price') is-invalid @enderror" 
-                                                   id="price" name="price" value="{{ old('price') }}" step="0.01" required>
-                                            @error('price')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="currency" class="form-label">Currency</label>
-                                        <select class="form-select @error('currency') is-invalid @enderror" id="currency" name="currency">
-                                            <option value="USD" {{ old('currency', 'USD') == 'USD' ? 'selected' : '' }}>USD</option>
-                                            <option value="EUR" {{ old('currency') == 'EUR' ? 'selected' : '' }}>EUR</option>
-                                            <option value="GBP" {{ old('currency') == 'GBP' ? 'selected' : '' }}>GBP</option>
-                                            <option value="JPY" {{ old('currency') == 'JPY' ? 'selected' : '' }}>JPY</option>
-                                        </select>
-                                        @error('currency')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Step 4: Amenities -->
-                        <div class="step-content d-none" id="step4">
-                            <div class="mb-3">
-                                <label class="form-label">Hotel Amenities</label>
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="wifi" name="amenities[]" value="wifi" {{ in_array('wifi', old('amenities', [])) ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="wifi">Free WiFi</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="pool" name="amenities[]" value="pool" {{ in_array('pool', old('amenities', [])) ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="pool">Swimming Pool</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="gym" name="amenities[]" value="gym" {{ in_array('gym', old('amenities', [])) ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="gym">Fitness Center</label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="restaurant" name="amenities[]" value="restaurant" {{ in_array('restaurant', old('amenities', [])) ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="restaurant">Restaurant</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="spa" name="amenities[]" value="spa" {{ in_array('spa', old('amenities', [])) ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="spa">Spa</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="parking" name="amenities[]" value="parking" {{ in_array('parking', old('amenities', [])) ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="parking">Parking</label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="concierge" name="amenities[]" value="concierge" {{ in_array('concierge', old('amenities', [])) ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="concierge">Concierge</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="room_service" name="amenities[]" value="room_service" {{ in_array('room_service', old('amenities', [])) ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="room_service">Room Service</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="business_center" name="amenities[]" value="business_center" {{ in_array('business_center', old('amenities', [])) ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="business_center">Business Center</label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Step 5: Media -->
-                        <div class="step-content d-none" id="step5">
-                            <div class="mb-3">
-                                <label for="images" class="form-label">Hotel Images</label>
-                                <input type="file" class="form-control @error('images') is-invalid @enderror" 
-                                       id="images" name="images[]" multiple accept="image/*">
-                                @error('images')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                                <div class="form-text">You can select multiple images</div>
-                            </div>
-                        </div>
-
-                        <!-- Step 6: Policies -->
-                        <div class="step-content d-none" id="step6">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="contact_email" class="form-label">Contact Email</label>
-                                        <input type="email" class="form-control @error('contact_email') is-invalid @enderror" 
-                                               id="contact_email" name="contact_email" value="{{ old('contact_email') }}">
-                                        @error('contact_email')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="contact_phone" class="form-label">Contact Phone</label>
-                                        <input type="tel" class="form-control @error('contact_phone') is-invalid @enderror" 
-                                               id="contact_phone" name="contact_phone" value="{{ old('contact_phone') }}">
-                                        @error('contact_phone')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="1" 
-                                           {{ old('is_active', true) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_active">
-                                        Active (Hotel will be visible to customers)
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Navigation Buttons -->
-                        <div class="d-flex justify-content-between mt-4">
-                            <button type="button" class="btn btn-secondary" id="prevBtn" onclick="changeStep(-1)" style="display: none;">
-                                <i class="ti ti-arrow-left"></i> Previous
-                            </button>
-                            <div class="ms-auto">
-                                <button type="button" class="btn btn-primary" id="nextBtn" onclick="changeStep(1)">
-                                    Next <i class="ti ti-arrow-right"></i>
-                                </button>
-                                <button type="submit" class="btn btn-success d-none" id="submitBtn">
-                                    <i class="ti ti-device-floppy"></i> Save Hotel
-                                </button>
-                            </div>
-                        </div>
-                    </form>
+                        @endforeach
+                    </div>
+                    @else
+                    <div class="alert alert-info">
+                        <i class="mdi mdi-information-outline me-2"></i>
+                        No tour features available. <a href="{{ route('admin.features') }}" class="alert-link">Add some
+                            tour features</a> first.
+                    </div>
+                    @endif
+                    @error('features')
+                    <div class="text-danger">{{ $message }}</div>
+                    @enderror
                 </div>
             </div>
         </div>
-    </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Tour Includes</h5>
+            </div>
+            <div class="card-body row g-3">
+                <div class="col-12">
+                    @if($tourIncludes->count() > 0)
+                    <div class="row">
+                        @foreach($tourIncludes as $include)
+                        <div class="col-md-4 mb-2">
+                            <div class="form-check d-flex align-items-center" style="cursor: pointer;">
+                                <input class="form-check-input me-2" type="checkbox" name="tour_includes[]"
+                                    value="{{ $include->name }}" id="tour-include-{{ $include->id }}" {{
+                                    in_array($include->name, old('tour_includes', [])) ? 'checked' : '' }}>
+                                <label class="form-check-label d-flex align-items-center"
+                                    for="tour-include-{{ $include->id }}" style="cursor: pointer;">
+                                    <i class="mdi {{ $include->icon }} me-2"
+                                        style="font-size: 1.2rem; cursor: pointer;"></i>
+                                    {{ $include->name }}
+                                </label>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                    @else
+                    <div class="alert alert-info">
+                        <i class="mdi mdi-information-outline me-2"></i>
+                        No tour includes available. <a href="{{ route('admin.features') }}" class="alert-link">Add some
+                            include features</a> first.
+                    </div>
+                    @endif
+                    @error('tour_includes')
+                    <div class="text-danger">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Tour Excludes</h5>
+            </div>
+            <div class="card-body row g-3">
+                <div class="col-12">
+                    @if($tourExcludes->count() > 0)
+                    <div class="row">
+                        @foreach($tourExcludes as $exclude)
+                        <div class="col-md-4 mb-2">
+                            <div class="form-check d-flex align-items-center" style="cursor: pointer;">
+                                <input class="form-check-input me-2" type="checkbox" name="tour_excludes[]"
+                                    value="{{ $exclude->name }}" id="tour-exclude-{{ $exclude->id }}" {{
+                                    in_array($exclude->name, old('tour_excludes', [])) ? 'checked' : '' }}>
+                                <label class="form-check-label d-flex align-items-center"
+                                    for="tour-exclude-{{ $exclude->id }}" style="cursor: pointer;">
+                                    <i class="mdi {{ $exclude->icon }} me-2"
+                                        style="font-size: 1.2rem; cursor: pointer;"></i>
+                                    {{ $exclude->name }}
+                                </label>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                    @else
+                    <div class="alert alert-info">
+                        <i class="mdi mdi-information-outline me-2"></i>
+                        No tour excludes available. <a href="{{ route('admin.features') }}" class="alert-link">Add some
+                            exclude features</a> first.
+                    </div>
+                    @endif
+                    @error('tour_excludes')
+                    <div class="text-danger">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+        </div>
+        @endif
+
+        <!-- Location Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Location</h5>
+            </div>
+            <div class="card-body row g-3">
+                <div class="col-md-12">
+                    <label class="form-label">Location (Search on Map)</label>
+                    <input type="text" class="form-control" id="location-input" name="location"
+                        value="{{ old('location') }}" placeholder="Search for a place...">
+                    @error('location')
+                    <div class="text-danger">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Latitude</label>
+                    <input type="text" class="form-control" id="lat-input" name="lat" value="{{ old('lat') }}"
+                        placeholder="Latitude" readonly>
+                    @error('lat')
+                    <div class="text-danger">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Longitude</label>
+                    <input type="text" class="form-control" id="lng-input" name="long" value="{{ old('long') }}"
+                        placeholder="Longitude" readonly>
+                    @error('long')
+                    <div class="text-danger">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label">Map Location (Address)</label>
+                    <input type="text" class="form-control" id="map-location-input" name="map_location"
+                        value="{{ old('map_location') }}" placeholder="Map location address" readonly>
+                    @error('map_location')
+                    <div class="text-danger">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="col-md-12">
+                    <div id="map" style="height: 300px; width: 100%; background: #eaeaea; border-radius: 8px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Images Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Images</h5>
+            </div>
+            <div class="card-body row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Cover Photo</label>
+                    <input type="file" class="form-control" name="cover_photo" id="cover-photo-input" accept="image/*">
+                    <div class="mt-2" id="cover-photo-preview">
+                        <!-- Placeholder image preview, will be replaced on file select -->
+                        <img src="https://media.istockphoto.com/id/1147544807/vector/thumbnail-image-vector-graphic.jpg?s=612x612&w=0&k=20&c=rnCKVbdxqkjlcs3xH87-9gocETqpspHFXu5dIGB4wuM="
+                            alt="Cover Preview" style="width:100px; height:75px; object-fit:cover; border-radius:4px;">
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label">Other Images</label>
+                    <div class="border rounded p-3" style="min-height: 120px; background: #f8f9fa;">
+                        <input type="file" class="form-control mb-2" name="other_images[]" id="other-images-input"
+                            accept="image/*" multiple>
+                        <div class="d-flex flex-wrap gap-2" id="other-images-preview">
+                            @for ($i = 0; $i < 6; $i++) <img
+                                src="https://media.istockphoto.com/id/1147544807/vector/thumbnail-image-vector-graphic.jpg?s=612x612&w=0&k=20&c=rnCKVbdxqkjlcs3xH87-9gocETqpspHFXu5dIGB4wuM="
+                                alt="Image 1" style="width:100px; height:75px; object-fit:cover; border-radius:4px;">
+                                @endfor
+                        </div>
+                    </div>
+                    <small class="text-muted">You can drop or select multiple images.</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status & Submit Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Status & Submit</h5>
+            </div>
+            <div class="card-body row g-3 align-items-end">
+                <div class="col-md-6">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" name="status">
+                        <option value="publish" {{ old('status', 'publish' )=='publish' ? 'selected' : '' }}>Publish
+                        </option>
+                        <option value="draft" {{ old('status')=='draft' ? 'selected' : '' }}>Draft</option>
+                    </select>
+                    @error('status')
+                    <div class="text-danger">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="col-md-6 text-end">
+                    <button type="submit" class="btn btn-primary">Create Deal</button>
+                </div>
+            </div>
+        </div>
+    </form>
 </div>
 
-<style>
-.step-item {
-    text-align: center;
-    flex: 1;
-}
-
-.step-item.clickable {
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.step-item.clickable:hover {
-    transform: translateY(-2px);
-}
-
-.step-item.clickable:hover .step-number {
-    background-color: #0b5ed7;
-    color: white;
-    transform: scale(1.1);
-}
-
-.step-number {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background-color: #e9ecef;
-    color: #6c757d;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 8px;
-    font-weight: bold;
-    transition: all 0.3s ease;
-}
-
-.step-item.active .step-number {
-    background-color: #0d6efd;
-    color: white;
-}
-
-.step-item.completed .step-number {
-    background-color: #198754;
-    color: white;
-}
-
-.step-label {
-    font-size: 14px;
-    color: #6c757d;
-    font-weight: 500;
-    transition: color 0.3s ease;
-}
-
-.step-item.active .step-label {
-    color: #0d6efd;
-    font-weight: 600;
-}
-
-.step-item.completed .step-label {
-    color: #198754;
-    font-weight: 600;
-}
-
-.step-item.clickable:hover .step-label {
-    color: #0b5ed7;
-    font-weight: 600;
-}
-
-.step-line {
-    flex: 1;
-    height: 2px;
-    background-color: #e9ecef;
-    margin: 0 10px;
-    margin-top: 20px;
-    transition: background-color 0.3s ease;
-}
-
-.step-line.completed {
-    background-color: #198754;
-}
-
-.step-content {
-    min-height: 400px;
-}
-</style>
-
+@push('scripts')
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 <script>
-let currentStep = 1;
-const totalSteps = 6;
-
-function changeStep(direction) {
-    const prevStep = currentStep;
-    currentStep += direction;
-    
-    if (currentStep < 1) currentStep = 1;
-    if (currentStep > totalSteps) currentStep = totalSteps;
-    
-    // Update step indicators
-    updateStepIndicators();
-    
-    // Show/hide step content
-    document.getElementById(`step${prevStep}`).classList.add('d-none');
-    document.getElementById(`step${currentStep}`).classList.remove('d-none');
-    
-    // Update navigation buttons
-    updateNavigationButtons();
-}
-
-function jumpToStep(stepNumber) {
-    if (stepNumber < 1 || stepNumber > totalSteps) return;
-    
-    const prevStep = currentStep;
-    currentStep = stepNumber;
-    
-    // Update step indicators
-    updateStepIndicators();
-    
-    // Show/hide step content
-    document.getElementById(`step${prevStep}`).classList.add('d-none');
-    document.getElementById(`step${currentStep}`).classList.remove('d-none');
-    
-    // Update navigation buttons
-    updateNavigationButtons();
-    
-    // Update card header title
-    updateCardHeader();
-}
-
-function updateStepIndicators() {
-    for (let i = 1; i <= totalSteps; i++) {
-        const stepItem = document.querySelector(`.step-item:nth-child(${i * 2 - 1})`);
-        const stepLine = document.querySelector(`.step-line:nth-child(${i * 2})`);
-        
-        // Remove all classes
-        stepItem.classList.remove('active', 'completed');
-        if (stepLine) stepLine.classList.remove('completed');
-        
-        if (i < currentStep) {
-            // Completed steps
-            stepItem.classList.add('completed');
-            if (stepLine) stepLine.classList.add('completed');
-        } else if (i === currentStep) {
-            // Current step
-            stepItem.classList.add('active');
+    // Cover photo preview
+    document.getElementById('cover-photo-input').addEventListener('change', function(e) {
+        const preview = document.getElementById('cover-photo-preview');
+        preview.innerHTML = '';
+        if (e.target.files && e.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                const img = document.createElement('img');
+                img.src = ev.target.result;
+                img.style.width = '100px';
+                img.style.height = '75px';
+                img.style.objectFit = 'cover';
+                img.style.borderRadius = '4px';
+                preview.appendChild(img);
+            }
+            reader.readAsDataURL(e.target.files[0]);
         }
+    });
+
+    // Other images preview
+    document.getElementById('other-images-input').addEventListener('change', function(e) {
+        const preview = document.getElementById('other-images-preview');
+        preview.innerHTML = '';
+        if (e.target.files) {
+            Array.from(e.target.files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    const img = document.createElement('img');
+                    img.src = ev.target.result;
+                    img.style.width = '100px';
+                    img.style.height = '75px';
+                    img.style.objectFit = 'cover';
+                    img.style.borderRadius = '4px';
+                    img.classList.add('me-2');
+                    preview.appendChild(img);
+                }
+                reader.readAsDataURL(file);
+            });
+        }
+    });
+
+    // Quill editor config for Description and Policies
+    // Add image insert, alignment, and resizing support to Quill toolbar
+    var quillToolbarOptions = [
+        [{ 'header': [1, 2, false] }],
+        ['bold', 'italic', 'underline', 'link', 'image'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'align': [] }],
+        ['clean']
+    ];
+
+    // Register align style for image positioning
+    var AlignStyle = Quill.import('attributors/style/align');
+    Quill.register(AlignStyle, true);
+
+    // Add custom image handler for inserting images
+    function imageHandler() {
+        const range = this.quill.getSelection();
+        const input = document.createElement('input');
+        input.setAttribute('type', 'file');
+        input.setAttribute('accept', 'image/*');
+        input.click();
+
+        input.onchange = () => {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const base64ImageSrc = e.target.result;
+                    this.quill.insertEmbed(range.index, 'image', base64ImageSrc, Quill.sources.USER);
+                    // Optionally, insert a newline after image
+                    this.quill.insertText(range.index + 1, '\n', Quill.sources.SILENT);
+                };
+                reader.readAsDataURL(file);
+            }
+        };
     }
-}
 
-function updateNavigationButtons() {
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    const submitBtn = document.getElementById('submitBtn');
-    
-    prevBtn.style.display = currentStep === 1 ? 'none' : 'block';
-    
-    if (currentStep === totalSteps) {
-        nextBtn.classList.add('d-none');
-        submitBtn.classList.remove('d-none');
-    } else {
-        nextBtn.classList.remove('d-none');
-        submitBtn.classList.add('d-none');
+    // Add image resize and alignment support using quill-image-resize-module (must be included in your project)
+    // If not included, resizing will not work, but alignment and width can be set via custom UI below
+
+    var descriptionQuill = new Quill('#description-editor', {
+        theme: 'snow',
+        modules: {
+            toolbar: quillToolbarOptions
+        }
+    });
+    var policiesQuill = new Quill('#policies-editor', {
+        theme: 'snow',
+        modules: {
+            toolbar: quillToolbarOptions
+        }
+    });
+
+    // Set initial content from textarea
+    descriptionQuill.root.innerHTML = document.getElementById('description').value;
+    policiesQuill.root.innerHTML = document.getElementById('policies').value;
+
+    // On form submit, update textarea values with Quill HTML
+    document.getElementById('dealForm').addEventListener('submit', function(e) {
+        document.getElementById('description').value = descriptionQuill.root.innerHTML;
+        document.getElementById('policies').value = policiesQuill.root.innerHTML;
+    });
+
+    // Google Maps Places Autocomplete and marker
+    let map, marker, autocomplete;
+    function initMap() {
+        // Use placeholder values if no lat/lng provided
+        const latValue = document.getElementById('lat-input').value;
+        const lngValue = document.getElementById('lng-input').value;
+        const initialLatLng = { 
+            lat: latValue ? parseFloat(latValue) : 0, 
+            lng: lngValue ? parseFloat(lngValue) : 0 
+        };
+        map = new google.maps.Map(document.getElementById('map'), {
+            center: initialLatLng,
+            zoom: 13
+        });
+        marker = new google.maps.Marker({
+            position: initialLatLng,
+            map: map,
+            draggable: true
+        });
+
+        // Update lat/lng on marker drag
+        marker.addListener('dragend', function() {
+            const pos = marker.getPosition();
+            document.getElementById('lat-input').value = pos.lat();
+            document.getElementById('lng-input').value = pos.lng();
+            geocodeLatLng(pos);
+        });
+
+        // Autocomplete
+        autocomplete = new google.maps.places.Autocomplete(document.getElementById('location-input'));
+        autocomplete.addListener('place_changed', function() {
+            const place = autocomplete.getPlace();
+            if (!place.geometry) return;
+            map.setCenter(place.geometry.location);
+            marker.setPosition(place.geometry.location);
+            document.getElementById('lat-input').value = place.geometry.location.lat();
+            document.getElementById('lng-input').value = place.geometry.location.lng();
+            document.getElementById('map-location-input').value = place.formatted_address || '';
+        });
     }
-}
 
-function updateCardHeader() {
-    const stepNames = ['General', 'Location', 'Pricing', 'Amenities', 'Media', 'Policies'];
-    const cardTitle = document.querySelector('.card-header h5');
-    cardTitle.textContent = `Hotel Information - Step ${currentStep}: ${stepNames[currentStep - 1]}`;
-}
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    updateStepIndicators();
-    updateNavigationButtons();
-    updateCardHeader();
-});
+    // Reverse geocode for marker drag
+    function geocodeLatLng(latlng) {
+        const geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ location: latlng }, (results, status) => {
+            if (status === "OK" && results[0]) {
+                document.getElementById('map-location-input').value = results[0].formatted_address;
+                document.getElementById('location-input').value = results[0].formatted_address;
+            }
+        });
+    }
 </script>
+<script
+    src="https://maps.googleapis.com/maps/api/js?key={{ env('GOOGLE_MAPS_API_KEY') }}&libraries=places&callback=initMap"
+    async defer></script>
+@endpush
 @endsection
