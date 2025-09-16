@@ -51,13 +51,6 @@ Route::get('/admin/apartments/{id}/edit', [AdminController::class, 'editApartmen
 Route::put('/admin/apartments/{id}', [AdminController::class, 'updateApartment'])->name('admin.apartments.update');
 Route::delete('/admin/apartments/{id}', [AdminController::class, 'deleteApartment'])->name('admin.apartments.delete');
 
-// Cars Management
-Route::get('/admin/cars', [AdminController::class, 'cars'])->name('admin.cars');
-Route::get('/admin/cars/create', [AdminController::class, 'createCar'])->name('admin.cars.create');
-Route::post('/admin/cars/store', [AdminController::class, 'storeCar'])->name('admin.cars.store');
-Route::get('/admin/cars/{id}/edit', [AdminController::class, 'editCar'])->name('admin.cars.edit');
-Route::put('/admin/cars/{id}', [AdminController::class, 'updateCar'])->name('admin.cars.update');
-Route::delete('/admin/cars/{id}', [AdminController::class, 'deleteCar'])->name('admin.cars.delete');
 
 // Tours Management
 Route::get('/admin/tours', [AdminController::class, 'tours'])->name('admin.tours');
@@ -144,3 +137,11 @@ Route::post('/admin/hotels/{hotel_id}/rooms', [DealsController::class, 'storeRoo
 Route::get('/admin/hotels/{hotel_id}/rooms/{room_id}/edit', [DealsController::class, 'editRoom'])->name('admin.rooms.edit');
 Route::put('/admin/hotels/{hotel_id}/rooms/{room_id}', [DealsController::class, 'updateRoom'])->name('admin.rooms.update');
 Route::delete('/admin/hotels/{hotel_id}/rooms/{room_id}', [DealsController::class, 'deleteRoom'])->name('admin.rooms.delete');
+
+// Cars Management
+Route::get('/admin/cars', [DealsController::class, 'cars'])->name('admin.cars');
+Route::get('/admin/cars/create', [DealsController::class, 'createCar'])->name('admin.cars.create');
+Route::post('/admin/cars/store', [DealsController::class, 'storeCar'])->name('admin.cars.store');
+Route::get('/admin/cars/{id}/edit', [DealsController::class, 'editCar'])->name('admin.cars.edit');
+Route::put('/admin/cars/{id}', [DealsController::class, 'updateCar'])->name('admin.cars.update');
+Route::delete('/admin/cars/{id}', [DealsController::class, 'deleteCar'])->name('admin.cars.delete');

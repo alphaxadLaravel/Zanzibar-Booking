@@ -5,17 +5,15 @@
 @section('content')
 <div class="container-fluid">
     <!-- Page Header -->
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box">
-                <div class="page-title-right">
-                    <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Tours</li>
-                    </ol>
-                </div>
-                <h4 class="page-title">All Tours</h4>
-            </div>
+    <div class="row align-items-center mb-3">
+        <div class="col d-flex justify-content-between align-items-center flex-wrap">
+            <h4 class="page-title mb-0">All Tours</h4>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb m-0 bg-transparent p-0">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Tours</li>
+                </ol>
+            </nav>
         </div>
     </div>
 
@@ -23,28 +21,16 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
-                    <div class="row align-items-center">
-                        <div class="col">
-                            <h5 class="card-title mb-0">Tours Management</h5>
-                        </div>
-                        <div class="col-auto">
-                            <a href="{{ route('admin.tours.create') }}" class="btn btn-primary">
-                                <i class="ti ti-plus"></i> Add New Tour
-                            </a>
-                        </div>
-                    </div>
-                </div>
+               
                 <div class="card-body">
-                    <!-- Success Message -->
-                    @if(session('success'))
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            {{ session('success') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    @endif
-
-                    <!-- Tours Table -->
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h5 class="card-title mb-0">Tours Management</h5>
+                        <a href="{{ route('admin.manage-deal', 'tour') }}" class="btn btn-primary">
+                            <i class="ti ti-plus"></i> Add New Tour
+                        </a>
+                    </div>
+                    <hr>
+                    
                     <div class="table-responsive">
                         <table class="table table-striped table-hover">
                             <thead>

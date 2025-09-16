@@ -244,7 +244,15 @@ class DealsController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.hotels')->with('success', 'Deal created successfully!');
+            // Redirect based on deal type
+            $redirectRoute = match($type) {
+                'car' => 'admin.cars',
+                'tour' => 'admin.tours',
+                'hotel', 'apartment' => 'admin.hotels',
+                default => 'admin.hotels'
+            };
+            
+            return redirect()->route($redirectRoute)->with('success', 'Deal created successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Failed to create deal: ' . $e->getMessage())->withInput();
@@ -518,7 +526,15 @@ class DealsController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.hotels')->with('success', 'Deal updated successfully!');
+            // Redirect based on deal type
+            $redirectRoute = match($type) {
+                'car' => 'admin.cars',
+                'tour' => 'admin.tours',
+                'hotel', 'apartment' => 'admin.hotels',
+                default => 'admin.hotels'
+            };
+            
+            return redirect()->route($redirectRoute)->with('success', 'Deal updated successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Failed to update deal: ' . $e->getMessage())->withInput();
@@ -826,6 +842,76 @@ class DealsController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Failed to delete room: ' . $e->getMessage());
+        }
+    }
+
+    // Cars Management
+    public function cars()
+    {
+        $hashids = new Hashids('MchungajiZanzibarBookings', 10);
+
+        $cars = Deal::with(['car', 'category', 'photos'])
+            ->where('type', 'car')
+            ->whereHas('car') // Only get deals that have car data
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
+        return view('admin.pages.cars.index', compact('cars', 'hashids'));
+    }
+
+    public function createCar()
+    {
+        // Redirect to the existing manageDeal method for car type
+        return $this->manageDeal('car');
+    }
+
+    public function storeCar(Request $request)
+    {
+        // Redirect to the existing storeDeal method for car type
+        return $this->storeDeal($request, 'car');
+    }
+
+    public function editCar($id)
+    {
+        // Redirect to the existing editDeal method for car type
+        return $this->editDeal($id, 'car');
+    }
+
+    public function updateCar(Request $request, $id)
+    {
+        // Redirect to the existing updateDeal method for car type
+        return $this->updateDeal($request, $id, 'car');
+    }
+
+    public function deleteCar($id)
+    {
+        try {
+            $deal = Deal::where('type', 'car')->findOrFail($id);
+            
+            // Delete associated car data
+            if ($deal->car) {
+                $deal->car->delete();
+            }
+            
+            // Delete associated photos
+            foreach ($deal->photos as $photo) {
+                if (Storage::exists($photo->photo)) {
+                    Storage::delete($photo->photo);
+                }
+                $photo->delete();
+            }
+            
+            // Delete cover photo
+            if ($deal->cover_photo && Storage::exists($deal->cover_photo)) {
+                Storage::delete($deal->cover_photo);
+            }
+            
+            // Delete the deal
+            $deal->delete();
+            
+            return redirect()->route('admin.cars')->with('success', 'Car deleted successfully!');
+        } catch (\Exception $e) {
+            return redirect()->route('admin.cars')->with('error', 'Failed to delete car: ' . $e->getMessage());
         }
     }
 }

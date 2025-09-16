@@ -41,19 +41,19 @@
                 </a>
             </li>
 
-            <!-- CARS -->
-            <li class="side-nav-item">
-                <a href="{{ route('admin.cars') }}" class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-car"></i></span>
-                    <span class="menu-text">Cars</span>
-                </a>
-            </li>
-
             <!-- TOURS -->
             <li class="side-nav-item">
                 <a href="{{ route('admin.tours') }}" class="side-nav-link">
                     <span class="menu-icon"><i class="mdi mdi-map-marker-radius"></i></span>
                     <span class="menu-text">Tours</span>
+                </a>
+            </li>
+
+            <!-- CARS -->
+            <li class="side-nav-item">
+                <a href="{{ route('admin.cars') }}" class="side-nav-link">
+                    <span class="menu-icon"><i class="mdi mdi-car"></i></span>
+                    <span class="menu-text">Cars</span>
                 </a>
             </li>
 

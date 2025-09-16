@@ -60,39 +60,6 @@ class AdminController extends Controller
         return redirect()->route('admin.apartments')->with('success', 'Apartment deleted successfully!');
     }
 
-    // Cars Management
-    public function cars()
-    {
-        return view('admin.pages.cars.index');
-    }
-
-    public function createCar()
-    {
-        return view('admin.pages.cars.create');
-    }
-
-    public function storeCar(Request $request)
-    {
-        // Add car creation logic here
-        return redirect()->route('admin.cars')->with('success', 'Car created successfully!');
-    }
-
-    public function editCar($id)
-    {
-        return view('admin.pages.cars.edit', compact('id'));
-    }
-
-    public function updateCar(Request $request, $id)
-    {
-        // Add car update logic here
-        return redirect()->route('admin.cars')->with('success', 'Car updated successfully!');
-    }
-
-    public function deleteCar($id)
-    {
-        // Add car deletion logic here
-        return redirect()->route('admin.cars')->with('success', 'Car deleted successfully!');
-    }
 
     // Tours Management
     public function tours()
