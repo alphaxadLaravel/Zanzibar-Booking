@@ -130,13 +130,10 @@ Route::put('/admin/features/{id}/toggle-status', [FeatureController::class, 'tog
 
 // hotels management
 Route::get('/admin/hotels', [DealsController::class, 'hotels'])->name('admin.hotels');
-Route::get('/admin/hotels/create', [DealsController::class, 'createHotel'])->name('admin.hotels.create');
-Route::post('/admin/hotels/store', [DealsController::class, 'storeHotel'])->name('admin.hotels.store');
-Route::get('/admin/hotels/{id}/edit', [DealsController::class, 'editHotel'])->name('admin.hotels.edit');
-Route::put('/admin/hotels/{id}', [DealsController::class, 'updateHotel'])->name('admin.hotels.update');
 Route::delete('/admin/hotels/{id}', [DealsController::class, 'deleteHotel'])->name('admin.hotels.delete');
 
-
-// manage deal
+// manage deal (create and edit) - specific routes first
+Route::get('/admin/manage-deal/{id}/{type}/edit', [DealsController::class, 'editDeal'])->name('admin.manage-deal.edit');
+Route::put('/admin/manage-deal/{id}/{type}/update', [DealsController::class, 'updateDeal'])->name('admin.manage-deal.update');
 Route::get('/admin/manage-deal/{type}', [DealsController::class, 'manageDeal'])->name('admin.manage-deal');
 Route::post('/admin/manage-deal/{type}/store', [DealsController::class, 'storeDeal'])->name('admin.manage-deal.store');

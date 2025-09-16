@@ -49,15 +49,14 @@
                                     <td>{{ $index + 1 }}</td>
                                     <td>
                                         @if($hotel->cover_photo)
-                                            <img src="{{ asset('storage/' . $hotel->cover_photo) }}" 
-                                                 alt="{{ $hotel->title }}" 
-                                                 class="rounded" 
-                                                 style="width: 50px; height: 50px; object-fit: cover;">
+                                        <img src="{{ asset('storage/' . $hotel->cover_photo) }}"
+                                            alt="{{ $hotel->title }}" class="rounded"
+                                            style="width: 50px; height: 50px; object-fit: cover;">
                                         @else
-                                            <div class="bg-light rounded d-flex align-items-center justify-content-center" 
-                                                 style="width: 50px; height: 50px;">
-                                                <i class="ti ti-hotel text-muted"></i>
-                                            </div>
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                                            style="width: 50px; height: 50px;">
+                                            <i class="ti ti-hotel text-muted"></i>
+                                        </div>
                                         @endif
                                     </td>
                                     <td>
@@ -75,26 +74,20 @@
                                     <td>${{ number_format($hotel->base_price, 2) }}/night</td>
                                     <td>
                                         @if($hotel->status)
-                                            <span class="badge bg-success">Active</span>
+                                        <span class="badge bg-success">Active</span>
                                         @else
-                                            <span class="badge bg-secondary">Inactive</span>
+                                        <span class="badge bg-secondary">Inactive</span>
                                         @endif
                                     </td>
                                     <td>
-                                        <div class="btn-group" role="group">
-                                            <a href="{{ route('admin.hotels.rooms', $hotel->id) }}"
-                                                class="btn btn-sm btn-outline-info" title="Manage Rooms">
-                                                <i class="ti ti-bed"></i>
-                                            </a>
-                                            <a href="{{ route('admin.hotels.edit', $hotel->id) }}"
-                                                class="btn btn-sm btn-outline-primary">
-                                                <i class="ti ti-edit"></i>
-                                            </a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger"
-                                                onclick="deleteHotel({{ $hotel->id }})">
-                                                <i class="ti ti-trash"></i>
-                                            </button>
-                                        </div>
+                                        <a href="{{ route('admin.manage-deal.edit', [$hashids->encode($hotel->id), 'hotel']) }}"
+                                            class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                                            <i class="mdi mdi-pencil"></i>
+                                        </a>
+                                        <a href="{{ route('admin.hotels.rooms', $hotel->id) }}"
+                                            class="btn btn-sm btn-outline-info" title="View">
+                                            Manage Hotel
+                                        </a>
                                     </td>
                                 </tr>
                                 @empty
@@ -144,7 +137,7 @@
 </div>
 
 {{-- <script>
-function deleteHotel(hotelId) {
+    function deleteHotel(hotelId) {
     const deleteForm = document.getElementById('deleteForm');
     deleteForm.action = "{{ route('admin.hotels.delete', '') }}/" + hotelId;
     const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
