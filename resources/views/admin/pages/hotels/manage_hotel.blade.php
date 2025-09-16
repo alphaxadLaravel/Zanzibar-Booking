@@ -1,6 +1,6 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Hotel Rooms')
+@section('title', 'Manage Hotel')
 
 @section('content')
 <div class="container-fluid">
@@ -24,7 +24,7 @@
                     <div style="flex: 0 0 120px; max-width: 120px;">
                         @if(isset($hotel) && $hotel->cover_photo)
                         <img src="{{ asset('storage/' . $hotel->cover_photo) }}" alt="{{ $hotel->title }}"
-                            class="img-fluid rounded" style="max-height: 100px;">
+                            class="img-fluid rounded" style="max-height: 100px; width: 100px; object-fit: cover;">
                         @else
                         <div class="bg-light rounded d-flex align-items-center justify-content-center"
                             style="height: 100px;">

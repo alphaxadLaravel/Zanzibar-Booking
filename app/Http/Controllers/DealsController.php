@@ -10,6 +10,7 @@ use App\Models\Tours;
 use App\Models\Car;
 use App\Models\DealPhotos;
 use App\Models\TourInclude;
+use App\Models\TourItenary;
 use App\Models\Room;
 use App\Models\RoomPhotos;
 use Hashids\Hashids;
@@ -1058,6 +1059,126 @@ class DealsController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Failed to delete tour: ' . $e->getMessage());
+        }
+    }
+
+    // manageTour
+    public function manageTour($id)
+    {
+        $hashids = new Hashids('MchungajiZanzibarBookings', 10);
+        $decodedTourId = $hashids->decode($id)[0];
+
+        $tour = Deal::with(['category', 'tours', 'photos', 'itineraries'])
+            ->where('type', 'tour')
+            ->find($decodedTourId);
+
+        if (!$tour) {
+            return redirect()->back()->with('error', 'Tour not found');
+        }
+
+        return view('admin.pages.tours.manage_tours', compact('tour', 'hashids'));
+    }
+
+    // Itinerary CRUD Methods
+    public function getItinerary($tourId, $itineraryId)
+    {
+        $hashids = new Hashids('MchungajiZanzibarBookings', 10);
+        $decodedTourId = $hashids->decode($tourId)[0];
+        $decodedItineraryId = $hashids->decode($itineraryId)[0];
+
+        $itinerary = TourItenary::where('deal_id', $decodedTourId)->find($decodedItineraryId);
+        
+        if (!$itinerary) {
+            return response()->json(['error' => 'Itinerary item not found'], 404);
+        }
+
+        return response()->json([
+            'id' => $itinerary->id,
+            'title' => $itinerary->title,
+            'description' => $itinerary->description,
+            'time' => $itinerary->time,
+            'location' => $itinerary->location
+        ]);
+    }
+
+    public function storeItinerary(Request $request, $tourId)
+    {
+        $hashids = new Hashids('MchungajiZanzibarBookings', 10);
+        $decodedTourId = $hashids->decode($tourId)[0];
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'time' => 'nullable|string|max:100',
+            'location' => 'nullable|string|max:255'
+        ]);
+
+        try {
+            TourItenary::create([
+                'deal_id' => $decodedTourId,
+                'title' => $request->title,
+                'description' => $request->description,
+                'time' => $request->time,
+                'location' => $request->location
+            ]);
+
+            return redirect()->back()->with('success', 'Itinerary item added successfully!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to add itinerary item: ' . $e->getMessage());
+        }
+    }
+
+    public function updateItinerary(Request $request, $tourId, $itineraryId)
+    {
+        $hashids = new Hashids('MchungajiZanzibarBookings', 10);
+        $decodedTourId = $hashids->decode($tourId)[0];
+        $decodedItineraryId = $hashids->decode($itineraryId)[0];
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'time' => 'nullable|string|max:100',
+            'location' => 'nullable|string|max:255'
+        ]);
+
+        try {
+            $itinerary = TourItenary::where('deal_id', $decodedTourId)->find($decodedItineraryId);
+            
+            if (!$itinerary) {
+                return redirect()->back()->with('error', 'Itinerary item not found');
+            }
+
+            $itinerary->update([
+                'title' => $request->title,
+                'description' => $request->description,
+                'time' => $request->time,
+                'location' => $request->location
+            ]);
+
+            return redirect()->back()->with('success', 'Itinerary item updated successfully!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to update itinerary item: ' . $e->getMessage());
+        }
+    }
+
+    public function deleteItinerary($tourId, $itineraryId)
+    {
+        $hashids = new Hashids('MchungajiZanzibarBookings', 10);
+        $decodedTourId = $hashids->decode($tourId)[0];
+        $decodedItineraryId = $hashids->decode($itineraryId)[0];
+
+        try {
+            $itinerary = TourItenary::where('deal_id', $decodedTourId)->find($decodedItineraryId);
+            
+            if (!$itinerary) {
+                return redirect()->back()->with('error', 'Itinerary item not found');
+            }
+
+            $itinerary->delete();
+
+            return redirect()->back()->with('success', 'Itinerary item deleted successfully!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to delete itinerary item: ' . $e->getMessage());
         }
     }
 }

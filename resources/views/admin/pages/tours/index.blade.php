@@ -106,7 +106,7 @@ use Illuminate\Support\Facades\Storage;
                                                 class="btn btn-sm btn-outline-primary" title="Edit Tour">
                                                 <i class="mdi mdi-pencil"></i> Edit
                                             </a>
-                                            <a href="{{ route('admin.manage-deal', ['tour', $hashids->encode($tour->id)]) }}"
+                                            <a href="{{ route('admin.tours.manage', $hashids->encode($tour->id)) }}"
                                                 class="btn btn-sm btn-outline-info" title="Manage Tour">
                                                 <i class="mdi mdi-cog"></i> Manage Tour
                                             </a>

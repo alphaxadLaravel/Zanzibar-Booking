@@ -146,3 +146,12 @@ Route::post('/admin/tours/store', [DealsController::class, 'storeTour'])->name('
 Route::get('/admin/tours/{id}/edit', [DealsController::class, 'editTour'])->name('admin.tours.edit');
 Route::put('/admin/tours/{id}', [DealsController::class, 'updateTour'])->name('admin.tours.update');
 Route::delete('/admin/tours/{id}', [DealsController::class, 'deleteTour'])->name('admin.tours.delete');
+
+// Tour Management
+Route::get('/admin/tours/{id}/manage', [DealsController::class, 'manageTour'])->name('admin.tours.manage');
+
+// Tour Itinerary CRUD
+Route::post('/admin/tours/{tourId}/itinerary', [DealsController::class, 'storeItinerary'])->name('admin.tours.itinerary.store');
+Route::get('/admin/tours/{tourId}/itinerary/{itineraryId}', [DealsController::class, 'getItinerary'])->name('admin.tours.itinerary.get');
+Route::put('/admin/tours/{tourId}/itinerary/{itineraryId}', [DealsController::class, 'updateItinerary'])->name('admin.tours.itinerary.update');
+Route::delete('/admin/tours/{tourId}/itinerary/{itineraryId}', [DealsController::class, 'deleteItinerary'])->name('admin.tours.itinerary.delete');

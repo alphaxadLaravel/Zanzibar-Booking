@@ -11,16 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tour_itenaries', function (Blueprint $table) {
-            $table->id();
-            $table->string('title');
-            $table->text('description')->nullable();
-            $table->timestamps();
+        Schema::table('tour_itenaries', function (Blueprint $table) {
+            $table->dropColumn('day_number');
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
-        Schema::dropIfExists('tour_itenaries');
+        Schema::table('tour_itenaries', function (Blueprint $table) {
+            $table->integer('day_number')->default(1)->after('deal_id');
+        });
     }
 };

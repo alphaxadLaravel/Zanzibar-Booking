@@ -83,6 +83,11 @@ class Deal extends Model
         return $this->hasMany(TourInclude::class);
     }
 
+    public function itineraries(): HasMany
+    {
+        return $this->hasMany(TourItenary::class);
+    }
+
     // Scopes
     public function scopeActive($query)
     {
