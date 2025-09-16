@@ -1,5 +1,5 @@
 <div class="sidenav-menu ">
-    <a href="{{ route('dashboard') }}" class="logo">
+    <a href="{{ route('index') }}" class="logo">
         <span class="logo logo-light">
             <span class="logo-lg text-white fw-bold fs-5" style="letter-spacing:1px;">Zanzibar Bookings</span>
             <span class="logo-sm"><img src="{{asset('logo.png')}}" alt="small logo"></span>

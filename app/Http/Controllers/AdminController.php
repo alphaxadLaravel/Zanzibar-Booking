@@ -5,6 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Blog;
 use App\Models\Category;
+use App\Models\Deal;
+use App\Models\Booking;
+use App\Models\Tours;
+use App\Models\Car;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -15,16 +19,16 @@ class AdminController extends Controller
     // Dashboard
     public function dashboard()
     {
-        // Static counts for UI purposes
+        // Real counts from database
         $stats = [
-            'tours_count' => 24,
-            'hotels_count' => 18,
-            'apartments_count' => 32,
-            'bookings_count' => 156,
-            'cars_count' => 12,
-            'blog_posts_count' => 8,
-            'site_visits_count' => 2847,
-            'total_revenue' => 45250.75,
+            'tours_count' => Deal::where('type', 'tour')->count(),
+            'hotels_count' => Deal::where('type', 'hotel')->count(),
+            'apartments_count' => Deal::where('type', 'apartment')->count(),
+            'bookings_count' => Booking::count(),
+            'cars_count' => Deal::where('type', 'car')->count(),
+            'blog_posts_count' => Blog::count(),
+            'site_visits_count' => 2847, // Keep static for now - would need analytics implementation
+            'total_revenue' => 45250.75, // Keep static for now - would need payment calculation
         ];
 
         return view('admin.pages.dashboard', compact('stats'));
