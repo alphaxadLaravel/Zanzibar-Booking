@@ -15,7 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('cover_photo')->nullable();
             $table->unsignedBigInteger('user_id');
-            $table->text('description')->nullable();
+            $table->string('title');
+            $table->text('preview_text')->nullable();
+            $table->longText('description')->nullable();
             $table->unsignedBigInteger('category_id');
             $table->boolean('status')->default(1);
             $table->timestamps();

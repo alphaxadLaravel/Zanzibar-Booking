@@ -56,6 +56,18 @@ class CategorySeeder extends Seeder
             ['category' => 'Private Tours', 'type' => 'tour', 'image' => null],
             ['category' => 'Group Tours', 'type' => 'tour', 'image' => null],
             ['category' => 'Walking Tours', 'type' => 'tour', 'image' => null],
+
+            // Blog Categories
+            ['category' => 'Travel Tips', 'type' => 'blog', 'image' => null],
+            ['category' => 'Destination Guides', 'type' => 'blog', 'image' => null],
+            ['category' => 'Hotel Reviews', 'type' => 'blog', 'image' => null],
+            ['category' => 'Travel News', 'type' => 'blog', 'image' => null],
+            ['category' => 'Adventure Stories', 'type' => 'blog', 'image' => null],
+            ['category' => 'Food & Dining', 'type' => 'blog', 'image' => null],
+            ['category' => 'Cultural Experiences', 'type' => 'blog', 'image' => null],
+            ['category' => 'Travel Photography', 'type' => 'blog', 'image' => null],
+            ['category' => 'Budget Travel', 'type' => 'blog', 'image' => null],
+            ['category' => 'Luxury Travel', 'type' => 'blog', 'image' => null],
         ];
 
         // Seed all categories

@@ -3,6 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Blog;
+use App\Models\Category;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
@@ -32,60 +38,165 @@ class AdminController extends Controller
         return view('admin.pages.apartments.index');
     }
 
-    public function createApartment()
-    {
-        return view('admin.pages.apartments.create');
-    }
-
-    public function storeApartment(Request $request)
-    {
-        // Add apartment creation logic here
-        return redirect()->route('admin.apartments')->with('success', 'Apartment created successfully!');
-    }
-
-    public function editApartment($id)
-    {
-        return view('admin.pages.apartments.edit', compact('id'));
-    }
-
-    public function updateApartment(Request $request, $id)
-    {
-        // Add apartment update logic here
-        return redirect()->route('admin.apartments')->with('success', 'Apartment updated successfully!');
-    }
-
-    public function deleteApartment($id)
-    {
-        // Add apartment deletion logic here
-        return redirect()->route('admin.apartments')->with('success', 'Apartment deleted successfully!');
-    }
-
     // Blog Management
     public function blog()
     {
-        return view('admin.pages.blog.index');
+        $blogs = Blog::with(['user', 'category'])->orderBy('created_at', 'desc')->get();
+        return view('admin.pages.blog.index', compact('blogs'));
     }
 
     public function createBlog()
     {
-        return view('admin.pages.blog.create');
+        // Filter categories by type and active status using scopes
+        $categories = Category::active()->byType('blog')->get();
+        return view('admin.pages.blog.create', compact('categories'));
     }
 
     public function storeBlog(Request $request)
     {
-        // Add blog creation logic here
-        return redirect()->route('admin.blog')->with('success', 'Blog post created successfully!');
+        // Debug: Log request data
+        Log::info('Blog creation request:', $request->all());
+        
+        // Enhanced validation rules
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'preview_text' => 'nullable|string|max:500',
+            'description' => 'required|string',
+            'category_id' => 'required|exists:categories,id',
+            'status' => 'required|in:draft,published',
+            'cover_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120' // Increased size limit
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Prepare data for blog creation
+            $data = $request->only(['title', 'preview_text', 'description', 'category_id']);
+            $data['user_id'] = 1;
+            $data['status'] = $request->status === 'published' ? 1 : 0;
+
+            // Handle cover photo upload
+            $coverPhotoPath = null;
+            if ($request->hasFile('cover_photo')) {
+                $coverPhoto = $request->file('cover_photo');
+                $filename = time() . '_' . $coverPhoto->getClientOriginalName();
+                $coverPhotoPath = $coverPhoto->storeAs('blog/covers', $filename, 'public');
+                $data['cover_photo'] = $coverPhotoPath;
+            }
+
+            // Create the blog post
+            $blog = Blog::create($data);
+            
+            DB::commit();
+            
+            Log::info('Blog created successfully:', ['blog_id' => $blog->id, 'title' => $blog->title]);
+            return redirect()->route('admin.blog')->with('success', 'Blog post created successfully!');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            // Clean up uploaded file if blog creation failed
+            if (isset($coverPhotoPath) && Storage::disk('public')->exists($coverPhotoPath)) {
+                Storage::disk('public')->delete($coverPhotoPath);
+            }
+            
+            Log::error('Blog creation failed:', [
+                'error' => $e->getMessage(), 
+                'data' => $data ?? null,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->back()
+                ->with('error', 'Failed to create blog post: ' . $e->getMessage())
+                ->withInput();
+        }
     }
 
     public function editBlog($id)
     {
-        return view('admin.pages.blog.edit', compact('id'));
+        // Find the blog post with relationships
+        $blog = Blog::with(['category', 'user'])->find($id);
+        
+        if (!$blog) {
+            return redirect()->route('admin.blog')->with('error', 'Blog post not found');
+        }
+        
+        // Filter categories by type and active status using scopes
+        $categories = Category::active()->byType('blog')->get();
+        
+        return view('admin.pages.blog.create', compact('blog', 'categories'));
     }
 
     public function updateBlog(Request $request, $id)
     {
-        // Add blog update logic here
-        return redirect()->route('admin.blog')->with('success', 'Blog post updated successfully!');
+        // Find the blog post
+        $blog = Blog::find($id);
+        
+        if (!$blog) {
+            return redirect()->route('admin.blog')->with('error', 'Blog post not found');
+        }
+        
+        // Debug: Log request data
+        Log::info('Blog update request:', $request->all());
+        
+        // Enhanced validation rules
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'preview_text' => 'nullable|string|max:500',
+            'description' => 'required|string',
+            'category_id' => 'required|exists:categories,id',
+            'status' => 'required|in:draft,published',
+            'cover_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Prepare data for blog update
+            $data = $request->only(['title', 'preview_text', 'description', 'category_id']);
+            $data['status'] = $request->status === 'published' ? 1 : 0;
+
+            // Handle cover photo upload
+            $coverPhotoPath = $blog->cover_photo; // Keep existing if no new upload
+            if ($request->hasFile('cover_photo')) {
+                // Delete old cover photo if exists
+                if ($blog->cover_photo && Storage::disk('public')->exists($blog->cover_photo)) {
+                    Storage::disk('public')->delete($blog->cover_photo);
+                }
+                
+                $coverPhoto = $request->file('cover_photo');
+                $filename = time() . '_' . $coverPhoto->getClientOriginalName();
+                $coverPhotoPath = $coverPhoto->storeAs('blog/covers', $filename, 'public');
+                $data['cover_photo'] = $coverPhotoPath;
+            }
+
+            // Update the blog post
+            $blog->update($data);
+            
+            DB::commit();
+            
+            Log::info('Blog updated successfully:', ['blog_id' => $blog->id, 'title' => $blog->title]);
+            return redirect()->route('admin.blog')->with('success', 'Blog post updated successfully!');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            // Clean up uploaded file if blog update failed
+            if ($request->hasFile('cover_photo') && isset($coverPhotoPath) && Storage::disk('public')->exists($coverPhotoPath)) {
+                Storage::disk('public')->delete($coverPhotoPath);
+            }
+            
+            Log::error('Blog update failed:', [
+                'error' => $e->getMessage(), 
+                'blog_id' => $id,
+                'data' => $data ?? null,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->back()
+                ->with('error', 'Failed to update blog post: ' . $e->getMessage())
+                ->withInput();
+        }
     }
 
     public function deleteBlog($id)
