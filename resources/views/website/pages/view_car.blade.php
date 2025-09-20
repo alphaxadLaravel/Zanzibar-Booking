@@ -1,21 +1,51 @@
 @extends('website.layouts.app')
 
 @section('pages')
+<style>
+    /* Prevent image distortion during loading */
+    .gallery img {
+        width: 100% !important;
+        height: 400px !important;
+        object-fit: cover !important;
+        display: block !important;
+        background-color: #f5f5f5;
+        transition: opacity 0.3s ease;
+    }
+    
+    .gallery img[loading="lazy"] {
+        opacity: 0;
+    }
+    
+    .gallery img.loaded {
+        opacity: 1;
+    }
+</style>
 <section class="gallery">
-    <div class="gmz-carousel-with-lightbox" data-count="10">
-        @for ($i = 0; $i < 8; $i++) 
-        <a href="{{asset('https://www.zanzibarbookings.com/storage/2023/05/29/landcruiser-prado-car-hire-zanzibar-7-1685320444-360x240.jpg')}}">
-            <img src="{{asset('https://www.zanzibarbookings.com/storage/2023/05/29/landcruiser-prado-car-hire-zanzibar-7-1685320444-360x240.jpg')}}" alt="Car Rental Image {{$i + 1}}" />
+    <div class="gmz-carousel-with-lightbox" data-count="{{ $car->photos->count() }}">
+        @forelse($car->photos as $photo)
+        <a href="{{ asset('storage/' . $photo->photo) }}">
+            <img src="{{ asset('storage/' . $photo->photo) }}" 
+                 alt="{{ $car->title }}" 
+                 style="width: 100%; height: 400px; object-fit: cover; display: block;"
+                 loading="lazy" />
         </a>
-        @endfor
+        @empty
+        <a href="{{ $car->cover_photo ? asset('storage/' . $car->cover_photo) : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop&crop=center' }}">
+            <img src="{{ $car->cover_photo ? asset('storage/' . $car->cover_photo) : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop&crop=center' }}" 
+                 alt="{{ $car->title }}" 
+                 style="width: 100%; height: 400px; object-fit: cover; display: block;"
+                 loading="lazy" />
+        </a>
+        @endforelse
     </div>
 </section>
 
 <div class="breadcrumb">
     <div class="container">
         <ul>
-            <li><a href="../index.html">Home</a></li>
-            <li><span>Car Rental</span></li>
+            <li><a href="{{ route('index') }}">Home</a></li>
+            <li><a href="{{ route('cars') }}">Cars</a></li>
+            <li><span>{{ $car->title }}</span></li>
         </ul>
     </div>
 </div>
@@ -27,10 +57,10 @@
                 <div class="add-wishlist-wrapper">
                     <a href="#gmz-login-popup" class="add-wishlist gmz-box-popup" data-effect="mfp-zoom-in"></a>
                 </div>
-                Toyota Land Cruiser Prado - Premium SUV Rental
+                {{ $car->title }}
             </h4>
             <p class="location text-primary">
-                <i class="fal fa-map-marker-alt"></i> Available for pickup in Stone Town, Nungwi, Paje & Airport
+                <i class="fal fa-map-marker-alt"></i> Available for pickup in {{ $car->location }}
             </p>
 
             <div class="meta">
@@ -38,37 +68,37 @@
                     <li class="col-6 col-md-4 mb-2">
                         <div class="d-flex flex-column">
                             <span class="label text-muted" style="font-size:13px;">Vehicle Type</span>
-                            <span class="value fw-semibold" style="font-size:15px;">SUV</span>
+                            <span class="value fw-semibold" style="font-size:15px;">{{ $car->category->category }}</span>
+                        </div>
+                    </li>
+                    <li class="col-6 col-md-4 mb-2">
+                        <div class="d-flex flex-column">
+                            <span class="label text-muted" style="font-size:13px;">Price</span>
+                            <span class="value fw-semibold" style="font-size:15px;">USD {{ number_format($car->base_price, 2) }}/day</span>
+                        </div>
+                    </li>
+                    <li class="col-6 col-md-4 mb-2">
+                        <div class="d-flex flex-column">
+                            <span class="label text-muted" style="font-size:13px;">Rating</span>
+                            <span class="value fw-semibold" style="font-size:15px;">{{ $car->ratings ? number_format($car->ratings, 1) : '5.0' }}/5</span>
                         </div>
                     </li>
                     <li class="col-6 col-md-4 mb-2">
                         <div class="d-flex flex-column">
                             <span class="label text-muted" style="font-size:13px;">Seating Capacity</span>
-                            <span class="value fw-semibold" style="font-size:15px;">7 Passengers</span>
+                            <span class="value fw-semibold" style="font-size:15px;">{{ $car->car->seating_capacity ?? '5' }} Passengers</span>
                         </div>
                     </li>
                     <li class="col-6 col-md-4 mb-2">
                         <div class="d-flex flex-column">
                             <span class="label text-muted" style="font-size:13px;">Transmission</span>
-                            <span class="value fw-semibold" style="font-size:15px;">Automatic</span>
+                            <span class="value fw-semibold" style="font-size:15px;">{{ $car->car->transmission ?? 'Automatic' }}</span>
                         </div>
                     </li>
                     <li class="col-6 col-md-4 mb-2">
                         <div class="d-flex flex-column">
                             <span class="label text-muted" style="font-size:13px;">Fuel Type</span>
-                            <span class="value fw-semibold" style="font-size:15px;">Diesel</span>
-                        </div>
-                    </li>
-                    <li class="col-6 col-md-4 mb-2">
-                        <div class="d-flex flex-column">
-                            <span class="label text-muted" style="font-size:13px;">Air Conditioning</span>
-                            <span class="value fw-semibold" style="font-size:15px;">Yes</span>
-                        </div>
-                    </li>
-                    <li class="col-6 col-md-4 mb-2">
-                        <div class="d-flex flex-column">
-                            <span class="label text-muted" style="font-size:13px;">GPS Navigation</span>
-                            <span class="value fw-semibold" style="font-size:15px;">Included</span>
+                            <span class="value fw-semibold" style="font-size:15px;">{{ $car->car->fuel_type ?? 'Petrol' }}</span>
                         </div>
                     </li>
                 </ul>
@@ -77,39 +107,35 @@
             <section class="description">
                 <h4 class="section-title">Vehicle Description</h4>
                 <div class="section-content">
-                    <p>Experience the ultimate comfort and reliability with our Toyota Land Cruiser Prado rental. This premium SUV is perfect for exploring Zanzibar's diverse landscapes, from pristine beaches to historic Stone Town. With its robust 4WD capabilities, spacious interior, and modern amenities, it's the ideal choice for families and groups seeking both adventure and comfort.</p>
-                    
-                    <p>The Land Cruiser Prado features a powerful diesel engine that provides excellent fuel efficiency and reliability for long-distance travel. Its high ground clearance and advanced 4WD system make it perfect for navigating Zanzibar's varied terrain, including sandy beaches, rocky coastal areas, and rural roads.</p>
-                    
-                    <p>Inside, you'll find a luxurious and spacious cabin that comfortably seats up to 7 passengers. The vehicle comes equipped with modern conveniences including air conditioning, GPS navigation, Bluetooth connectivity, and premium audio system. Safety features include multiple airbags, ABS brakes, and stability control systems.</p>
+                    <p>{{ $car->description ?: 'Experience the ultimate comfort and reliability with our ' . $car->title . ' rental. This premium vehicle is perfect for exploring Zanzibar\'s diverse landscapes, from pristine beaches to historic Stone Town. With its modern amenities and reliable performance, it\'s the ideal choice for families and groups seeking both adventure and comfort.' }}</p>
                 </div>
             </section>
 
             <section class="feature">
                 <h4 class="section-title mb-4">Vehicle Features & Amenities</h4>
                 <div class="section-content">
+                    @if($car->features->count() > 0)
                     <div class="row">
+                        @foreach($car->features->chunk(ceil($car->features->count() / 2)) as $chunk)
                         <div class="col-md-6">
                             <ul class="feature-list" style="list-style: none; padding: 0;">
-                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Air Conditioning</li>
-                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>GPS Navigation System</li>
-                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Bluetooth Connectivity</li>
-                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Premium Audio System</li>
-                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Power Windows & Locks</li>
-                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Central Locking</li>
+                                @foreach($chunk as $feature)
+                                <li class="mb-2">
+                                    <i class="mdi {{ $feature->icon ?: 'mdi-check-circle' }} text-success me-2"></i>
+                                    {{ $feature->name }}
+                                </li>
+                                @endforeach
                             </ul>
                         </div>
-                        <div class="col-md-6">
-                            <ul class="feature-list" style="list-style: none; padding: 0;">
-                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>4WD Capability</li>
-                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Multiple Airbags</li>
-                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>ABS Brakes</li>
-                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Stability Control</li>
-                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Spare Tire</li>
-                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Emergency Kit</li>
-                            </ul>
+                        @endforeach
+                    </div>
+                    @else
+                    <div class="row">
+                        <div class="col-12">
+                            <p class="text-muted">No features available for this vehicle.</p>
                         </div>
                     </div>
+                    @endif
                 </div>
             </section>
 
@@ -228,16 +254,16 @@
                         <div class="row text-center">
                             <div class="col-6">
                                 <div class="pricing-item">
-                                    <h4 class="price-amount mb-1" style="color: #2e8b57; font-weight: 700; font-size: 1.6rem;">$120</h4>
+                                    <h4 class="price-amount mb-1" style="color: #2e8b57; font-weight: 700; font-size: 1.6rem;">${{ number_format($car->base_price, 0) }}</h4>
                                     <p class="price-label mb-0" style="color: #666; font-size: 13px; font-weight: 500;">Daily Rate</p>
                                     <small class="text-muted" style="font-size: 11px;">Per Day</small>
                                 </div>
                             </div>
                             <div class="col-6">
                                 <div class="pricing-item">
-                                    <h4 class="price-amount mb-1" style="color: #2e8b57; font-weight: 700; font-size: 1.6rem;">$750</h4>
+                                    <h4 class="price-amount mb-1" style="color: #2e8b57; font-weight: 700; font-size: 1.6rem;">${{ number_format($car->base_price * 7 * 0.9, 0) }}</h4>
                                     <p class="price-label mb-0" style="color: #666; font-size: 13px; font-weight: 500;">Weekly Rate</p>
-                                    <small class="text-muted" style="font-size: 11px;">7 Days</small>
+                                    <small class="text-muted" style="font-size: 11px;">7 Days (10% off)</small>
                                 </div>
                             </div>
                         </div>
@@ -416,7 +442,7 @@
 
                                 <!-- Submit Button -->
                                 <div class="d-flex justify-content-center">
-                                    <button type="submit" class="btn btn-success w-100" style="
+                                    <a href="{{ route('confirm-booking', ['deal_id' => $car->deal_id]) }}" class="btn btn-success w-100" style="
                                         text-align: center;
                                         display: flex;
                                         align-items: center;
@@ -429,10 +455,11 @@
                                         border-radius: 8px;
                                         transition: all 0.3s ease;
                                         box-shadow: 0 2px 4px rgba(46, 139, 87, 0.2);
+                                        text-decoration: none;
                                     ">
                                         <i class="fas fa-car me-2"></i>
                                         Book This Vehicle
-                                    </button>
+                                    </a>
                                 </div>
                             </div>
                         </form>
@@ -661,7 +688,7 @@
         const timeDiff = returnDateObj.getTime() - pickup.getTime();
         const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
         
-        const dailyRate = 120;
+        const dailyRate = {{ $car->base_price }};
         const additionalDriverRate = 10;
         
         const basePrice = daysDiff * dailyRate;
@@ -676,9 +703,9 @@
         
         // Update daily rate display based on days
         if (daysDiff >= 7) {
-            document.getElementById('daily-rate-display').textContent = '$107 (Weekly)';
+            document.getElementById('daily-rate-display').textContent = '${{ number_format($car->base_price * 0.9, 0) }} (Weekly)';
         } else {
-            document.getElementById('daily-rate-display').textContent = '$120';
+            document.getElementById('daily-rate-display').textContent = '${{ number_format($car->base_price, 0) }}';
         }
     }
 
@@ -687,7 +714,7 @@
         document.getElementById('additional-driver-cost').textContent = '$0';
         document.getElementById('subtotal-price').textContent = '$0';
         document.getElementById('total-price').textContent = '$0';
-        document.getElementById('daily-rate-display').textContent = '$120';
+        document.getElementById('daily-rate-display').textContent = '${{ number_format($car->base_price, 0) }}';
     }
 
     // Event listeners for price calculation
@@ -742,5 +769,76 @@
             document.getElementById('pickup_date').value = today;
         }, 2000);
     });
+    
+    // Handle image loading to prevent distortion
+    document.addEventListener('DOMContentLoaded', function() {
+        const images = document.querySelectorAll('.gallery img');
+        
+        images.forEach(img => {
+            // Set initial dimensions to prevent layout shift
+            img.style.width = '100%';
+            img.style.height = '400px';
+            img.style.objectFit = 'cover';
+            img.style.display = 'block';
+            img.style.backgroundColor = '#f5f5f5';
+            
+            // Add loaded class when image loads
+            img.addEventListener('load', function() {
+                this.classList.add('loaded');
+                this.style.opacity = '1';
+            });
+            
+            // Handle error case
+            img.addEventListener('error', function() {
+                this.style.opacity = '1';
+                this.style.backgroundColor = '#f0f0f0';
+            });
+        });
+    });
 </script>
+
+<!-- Nearby Cars Section -->
+<section class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <h3 class="section-title mb-4">Cars Near By</h3>
+            <div class="row">
+                @forelse($nearbyCars as $nearbyCar)
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="position-relative">
+                            <img src="{{ $nearbyCar->cover_photo ? asset('storage/' . $nearbyCar->cover_photo) : 'https://images.unsplash.com/photo-1549317336-206569e8475c?w=400&h=250&fit=crop&crop=center' }}" 
+                                 class="card-img-top" 
+                                 alt="{{ $nearbyCar->title }}"
+                                 style="height: 200px; object-fit: cover;">
+                            @if($nearbyCar->is_featured)
+                            <span class="badge bg-success position-absolute" style="top: 10px; left: 10px;">Featured</span>
+                            @endif
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">{{ $nearbyCar->title }}</h5>
+                            <p class="card-text text-muted">
+                                <i class="fas fa-map-marker-alt me-1"></i>{{ $nearbyCar->location }}
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="text-success fw-bold fs-5">USD {{ number_format($nearbyCar->base_price, 2) }}</span>
+                                    <small class="text-muted">/day</small>
+                                </div>
+                                <a href="{{ route('view-car', ['id' => $hashids->encode($nearbyCar->id)]) }}" class="btn btn-primary btn-sm">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @empty
+                <div class="col-12">
+                    <div class="text-center py-4">
+                        <p class="text-muted">No nearby cars found</p>
+                    </div>
+                </div>
+                @endforelse
+            </div>
+        </div>
+    </div>
+</section>
 @endsection

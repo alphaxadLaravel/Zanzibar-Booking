@@ -103,4 +103,14 @@ class Deal extends Model
     {
         return $query->where('category_id', $categoryId);
     }
+
+    public function nears(): HasMany
+    {
+        return $this->hasMany(Near::class, 'deal_id');
+    }
+
+    public function nearbyDeals(): HasMany
+    {
+        return $this->hasMany(Near::class, 'near_id');
+    }
 }

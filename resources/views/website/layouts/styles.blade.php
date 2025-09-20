@@ -1,7 +1,7 @@
 <link rel="stylesheet" href="{{asset('html/assets/css/header.css')}}" />
 
-{{-- view hotel --}}
 <link rel="stylesheet" href="{{asset('vendors/fotorama-4.6.4/fotorama.css')}}">
+<link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css" rel="stylesheet">
    
 <link rel="stylesheet" href="{{asset('html/assets/vendor/slick-1.8.1/slick.css')}}" />
 <link rel="stylesheet" href="{{asset('vendors/glow-cookies/glowCookies.css')}}" />

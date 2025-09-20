@@ -16,12 +16,14 @@ Route::get('/view/blog', [WebsiteController::class, 'viewBlog'])->name('view-blo
 
 ##### DEALS
 Route::get('/hotels', [WebsiteController::class, 'hotels'])->name('hotels');
-Route::get('/view/hotel', [WebsiteController::class, 'viewHotel'])->name('view-hotel');
+Route::get('/apartments', [WebsiteController::class, 'apartments'])->name('apartments');
+Route::get('/view/hotel/{id}', [WebsiteController::class, 'viewHotel'])->name('view-hotel');
+Route::get('/view/apartment/{id}', [WebsiteController::class, 'viewApartment'])->name('view-apartment');
 Route::get('/tours', [WebsiteController::class, 'tours'])->name('tours');
-Route::get('/view/tour', [WebsiteController::class, 'viewTour'])->name('view-tour');
+Route::get('/view/tour/{id}', [WebsiteController::class, 'viewTour'])->name('view-tour');
 
 Route::get('/cars', [WebsiteController::class, 'cars'])->name('cars');
-Route::get('/view/car', [WebsiteController::class, 'viewCar'])->name('view-car');
+Route::get('/view/car/{id}', [WebsiteController::class, 'viewCar'])->name('view-car');
 Route::get('/flights', [WebsiteController::class, 'flights'])->name('flights');
 
 // Booking routes
@@ -155,3 +157,8 @@ Route::post('/admin/tours/{tourId}/itinerary', [DealsController::class, 'storeIt
 Route::get('/admin/tours/{tourId}/itinerary/{itineraryId}', [DealsController::class, 'getItinerary'])->name('admin.tours.itinerary.get');
 Route::put('/admin/tours/{tourId}/itinerary/{itineraryId}', [DealsController::class, 'updateItinerary'])->name('admin.tours.itinerary.update');
 Route::delete('/admin/tours/{tourId}/itinerary/{itineraryId}', [DealsController::class, 'deleteItinerary'])->name('admin.tours.itinerary.delete');
+
+// Nearby Deals Management
+Route::get('/admin/hotels/{hotelId}/get-deals-by-type/{type}', [DealsController::class, 'getDealsByType'])->name('admin.hotels.get-deals-by-type');
+Route::post('/admin/hotels/{hotelId}/add-nearby', [DealsController::class, 'addNearbyDeals'])->name('admin.hotels.add-nearby');
+Route::delete('/admin/hotels/{hotelId}/remove-nearby/{nearId}', [DealsController::class, 'removeNearbyDeal'])->name('admin.hotels.remove-nearby');

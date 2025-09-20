@@ -292,6 +292,83 @@
             </div>
         </div>
     </div>
+
+    <!-- Nearby Deals Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <h5 class="card-title mb-0">Nearby Tours & Hotels</h5>
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#nearbyDealsModal">
+                            <i class="ti ti-plus"></i> Add Nearby Deals
+                        </button>
+                    </div>
+                    <hr>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Cover</th>
+                                    <th>Title</th>
+                                    <th>Type</th>
+                                    <th>Location</th>
+                                    <th>Price</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($nearbyDeals as $index => $near)
+                                <tr>
+                                    <td>{{ $index + 1 }}</td>
+                                    <td>
+                                        @if($near->nearDeal->cover_photo)
+                                        <img src="{{ asset('storage/' . $near->nearDeal->cover_photo) }}" alt="{{ $near->nearDeal->title }}"
+                                            class="img-fluid rounded" style="width: 50px; height: 40px; object-fit: cover;">
+                                        @else
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 50px; height: 40px;">
+                                            <i class="ti ti-photo text-muted" style="font-size: 1rem;"></i>
+                                        </div>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold">{{ $near->nearDeal->title }}</div>
+                                        <small class="text-muted">{{ ucfirst($near->nearDeal->type) }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ $near->type == 'tour' ? 'info' : 'primary' }}">
+                                            {{ ucfirst($near->type) }}
+                                        </span>
+                                    </td>
+                                    <td>{{ $near->nearDeal->location ?? 'Not specified' }}</td>
+                                    <td>
+                                        <span class="fw-bold text-success">${{ number_format($near->nearDeal->base_price, 2) }}</span>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeNearbyDeal('{{ $near->id }}')">
+                                            <i class="ti ti-trash"></i> Remove
+                                        </button>
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">
+                                        <div class="text-muted">
+                                            <i class="ti ti-map-pin" style="font-size: 2rem;"></i>
+                                            <div class="mt-2">No nearby deals added yet</div>
+                                            <small>Click "Add Nearby Deals" to get started</small>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Edit Room Modal -->
@@ -616,6 +693,57 @@
     </div>
 </div>
 
+<!-- Add Nearby Deals Modal -->
+<div class="modal fade" id="nearbyDealsModal" tabindex="-1" aria-labelledby="nearbyDealsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="nearbyDealsModalLabel">Add Nearby Deal</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="nearbyDealsForm" method="POST" action="{{ route('admin.hotels.add-nearby', $hotelId) }}">
+                @csrf
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <!-- Deal Type Selection -->
+                        <div class="col-12">
+                            <label for="deal_type" class="form-label">Deal Type <span class="text-danger">*</span></label>
+                            <select class="form-select" id="deal_type" name="deal_type" required>
+                                <option value="">Select deal type...</option>
+                                <option value="tour">Tours</option>
+                                <option value="hotel">Hotels</option>
+                                <option value="apartment">Apartments</option>
+                            </select>
+                        </div>
+
+                        <!-- Deal Selection -->
+                        <div class="col-12">
+                            <label for="nearby_deal_id" class="form-label">Select Deal <span class="text-danger">*</span></label>
+                            <select class="form-select" id="nearby_deal_id" name="nearby_deal_id" required>
+                                <option value="">Select deal type first...</option>
+                            </select>
+                        </div>
+
+                        <!-- Selected Deal Preview -->
+                        <div class="col-12" id="deal-preview-container" style="display: none;">
+                            <label class="form-label">Selected Deal Preview</label>
+                            <div id="deal-preview" class="border rounded p-3 bg-light">
+                                <!-- Preview content will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success" id="add-deal-btn" disabled>
+                        <i class="ti ti-plus"></i> Add Deal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
@@ -821,6 +949,129 @@
         // Show the delete modal
         const deleteHotelModal = new bootstrap.Modal(document.getElementById('deleteHotelModal'));
         deleteHotelModal.show();
+    }
+
+    // Nearby Deals functionality
+    let availableDeals = [];
+
+    // Reset modal when it opens
+    document.getElementById('nearbyDealsModal').addEventListener('show.bs.modal', function () {
+        document.getElementById('deal_type').value = '';
+        document.getElementById('nearby_deal_id').innerHTML = '<option value="">Select deal type first...</option>';
+        document.getElementById('deal-preview-container').style.display = 'none';
+        document.getElementById('add-deal-btn').disabled = true;
+        availableDeals = [];
+    });
+
+    // Handle deal type change
+    document.getElementById('deal_type').addEventListener('change', function() {
+        const dealType = this.value;
+        const dealSelect = document.getElementById('nearby_deal_id');
+        const previewContainer = document.getElementById('deal-preview-container');
+        const addBtn = document.getElementById('add-deal-btn');
+        
+        // Reset
+        dealSelect.innerHTML = '<option value="">Loading...</option>';
+        previewContainer.style.display = 'none';
+        addBtn.disabled = true;
+        
+        if (!dealType) {
+            dealSelect.innerHTML = '<option value="">Select deal type first...</option>';
+            return;
+        }
+        
+        // Load deals for selected type
+        fetch(`/admin/hotels/{{ $hotelId }}/get-deals-by-type/${dealType}`)
+            .then(response => response.json())
+            .then(data => {
+                dealSelect.innerHTML = '';
+                availableDeals = data.deals || [];
+                
+                if (availableDeals.length === 0) {
+                    dealSelect.innerHTML = '<option value="">No deals available</option>';
+                    return;
+                }
+                
+                dealSelect.innerHTML = '<option value="">Select a deal...</option>';
+                availableDeals.forEach(deal => {
+                    const option = document.createElement('option');
+                    option.value = deal.id;
+                    option.textContent = `${deal.title} - $${deal.base_price}`;
+                    dealSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                dealSelect.innerHTML = '<option value="">Error loading deals</option>';
+            });
+    });
+
+    // Handle deal selection change
+    document.getElementById('nearby_deal_id').addEventListener('change', function() {
+        const selectedDealId = this.value;
+        const previewContainer = document.getElementById('deal-preview-container');
+        const preview = document.getElementById('deal-preview');
+        const addBtn = document.getElementById('add-deal-btn');
+        
+        if (!selectedDealId) {
+            previewContainer.style.display = 'none';
+            addBtn.disabled = true;
+            return;
+        }
+        
+        // Find selected deal
+        const selectedDeal = availableDeals.find(deal => deal.id == selectedDealId);
+        
+        if (selectedDeal) {
+            // Show preview
+            preview.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        ${selectedDeal.cover_photo ? 
+                            `<img src="/storage/${selectedDeal.cover_photo}" alt="${selectedDeal.title}" style="width: 60px; height: 45px; object-fit: cover; border-radius: 6px;">` :
+                            `<div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 60px; height: 45px;"><i class="ti ti-photo text-muted"></i></div>`
+                        }
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1">${selectedDeal.title}</h6>
+                        <p class="mb-1 text-muted">${selectedDeal.location || 'Location not specified'}</p>
+                        <p class="mb-0">
+                            <strong class="text-success">$${selectedDeal.base_price}</strong>
+                        </p>
+                    </div>
+                </div>
+            `;
+            previewContainer.style.display = 'block';
+            addBtn.disabled = false;
+        } else {
+            previewContainer.style.display = 'none';
+            addBtn.disabled = true;
+        }
+    });
+
+    // Remove nearby deal function
+    function removeNearbyDeal(nearId) {
+        if (confirm('Are you sure you want to remove this nearby deal?')) {
+            fetch(`/admin/hotels/{{ $hotelId }}/remove-nearby/${nearId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error removing nearby deal: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error removing nearby deal');
+            });
+        }
     }
 
 </script>

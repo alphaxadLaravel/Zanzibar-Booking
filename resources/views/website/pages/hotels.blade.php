@@ -135,28 +135,18 @@
                             <select class="form-control flex-grow-1" id="search_location" name="location"
                                 style="height: 45px;">
                                 <option value="">All Locations</option>
-                                <option value="Nungwi">Nungwi</option>
-                                <option value="Stone Town">Stone Town</option>
-                                <option value="Paje">Paje</option>
-                                <option value="Kendwa">Kendwa</option>
-                                <option value="Jambiani">Jambiani</option>
-                                <option value="Michamvi">Michamvi</option>
-                                <option value="Matemwe">Matemwe</option>
-                                <option value="Kiwengwa">Kiwengwa</option>
-                                <option value="Bwejuu">Bwejuu</option>
-                                <option value="Pingwe">Pingwe</option>
+                                @foreach($locations as $location)
+                                    <option value="{{ $location }}">{{ $location }}</option>
+                                @endforeach
                             </select>
                         </div>
                         <div class="col-12 col-md-3 d-flex flex-column" style="min-width: 0;">
                             <select class="form-control flex-grow-1" id="search_category" name="property_type"
                                 style="height: 45px;">
                                 <option value="">All Hotel Types</option>
-                                <option value="68">Budget Hotels</option>
-                                <option value="67">Mid Range Hotels</option>
-                                <option value="66">Luxury Beach Resorts</option>
-                                <option value="65">Stone Town Hotels</option>
-                                <option value="64">Villas & Apartments</option>
-                                <option value="63">Homestay</option>
+                                @foreach($categories as $category)
+                                    <option value="{{ $category->id }}">{{ $category->category }}</option>
+                                @endforeach
                             </select>
                         </div>
                         <div class="col-12 col-md-3 d-flex flex-column" style="min-width: 0;">
@@ -190,7 +180,7 @@
                 style="overflow: hidden; outline: none; touch-action: none;">
                 <div class="results-count d-flex align-items-center justify-content-between">
                     <div>
-                        Found <b>60 Hotels</b>
+                        Found <b>{{ $hotels->total() }} Hotels</b>
                     </div>
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="sort">
@@ -255,25 +245,29 @@
                 </div>
 
                 <div class="row">
-                    @for ($i = 0; $i < 18; $i++)
+                    @forelse($hotels as $hotel)
                     <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
-                        <div class="tour-item tour-item--grid rounded-4" data-plugin="matchHeight" data-id="357"
-                            data-lat="-6.142857" data-lng="39.494472">
+                        <div class="tour-item tour-item--grid rounded-4" data-plugin="matchHeight" data-id="{{ $hotel->id }}"
+                            data-lat="{{ $hotel->lat }}" data-lng="{{ $hotel->long }}">
                             <div class="hotel-item__thumbnail position-relative">
+                                @if($hotel->is_featured)
                                 <span class="hotel-item__label position-absolute" style="top: 12px; left: 12px; z-index: 2; background: #ff5722; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 14px;">Featured</span>
-                                <a href="https://www.zanzibarbookings.com/hotel/emerald-dreams-boutique-hotel" style="display:block;">
+                                @endif
+                                <a href="{{route('view-hotel', ['id' => $hashids->encode($hotel->id)])}}" style="display:block;">
                                     <img 
-                                        src="https://www.zanzibarbookings.com/storage/2024/02/28/emarald-michamvi-10-1709067414-360x240.jpg"
-                                        alt="Emerald Dreams Boutique Hotel"
+                                        src="{{ $hotel->cover_photo ? asset('storage/' . $hotel->cover_photo) : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=360&h=240&fit=crop&crop=center' }}"
+                                        alt="{{ $hotel->title }}"
                                         loading="eager"
                                         width="360"
-                                        height="240"
-                                        style="width:100%;height:220px;object-fit:cover;border-radius:12px;"
+                                        height="160"
+                                        style="width:100%;height:140px;object-fit:cover;border-radius:8px;"
                                     />
                                 </a>
-                                <a class="hotel-item__type" href="https://www.zanzibarbookings.com/hotel-search?property_type=67" style="position:absolute;left:12px;bottom:12px;z-index:2;background:#2e8b57;color:#fff;padding:4px 10px;border-radius:5px;font-size:13px;">
-                                    Mid range Hotels
+                                @if($hotel->category)
+                                <a class="hotel-item__type" href="#" style="position:absolute;left:12px;bottom:12px;z-index:2;background:#2e8b57;color:#fff;padding:4px 10px;border-radius:5px;font-size:13px;">
+                                    {{ $hotel->category->category }}
                                 </a>
+                                @endif
                                 <div class="add-wishlist-wrapper" style="position:absolute;top:12px;right:12px;z-index:2;">
                                     <a href="#gmz-login-popup" class="add-wishlist gmz-box-popup" data-effect="mfp-zoom-in">
                                         <i class="fal fa-heart"></i>
@@ -287,62 +281,39 @@
                                         <i class="fa fa-star text-warning"></i>
                                         <i class="fa fa-star text-warning"></i>
                                         <i class="fa fa-star text-warning"></i>
-                                        <i class="fa fa-star text-muted"></i>
+                                        <i class="fa fa-star text-warning"></i>
                                     </div>
                                 </div>
                                 <h3 class="hotel-item__title" style="font-size:1.25rem;font-weight:600;">
-                                    <a href="https://www.zanzibarbookings.com/hotel/emerald-dreams-boutique-hotel" style="color:#222;text-decoration:none;">Emerald Dreams Boutique Hotel</a>
+                                    <a href="{{route('view-hotel', ['id' => $hashids->encode($hotel->id)])}}" style="color:#222;text-decoration:none;">{{ $hotel->title }}</a>
                                 </h3>
                                 <div class="hotel-item__meta" style="margin:18px 0 12px 0;">
                                     <div class="i-meta d-flex align-items-center" style="font-size:15px;color:#888;">
                                         <i class="fal fa-map-marker-alt" style="margin-right:6px;"></i>
-                                        <span>Michamvi, Zanzibar</span>
+                                        <span>{{ $hotel->location }}</span>
                                     </div>
                                 </div>
                                 <div class="hotel-item__price mb-3">
-                                    <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600;">USD 150.00</span>
+                                    <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600;">USD {{ number_format($hotel->base_price, 2) }}</span>
                                     <span class="_unit" style="color:#2e8b57;font-size:1rem;">/night</span>
                                 </div>
                                 <a class="btn btn-primary btn-sm hotel-item__view-detail w-100 d-flex justify-content-center align-items-center"
-                                    href="https://www.zanzibarbookings.com/hotel/emerald-dreams-boutique-hotel"
+                                    href="{{route('view-hotel', ['id' => $hashids->encode($hotel->id)])}}"
                                     style="font-size:1rem;padding:8px 0;border-radius:7px;text-align:center;">
                                     View Detail
                                 </a>
                             </div>
                         </div>
                     </div>
-                    @endfor
+                    @empty
+                    <div class="col-12">
+                        <p class="text-center">No hotels found with coordinates.</p>
+                    </div>
+                    @endforelse
                 </div>
 
                 <nav>
-                    <ul class="pagination">
-                        <li class="page-item disabled" aria-disabled="true" aria-label="« Previous">
-                            <span class="page-link" aria-hidden="true">‹</span>
-                        </li>
-                        <li class="page-item active" aria-current="page"><span class="page-link">1</span></li>
-                        <li class="page-item"><a class="page-link"
-                                href="https://www.zanzibarbookings.com/hotel-search?page=2">2</a></li>
-                        <li class="page-item"><a class="page-link"
-                                href="https://www.zanzibarbookings.com/hotel-search?page=3">3</a></li>
-                        <li class="page-item"><a class="page-link"
-                                href="https://www.zanzibarbookings.com/hotel-search?page=4">4</a></li>
-                        <li class="page-item"><a class="page-link"
-                                href="https://www.zanzibarbookings.com/hotel-search?page=5">5</a></li>
-                        <li class="page-item"><a class="page-link"
-                                href="https://www.zanzibarbookings.com/hotel-search?page=6">6</a></li>
-                        <li class="page-item"><a class="page-link"
-                                href="https://www.zanzibarbookings.com/hotel-search?page=7">7</a></li>
-                        <li class="page-item"><a class="page-link"
-                                href="https://www.zanzibarbookings.com/hotel-search?page=8">8</a></li>
-                        <li class="page-item"><a class="page-link"
-                                href="https://www.zanzibarbookings.com/hotel-search?page=9">9</a></li>
-                        <li class="page-item"><a class="page-link"
-                                href="https://www.zanzibarbookings.com/hotel-search?page=10">10</a></li>
-                        <li class="page-item">
-                            <a class="page-link" href="https://www.zanzibarbookings.com/hotel-search?page=2" rel="next"
-                                aria-label="Next »">›</a>
-                        </li>
-                    </ul>
+                    {{ $hotels->links() }}
                 </nav>
             </div>
         </div>
@@ -376,40 +347,51 @@
             ]
         });
 
-        // Add markers for different areas in Zanzibar
-        const locations = [
-            { lat: -5.7237, lng: 39.3027, title: "Stone Town", info: "Historic Stone Town" },
-            { lat: -5.7403, lng: 39.2926, title: "Nungwi", info: "Nungwi Beach" },
-            { lat: -6.1649, lng: 39.4359, title: "Paje", info: "Paje Beach" },
-            { lat: -5.7549, lng: 39.2880, title: "Kendwa", info: "Kendwa Beach" },
-            { lat: -6.1429, lng: 39.4945, title: "Jambiani", info: "Jambiani Beach" },
-            { lat: -6.1649, lng: 39.4359, title: "Michamvi", info: "Michamvi Peninsula" },
-            { lat: -5.9412, lng: 39.3623, title: "Matemwe", info: "Matemwe Beach" },
-            { lat: -5.7237, lng: 39.3027, title: "Kiwengwa", info: "Kiwengwa Beach" },
-            { lat: -6.1649, lng: 39.4359, title: "Bwejuu", info: "Bwejuu Beach" },
-            { lat: -6.1649, lng: 39.4359, title: "Pingwe", info: "Pingwe Beach" }
-        ];
+        // Hotel data from Laravel
+        const hotels = @json($hotels);
 
-        // Add markers for each location
-        locations.forEach(location => {
+        // Add markers for each hotel
+        hotels.forEach(hotel => {
             const marker = new google.maps.Marker({
-                position: { lat: location.lat, lng: location.lng },
+                position: { lat: parseFloat(hotel.lat), lng: parseFloat(hotel.long) },
                 map: map,
-                title: location.title,
+                title: hotel.title,
                 icon: {
-                    url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
-                    scaledSize: new google.maps.Size(20, 20)
+                    url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+                    scaledSize: new google.maps.Size(25, 25)
                 }
             });
 
             // Add info window
             const infoWindow = new google.maps.InfoWindow({
-                content: `<div style="padding: 5px;"><strong>${location.title}</strong><br>${location.info}</div>`
+                content: `
+                    <div style="padding-left: 10px; padding-right: 10px; max-width: 250px;">
+                        ${hotel.cover_photo ? `<img src="storage/${hotel.cover_photo}" alt="${hotel.title}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;">` : ''}
+                        <h6 style="margin: 0 0 5px 0; font-weight: 600;">${hotel.title}</h6>
+                        <p style="margin: 0 0 5px 0; color: #666; font-size: 14px;">
+                            <i class="fas fa-map-marker-alt"></i> ${hotel.location}
+                        </p>
+                        <p style="margin: 0 0 5px 0; color: #2e8b57; font-weight: 600;">
+                            USD ${parseFloat(hotel.base_price).toFixed(2)}/night
+                        </p>
+                        ${hotel.category ? `<span style="background: #2e8b57; color: white; padding: 2px 8px; border-radius: 3px; font-size: 12px;">${hotel.category.category}</span>` : ''}
+                    </div>
+                `
             });
 
             marker.addListener('click', () => {
                 infoWindow.open(map, marker);
             });
+
+            // Add click listener to hotel cards to center map on marker
+            const hotelCard = document.querySelector(`[data-id="${hotel.id}"]`);
+            if (hotelCard) {
+                hotelCard.addEventListener('click', () => {
+                    map.setCenter(marker.getPosition());
+                    map.setZoom(12);
+                    infoWindow.open(map, marker);
+                });
+            }
         });
     }
 </script>

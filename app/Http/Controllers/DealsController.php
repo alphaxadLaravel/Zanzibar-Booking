@@ -13,6 +13,7 @@ use App\Models\TourInclude;
 use App\Models\TourItenary;
 use App\Models\Room;
 use App\Models\RoomPhotos;
+use App\Models\Near;
 use Hashids\Hashids;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -85,7 +86,13 @@ class DealsController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('admin.pages.hotels.manage_hotel', compact('hotel', 'hotelId', 'rooms', 'hashids'));
+        // Get nearby deals for this hotel
+        $nearbyDeals = Near::with('nearDeal')
+            ->where('deal_id', $hotelId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('admin.pages.hotels.manage_hotel', compact('hotel', 'hotelId', 'rooms', 'nearbyDeals', 'hashids'));
     }
 
     // manageDeal
@@ -1255,6 +1262,77 @@ class DealsController extends Controller
             return redirect()->back()->with('success', 'Itinerary item deleted successfully!');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Failed to delete itinerary item: ' . $e->getMessage());
+        }
+    }
+
+    // Nearby Deals Management
+    public function getDealsByType($hotelId, $type)
+    {
+        // Get deals of the specified type, excluding the current hotel
+        $deals = Deal::where('type', $type)
+            ->where('id', '!=', $hotelId)
+            ->where('status', 1) // Only active deals
+            ->select('id', 'title', 'base_price', 'cover_photo', 'location')
+            ->orderBy('title')
+            ->get();
+
+        return response()->json(['deals' => $deals]);
+    }
+
+    public function addNearbyDeals(Request $request, $hotelId)
+    {
+        $request->validate([
+            'nearby_deal_id' => 'required|exists:deals,id',
+            'deal_type' => 'required|in:tour,hotel,apartment'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $dealType = $request->deal_type;
+            $nearDealId = $request->nearby_deal_id;
+
+            // Check if this nearby deal relationship already exists
+            $existingNear = Near::where('deal_id', $hotelId)
+                ->where('near_id', $nearDealId)
+                ->first();
+
+            if ($existingNear) {
+                DB::rollBack();
+                return redirect()->back()->with('info', 'This deal is already added as nearby.');
+            }
+
+            Near::create([
+                'deal_id' => $hotelId,
+                'near_id' => $nearDealId,
+                'type' => $dealType
+            ]);
+
+            DB::commit();
+
+            return redirect()->back()->with('success', "Successfully added nearby {$dealType}!");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to add nearby deal: ' . $e->getMessage());
+        }
+    }
+
+    public function removeNearbyDeal($hotelId, $nearId)
+    {
+        try {
+            $near = Near::where('deal_id', $hotelId)
+                ->where('id', $nearId)
+                ->first();
+
+            if (!$near) {
+                return response()->json(['success' => false, 'message' => 'Nearby deal not found'], 404);
+            }
+
+            $near->delete();
+
+            return response()->json(['success' => true, 'message' => 'Nearby deal removed successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to remove nearby deal: ' . $e->getMessage()], 500);
         }
     }
 }

@@ -135,32 +135,18 @@
                             <select class="form-control flex-grow-1" id="search_location" name="location"
                                 style="height: 45px;">
                                 <option value="">All Locations</option>
-                                <option value="Nungwi">Nungwi</option>
-                                <option value="Stone Town">Stone Town</option>
-                                <option value="Paje">Paje</option>
-                                <option value="Kendwa">Kendwa</option>
-                                <option value="Jambiani">Jambiani</option>
-                                <option value="Michamvi">Michamvi</option>
-                                <option value="Matemwe">Matemwe</option>
-                                <option value="Kiwengwa">Kiwengwa</option>
-                                <option value="Bwejuu">Bwejuu</option>
-                                <option value="Pingwe">Pingwe</option>
+                                @foreach($locations as $location)
+                                <option value="{{ $location }}">{{ $location }}</option>
+                                @endforeach
                             </select>
                         </div>
                         <div class="col-12 col-md-3 d-flex flex-column" style="min-width: 0;">
                             <select class="form-control flex-grow-1" id="search_category" name="car_type"
                                 style="height: 45px;">
                                 <option value="">All Car Types</option>
-                                <option value="economy">Economy Cars</option>
-                                <option value="compact">Compact Cars</option>
-                                <option value="intermediate">Intermediate Cars</option>
-                                <option value="standard">Standard Cars</option>
-                                <option value="fullsize">Full Size Cars</option>
-                                <option value="premium">Premium Cars</option>
-                                <option value="luxury">Luxury Cars</option>
-                                <option value="suv">SUV</option>
-                                <option value="minivan">Minivan</option>
-                                <option value="convertible">Convertible</option>
+                                @foreach($categories as $category)
+                                <option value="{{ $category->id }}">{{ $category->category }}</option>
+                                @endforeach
                             </select>
                         </div>
                         <div class="col-12 col-md-3 d-flex flex-column" style="min-width: 0;">
@@ -194,7 +180,7 @@
                 style="overflow: hidden; outline: none; touch-action: none;">
                 <div class="results-count d-flex align-items-center justify-content-between">
                     <div>
-                        Found <b>45 Cars</b>
+                        Found <b>{{ $cars->total() }} Cars</b>
                     </div>
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="sort">
@@ -259,16 +245,20 @@
                 </div>
 
                 <div class="row">
-                    @for ($i = 0; $i < 15; $i++)
+                    @forelse($cars as $car)
                     <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
-                        <div class="tour-item tour-item--grid rounded-4" data-plugin="matchHeight" data-id="357"
-                            data-lat="-6.142857" data-lng="39.494472">
+                        <div class="tour-item tour-item--grid rounded-4" data-plugin="matchHeight" data-id="{{ $car->id }}"
+                            data-lat="{{ $car->lat }}" data-lng="{{ $car->long }}">
                             <div class="hotel-item__thumbnail position-relative">
+                                @if($car->is_featured)
+                                <span class="hotel-item__label position-absolute" style="top: 12px; left: 12px; z-index: 2; background: #28a745; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 14px;">Featured</span>
+                                @else
                                 <span class="hotel-item__label position-absolute" style="top: 12px; left: 12px; z-index: 2; background: #28a745; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 14px;">Available</span>
-                                <a href="{{route('view-car')}}" style="display:block;">
+                                @endif
+                                <a href="{{ route('view-car', ['id' => $hashids->encode($car->id)]) }}" style="display:block;">
                                     <img 
-                                        src="https://images.unsplash.com/photo-1549317336-206569e8475c?w=360&h=240&fit=crop&crop=center"
-                                        alt="Toyota RAV4 2023"
+                                        src="{{ $car->cover_photo ? asset('storage/' . $car->cover_photo) : 'https://images.unsplash.com/photo-1549317336-206569e8475c?w=360&h=240&fit=crop&crop=center' }}"
+                                        alt="{{ $car->title }}"
                                         onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1549317336-206569e8475c?w=360&h=240&fit=crop&crop=center';"
                                         loading="eager"
                                         width="360"
@@ -276,8 +266,8 @@
                                         style="width:100%;height:220px;object-fit:cover;border-radius:12px;"
                                     />
                                 </a>
-                                <a class="hotel-item__type" href="{{route('view-car')}}" style="position:absolute;left:12px;bottom:12px;z-index:2;background:#007bff;color:#fff;padding:4px 10px;border-radius:5px;font-size:13px;">
-                                    SUV
+                                <a class="hotel-item__type" href="#" style="position:absolute;left:12px;bottom:12px;z-index:2;background:#007bff;color:#fff;padding:4px 10px;border-radius:5px;font-size:13px;">
+                                    {{ $car->category->category }}
                                 </a>
                                 <div class="add-wishlist-wrapper" style="position:absolute;top:12px;right:12px;z-index:2;">
                                     <a href="#gmz-login-popup" class="add-wishlist gmz-box-popup" data-effect="mfp-zoom-in">
@@ -296,21 +286,21 @@
                                     </div>
                                 </div>
                                 <h3 class="hotel-item__title" style="font-size:1.25rem;font-weight:600;">
-                                    <a href="{{route('view-car')}}" style="color:#222;text-decoration:none;">Toyota RAV4 2023</a>
+                                    <a href="{{ route('view-car', ['id' => $hashids->encode($car->id)]) }}" style="color:#222;text-decoration:none;">{{ $car->title }}</a>
                                 </h3>
                                 <div class="hotel-item__meta" style="margin:18px 0 12px 0;">
                                     <div class="i-meta d-flex align-items-center" style="font-size:15px;color:#888;">
                                         <i class="fal fa-map-marker-alt" style="margin-right:6px;"></i>
-                                        <span>Stone Town Car Rental</span>
+                                        <span>{{ $car->location }}</span>
                                     </div>
                                 </div>
                                 <div style="margin-top:18px;">
                                     <div class="tour-item__price mb-2" style="text-align:left;">
-                                        <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600;">USD 45.00</span>
+                                        <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600;">USD {{ number_format($car->base_price, 2) }}</span>
                                         <span class="_unit" style="color:#2e8b57;font-size:1rem;">/Day</span>
                                     </div>
                                     <a class="btn btn-primary btn-sm tour-item__view-detail"
-                                        href="{{route('view-car')}}"
+                                        href="{{ route('view-car', ['id' => $hashids->encode($car->id)]) }}"
                                         style="width:100%;display:block;text-align:center;font-size:1rem;padding:8px 22px;border-radius:7px;">
                                         View Details
                                     </a>
@@ -318,38 +308,18 @@
                             </div>
                         </div>
                     </div>
-                    @endfor
+                    @empty
+                    <div class="col-12">
+                        <div class="text-center py-5">
+                            <h3>No cars found</h3>
+                            <p>Try adjusting your search criteria</p>
+                        </div>
+                    </div>
+                    @endforelse
                 </div>
 
                 <nav>
-                    <ul class="pagination">
-                        <li class="page-item disabled" aria-disabled="true" aria-label="« Previous">
-                            <span class="page-link" aria-hidden="true">‹</span>
-                        </li>
-                        <li class="page-item active" aria-current="page"><span class="page-link">1</span></li>
-                        <li class="page-item"><a class="page-link"
-                                href="https://www.zanzibarbookings.com/car-search?page=2">2</a></li>
-                        <li class="page-item"><a class="page-link"
-                                href="https://www.zanzibarbookings.com/car-search?page=3">3</a></li>
-                        <li class="page-item"><a class="page-link"
-                                href="https://www.zanzibarbookings.com/car-search?page=4">4</a></li>
-                        <li class="page-item"><a class="page-link"
-                                href="https://www.zanzibarbookings.com/car-search?page=5">5</a></li>
-                        <li class="page-item"><a class="page-link"
-                                href="https://www.zanzibarbookings.com/car-search?page=6">6</a></li>
-                        <li class="page-item"><a class="page-link"
-                                href="https://www.zanzibarbookings.com/car-search?page=7">7</a></li>
-                        <li class="page-item"><a class="page-link"
-                                href="https://www.zanzibarbookings.com/car-search?page=8">8</a></li>
-                        <li class="page-item"><a class="page-link"
-                                href="https://www.zanzibarbookings.com/car-search?page=9">9</a></li>
-                        <li class="page-item"><a class="page-link"
-                                href="https://www.zanzibarbookings.com/car-search?page=10">10</a></li>
-                        <li class="page-item">
-                            <a class="page-link" href="https://www.zanzibarbookings.com/car-search?page=2" rel="next"
-                                aria-label="Next »">›</a>
-                        </li>
-                    </ul>
+                    {{ $cars->links() }}
                 </nav>
             </div>
         </div>
@@ -383,39 +353,55 @@
             ]
         });
 
-        // Add markers for car rental locations in Zanzibar
-        const locations = [
-            { lat: -5.7237, lng: 39.3027, title: "Stone Town Car Rental", info: "Main car rental hub in Stone Town" },
-            { lat: -5.7403, lng: 39.2926, title: "Nungwi Car Rental", info: "Car rental near Nungwi Beach" },
-            { lat: -6.1649, lng: 39.4359, title: "Paje Car Rental", info: "Car rental near Paje Beach" },
-            { lat: -5.7549, lng: 39.2880, title: "Kendwa Car Rental", info: "Car rental near Kendwa Beach" },
-            { lat: -6.1429, lng: 39.4945, title: "Jambiani Car Rental", info: "Car rental near Jambiani Beach" },
-            { lat: -6.1649, lng: 39.4359, title: "Michamvi Car Rental", info: "Car rental near Michamvi Peninsula" },
-            { lat: -5.9412, lng: 39.3623, title: "Matemwe Car Rental", info: "Car rental near Matemwe Beach" },
-            { lat: -5.7237, lng: 39.3027, title: "Kiwengwa Car Rental", info: "Car rental near Kiwengwa Beach" },
-            { lat: -6.1649, lng: 39.4359, title: "Bwejuu Car Rental", info: "Car rental near Bwejuu Beach" },
-            { lat: -6.1649, lng: 39.4359, title: "Pingwe Car Rental", info: "Car rental near Pingwe Beach" }
-        ];
+        // Get cars data from Laravel
+        const cars = @json($cars);
 
-        // Add markers for each location
-        locations.forEach(location => {
-            const marker = new google.maps.Marker({
-                position: { lat: location.lat, lng: location.lng },
-                map: map,
-                title: location.title,
-                icon: {
-                    url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
-                    scaledSize: new google.maps.Size(20, 20)
+        // Add markers for each car
+        cars.forEach(car => {
+            if (car.lat && car.lng) {
+                const marker = new google.maps.Marker({
+                    position: { lat: parseFloat(car.lat), lng: parseFloat(car.lng) },
+                    map: map,
+                    title: car.title,
+                    icon: {
+                        url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+                        scaledSize: new google.maps.Size(20, 20)
+                    }
+                });
+
+                // Add info window
+                const infoWindow = new google.maps.InfoWindow({
+                    content: `
+                        <div style="padding: 10px; max-width: 250px;">
+                            <h6 style="margin: 0 0 8px 0; font-weight: 600;">${car.title}</h6>
+                            <p style="margin: 0 0 8px 0; color: #666; font-size: 14px;">
+                                <i class="fas fa-map-marker-alt" style="margin-right: 5px;"></i>${car.location}
+                            </p>
+                            <p style="margin: 0 0 8px 0; color: #2e8b57; font-weight: 600;">
+                                USD ${parseFloat(car.base_price).toFixed(2)} /day
+                            </p>
+                            <a href="/view-car/${car.id}" style="color: #007bff; text-decoration: none; font-size: 14px;">
+                                View Details →
+                            </a>
+                        </div>
+                    `
+                });
+
+                marker.addListener('click', () => {
+                    infoWindow.open(map, marker);
+                });
+            }
+        });
+
+        // Add click listeners to car cards to center map on marker
+        document.querySelectorAll('.tour-item').forEach(card => {
+            card.addEventListener('click', function() {
+                const lat = parseFloat(this.dataset.lat);
+                const lng = parseFloat(this.dataset.lng);
+                if (lat && lng) {
+                    map.setCenter({ lat: lat, lng: lng });
+                    map.setZoom(12);
                 }
-            });
-
-            // Add info window
-            const infoWindow = new google.maps.InfoWindow({
-                content: `<div style="padding: 5px;"><strong>${location.title}</strong><br>${location.info}</div>`
-            });
-
-            marker.addListener('click', () => {
-                infoWindow.open(map, marker);
             });
         });
     }

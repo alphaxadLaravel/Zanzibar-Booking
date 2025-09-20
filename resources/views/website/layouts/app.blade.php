@@ -13,24 +13,6 @@
 
 <body class="body">
 
-    <div id="preloader" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;background:#fff;display:flex;align-items:center;justify-content:center;">
-        <img src="{{ asset('logo.png') }}" alt="Loading..." style="width:90px;height:90px;object-fit:contain;animation:preloader-zoom 1s infinite alternate;">
-    </div>
-    <style>
-        @keyframes preloader-zoom {
-            0% { transform: scale(1);}
-            100% { transform: scale(1.18);}
-        }
-    </style>
-    <script>
-        window.addEventListener('load', function() {
-            var preloader = document.getElementById('preloader');
-            if (preloader) {
-                preloader.style.display = 'none';
-            }
-        });
-    </script>
-
     @include('website.layouts.header')
 
     <div class="site-content">

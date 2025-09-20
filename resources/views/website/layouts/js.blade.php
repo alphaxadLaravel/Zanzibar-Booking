@@ -7,6 +7,8 @@
 <script src="{{asset('vendors/matchHeight.js')}}"></script>
 <script src="{{asset('js/bootstrap-validate.js')}}"></script>
 
+<link href="https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/7.4.47/css/materialdesignicons.min.css"
+rel="stylesheet">
 <script src="{{asset('vendors/fotorama-4.6.4/fotorama.js')}}"></script>
 
 <!-- Main JavaScript files for carousel functionality -->

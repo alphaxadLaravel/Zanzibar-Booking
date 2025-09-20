@@ -1,26 +1,39 @@
 @extends('website.layouts.app')
 
+@php
+use Illuminate\Support\Str;
+@endphp
+
 @section('pages')
 <section class="gallery">
-    <div class="gmz-carousel-with-lightbox" data-count="33">
-        @for ($i = 0; $i < 10; $i++) <a
-            href="{{asset('https://www.zanzibarbookings.com/storage/2024/02/28/emarald-michamvi-34-1709067436.jpg')}}">
-            <img src="{{asset('https://www.zanzibarbookings.com/storage/2024/02/28/emarald-michamvi-34-1709067436.jpg')}}"
-                alt="home slider" />
-            </a>
-            @endfor
+    <div class="gmz-carousel-with-lightbox" data-count="{{ $hotel->photos->count() }}">
+        @forelse($hotel->photos as $photo)
+        <a href="{{ asset('storage/' . $photo->photo) }}">
+            <img src="{{ asset('storage/' . $photo->photo) }}" alt="{{ $hotel->title }}"
+                style="width: 100%; height: 400px; object-fit: cover; display: block;" loading="lazy" />
+        </a>
+        @empty
+        <a
+            href="{{ $hotel->cover_photo ? asset('storage/' . $hotel->cover_photo) : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop&crop=center' }}">
+            <img src="{{ $hotel->cover_photo ? asset('storage/' . $hotel->cover_photo) : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop&crop=center' }}"
+                alt="{{ $hotel->title }}" style="width: 100%; height: 400px; object-fit: cover; display: block;"
+                loading="lazy" />
+        </a>
+        @endforelse
     </div>
 </section>
 <div class="breadcrumb">
     <div class="container">
         <ul>
-            <li><a href="../index.html">Home</a></li>
-            <li><span>Aluna Paje</span></li>
+            <li><a href="{{ route('index') }}">Home</a></li>
+            <li><span>{{ $hotel->title }}</span></li>
         </ul>
     </div>
 </div>
+
 <div class="container">
     <div class="row">
+        {{-- ############## MAIN ############################# --}}
         <div class="col-lg-8 pb-5">
             <div class="hotel-star">
                 <div class="star-rating">
@@ -32,19 +45,12 @@
                 </div>
             </div>
             <div class="d-flex align-items-center mb-3" style="gap: 16px;">
-                <h1 class="post-title mb-0"
-                    style="font-size:2.3rem;font-weight:700;line-height:1.2;flex:1 1 auto;color:#222;">
-                    Aluna Paje
-                </h1>
-                <div class="add-wishlist-wrapper" style="margin-left:8px;">
-                    <a href="#gmz-login-popup" class="add-wishlist gmz-box-popup" data-effect="mfp-zoom-in"
-                        style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;background:#f5f5f5;box-shadow:0 2px 8px rgba(0,0,0,0.06);transition:background 0.2s;">
-                        <i class="fal fa-heart" style="font-size:1.5rem;color:#ff5722;transition:color 0.2s;"></i>
-                    </a>
-                </div>
+                <h2 class="post-title my-2 bold">
+                    {{ $hotel->title }}
+                </h2>
             </div>
             <p class="location">
-                <i class="fal fa-map-marker-alt"></i> Paje Beach, Paje
+                <i class="fal fa-map-marker-alt"></i> {{ $hotel->location }}
             </p>
 
             <div class="meta">
@@ -52,117 +58,55 @@
                     <li class="col-6 col-md-4 mb-2">
                         <div class="d-flex flex-column">
                             <span class="label text-muted" style="font-size:13px;">Type</span>
-                            <span class="value fw-semibold" style="font-size:15px;">Mid range Hotels</span>
+                            <span class="value fw-semibold" style="font-size:15px;">{{ $hotel->category ?
+                                $hotel->category->category : 'Hotel' }}</span>
                         </div>
                     </li>
                     <li class="col-6 col-md-4 mb-2">
                         <div class="d-flex flex-column">
-                            <span class="label text-muted" style="font-size:13px;">Checkin</span>
-                            <span class="value fw-semibold" style="font-size:15px;">2:00 pm</span>
+                            <span class="label text-muted" style="font-size:13px;">Price</span>
+                            <span class="value fw-semibold" style="font-size:15px;">USD {{
+                                number_format($hotel->base_price, 2) }}/night</span>
                         </div>
                     </li>
                     <li class="col-6 col-md-4 mb-2">
                         <div class="d-flex flex-column">
-                            <span class="label text-muted" style="font-size:13px;">Checkout</span>
-                            <span class="value fw-semibold" style="font-size:15px;">10:00 am</span>
+                            <span class="label text-muted" style="font-size:13px;">Rating</span>
+                            <span class="value fw-semibold" style="font-size:15px;">{{ $hotel->ratings ?
+                                number_format($hotel->ratings, 1) : '5.0' }}/5</span>
                         </div>
                     </li>
-
                 </ul>
-
             </div>
             <hr>
             <section class="description">
-                <h2 class="section-title">Detail</h2>
+                <h4 class="section-title">Detail</h4>
                 <div class="section-content">
                     <p>
-                        <span style="color: rgb(0, 0, 0)">Aluna Paje is a new accommodation in the heart of the
-                            lively center of Paje. Aluna is characterized by a personal
-                            approach, good service and comfortable rooms. Feeling at
-                            home away from home. The hotel is built in European
-                            architecture and offers a unique combination of modern
-                            design with African details and a natural and green
-                            environment. </span>
+                        {!! $hotel->description !!}
                     </p>
                 </div>
             </section>
             <hr>
             <section class="feature">
-                <h2 class="section-title">Facilities</h2>
+                <h4 class="section-title">Facilities</h4>
                 <div class="section-content">
-                    <div class="d-flex flex-wrap">
-                        <!-- Row 1 -->
-                        <div class="facility-card d-flex align-items-center p-3 mb-3 mx-2"
-                            style="background: white; border-radius: 8px; border: 1px solid #e0e0e0; min-height: 60px; flex: 0 0 auto; min-width: 200px;">
-                            <i class="fas fa-home me-3"
-                                style="font-size: 1.5rem; color: #333; width: 24px; text-align: center;"></i>
-                            <span style="font-size: 14px; font-weight: 500; color: #333; line-height: 1.4;">The entire
-                                place is
-                                yours</span>
+                    <div class="d-flex flex-wrap" style="gap: 10px;">
+                        @forelse($hotel->features as $feature)
+                        <div class="facility-card d-flex align-items-center px-3 py-2 mb-2"
+                            style="background: #fff; border-radius: 6px; border: 1px solid #e0e0e0; min-height: 38px; flex: 0 0 auto; min-width: 140px; max-width: 220px;">
+                            @if($feature->icon)
+                            <i class="mdi {{ $feature->icon }} me-2"
+                                style="font-size: 1.2rem; color: #2e8b57; width: 20px; text-align: center;"></i>
+                            @else
+                            <i class="mdi mdi-check-circle me-2"
+                                style="font-size: 1.2rem; color: #2e8b57; width: 20px; text-align: center;"></i>
+                            @endif
+                            <span style="font-size: 13px; font-weight: 500; color: #333; line-height: 1.3;">{{ $feature->name }}</span>
                         </div>
-                        <div class="facility-card d-flex align-items-center p-3 mb-3 mx-2"
-                            style="background: white; border-radius: 8px; border: 1px solid #e0e0e0; min-height: 60px; flex: 0 0 auto; min-width: 200px;">
-                            <i class="fas fa-expand-arrows-alt me-3"
-                                style="font-size: 1.5rem; color: #333; width: 24px; text-align: center;"></i>
-                            <span style="font-size: 14px; font-weight: 500; color: #333; line-height: 1.4;">116 m²
-                                size</span>
-                        </div>
-                        <div class="facility-card d-flex align-items-center p-3 mb-3 mx-2"
-                            style="background: white; border-radius: 8px; border: 1px solid #e0e0e0; min-height: 60px; flex: 0 0 auto; min-width: 200px;">
-                            <i class="fas fa-swimming-pool me-3"
-                                style="font-size: 1.5rem; color: #333; width: 24px; text-align: center;"></i>
-                            <span style="font-size: 14px; font-weight: 500; color: #333; line-height: 1.4;">Swimming
-                                Pool</span>
-                        </div>
-                        <div class="facility-card d-flex align-items-center p-3 mb-3 mx-2"
-                            style="background: white; border-radius: 8px; border: 1px solid #e0e0e0; min-height: 60px; flex: 0 0 auto; min-width: 200px;">
-                            <i class="fas fa-umbrella-beach me-3"
-                                style="font-size: 1.5rem; color: #333; width: 24px; text-align: center;"></i>
-                            <span
-                                style="font-size: 14px; font-weight: 500; color: #333; line-height: 1.4;">Balcony</span>
-                        </div>
-                        <div class="facility-card d-flex align-items-center p-3 mb-3 mx-2"
-                            style="background: white; border-radius: 8px; border: 1px solid #e0e0e0; min-height: 60px; flex: 0 0 auto; min-width: 200px;">
-                            <i class="fas fa-parking me-3"
-                                style="font-size: 1.5rem; color: #333; width: 24px; text-align: center;"></i>
-                            <span style="font-size: 14px; font-weight: 500; color: #333; line-height: 1.4;">Free on-site
-                                parking</span>
-                        </div>
-
-                        <!-- Row 2 -->
-                        <div class="facility-card d-flex align-items-center p-3 mb-3 mx-2"
-                            style="background: white; border-radius: 8px; border: 1px solid #e0e0e0; min-height: 60px; flex: 0 0 auto; min-width: 200px;">
-                            <i class="fas fa-shower me-3"
-                                style="font-size: 1.5rem; color: #333; width: 24px; text-align: center;"></i>
-                            <span style="font-size: 14px; font-weight: 500; color: #333; line-height: 1.4;">Private
-                                bathroom</span>
-                        </div>
-                        <div class="facility-card d-flex align-items-center p-3 mb-3 mx-2"
-                            style="background: white; border-radius: 8px; border: 1px solid #e0e0e0; min-height: 60px; flex: 0 0 auto; min-width: 200px;">
-                            <i class="fas fa-wifi me-3"
-                                style="font-size: 1.5rem; color: #333; width: 24px; text-align: center;"></i>
-                            <span style="font-size: 14px; font-weight: 500; color: #333; line-height: 1.4;">Free
-                                WiFi</span>
-                        </div>
-                        <div class="facility-card d-flex align-items-center p-3 mb-3 mx-2"
-                            style="background: white; border-radius: 8px; border: 1px solid #e0e0e0; min-height: 60px; flex: 0 0 auto; min-width: 200px;">
-                            <i class="fas fa-eye me-3"
-                                style="font-size: 1.5rem; color: #333; width: 24px; text-align: center;"></i>
-                            <span style="font-size: 14px; font-weight: 500; color: #333; line-height: 1.4;">View</span>
-                        </div>
-                        <div class="facility-card d-flex align-items-center p-3 mb-3 mx-2"
-                            style="background: white; border-radius: 8px; border: 1px solid #e0e0e0; min-height: 60px; flex: 0 0 auto; min-width: 200px;">
-                            <i class="fas fa-bath me-3"
-                                style="font-size: 1.5rem; color: #333; width: 24px; text-align: center;"></i>
-                            <span style="font-size: 14px; font-weight: 500; color: #333; line-height: 1.4;">Bath</span>
-                        </div>
-                        <div class="facility-card d-flex align-items-center p-3 mb-3 mx-2"
-                            style="background: white; border-radius: 8px; border: 1px solid #e0e0e0; min-height: 60px; flex: 0 0 auto; min-width: 200px;">
-                            <i class="fas fa-snowflake me-3"
-                                style="font-size: 1.5rem; color: #333; width: 24px; text-align: center;"></i>
-                            <span style="font-size: 14px; font-weight: 500; color: #333; line-height: 1.4;">Air
-                                conditioning</span>
-                        </div>
+                        @empty
+                        <div class="text-muted" style="font-size: 14px;">No facilities listed.</div>
+                        @endforelse
                     </div>
                 </div>
             </section>
@@ -236,9 +180,17 @@
             <section class="map">
                 <h2 class="section-title">Hotel Location On Map</h2>
                 <div id="address-map-container" style="width: 100%; height: 400px">
+                    @if($hotel->lat && $hotel->long)
                     <iframe width="100%" height="100%" frameborder="0" style="border:0; border-radius: 8px;"
-                        src="https://www.google.com/maps?q=Zanzibar&output=embed" allowfullscreen aria-hidden="false"
-                        tabindex="0" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                        src="https://www.google.com/maps?q={{ $hotel->lat }},{{ $hotel->long }}&output=embed"
+                        allowfullscreen aria-hidden="false" tabindex="0" loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    @else
+                    <iframe width="100%" height="100%" frameborder="0" style="border:0; border-radius: 8px;"
+                        src="https://www.google.com/maps?q={{ $hotel->location }}&output=embed" allowfullscreen
+                        aria-hidden="false" tabindex="0" loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    @endif
                 </div>
             </section>
             <hr>
@@ -398,17 +350,17 @@
                         <p class="notice mb-4 text-muted">
                             Your email address will not be published. Required fields are marked *
                         </p>
-                        
+
                         <div class="gmz-loader">
                             <div class="loader-inner">
                                 <div class="spinner-grow text-info align-self-center loader-lg"></div>
                             </div>
                         </div>
-                        
+
                         <input type="hidden" name="post_id" value="121" />
                         <input type="hidden" name="comment_id" value="0" />
                         <input type="hidden" name="comment_type" value="hotel" />
-                        
+
                         <div class="row g-3">
                             <div class="col-12">
                                 <div class="review-select-rate mb-3">
@@ -432,7 +384,7 @@
                                         data-validation="required" />
                                 </div>
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="comment-email" class="form-label fw-semibold">Your Email *</label>
@@ -454,15 +406,16 @@
                             <div class="col-12">
                                 <div class="form-group">
                                     <label for="comment-content" class="form-label fw-semibold">Your Review *</label>
-                                    <textarea id="comment-content" name="comment_content" 
+                                    <textarea id="comment-content" name="comment_content"
                                         placeholder="Share your experience with this hotel..."
-                                        class="form-control gmz-validation" data-validation="required" rows="5"></textarea>
+                                        class="form-control gmz-validation" data-validation="required"
+                                        rows="5"></textarea>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="gmz-message mt-3"></div>
-                        
+
                         <div class="d-grid mt-4">
                             <button type="submit" class="btn btn-primary btn-lg text-uppercase fw-semibold">
                                 Submit Review
@@ -472,11 +425,15 @@
                 </div>
             </div>
         </div>
+
+
+        {{-- ################ ROOMS LIST ################ --}}
         <div class="col-lg-4">
             <div class="siderbar-single">
-
-                {{-- rooms list --}}
-                @for ($i = 0; $i < 6; $i++) 
+                <h4 class="post-title my-2 bold">
+                    Hotel Rooms To Book 
+                </h4>
+                @forelse($rooms as $room)
                 <div class="card mb-4 room-card rounded"
                     style=" overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
                     <div class="row g-0 align-items-center">
@@ -484,173 +441,63 @@
                             style="background: #f8f9fa;">
                             <div class="rounded"
                                 style="width: 80px; height: 80px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-                                <img src="https://www.zanzibarbookings.com/storage/2024/02/28/emarald-michamvi-34-1709067436.jpg"
-                                    alt="Room Image" class="rounded"
+                                <img src="{{ $room->photos->first() ? asset('storage/' . $room->photos->first()->photo) : ($room->cover_photo ? asset('storage/' . $room->cover_photo) : ($hotel->cover_photo ? asset('storage/' . $hotel->cover_photo) : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=80&h=80&fit=crop&crop=center')) }}"
+                                    alt="{{ $room->title }}" class="rounded"
                                     style="width: 100%; height: 100%; object-fit: cover;">
                             </div>
                         </div>
                         <div class="col-8">
                             <div class="card-body p-3">
-                                <h5 class="card-title mb-1" style="font-size: 1.1rem; font-weight: 600;">Deluxe Double
-                                    Room</h5>
+                                <h5 class="card-title mb-1" style="font-size: 1.1rem; font-weight: 600;">{{
+                                    $room->title ?? 'Standard Room' }}</h5>
                                 <div class="mb-2" style="font-size: 13px; color: #666;">
-                                    <i class="fa fa-user"></i> 2 Guests &nbsp; | &nbsp;
-                                    <i class="fa fa-bed"></i> 1 King Bed
+                                    <i class="fa fa-user"></i> {{ $room->people ?? '2' }} Guests &nbsp; | &nbsp;
+                                    <i class="fa fa-bed"></i> {{ $room->beds ?? '1' }} {{ $room->beds == 1 ? 'Bed' : 'Beds' }}
                                 </div>
                                 <div class="d-flex align-items-center justify-content-between">
                                     <div>
-                                        <span class="fw-bold" style="font-size: 1.1rem; color: #ff5722;">$120</span>
+                                        <span class="fw-bold" style="font-size: 1.1rem; color: #ff5722;">${{
+                                            number_format($room->price ?? $hotel->base_price, 0) }}</span>
                                         <span style="font-size: 13px; color: #888;">/ night</span>
                                     </div>
-                                    <a href="#book-room" class="btn btn-primary btn-sm gmz-box-popup"
-                                        data-effect="mfp-zoom-in" style="font-size: 13px;">Book Now</a>
+                                    <a href="{{ route('confirm-booking', ['deal_id' => $hotel->id]) }}" class="btn btn-primary btn-sm"
+                                        style="font-size: 13px;">Book Now</a>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-
-
-            <div class="white-popup mfp-with-anim mfp-hide gmz-popup-form" id="book-room">
-                <div class="popup-inner">
-                    <h4 class="popup-title">Deluxe Double Room</h4>
-                    <div class="popup-content">
-                        <form class="booking-form" id="booking-form">
-                            <div class="gmz-loader">
-                                <div class="loader-inner">
-                                    <div class="spinner-grow text-info align-self-center loader-lg"></div>
-                                </div>
-                            </div>
-                            
-
-                            <!-- Booking Form Fields -->
-                            <div class="form">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="field-wrapper input">
-                                            <label for="rooms">NUMBER OF ROOMS</label>
-                                            <i class="fal fa-bed"></i>
-                                            <select id="rooms" name="rooms" class="form-control gmz-validation" data-validation="required">
-                                                <option value="">Select rooms</option>
-                                                <option value="1">1 Room</option>
-                                                <option value="2">2 Rooms</option>
-                                                <option value="3">3 Rooms</option>
-                                                <option value="4">4 Rooms</option>
-                                                <option value="5">5 Rooms</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="field-wrapper input">
-                                            <label for="guests">NUMBER OF GUESTS</label>
-                                            <i class="fal fa-users"></i>
-                                            <select id="guests" name="guests" class="form-control gmz-validation" data-validation="required">
-                                                <option value="">Select guests</option>
-                                                <option value="1">1 Guest</option>
-                                                <option value="2">2 Guests</option>
-                                                <option value="3">3 Guests</option>
-                                                <option value="4">4 Guests</option>
-                                                <option value="5">5 Guests</option>
-                                                <option value="6">6 Guests</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="field-wrapper input">
-                                            <label for="checkin">CHECK-IN DATE</label>
-                                            <i class="fal fa-calendar-alt"></i>
-                                            <input id="checkin" name="checkin" type="date" class="form-control gmz-validation" 
-                                                   data-validation="required" min="">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="field-wrapper input">
-                                            <label for="checkout">CHECK-OUT DATE</label>
-                                            <i class="fal fa-calendar-alt"></i>
-                                            <input id="checkout" name="checkout" type="date" class="form-control gmz-validation" 
-                                                   data-validation="required" min="">
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Price Calculation Display -->
-                                <div class="price-calculation my-4 p-2" style="background: #e8f5e8; border-radius: 8px; border-left: 4px solid #28a745;">
-                                    <div class="row">
-                                        <div class="col-6">
-                                            <div class="calculation-item">
-                                                <span class="label">Price per Room/Night:</span>
-                                                <span class="value" id="room-price">$120</span>
-                                            </div>
-                                            <div class="calculation-item">
-                                                <span class="label">Number of Rooms:</span>
-                                                <span class="value" id="rooms-count">0</span>
-                                            </div>
-                                        </div>
-                                        <div class="col-6">
-                                            <div class="calculation-item">
-                                                <span class="label">Number of Nights:</span>
-                                                <span class="value" id="nights">0</span>
-                                            </div>
-                                            <div class="calculation-item">
-                                                <span class="label">Calculation:</span>
-                                                <span class="value" id="calculation">0 × 0 = $0</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <hr style="margin: 10px 0;">
-                                    <div class="total-price text-center">
-                                        <h5 class="mb-0">
-                                            <span class="label">Total Price: </span>
-                                            <span class="value text-success" id="total-price" style="font-size: 1.5rem; font-weight: 700;">$0</span>
-                                        </h5>
-                                        <small class="text-muted">Rooms × Nights × Price per Room/Night</small>
-                                    </div>
-                                </div>
-
-                                <div class="gmz-message"></div>
-
-                                <!-- Submit Button -->
-                                <div class="d-flex justify-content-center">
-                                    <button type="submit" class="btn btn-primary w-100" style="
-                                        text-align: center;
-                                        display: flex;
-                                        align-items: center;
-                                        justify-content: center;
-                                        padding: 12px 24px;
-                                        font-size: 16px;
-                                        font-weight: 600;
-                                    ">
-                                        <i class="fal fa-calendar-check me-2"></i>
-                                        Confirm Booking
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
+                @empty
+                <div class="well my-4 d-flex flex-column align-items-center justify-content-center text-center py-5" style="background: #f8f9fa; border-radius: 12px; border: 1px solid #e0e0e0;">
+                    <div class="mb-3">
+                        <i class="mdi mdi-bed-empty" style="font-size: 2.5rem; color: #bdbdbd;"></i>
                     </div>
+                    <h5 class="mb-2" style="color: #888;">No rooms available</h5>
+                    <p class="mb-0" style="color: #aaa; font-size: 1rem;">Please check back later or contact the hotel for more information.</p>
                 </div>
+                @endforelse
             </div>
-            @endfor
-           
         </div>
     </div>
 </div>
-</div>
 
 
+@if($nearbyHotels->isNotEmpty())
 <section class="list-hotel list-hotel--grid py-40 bg-gray-100 mb-0 nearby">
     <div class="container">
-        <h2 class="section-title mb-20">Hotels Near By</h2>
+        <h4 class="section-title mb-20">Nearby Hotels & Apartments</h4>
         <div class="row">
-            @for ($i = 0; $i < 3; $i++) <div class="col-lg-4 col-md-4 col-sm-12">
+            @foreach($nearbyHotels as $nearbyHotel)
+            <div class="col-lg-4 col-md-4 col-sm-12">
                 <div class="tour-item tour-item--grid" data-plugin="matchHeight">
                     <div class="tour-item__thumbnail position-relative">
+                        @if($nearbyHotel->is_featured)
                         <span class="tour-item__label position-absolute"
                             style="top: 12px; left: 12px; z-index: 2; background: #ff5722; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 14px;">Featured</span>
-                        <a href="{{route('view-hotel')}}" style="display:block;">
-                            <img src="https://www.zanzibarbookings.com/storage/2023/09/12/dji-0973-hdr-sky5-3-1694521316-360x240.jpg"
-                                alt="Zanzibar Slave Route &amp; Heritage Tour" loading="eager" width="360" height="240"
+                        @endif
+                        <a href="{{route('view-hotel', ['id' => $hashids->encode($nearbyHotel->id)])}}" style="display:block;">
+                            <img src="{{ $nearbyHotel->cover_photo ? asset('storage/' . $nearbyHotel->cover_photo) : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=360&h=240&fit=crop&crop=center' }}"
+                                alt="{{ $nearbyHotel->title }}" loading="eager" width="360" height="240"
                                 style="width:100%;height:220px;object-fit:cover;border-radius:12px;" />
                         </a>
 
@@ -671,193 +518,388 @@
                             </div>
                         </div>
                         <h3 class="car-item__title" style="font-size:1.25rem;font-weight:600;">
-                            <a href="{{route('view-hotel')}}" style="color:#222;text-decoration:none;">Opera Hotel</a>
+                            <a href="{{route('view-hotel', ['id' => $hashids->encode($nearbyHotel->id)])}}"
+                                style="color:#222;text-decoration:none;">{{ $nearbyHotel->title }}</a>
                         </h3>
                         <div class="tour-item__meta" style="margin:18px 0 12px 0;">
                             <div class="i-meta d-flex align-items-center" style="font-size:15px;color:#888;">
-                                <i class="fas fa-map-marker-alt me-2"></i>Jambiani, Zanzibar
+                                <i class="fas fa-map-marker-alt me-2"></i>{{ $nearbyHotel->location }}
                             </div>
                         </div>
                         <div class="d-flex justify-content-between align-items-center" style="margin-top:18px;">
                             <div class="tour-item__price">
                                 <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600;">USD
-                                    120.00</span>
+                                    {{ number_format($nearbyHotel->base_price, 2) }}</span>
                                 <span class="_unit" style="color:#2e8b57;font-size:1rem;">/Night</span>
                             </div>
-                            <a class="btn btn-primary btn-sm tour-item__view-detail" href="{{route('view-hotel')}}"
+                            <a class="btn btn-primary btn-sm tour-item__view-detail"
+                                href="{{route('view-hotel', ['id' => $hashids->encode($nearbyHotel->id)])}}"
                                 style="font-size:1rem;padding:8px 22px;border-radius:7px;">
                                 View Detail
                             </a>
                         </div>
                     </div>
                 </div>
+            </div>
+            @endforeach
         </div>
-        @endfor
-
-
-    </div>
     </div>
 </section>
+@endif
+
+@if($nearbyTours->isNotEmpty())
+<section class="list-tour list-tour--grid py-40 bg-white mb-0 nearby-activities">
+    <div class="container">
+        <h4 class="section-title mb-20">Nearby Activities</h4>
+        <div class="row">
+            @foreach($nearbyTours as $tour)
+            <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
+                <div class="tour-item tour-item--grid" data-plugin="matchHeight">
+                    <div class="tour-item__thumbnail position-relative">
+                        @if($tour->is_featured)
+                        <span class="tour-item__label position-absolute"
+                            style="top: 12px; left: 12px; z-index: 2; background: #ff5722; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 14px;">Featured</span>
+                        @endif
+                        <a href="{{route('view-tour', ['id' => $hashids->encode($tour->id)])}}" style="display:block;">
+                            <img src="{{ $tour->cover_photo ? asset('storage/' . $tour->cover_photo) : 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=360&h=240&fit=crop&crop=center' }}"
+                                alt="{{ $tour->title }}" loading="eager" width="360" height="240"
+                                style="width:100%;height:220px;object-fit:cover;border-radius:12px;" />
+                        </a>
+
+                        <div class="add-wishlist-wrapper" style="position:absolute;top:12px;right:12px;z-index:2;">
+                            <a href="#gmz-login-popup" class="add-wishlist gmz-box-popup" data-effect="mfp-zoom-in">
+                                <i class="fal fa-heart"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="tour-item__details" style="padding-top:18px;">
+                        <div class="star-rating mb-2">
+                            <div class="star-rating">
+                                <i class="fa fa-star text-warning"></i>
+                                <i class="fa fa-star text-warning"></i>
+                                <i class="fa fa-star text-warning"></i>
+                                <i class="fa fa-star text-warning"></i>
+                                <i class="fa fa-star text-warning"></i>
+                            </div>
+                        </div>
+                        <h3 class="tour-item__title" style="font-size:1.25rem;font-weight:600;">
+                            <a href="{{route('view-tour', ['id' => $hashids->encode($tour->id)])}}"
+                                style="color:#222;text-decoration:none;">{{ $tour->title }}</a>
+                        </h3>
+                        <div class="tour-item__meta" style="margin:18px 0 12px 0;">
+                            <div class="i-meta d-flex align-items-center" style="font-size:15px;color:#888;">
+                                <i class="fas fa-map-marker-alt me-2"></i>{{ $tour->location }}
+                            </div>
+                        </div>
+                        @if($tour->tours)
+                        <div class="tour-duration mb-2" style="font-size:14px;color:#666;">
+                            <i class="fas fa-clock me-2"></i>{{ $tour->tours->duration ?? 'Full Day' }}
+                        </div>
+                        @endif
+                        <div class="d-flex justify-content-between align-items-center" style="margin-top:18px;">
+                            <div class="tour-item__price">
+                                <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600;">USD
+                                    {{ number_format($tour->base_price, 2) }}</span>
+                                <span class="_unit" style="color:#2e8b57;font-size:1rem;">/person</span>
+                            </div>
+                            <a class="btn btn-primary btn-sm tour-item__view-detail"
+                                href="{{route('view-tour', ['id' => $hashids->encode($tour->id)])}}"
+                                style="font-size:1rem;padding:8px 22px;border-radius:7px;">
+                                View Detail
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+</section>
+@endif
+
+<!-- Booking Modal -->
+@foreach($rooms as $room)
+<div id="book-room-{{ $room->id }}" class="white-popup gmz-popup-form" style="display: none;">
+    <div class="popup-inner">
+        <h3 class="popup-title">Book {{ $room->title }}</h3>
+        <form id="booking-form-{{ $room->id }}" class="booking-form">
+            <div class="gmz-loader" style="display: none;">
+                <div class="loader-inner">
+                    <div class="spinner-grow text-info align-self-center loader-lg"></div>
+                </div>
+            </div>
+            
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="field-wrapper">
+                        <label>Check-in Date *</label>
+                        <i class="fas fa-calendar-alt"></i>
+                        <input type="date" id="checkin-{{ $room->id }}" name="checkin" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="field-wrapper">
+                        <label>Check-out Date *</label>
+                        <i class="fas fa-calendar-alt"></i>
+                        <input type="date" id="checkout-{{ $room->id }}" name="checkout" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="field-wrapper">
+                        <label>Number of Rooms *</label>
+                        <i class="fas fa-bed"></i>
+                        <select id="rooms-{{ $room->id }}" name="rooms" required>
+                            <option value="">Select rooms</option>
+                            @for($i = 1; $i <= $room->number_of_rooms; $i++)
+                                <option value="{{ $i }}">{{ $i }} {{ $i == 1 ? 'Room' : 'Rooms' }}</option>
+                            @endfor
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="field-wrapper">
+                        <label>Number of Guests *</label>
+                        <i class="fas fa-user"></i>
+                        <select id="guests-{{ $room->id }}" name="guests" required>
+                            <option value="">Select guests</option>
+                            @for($i = 1; $i <= $room->people; $i++)
+                                <option value="{{ $i }}">{{ $i }} {{ $i == 1 ? 'Guest' : 'Guests' }}</option>
+                            @endfor
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="field-wrapper">
+                        <label>First Name *</label>
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="first_name-{{ $room->id }}" name="first_name" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="field-wrapper">
+                        <label>Last Name *</label>
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="last_name-{{ $room->id }}" name="last_name" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="field-wrapper">
+                        <label>Email Address *</label>
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="email-{{ $room->id }}" name="email" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="field-wrapper">
+                        <label>Phone Number *</label>
+                        <i class="fas fa-phone"></i>
+                        <input type="tel" id="phone-{{ $room->id }}" name="phone" required>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="field-wrapper">
+                        <label>Special Requests</label>
+                        <i class="fas fa-comment"></i>
+                        <textarea id="special_requests-{{ $room->id }}" name="special_requests" rows="3" placeholder="Any special requests or notes..."></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Price Calculation -->
+            <div class="price-calculation mt-4 p-3" style="background: #f8f9fa; border-radius: 8px; border: 1px solid #e0e0e0;">
+                <h6 class="mb-3">Price Summary</h6>
+                <div class="calculation-item">
+                    <span class="label">Room Price:</span>
+                    <span class="value" id="room-price-{{ $room->id }}">${{ number_format($room->price, 0) }}</span>
+                </div>
+                <div class="calculation-item">
+                    <span class="label">Rooms:</span>
+                    <span class="value" id="rooms-count-{{ $room->id }}">0</span>
+                </div>
+                <div class="calculation-item">
+                    <span class="label">Nights:</span>
+                    <span class="value" id="nights-{{ $room->id }}">0</span>
+                </div>
+                <div class="calculation-item">
+                    <span class="label">Calculation:</span>
+                    <span class="value" id="calculation-{{ $room->id }}">0 × 0 = $0</span>
+                </div>
+                <hr>
+                <div class="calculation-item">
+                    <span class="label"><strong>Total Price:</strong></span>
+                    <span class="value" id="total-price-{{ $room->id }}" style="color: #2e8b57; font-weight: bold;">$0</span>
+                </div>
+            </div>
+            
+            <div class="d-grid mt-4">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-credit-card me-2"></i>Confirm Booking
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+@endforeach
 
 <style>
-/* Fix modal z-index to appear above header */
-.white-popup.gmz-popup-form {
-    z-index: 2147483647 !important;
-}
+    /* Fix modal z-index to appear above header */
+    .white-popup.gmz-popup-form {
+        z-index: 2147483647 !important;
+    }
 
-.mfp-bg {
-    z-index: 2147483646 !important;
-}
+    .mfp-bg {
+        z-index: 2147483646 !important;
+    }
 
-.mfp-wrap {
-    z-index: 2147483646 !important;
-}
+    .mfp-wrap {
+        z-index: 2147483646 !important;
+    }
 
-.mfp-container {
-    z-index: 2147483646 !important;
-}
+    .mfp-container {
+        z-index: 2147483646 !important;
+    }
 
-/* Ensure modal content is properly positioned */
-.mfp-content {
-    z-index: 2147483647 !important;
-}
+    /* Ensure modal content is properly positioned */
+    .mfp-content {
+        z-index: 2147483647 !important;
+    }
 
-/* Fix for Magnific Popup modal positioning */
-.mfp-ready .mfp-bg {
-    opacity: 0.8;
-}
+    /* Fix for Magnific Popup modal positioning */
+    .mfp-ready .mfp-bg {
+        opacity: 0.8;
+    }
 
-.mfp-ready .mfp-wrap {
-    opacity: 1;
-}
+    .mfp-ready .mfp-wrap {
+        opacity: 1;
+    }
 
-/* Ensure modal is centered and visible */
-.white-popup {
-    position: relative;
-    background: white;
-    padding: 0;
-    width: auto;
-    max-width: 500px;
-    margin: 0 auto;
-    border-radius: 8px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-}
+    /* Ensure modal is centered and visible */
+    .white-popup {
+        position: relative;
+        background: white;
+        padding: 0;
+        width: auto;
+        max-width: 500px;
+        margin: 0 auto;
+        border-radius: 8px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
 
-.popup-inner {
-    padding: 15px;
-}
+    .popup-inner {
+        padding: 15px;
+    }
 
-.popup-title {
-    margin-bottom: 15px;
-    font-size: 20px;
-    font-weight: 600;
-    color: #333;
-    text-align: center;
-    border-bottom: 2px solid #f0f0f0;
-    padding-bottom: 10px;
-}
+    .popup-title {
+        margin-bottom: 15px;
+        font-size: 20px;
+        font-weight: 600;
+        color: #333;
+        text-align: center;
+        border-bottom: 2px solid #f0f0f0;
+        padding-bottom: 10px;
+    }
 
-.calculation-item {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 5px;
-    font-size: 13px;
-}
+    .calculation-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+        font-size: 13px;
+    }
 
-.calculation-item .label {
-    color: #666;
-    font-weight: 500;
-}
+    .calculation-item .label {
+        color: #666;
+        font-weight: 500;
+    }
 
-.calculation-item .value {
-    color: #333;
-    font-weight: 600;
-}
+    .calculation-item .value {
+        color: #333;
+        font-weight: 600;
+    }
 
-.price-calculation {
-    transition: all 0.3s ease;
-}
+    .price-calculation {
+        transition: all 0.3s ease;
+    }
 
-.price-calculation:hover {
-    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.15);
-}
+    .price-calculation:hover {
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.15);
+    }
 
-.booking-form .field-wrapper {
-    position: relative;
-}
+    .booking-form .field-wrapper {
+        position: relative;
+    }
 
-.booking-form .field-wrapper input,
-.booking-form .field-wrapper select,
-.booking-form .field-wrapper textarea {
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    transition: border-color 0.3s ease;
-    font-size: 14px;
-}
+    .booking-form .field-wrapper input,
+    .booking-form .field-wrapper select,
+    .booking-form .field-wrapper textarea {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        transition: border-color 0.3s ease;
+        font-size: 14px;
+    }
 
-.booking-form .field-wrapper input:focus,
-.booking-form .field-wrapper select:focus,
-.booking-form .field-wrapper textarea:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-}
+    .booking-form .field-wrapper input:focus,
+    .booking-form .field-wrapper select:focus,
+    .booking-form .field-wrapper textarea:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
 
-.booking-form label {
-    font-size: 11px;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 2px;
-    display: block;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
+    .booking-form label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 2px;
+        display: block;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
 
-.booking-form  {
-    margin-bottom: 10px !important;
-}
+    .booking-form {
+        margin-bottom: 10px !important;
+    }
 
-.booking-form .mb-4 {
-    margin-bottom: 15px !important;
-}
+    .booking-form .mb-4 {
+        margin-bottom: 15px !important;
+    }
 
-.popup-title {
-    margin-bottom: 15px;
-    font-size: 20px;
-    font-weight: 600;
-    color: #333;
-    text-align: center;
-    border-bottom: 2px solid #f0f0f0;
-    padding-bottom: 10px;
-}
+    .popup-title {
+        margin-bottom: 15px;
+        font-size: 20px;
+        font-weight: 600;
+        color: #333;
+        text-align: center;
+        border-bottom: 2px solid #f0f0f0;
+        padding-bottom: 10px;
+    }
 
-.booking-form .field-wrapper {
-    position: relative;
-}
+    .booking-form .field-wrapper {
+        position: relative;
+    }
 
-.booking-form .field-wrapper i {
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #666;
-    z-index: 2;
-    font-size: 12px;
-}
+    .booking-form .field-wrapper i {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #666;
+        z-index: 2;
+        font-size: 12px;
+    }
 
-.booking-form .field-wrapper input,
-.booking-form .field-wrapper select,
-.booking-form .field-wrapper textarea {
-    padding: 6px 6px 6px 35px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    transition: border-color 0.3s ease;
-    font-size: 13px;
-}
+    .booking-form .field-wrapper input,
+    .booking-form .field-wrapper select,
+    .booking-form .field-wrapper textarea {
+        padding: 6px 6px 6px 35px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        transition: border-color 0.3s ease;
+        font-size: 13px;
+    }
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function() {
     // Fix modal z-index issues
     function fixModalZIndex() {
         // Ensure modals are above header
@@ -882,19 +924,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Set minimum date to today
+    // Set minimum date to today for all booking forms
     const today = new Date().toISOString().split('T')[0];
-    document.getElementById('checkin').min = today;
-    document.getElementById('checkout').min = today;
     
-    // Room price per night
-    const roomPricePerNight = 120;
+    // Initialize all booking forms
+    const roomPrices = {
+        @foreach($rooms as $room)
+        {{ $room->id }}: {{ $room->price }},
+        @endforeach
+    };
     
-    // Price calculation function
-    function calculatePrice() {
-        const rooms = parseInt(document.getElementById('rooms').value) || 0;
-        const checkin = document.getElementById('checkin').value;
-        const checkout = document.getElementById('checkout').value;
+    // Price calculation function for specific room
+    function calculatePrice(roomId) {
+        const rooms = parseInt(document.getElementById(`rooms-${roomId}`).value) || 0;
+        const checkin = document.getElementById(`checkin-${roomId}`).value;
+        const checkout = document.getElementById(`checkout-${roomId}`).value;
+        const roomPrice = roomPrices[roomId];
         
         if (rooms > 0 && checkin && checkout) {
             const checkinDate = new Date(checkin);
@@ -905,80 +950,93 @@ document.addEventListener('DOMContentLoaded', function() {
             const nights = Math.ceil(timeDiff / (1000 * 3600 * 24));
             
             if (nights > 0) {
-                const total = rooms * nights * roomPricePerNight;
+                const total = rooms * nights * roomPrice;
                 
                 // Update display
-                document.getElementById('room-price').textContent = `$${roomPricePerNight}`;
-                document.getElementById('rooms-count').textContent = rooms;
-                document.getElementById('nights').textContent = nights;
-                document.getElementById('calculation').textContent = `${rooms} × ${nights} × $${roomPricePerNight} = $${total}`;
-                document.getElementById('total-price').textContent = `$${total}`;
+                document.getElementById(`room-price-${roomId}`).textContent = `$${roomPrice}`;
+                document.getElementById(`rooms-count-${roomId}`).textContent = rooms;
+                document.getElementById(`nights-${roomId}`).textContent = nights;
+                document.getElementById(`calculation-${roomId}`).textContent = `${rooms} × ${nights} × $${roomPrice} = $${total}`;
+                document.getElementById(`total-price-${roomId}`).textContent = `$${total}`;
             } else {
-                resetPriceDisplay();
+                resetPriceDisplay(roomId);
             }
         } else {
-            resetPriceDisplay();
+            resetPriceDisplay(roomId);
         }
     }
     
-    // Reset price display
-    function resetPriceDisplay() {
-        document.getElementById('room-price').textContent = '$120';
-        document.getElementById('rooms-count').textContent = '0';
-        document.getElementById('nights').textContent = '0';
-        document.getElementById('calculation').textContent = '0 × 0 = $0';
-        document.getElementById('total-price').textContent = '$0';
+    // Reset price display for specific room
+    function resetPriceDisplay(roomId) {
+        const roomPrice = roomPrices[roomId];
+        document.getElementById(`room-price-${roomId}`).textContent = `$${roomPrice}`;
+        document.getElementById(`rooms-count-${roomId}`).textContent = '0';
+        document.getElementById(`nights-${roomId}`).textContent = '0';
+        document.getElementById(`calculation-${roomId}`).textContent = '0 × 0 = $0';
+        document.getElementById(`total-price-${roomId}`).textContent = '$0';
     }
     
-    // Event listeners for price calculation
-    document.getElementById('rooms').addEventListener('change', calculatePrice);
-    document.getElementById('checkin').addEventListener('change', function() {
-        // Set minimum checkout date to day after checkin
-        const checkinDate = new Date(this.value);
-        const nextDay = new Date(checkinDate);
-        nextDay.setDate(nextDay.getDate() + 1);
-        document.getElementById('checkout').min = nextDay.toISOString().split('T')[0];
-        calculatePrice();
-    });
-    document.getElementById('checkout').addEventListener('change', calculatePrice);
-    
-    // Form submission
-    document.getElementById('booking-form').addEventListener('submit', function(e) {
-        e.preventDefault();
+    // Initialize event listeners for all booking forms
+    @foreach($rooms as $room)
+    (function() {
+        const roomId = {{ $room->id }};
         
-        // Get form data
-        const formData = {
-            rooms: document.getElementById('rooms').value,
-            guests: document.getElementById('guests').value,
-            checkin: document.getElementById('checkin').value,
-            checkout: document.getElementById('checkout').value,
-            first_name: document.getElementById('first_name').value,
-            last_name: document.getElementById('last_name').value,
-            email: document.getElementById('email').value,
-            phone: document.getElementById('phone').value,
-            special_requests: document.getElementById('special_requests').value,
-            total_price: document.getElementById('total-price').textContent
-        };
+        // Set minimum dates
+        document.getElementById(`checkin-${roomId}`).min = today;
+        document.getElementById(`checkout-${roomId}`).min = today;
         
-        // Show loading
-        const loader = document.querySelector('.gmz-loader');
-        loader.style.display = 'block';
+        // Event listeners for price calculation
+        document.getElementById(`rooms-${roomId}`).addEventListener('change', () => calculatePrice(roomId));
+        document.getElementById(`checkin-${roomId}`).addEventListener('change', function() {
+            // Set minimum checkout date to day after checkin
+            const checkinDate = new Date(this.value);
+            const nextDay = new Date(checkinDate);
+            nextDay.setDate(nextDay.getDate() + 1);
+            document.getElementById(`checkout-${roomId}`).min = nextDay.toISOString().split('T')[0];
+            calculatePrice(roomId);
+        });
+        document.getElementById(`checkout-${roomId}`).addEventListener('change', () => calculatePrice(roomId));
         
-        // Simulate booking process (replace with actual API call)
-        setTimeout(() => {
-            loader.style.display = 'none';
-            alert('Booking confirmed! You will receive a confirmation email shortly.');
+        // Form submission
+        document.getElementById(`booking-form-${roomId}`).addEventListener('submit', function(e) {
+            e.preventDefault();
             
-            // Reset form
-            document.getElementById('booking-form').reset();
-            resetPriceDisplay();
+            // Get form data
+            const formData = {
+                room_id: roomId,
+                rooms: document.getElementById(`rooms-${roomId}`).value,
+                guests: document.getElementById(`guests-${roomId}`).value,
+                checkin: document.getElementById(`checkin-${roomId}`).value,
+                checkout: document.getElementById(`checkout-${roomId}`).value,
+                first_name: document.getElementById(`first_name-${roomId}`).value,
+                last_name: document.getElementById(`last_name-${roomId}`).value,
+                email: document.getElementById(`email-${roomId}`).value,
+                phone: document.getElementById(`phone-${roomId}`).value,
+                special_requests: document.getElementById(`special_requests-${roomId}`).value,
+                total_price: document.getElementById(`total-price-${roomId}`).textContent
+            };
             
-            // Close modal (if using Magnific Popup)
-            if (typeof $.magnificPopup !== 'undefined') {
-                $.magnificPopup.close();
-            }
-        }, 2000);
-    });
+            // Show loading
+            const loader = document.querySelector(`#booking-form-${roomId} .gmz-loader`);
+            loader.style.display = 'block';
+            
+            // Simulate booking process (replace with actual API call)
+            setTimeout(() => {
+                loader.style.display = 'none';
+                alert('Booking confirmed! You will receive a confirmation email shortly.');
+                
+                // Reset form
+                document.getElementById(`booking-form-${roomId}`).reset();
+                resetPriceDisplay(roomId);
+                
+                // Close modal (if using Magnific Popup)
+                if (typeof $.magnificPopup !== 'undefined') {
+                    $.magnificPopup.close();
+                }
+            }, 2000);
+        });
+    })();
+    @endforeach
 });
 </script>
 

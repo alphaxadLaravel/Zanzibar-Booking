@@ -35,4 +35,14 @@ return [
         ],
     ],
 
+    'aviationstack' => [
+        'api_key' => env('AVIATIONSTACK_API_KEY'),
+    ],
+
+    'amadeus' => [
+        'api_key' => env('AMADEUS_API_KEY'),
+        'api_secret' => env('AMADEUS_API_SECRET'),
+        'access_token' => env('AMADEUS_ACCESS_TOKEN'),
+    ],
+
 ];

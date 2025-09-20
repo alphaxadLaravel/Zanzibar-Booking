@@ -41,71 +41,57 @@
                 }
             </style>
             <div class="row">
-                @for ($i = 0; $i < 12; $i++)
+                @forelse($blogs as $blog)
                 <div class="col-12 mb-4">
                     <div class="card d-flex flex-row blog-card-flex align-items-stretch shadow-sm border-0">
                         <div class="col-md-4 blog-card-img-col p-0 d-flex align-items-center mx-2">
-                            <a href="{{route('view-blog')}}" class="w-100 h-100 d-block">
-                                <img src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80"
+                            <a href="{{route('view-blog', ['id' => $blog->id])}}" class="w-100 h-100 d-block">
+                                <img src="{{ $blog->cover_photo ? asset('storage/' . $blog->cover_photo) : 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80' }}"
                                     class="img-fluid rounded-start w-100 h-100 object-fit-cover"
                                     style="min-height: 200px; max-height: 220px; object-fit: cover;"
-                                    alt="DISCOVER NATURE &amp; CULTURE IN ONE UNFORGETTABLE EXPERIENCE">
+                                    alt="{{ $blog->title }}">
                             </a>
                         </div>
                         <div class="col-md-8 blog-card-content-col p-4 d-flex flex-column position-relative">
                             <div>
                                 <h3 class="card-title mb-2" style="font-size:1.3rem;">
-                                    <a href="{{route('view-blog')}}" class="text-decoration-none text-dark">
-                                        DISCOVER NATURE &amp; CULTURE IN ONE UNFORGETTABLE EXPERIENCE
+                                    <a href="{{route('view-blog', ['id' => $blog->id])}}" class="text-decoration-none text-dark">
+                                        {{ $blog->title }}
                                     </a>
                                 </h3>
                                 <div class="mb-2 text-muted small">
-                                    <span>By Zanzibar Bookings</span>
+                                    <span>By {{ $blog->user ? $blog->user->firstname . ' ' . $blog->user->lastname : 'Zanzibar Bookings' }}</span>
                                     <span class="mx-2">|</span>
-                                    <span><i class="far fa-calendar-alt"></i> 03/09/2025</span>
+                                    <span><i class="far fa-calendar-alt"></i> {{ $blog->created_at->format('d/m/Y') }}</span>
+                                    @if($blog->category)
+                                    <span class="mx-2">|</span>
+                                    <span><i class="far fa-folder"></i> {{ $blog->category->category }}</span>
+                                    @endif
                                 </div>
                                 <p class="card-text mb-3">
-                                    Experience the best of Zanzibar with our curated guides on nature, culture, and unforgettable adventures. Dive into the heart of the island and discover what makes it unique.
+                                    {{ $blog->preview_text ? Str::limit($blog->preview_text, 150) : Str::limit(strip_tags($blog->description), 150) }}
                                 </p>
                             </div>
-                            <div class="mt-auto d-flex flex-wrap justify-content-between align-items-end gap-2">
-                                <div class="mb-2 mb-md-0">
-                                    <!-- Tags removed -->
-                                </div>
-                                <a href="{{route('view-blog')}}" class="btn btn-primary btn-sm ms-2">
-                                    Read More <i class="fas fa-arrow-right ms-1"></i>
+                            <div class="mt-auto d-flex flex-wrap justify-content-end align-items-end gap-2">
+                                <a href="{{route('view-blog', ['id' => $blog->id])}}" class="btn btn-primary btn-sm ms-2">
+                                    Read More
                                 </a>
                             </div>
                         </div>
                     </div>
                 </div>
-                @endfor
+                @empty
+                <div class="col-12">
+                    <div class="text-center py-5">
+                        <h4>No blog posts found</h4>
+                        <p class="text-muted">Check back later for new content!</p>
+                    </div>
+                </div>
+                @endforelse
             </div>
 
             <nav>
-                <ul class="pagination">
-                    <li class="page-item disabled" aria-disabled="true" aria-label="&laquo; Previous">
-                        <span class="page-link" aria-hidden="true">&lsaquo;</span>
-                    </li>
-
-                    <li class="page-item active" aria-current="page">
-                        <span class="page-link">1</span>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="blog4658.html?page=2">2</a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="blog9ba9.html?page=3">3</a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="blogfdb0.html?page=4">4</a>
-                    </li>
-
-                    <li class="page-item">
-                        <a class="page-link" href="blog4658.html?page=2" rel="next"
-                            aria-label="Next &raquo;">&rsaquo;</a>
-                    </li>
-                </ul>
+                {{ $blogs->links() }}
             </nav>
         </div>
         <div class="col-lg-3">
@@ -113,23 +99,27 @@
                 <div class="widget-item widget-recent-post">
                     <h4 class="widget-title">Recent posts</h4>
                     <div class="widget-content">
-                        @for ($i = 0; $i < 12; $i++)
+                        @forelse($blogs->take(5) as $recentBlog)
                         <div class="post-item d-flex align-items-center mb-3">
-                            <a href="{{route('view-blog')}}" class="flex-shrink-0" style="width: 60px; height: 60px; display: block; margin-right: 16px;">
-                                <img src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80"
-                                    alt="DISCOVER NATURE &amp; CULTURE IN ONE UNFORGETTABLE EXPERIENCE"
+                            <a href="{{route('view-blog', ['id' => $recentBlog->id])}}" class="flex-shrink-0" style="width: 60px; height: 60px; display: block; margin-right: 16px;">
+                                <img src="{{ $recentBlog->cover_photo ? asset('storage/' . $recentBlog->cover_photo) : 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80' }}"
+                                    alt="{{ $recentBlog->title }}"
                                     class="img-fluid rounded" style="object-fit: cover; width: 100%; height: 100%;" />
                             </a>
                             <div class="info">
                                 <h6 class="mb-1" style="font-size: 1rem; max-height: 2.8em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; text-overflow: ellipsis;">
-                                    <a href="{{route('view-blog')}}" class="text-dark text-decoration-none" style="display: inline; color: inherit;">
-                                        DISCOVER NATURE &amp; CULTURE IN ONE UNFORGETTABLE EXPERIENCE
+                                    <a href="{{route('view-blog', ['id' => $recentBlog->id])}}" class="text-dark text-decoration-none" style="display: inline; color: inherit;">
+                                        {{ $recentBlog->title }}
                                     </a>
                                 </h6>
-                                <small class="text-muted">03/09/2025</small>
+                                <small class="text-muted">{{ $recentBlog->created_at->format('d/m/Y') }}</small>
                             </div>
                         </div>
-                        @endfor
+                        @empty
+                        <div class="text-center py-3">
+                            <p class="text-muted small">No recent posts available</p>
+                        </div>
+                        @endforelse
                     </div>
                 </div>
 
@@ -137,51 +127,17 @@
                     <h4 class="widget-title">Categories</h4>
                     <div class="widget-content">
                         <ul class="list-unstyled mb-0">
+                            @forelse($categories as $category)
                             <li class="mb-2">
-                                <a href="category/wedds-in-zanzibar.html" class="d-block px-3 py-2 rounded text-dark text-decoration-none category-link">
-                                    <i class="fas fa-chevron-right me-2 text-primary"></i> Wedds in Zanzibar
+                                <a href="#" class="d-block px-3 py-2 rounded text-dark text-decoration-none category-link">
+                                    <i class="fas fa-chevron-right me-2 text-primary"></i> {{ $category->category }}
                                 </a>
                             </li>
+                            @empty
                             <li class="mb-2">
-                                <a href="category/visit-zanzibar.html" class="d-block px-3 py-2 rounded text-dark text-decoration-none category-link">
-                                    <i class="fas fa-chevron-right me-2 text-primary"></i> Visit Zanzibar
-                                </a>
+                                <span class="d-block px-3 py-2 text-muted">No categories available</span>
                             </li>
-                            <li class="mb-2">
-                                <a href="category/zanzibar-top-attractions.html" class="d-block px-3 py-2 rounded text-dark text-decoration-none category-link">
-                                    <i class="fas fa-chevron-right me-2 text-primary"></i> Zanzibar Top Attractions
-                                </a>
-                            </li>
-                            <li class="mb-2">
-                                <a href="category/snorkeling-site.html" class="d-block px-3 py-2 rounded text-dark text-decoration-none category-link">
-                                    <i class="fas fa-chevron-right me-2 text-primary"></i> Snorkeling Site
-                                </a>
-                            </li>
-                            <li class="mb-2">
-                                <a href="category/historical.html" class="d-block px-3 py-2 rounded text-dark text-decoration-none category-link">
-                                    <i class="fas fa-chevron-right me-2 text-primary"></i> Historical
-                                </a>
-                            </li>
-                            <li class="mb-2">
-                                <a href="category/domestic-tourism.html" class="d-block px-3 py-2 rounded text-dark text-decoration-none category-link">
-                                    <i class="fas fa-chevron-right me-2 text-primary"></i> Domestic Tourism
-                                </a>
-                            </li>
-                            <li class="mb-2">
-                                <a href="category/marine-life.html" class="d-block px-3 py-2 rounded text-dark text-decoration-none category-link">
-                                    <i class="fas fa-chevron-right me-2 text-primary"></i> Marine Life
-                                </a>
-                            </li>
-                            <li class="mb-2">
-                                <a href="category/zanzibar-history.html" class="d-block px-3 py-2 rounded text-dark text-decoration-none category-link">
-                                    <i class="fas fa-chevron-right me-2 text-primary"></i> Zanzibar History
-                                </a>
-                            </li>
-                            <li>
-                                <a href="category/things-to-do-in-zanzibar.html" class="d-block px-3 py-2 rounded text-dark text-decoration-none category-link">
-                                    <i class="fas fa-chevron-right me-2 text-primary"></i> Things to do in Zanzibar
-                                </a>
-                            </li>
+                            @endforelse
                         </ul>
                     </div>
                     <style>

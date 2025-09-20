@@ -34,7 +34,7 @@
                         <a href="{{ route('hotels') }}">Hotels</a>
                     </li>
                     <li class="menu-item menu-item-5">
-                        <a href="hotel-searchfe2d.html?property_type=64">Apartments</a>
+                        <a href="{{route('apartments')}}">Apartments</a>
                     </li>
                     <li class="menu-item menu-item-5">
                         <a href="{{ route('tours') }}">Tours</a>

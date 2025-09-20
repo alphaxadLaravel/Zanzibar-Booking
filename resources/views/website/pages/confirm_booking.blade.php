@@ -1,8 +1,8 @@
 @extends('website.layouts.app')
 
-@section('title', 'Confirm Booking - Zanzibar Bookings')
+@section('title', 'Book Now - Zanzibar Bookings')
 @section('meta')
-<meta name="description" content="Confirm your booking and complete payment for your Zanzibar adventure">
+<meta name="description" content="Book your Zanzibar adventure - tours, hotels, cars and more">
 @endsection
 
 @section('pages')
@@ -10,253 +10,244 @@
     <div class="container">
         <ul>
             <li><a href="{{ route('index') }}">Home</a></li>
-            <li><a href="{{ route('tours') }}">Booking</a></li>
-            <li><span>Payment</span></li>
+            <li><span>Book Now</span></li>
         </ul>
     </div>
 </div>
 
 <div class="container py-5">
     <div class="row">
-        <!-- Booking Summary Card -->
-        <div class="col-lg-4 mb-4">
-            <div class="card booking-summary-card">
-                <div class="card-header bg-primary text-white">
+        <!-- Deal Details Section (4 columns) -->
+        <div class="col-lg-3 mb-4">
+            <div class="card">
+                <div class="card-header">
                     <h5 class="mb-0">
-                        <i class="fal fa-calendar-check mr-2"></i>
-                        Your Booking
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Deal Details
                     </h5>
                 </div>
                 <div class="card-body">
-                    <!-- Booking Image -->
-                    <div class="booking-image mb-3">
-                        <img src="{{ asset('https://www.zanzibarbookings.com/storage/2024/02/28/emarald-michamvi-34-1709067436.jpg') }}" 
-                             alt="Dolphin Spotting" class="img-fluid rounded">
+                    <!-- Deal Image -->
+                    <div class="mb-3">
+                        <img src="{{ $deal->cover_photo ? asset('storage/' . $deal->cover_photo) : asset('images/default-placeholder.jpg') }}" 
+                             alt="{{ $deal->title }}" class="img-fluid rounded" style="height: 180px; object-fit: cover;">
                     </div>
                     
-                    <!-- Booking Number -->
-                    <div class="booking-number mb-3">
-                        <small class="text-muted">Booking Number:</small>
-                        <span class="fw-bold text-primary">FORTUNE:7975</span>
-                    </div>
-                    
-                    <!-- Activity Details -->
-                    <div class="activity-details mb-3">
-                        <h6 class="fw-bold mb-2">Dolphin Spotting</h6>
-                        <p class="text-muted mb-1">
-                            <i class="fal fa-map-marker-alt text-primary mr-1"></i>
-                            Nungwi
-                        </p>
-                        <p class="text-muted mb-1">
-                            <i class="fal fa-calendar text-primary mr-1"></i>
-                            2025-09-13 - 2025-09-25
-                        </p>
-                        <p class="text-muted mb-1">
-                            <i class="fal fa-users text-primary mr-1"></i>
-                            4 Adults
-                        </p>
-                    </div>
-                    
-                    <!-- Price Breakdown -->
-                    <div class="price-breakdown">
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted">Base Price (4 adults)</span>
-                            <span class="fw-semibold">USD 65</span>
+                    <!-- Deal Info -->
+                    <div>
+                        <h5 class="mb-3">{{ $deal->title }}</h5>
+                        
+                        <div class="mb-3">
+                            <div class="mb-2">
+                                <i class="fas fa-map-marker-alt text-primary mr-2"></i>
+                                <span class="text-muted">{{ $deal->location }}</span>
+                            </div>
+                            <div class="mb-2">
+                                <i class="fas fa-tag text-primary mr-2"></i>
+                                <span class="text-muted">{{ ucfirst($deal->type) }}</span>
+                            </div>
+                            @if($deal->ratings)
+                            <div class="mb-3">
+                                <i class="fas fa-star text-warning mr-2"></i>
+                                <span class="text-muted">{{ number_format($deal->ratings, 1) }} Rating</span>
+                            </div>
+                            @endif
                         </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted">Duration</span>
-                            <span class="fw-semibold">12 day(s)</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted">Calculation</span>
-                            <span class="fw-semibold">65 x 4 x 12</span>
-                        </div>
-                        <hr>
-                        <div class="d-flex justify-content-between">
-                            <span class="fw-bold">Total:</span>
-                            <span class="fw-bold text-primary fs-5">USD 3,120</span>
+                        
+                        <div class="bg-light border rounded p-3 text-center">
+                            <div class="mb-1">
+                                <span class="text-muted">USD</span>
+                                <span class="h4 text-primary font-weight-bold">{{ number_format($deal->base_price, 0) }}</span>
+                            </div>
+                            <small class="text-muted">
+                                @if($deal->type == 'tour')
+                                    per person
+                                @elseif($deal->type == 'car')
+                                    per day
+                                @elseif(in_array($deal->type, ['hotel', 'apartment']))
+                                    per night
+                                @endif
+                            </small>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <!-- Payment and Personal Details Form -->
-        <div class="col-lg-8">
+        <!-- Booking Form Section (8 columns) -->
+        <div class="col-lg-9">
             <div class="card">
-                <div class="card-header bg-primary text-white">
+                <div class="card-header">
                     <h5 class="mb-0">
-                        <i class="fal fa-credit-card mr-2"></i>
-                        Payment Method & Personal Details
+                        <i class="fas fa-calendar-check mr-2"></i>
+                        Complete Your Booking
                     </h5>
                 </div>
                 <div class="card-body">
+
+                    <!-- Booking Form -->
                     <form id="bookingForm" method="POST" action="{{ route('process.booking') }}">
                         @csrf
+                        <input type="hidden" name="deal_id" value="{{ $deal->id }}">
+                        <input type="hidden" name="deal_type" value="{{ $deal->type }}">
                         
-                        <!-- Payment Method Selection -->
-                        <div class="payment-method mb-4">
-                            <h6 class="fw-bold mb-3">Payment Method</h6>
+                        <!-- Booking Details -->
+                        <div class="border-bottom pb-3 mb-4">
+                            <h6 class="mb-3">
+                                <i class="fas fa-calendar mr-2"></i>Booking Details
+                            </h6>
+                            @if($deal->type == 'tour')
                             <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <div class="payment-option">
-                                        <label class="payment-radio">
-                                            <input type="radio" name="payment_method" value="pesapal" checked>
-                                            <div class="payment-card">
-                                                <div class="payment-icon">
-                                                    <i class="fal fa-mobile-alt"></i>
-                                                </div>
-                                                <div class="payment-info">
-                                                    <h6 class="mb-1">Pay via Pesapal</h6>
-                                                    <small class="text-muted">Secure online payment</small>
-                                                </div>
-                                            </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="check_in" class="form-label">Tour Date *</label>
+                                    <input type="date" class="form-control" id="check_in" name="check_in" placeholder="Select tour date" required>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="guests" class="form-label">Guests *</label>
+                                    <select class="form-control" id="guests" name="guests" required>
+                                        <option value="">Select number of guests</option>
+                                        @for($i = 1; $i <= 8; $i++)
+                                            <option value="{{ $i }}">{{ $i }} {{ $i == 1 ? 'Guest' : 'Guests' }}</option>
+                                        @endfor
+                                    </select>
+                                </div>
+                            </div>
+                            @elseif($deal->type == 'car')
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <label for="pickup_date" class="form-label">Pickup Date *</label>
+                                    <input type="date" class="form-control" id="pickup_date" name="pickup_date" placeholder="Select pickup date" required>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="return_date" class="form-label">Return Date *</label>
+                                    <input type="date" class="form-control" id="return_date" name="return_date" placeholder="Select return date" required>
+                                </div>
+                            </div>
+                            @elseif($deal->type == 'hotel')
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <label for="check_in" class="form-label">Check-in *</label>
+                                    <input type="date" class="form-control" id="check_in" name="check_in" placeholder="Select check-in date" required>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="check_out" class="form-label">Check-out *</label>
+                                    <input type="date" class="form-control" id="check_out" name="check_out" placeholder="Select check-out date" required>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="guests" class="form-label">Guests *</label>
+                                    <select class="form-control" id="guests" name="guests" required>
+                                        <option value="">Select number of guests</option>
+                                        @for($i = 1; $i <= 6; $i++)
+                                            <option value="{{ $i }}">{{ $i }} {{ $i == 1 ? 'Guest' : 'Guests' }}</option>
+                                        @endfor
+                                    </select>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="rooms" class="form-label">Rooms</label>
+                                    <select class="form-control" id="rooms" name="rooms">
+                                        <option value="1">1 Room</option>
+                                        <option value="2">2 Rooms</option>
+                                        <option value="3">3 Rooms</option>
+                                    </select>
+                                </div>
+                            </div>
+                            @elseif($deal->type == 'apartment')
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="check_in" class="form-label">Check-in *</label>
+                                    <input type="date" class="form-control" id="check_in" name="check_in" placeholder="Select check-in date" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="check_out" class="form-label">Check-out *</label>
+                                    <input type="date" class="form-control" id="check_out" name="check_out" placeholder="Select check-out date" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="guests" class="form-label">Guests *</label>
+                                    <select class="form-control" id="guests" name="guests" required>
+                                        <option value="">Select number of guests</option>
+                                        @for($i = 1; $i <= 8; $i++)
+                                            <option value="{{ $i }}">{{ $i }} {{ $i == 1 ? 'Guest' : 'Guests' }}</option>
+                                        @endfor
+                                    </select>
+                                </div>
+                            </div>
+                            @endif
+                        </div>
+
+                        <!-- Personal Information -->
+                        <div class="border-bottom pb-3 mb-4">
+                            <h6 class="mb-3">
+                                <i class="fas fa-user mr-2"></i>Personal Information
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <label for="first_name" class="form-label">First Name *</label>
+                                    <input type="text" class="form-control" id="first_name" name="first_name" placeholder="Enter your first name" required>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="last_name" class="form-label">Last Name *</label>
+                                    <input type="text" class="form-control" id="last_name" name="last_name" placeholder="Enter your last name" required>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="email" class="form-label">Email *</label>
+                                    <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email address" required>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="phone" class="form-label">Phone *</label>
+                                    <input type="tel" class="form-control" id="phone" name="phone" placeholder="Enter your phone number" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Payment & Submit -->
+                        <div>
+                            <h6 class="mb-3">
+                                <i class="fas fa-credit-card mr-2"></i>Payment Method
+                            </h6>
+                            <div class="row mb-4">
+                                <div class="col-md-6 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="payment_method" value="pesapal" id="pesapal" checked>
+                                        <label class="form-check-label" for="pesapal">
+                                            <i class="fas fa-mobile-alt mr-2"></i>Pay Online
                                         </label>
                                     </div>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <div class="payment-option">
-                                        <label class="payment-radio">
-                                            <input type="radio" name="payment_method" value="offline">
-                                            <div class="payment-card">
-                                                <div class="payment-icon">
-                                                    <i class="fal fa-handshake"></i>
-                                                </div>
-                                                <div class="payment-info">
-                                                    <h6 class="mb-1">Pay Offline</h6>
-                                                    <small class="text-muted">Pay on arrival</small>
-                                                </div>
-                                            </div>
+                                <div class="col-md-6 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="payment_method" value="offline" id="offline">
+                                        <label class="form-check-label" for="offline">
+                                            <i class="fas fa-handshake mr-2"></i>Pay on Arrival
                                         </label>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <!-- Personal Details Form -->
-                        <div class="personal-details">
-                            <h6 class="fw-bold mb-3">Personal Details</h6>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <div class="field-wrapper input">
-                                        <label for="first_name">FIRST NAME</label>
-                                        <i class="fal fa-user-alt"></i>
-                                        <input id="first_name" name="first_name" type="text" 
-                                               class="form-control gmz-validation" 
-                                               data-validation="required" 
-                                               placeholder="First Name" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <div class="field-wrapper input">
-                                        <label for="last_name">LAST NAME</label>
-                                        <i class="fal fa-user-alt"></i>
-                                        <input id="last_name" name="last_name" type="text" 
-                                               class="form-control gmz-validation" 
-                                               data-validation="required" 
-                                               placeholder="Last Name" required>
-                                    </div>
-                                </div>
-                            </div>
                             
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <div class="field-wrapper input">
-                                        <label for="email">EMAIL</label>
-                                        <i class="fal fa-at"></i>
-                                        <input id="email" name="email" type="email" 
-                                               class="form-control gmz-validation" 
-                                               data-validation="required" 
-                                               placeholder="Email Address" required>
-                                    </div>
+                            <!-- Terms & Submit -->
+                            <div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="agree_terms" name="agree_terms" required>
+                                    <label class="form-check-label" for="agree_terms">
+                                        I agree to the <a href="#" class="text-primary">Terms and Conditions</a>
+                                    </label>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <div class="field-wrapper input">
-                                        <label for="phone">PHONE NUMBER</label>
-                                        <i class="fal fa-phone"></i>
-                                        <input id="phone" name="phone" type="tel" 
-                                               class="form-control gmz-validation" 
-                                               data-validation="required" 
-                                               placeholder="Phone Number" required>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <div class="field-wrapper input">
-                                        <label for="nationality">NATIONALITY</label>
-                                        <i class="fal fa-flag"></i>
-                                        <select id="nationality" name="nationality" 
-                                                class="form-control gmz-validation" 
-                                                data-validation="required" required>
-                                            <option value="">Select Nationality</option>
-                                            <option value="Tanzania">Tanzania</option>
-                                            <option value="Kenya">Kenya</option>
-                                            <option value="Uganda">Uganda</option>
-                                            <option value="USA">USA</option>
-                                            <option value="UK">UK</option>
-                                            <option value="Germany">Germany</option>
-                                            <option value="France">France</option>
-                                            <option value="Italy">Italy</option>
-                                            <option value="Spain">Spain</option>
-                                            <option value="Other">Other</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <div class="field-wrapper input">
-                                        <label for="passport_number">PASSPORT NUMBER</label>
-                                        <i class="fal fa-id-card"></i>
-                                        <input id="passport_number" name="passport_number" type="text" 
-                                               class="form-control gmz-validation" 
-                                               data-validation="required" 
-                                               placeholder="Passport Number" required>
+                                
+                                <div class="bg-light border rounded p-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div>
+                                            <div class="text-muted mb-1">Total Amount</div>
+                                            <div>
+                                                <span class="text-muted">USD</span>
+                                                <span class="h4 text-success font-weight-bold">{{ number_format($deal->base_price, 0) }}</span>
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn btn-success btn-lg" id="bookBtn">
+                                            <i class="fas fa-calendar-check mr-2"></i>
+                                            Complete Booking
+                                        </button>
                                     </div>
                                 </div>
                             </div>
-                            
-                            <!-- Special Requirements -->
-                            <div class="mb-3">
-                                <div class="field-wrapper input">
-                                    <label for="special_requirements">SPECIAL REQUIREMENTS</label>
-                                    <i class="fal fa-clipboard-list"></i>
-                                    <textarea id="special_requirements" name="special_requirements" 
-                                              class="form-control" rows="3" 
-                                              placeholder="Any special dietary requirements, accessibility needs, or other requests..."></textarea>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Terms and Conditions -->
-                        <div class="terms-condition mb-4">
-                            <div class="n-chk">
-                                <label class="new-control new-checkbox checkbox-primary">
-                                    <input type="checkbox" name="agree_terms" value="1" 
-                                           id="agree-terms" class="new-control-input gmz-validation" 
-                                           data-validation="required" required>
-                                    <span class="new-control-indicator"></span>
-                                    <span>I have read and agree to the 
-                                        <a href="#" class="text-primary">Terms and Conditions</a>
-                                    </span>
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <!-- Total Amount Display -->
-                        <div class="total-amount mb-4 p-3 bg-light rounded">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="fw-bold">Total Amount:</span>
-                                <span class="fw-bold text-primary fs-4">USD 3,120</span>
-                            </div>
-                        </div>
-                        
-                        <!-- Submit Button -->
-                        <div class="d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary btn-lg px-5" id="proceedBtn">
-                                <i class="fal fa-calendar-check mr-2"></i>
-                                Proceed and Pay
-                            </button>
                         </div>
                     </form>
                 </div>
@@ -265,217 +256,18 @@
     </div>
 </div>
 
-<style>
-.booking-summary-card {
-    border: none;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
-}
-
-.booking-summary-card .card-header {
-    border-radius: 10px 10px 0 0;
-    background: linear-gradient(135deg, #2c5aa0 0%, #1e3a8a 100%);
-}
-
-.booking-image img {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-    border-radius: 8px;
-}
-
-.payment-option {
-    margin-bottom: 1rem;
-}
-
-.payment-radio {
-    cursor: pointer;
-    display: block;
-    margin: 0;
-}
-
-.payment-radio input[type="radio"] {
-    display: none;
-}
-
-.payment-card {
-    border: 2px solid #e9ecef;
-    border-radius: 8px;
-    padding: 1rem;
-    display: flex;
-    align-items: center;
-    transition: all 0.3s ease;
-    background: #fff;
-}
-
-.payment-card:hover {
-    border-color: #2c5aa0;
-    box-shadow: 0 2px 8px rgba(44, 90, 160, 0.1);
-}
-
-.payment-radio input[type="radio"]:checked + .payment-card {
-    border-color: #2c5aa0;
-    background: linear-gradient(135deg, #f8f9ff 0%, #e8f2ff 100%);
-}
-
-.payment-icon {
-    width: 50px;
-    height: 50px;
-    background: #2c5aa0;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 1rem;
-    color: white;
-    font-size: 1.2rem;
-}
-
-.payment-info h6 {
-    margin: 0;
-    color: #333;
-}
-
-.field-wrapper {
-    position: relative;
-    margin-bottom: 1rem;
-}
-
-.field-wrapper label {
-    font-size: 12px;
-    font-weight: 600;
-    color: #666;
-    margin-bottom: 5px;
-    display: block;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.field-wrapper i {
-    position: absolute;
-    left: 15px;
-    top: 35px;
-    color: #999;
-    z-index: 2;
-}
-
-.field-wrapper input,
-.field-wrapper select,
-.field-wrapper textarea {
-    padding-left: 45px;
-    border: 2px solid #e9ecef;
-    border-radius: 8px;
-    font-size: 14px;
-    transition: all 0.3s ease;
-    background: #fff;
-}
-
-.field-wrapper input:focus,
-.field-wrapper select:focus,
-.field-wrapper textarea:focus {
-    border-color: #2c5aa0;
-    box-shadow: 0 0 0 3px rgba(44, 90, 160, 0.1);
-    outline: none;
-}
-
-.field-wrapper textarea {
-    resize: vertical;
-    min-height: 80px;
-}
-
-.total-amount {
-    background: linear-gradient(135deg, #f8f9ff 0%, #e8f2ff 100%);
-    border: 2px solid #e8f2ff;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #2c5aa0 0%, #1e3a8a 100%);
-    border: none;
-    border-radius: 8px;
-    padding: 12px 30px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    transition: all 0.3s ease;
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(44, 90, 160, 0.3);
-}
-
-.n-chk .new-control {
-    position: relative;
-    padding-left: 30px;
-    cursor: pointer;
-}
-
-.n-chk .new-control-input {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 20px;
-    height: 20px;
-    opacity: 0;
-}
-
-.n-chk .new-control-indicator {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 20px;
-    height: 20px;
-    border: 2px solid #ddd;
-    border-radius: 4px;
-    background: #fff;
-    transition: all 0.3s ease;
-}
-
-.n-chk .new-control-input:checked + .new-control-indicator {
-    background: #2c5aa0;
-    border-color: #2c5aa0;
-}
-
-.n-chk .new-control-input:checked + .new-control-indicator::after {
-    content: '✓';
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    color: white;
-    font-size: 12px;
-    font-weight: bold;
-}
-
-@media (max-width: 768px) {
-    .payment-card {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .payment-icon {
-        margin-right: 0;
-        margin-bottom: 0.5rem;
-    }
-    
-    .btn-lg {
-        width: 100%;
-    }
-}
-</style>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Payment method selection
     const paymentRadios = document.querySelectorAll('input[name="payment_method"]');
-    const proceedBtn = document.getElementById('proceedBtn');
+    const bookBtn = document.getElementById('bookBtn');
     
     paymentRadios.forEach(radio => {
         radio.addEventListener('change', function() {
             if (this.value === 'pesapal') {
-                proceedBtn.innerHTML = '<i class="fal fa-credit-card mr-2"></i>Proceed and Pay';
+                bookBtn.innerHTML = '<i class="fal fa-credit-card mr-2"></i>Complete Booking & Pay';
             } else {
-                proceedBtn.innerHTML = '<i class="fal fa-handshake mr-2"></i>Confirm Booking';
+                bookBtn.innerHTML = '<i class="fal fa-handshake mr-2"></i>Complete Booking';
             }
         });
     });
@@ -496,7 +288,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        const termsCheckbox = document.getElementById('agree-terms');
+        const termsCheckbox = document.getElementById('agree_terms');
         if (!termsCheckbox.checked) {
             isValid = false;
             alert('Please agree to the Terms and Conditions');
@@ -506,6 +298,13 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             alert('Please fill in all required fields');
         }
+    });
+    
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    const dateInputs = document.querySelectorAll('input[type="date"]');
+    dateInputs.forEach(input => {
+        input.setAttribute('min', today);
     });
 });
 </script>

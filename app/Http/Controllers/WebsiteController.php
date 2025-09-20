@@ -3,13 +3,72 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Category;
+use App\Models\Deal;
+use App\Models\Tours;
+use App\Models\Car;
+use App\Models\Blog;
+use App\Models\Near;
+use Illuminate\Support\Facades\Log;
+use Hashids\Hashids;
 
 class WebsiteController extends Controller
 {
+    /**
+     * Create Hashids instance
+     */
+    private function getHashids()
+    {
+        return new Hashids('MchungajiZanzibarBookings', 10);
+    }
+
     //index
     public function index()
     {
-        return view('website.pages.index');
+        // Fetch categories for property types (hotels, apartments, tours, resorts)
+        $propertyCategories = Category::whereIn('type', ['hotel', 'apartment', 'tour', 'resort'])
+            ->limit(6)
+            ->get();
+
+        // Fetch all deals (hotels/apartments)
+        $featuredDeals = Deal::whereIn('type', ['hotel', 'apartment'])
+            ->with(['category', 'photos'])
+            ->limit(6)
+            ->get();
+
+        // Fetch tour categories
+        $tourCategories = Category::where('type', 'tour')
+            ->limit(6)
+            ->get();
+
+        // Fetch all tours
+        $featuredTours = Deal::where('type', 'tour')
+            ->with(['category', 'photos', 'tours'])
+            ->limit(6)
+            ->get();
+
+        // Fetch car categories
+        $carCategories = Category::where('type', 'car')
+            ->limit(6)
+            ->get();
+
+        // Fetch all cars
+        $featuredCars = Deal::where('type', 'car')
+            ->with(['category', 'photos', 'car'])
+            ->limit(6)
+            ->get();
+
+        $hashids = $this->getHashids();
+
+        return view('website.pages.index', compact(
+            'propertyCategories',
+            'featuredDeals',
+            'tourCategories',
+            'featuredTours',
+            'carCategories',
+            'featuredCars',
+            'hashids'
+        ));
     }
 
     // contactUs
@@ -21,63 +80,474 @@ class WebsiteController extends Controller
     // blog
     public function blog()
     {
-        return view('website.pages.blog');
+        // Fetch published blog posts with pagination
+        $blogs = Blog::where('status', 1)
+            ->with(['user', 'category'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(6);
+
+        // Fetch blog categories for sidebar
+        $categories = Category::where('type', 'blog')
+            ->get();
+
+        return view('website.pages.blog', compact('blogs', 'categories'));
     }
 
     // viewBlog
-    public function viewBlog()
+    public function viewBlog(Request $request)
     {
-        return view('website.pages.view_post');
+        // Get blog ID from request parameter
+        $blogId = $request->get('id', 1); // Default to 1 if no ID provided
+        
+        // Fetch specific blog post
+        $blog = Blog::where('status', 1)
+            ->with(['user', 'category'])
+            ->findOrFail($blogId);
+
+        // Fetch recent blog posts for sidebar
+        $recentBlogs = Blog::where('status', 1)
+            ->where('id', '!=', $blogId)
+            ->with(['user', 'category'])
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+
+        // Fetch blog categories for sidebar
+        $categories = Category::where('type', 'blog')
+            ->get();
+
+        return view('website.pages.view_post', compact('blog', 'recentBlogs', 'categories'));
     }
 
     // hotels
     public function hotels()
     {
-        return view('website.pages.hotels');
+        // Fetch hotels and apartments with coordinates - paginated by 6
+        $hotels = Deal::whereIn('type', ['hotel', 'apartment'])
+            ->with(['category', 'photos'])
+            ->paginate(6);
+
+        // Fetch categories for filter dropdown
+        $categories = Category::whereIn('type', ['hotel', 'apartment'])
+            ->get();
+
+        // Get unique locations for filter dropdown
+        $locations = Deal::whereIn('type', ['hotel', 'apartment'])
+            ->whereNotNull('location')
+            ->distinct()
+            ->pluck('location')
+            ->filter()
+            ->sort()
+            ->values();
+
+        $hashids = $this->getHashids();
+
+        return view('website.pages.hotels', compact('hotels', 'categories', 'locations', 'hashids'));
+    }
+
+    // apartments
+    public function apartments()
+    {
+        // Fetch only apartments with coordinates - paginated by 6
+        $apartments = Deal::where('type', 'apartment')
+            ->with(['category', 'photos'])
+            ->paginate(6);
+
+        // Fetch apartment categories for filter dropdown
+        $categories = Category::where('type', 'apartment')
+            ->get();
+
+        // Get unique locations for filter dropdown
+        $locations = Deal::where('type', 'apartment')
+            ->whereNotNull('location')
+            ->distinct()
+            ->pluck('location')
+            ->filter()
+            ->sort()
+            ->values();
+
+        $hashids = $this->getHashids();
+
+        return view('website.pages.apartments', compact('apartments', 'categories', 'locations', 'hashids'));
     }
 
     // tours
     public function tours()
     {
-        return view('website.pages.tours');
+        // Fetch tours with coordinates - paginated by 6
+        $tours = Deal::where('type', 'tour')
+            ->with(['category', 'photos', 'tours'])
+            ->paginate(6);
+
+        // Fetch tour categories for filter dropdown
+        $categories = Category::where('type', 'tour')
+            ->get();
+
+        // Get unique locations for filter dropdown
+        $locations = Deal::where('type', 'tour')
+            ->whereNotNull('location')
+            ->distinct()
+            ->pluck('location')
+            ->filter()
+            ->sort()
+            ->values();
+
+        $hashids = $this->getHashids();
+
+        return view('website.pages.tours', compact('tours', 'categories', 'locations', 'hashids'));
     }
 
-    // viewTour
-    public function viewTour()
-    {
-        return view('website.pages.view_tour');
-    }
+    
 
     // viewHotel
-    public function viewHotel()
+    public function viewHotel($id)
     {
-        return view('website.pages.view_hotel');
+        $hashids = $this->getHashids();
+        
+        // Decode the hashed ID
+        $decodedIds = $hashids->decode($id);
+        if (empty($decodedIds)) {
+            abort(404, 'Hotel not found');
+        }
+        $hotelId = $decodedIds[0];
+        
+        // Fetch specific hotel with all relationships
+        $hotel = Deal::whereIn('type', ['hotel', 'apartment'])
+            ->with(['category', 'photos', 'rooms.photos', 'features'])
+            ->findOrFail($hotelId);
+
+        // Ensure we have rooms data - if no rooms exist, we'll show default room in view
+        $rooms = $hotel->rooms()->active()->available()->get();
+
+        // Fetch nearby deals from the nears table
+        $nearbyDeals = Near::where('deal_id', $hotelId)
+            ->with(['nearDeal.category', 'nearDeal.photos', 'nearDeal.tours'])
+            ->get();
+
+        // Separate nearby deals by type
+        $nearbyHotels = collect();
+        $nearbyTours = collect();
+
+        foreach ($nearbyDeals as $near) {
+            if ($near->type === 'hotel' || $near->type === 'apartment') {
+                $nearbyHotels->push($near->nearDeal);
+            } elseif ($near->type === 'tour') {
+                $nearbyTours->push($near->nearDeal);
+            }
+        }
+
+        // Limit to reasonable numbers
+        $nearbyHotels = $nearbyHotels->take(3);
+        $nearbyTours = $nearbyTours->take(6);
+
+        return view('website.pages.view_hotel', compact('hotel', 'rooms', 'nearbyHotels', 'nearbyTours', 'hashids'));
+    }
+
+    // viewApartment
+    public function viewApartment($id)
+    {
+        $hashids = $this->getHashids();
+        
+        // Decode the hashed ID
+        $decodedIds = $hashids->decode($id);
+        if (empty($decodedIds)) {
+            abort(404, 'Apartment not found');
+        }
+        $apartmentId = $decodedIds[0];
+        
+        // Fetch specific apartment with all relationships
+        $apartment = Deal::where('type', 'apartment')
+            ->with(['category', 'photos', 'features'])
+            ->findOrFail($apartmentId);
+
+        // Fetch nearby deals from the nears table
+        $nearbyDeals = Near::where('deal_id', $apartmentId)
+            ->with(['nearDeal.category', 'nearDeal.photos', 'nearDeal.tours'])
+            ->get();
+
+        // Separate nearby deals by type
+        $nearbyHotels = collect();
+        $nearbyTours = collect();
+
+        foreach ($nearbyDeals as $near) {
+            if ($near->type === 'hotel' || $near->type === 'apartment') {
+                $nearbyHotels->push($near->nearDeal);
+            } elseif ($near->type === 'tour') {
+                $nearbyTours->push($near->nearDeal);
+            }
+        }
+
+        // Limit to reasonable numbers
+        $nearbyHotels = $nearbyHotels->take(3);
+        $nearbyTours = $nearbyTours->take(6);
+
+        return view('website.pages.view_apartment', compact('apartment', 'nearbyHotels', 'nearbyTours', 'hashids'));
     }
 
     // cars
     public function cars()
     {
-        return view('website.pages.cars');
+        // Fetch cars with coordinates - paginated by 6
+        $cars = Deal::where('type', 'car')
+            ->with(['category', 'photos', 'car'])
+            ->paginate(6);
+
+        // Fetch car categories for filter dropdown
+        $categories = Category::where('type', 'car')
+            ->get();
+
+        // Get unique locations for filter dropdown
+        $locations = Deal::where('type', 'car')
+            ->whereNotNull('location')
+            ->distinct()
+            ->pluck('location')
+            ->filter()
+            ->sort()
+            ->values();
+
+        $hashids = $this->getHashids();
+
+        return view('website.pages.cars', compact('cars', 'categories', 'locations', 'hashids'));
     }
 
-    // viewCar
-    public function viewCar()
+    /**
+     * Display flights page with real-time flight data from API
+     * 
+     * This method fetches ONLY real data from AviationStack API.
+     * No hardcoded or sample data is used.
+     * 
+     * To enable real API data:
+     * 1. Get a free API key from https://aviationstack.com/
+     * 2. Add AVIATIONSTACK_API_KEY=your_api_key to your .env file
+     * 3. The system will automatically fetch real flight data
+     * 4. If API fails, empty data is returned (no fallback)
+     */
+    public function flights()
     {
-        return view('website.pages.view_car');
+        try {
+            // Fetch flights from real API only
+            $flights = $this->fetchFlightsFromAPI();
+            
+            // Get unique airlines for filter
+            $airlines = $flights->pluck('airline')->unique()->sort()->values();
+
+            // Get unique destinations for filter
+            $destinations = $flights->pluck('arrival.city')->unique()->sort()->values();
+
+            return view('website.pages.flights', compact('flights', 'airlines', 'destinations'));
+            
+        } catch (\Exception $e) {
+            Log::error('Flights API Error: ' . $e->getMessage());
+            
+            // Return empty data on error - no fallback to hardcoded data
+            $flights = collect([]);
+            $airlines = collect([]);
+            $destinations = collect([]);
+            
+            return view('website.pages.flights', compact('flights', 'airlines', 'destinations'));
+        }
+    }
+
+    // Fetch flights from real API
+    private function fetchFlightsFromAPI($origin = 'ZNZ', $destination = null, $date = null)
+    {
+        try {
+            // Using AviationStack API for flight schedules
+            // You can get a free API key from https://aviationstack.com/
+            $apiKey = config('services.aviationstack.api_key', 'your_api_key_here');
+            
+            if ($apiKey === 'your_api_key_here') {
+                // If no API key is configured, return empty collection
+                Log::warning('AviationStack API key not configured');
+                return collect([]);
+            }
+            
+            $client = new \GuzzleHttp\Client();
+            
+            // Build query parameters
+            $queryParams = [
+                'access_key' => $apiKey,
+                'dep_iata' => $origin,
+                'limit' => 20
+            ];
+            
+            if ($destination) {
+                $queryParams['arr_iata'] = $destination;
+            }
+            
+            if ($date) {
+                $queryParams['dep_date'] = $date;
+            } else {
+                // Default to today's date
+                $queryParams['dep_date'] = now()->format('Y-m-d');
+            }
+            
+            $response = $client->get('http://api.aviationstack.com/v1/flights', [
+                'query' => $queryParams,
+                'timeout' => 10
+            ]);
+            
+            $data = json_decode($response->getBody(), true);
+            
+            if (isset($data['data']) && is_array($data['data'])) {
+                return $this->formatAviationStackData($data['data']);
+            }
+            
+            return collect([]);
+            
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            Log::error('Flight API Request Error: ' . $e->getMessage());
+            return collect([]);
+        } catch (\Exception $e) {
+            Log::error('Flight API Error: ' . $e->getMessage());
+            return collect([]);
+        }
+    }
+
+    // Format AviationStack API response data
+    private function formatAviationStackData($apiData)
+    {
+        $flights = collect();
+        
+        foreach ($apiData as $flight) {
+            try {
+                $departure = $flight['departure'] ?? [];
+                $arrival = $flight['arrival'] ?? [];
+                $airline = $flight['airline'] ?? [];
+                $flightInfo = $flight['flight'] ?? [];
+                
+                $flights->push([
+                    'id' => $flight['flight']['number'] ?? uniqid(),
+                    'airline' => $airline['name'] ?? 'Unknown Airline',
+                    'flight_number' => $flightInfo['iata'] ?? $flightInfo['number'] ?? 'N/A',
+                    'departure' => [
+                        'airport' => $departure['iata'] ?? 'N/A',
+                        'city' => $departure['airport'] ?? 'Unknown',
+                        'time' => isset($departure['scheduled']) ? date('H:i', strtotime($departure['scheduled'])) : 'N/A',
+                        'date' => isset($departure['scheduled']) ? date('Y-m-d', strtotime($departure['scheduled'])) : 'N/A'
+                    ],
+                    'arrival' => [
+                        'airport' => $arrival['iata'] ?? 'N/A',
+                        'city' => $arrival['airport'] ?? 'Unknown',
+                        'time' => isset($arrival['scheduled']) ? date('H:i', strtotime($arrival['scheduled'])) : 'N/A',
+                        'date' => isset($arrival['scheduled']) ? date('Y-m-d', strtotime($arrival['scheduled'])) : 'N/A'
+                    ],
+                    'duration' => $this->calculateDuration($departure['scheduled'] ?? null, $arrival['scheduled'] ?? null),
+                    'price' => null, // Price not available from AviationStack API
+                    'currency' => null, // Currency not available from AviationStack API
+                    'stops' => null, // Stop information not available from AviationStack API
+                    'aircraft' => $flight['aircraft']['name'] ?? 'Unknown',
+                    'status' => $this->getFlightStatus($departure['delay'] ?? null, $flight['flight_status'] ?? null)
+                ]);
+            } catch (\Exception $e) {
+                Log::warning('Error formatting flight data: ' . $e->getMessage());
+                continue;
+            }
+        }
+        
+        return $flights;
+    }
+    
+    // Calculate flight duration
+    private function calculateDuration($departureTime, $arrivalTime)
+    {
+        if (!$departureTime || !$arrivalTime) {
+            return 'N/A';
+        }
+        
+        try {
+            $departure = new \DateTime($departureTime);
+            $arrival = new \DateTime($arrivalTime);
+            $diff = $departure->diff($arrival);
+            
+            $hours = $diff->h;
+            $minutes = $diff->i;
+            
+            return $hours . 'h ' . $minutes . 'm';
+        } catch (\Exception $e) {
+            return 'N/A';
+        }
+    }
+    
+    
+    // Get flight status
+    private function getFlightStatus($delay, $flightStatus)
+    {
+        if ($delay && $delay > 0) {
+            return 'Delayed';
+        }
+        
+        switch ($flightStatus) {
+            case 'active':
+            case 'landed':
+                return 'On Time';
+            case 'cancelled':
+                return 'Cancelled';
+            case 'incident':
+                return 'Delayed';
+            default:
+                return 'On Time';
+        }
     }
     
 
-
-    // flights
-    public function flights()
+    // viewCar
+    public function viewCar($id)
     {
-        return view('website.pages.flights');
+        $hashids = $this->getHashids();
+        
+        // Decode the hashed ID
+        $decodedIds = $hashids->decode($id);
+        if (empty($decodedIds)) {
+            abort(404, 'Car not found');
+        }
+        $carId = $decodedIds[0];
+
+        $car = Deal::where('type', 'car')
+            ->where('id', $carId)
+            ->with(['category', 'photos', 'car', 'features'])
+            ->firstOrFail();
+
+        // Fetch nearby cars (up to 3) in the same location, or random if none found
+        $nearbyCars = Deal::where('type', 'car')
+            ->where('id', '!=', $car->id)
+            ->where('location', $car->location)
+            ->with(['category', 'photos'])
+            ->limit(3)
+            ->get();
+
+        // If no cars in same location, get random cars
+        if ($nearbyCars->isEmpty()) {
+            $nearbyCars = Deal::where('type', 'car')
+                ->where('id', '!=', $car->id)
+                ->with(['category', 'photos'])
+                ->limit(3)
+                ->get();
+        }
+
+        return view('website.pages.view_car', compact('car', 'nearbyCars', 'hashids'));
     }
 
+
+
+
     // confirmBooking
-    public function confirmBooking()
+    public function confirmBooking(Request $request)
     {
-        return view('website.pages.confirm_booking');
+        // Get deal ID from request or session
+        $dealId = $request->get('deal_id') ?? session('booking_deal_id');
+        
+        if (!$dealId) {
+            return redirect()->route('index')->with('error', 'No deal selected for booking');
+        }
+        
+        $deal = Deal::with(['category', 'photos'])->find($dealId);
+        
+        if (!$deal) {
+            return redirect()->route('index')->with('error', 'Deal not found');
+        }
+        
+        return view('website.pages.confirm_booking', compact('deal'));
     }
 
     // processBooking
@@ -85,25 +555,99 @@ class WebsiteController extends Controller
     {
         // Validate the request
         $request->validate([
+            'deal_id' => 'required|exists:deals,id',
+            'deal_type' => 'required|string',
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'phone' => 'required|string|max:20',
-            'nationality' => 'required|string|max:100',
-            'passport_number' => 'required|string|max:50',
             'payment_method' => 'required|in:pesapal,offline',
             'agree_terms' => 'required|accepted',
         ]);
 
+        // Get deal details
+        $deal = Deal::findOrFail($request->deal_id);
+        
+        // Generate booking reference
+        $bookingRef = 'ZB' . strtoupper(substr(md5(time() . $request->email), 0, 8));
+        
+        // Prepare booking data
+        $bookingData = [
+            'deal_id' => $deal->id,
+            'deal_type' => $deal->type,
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'payment_method' => $request->payment_method,
+            'special_requirements' => $request->special_requirements ?? '',
+            'booking_reference' => $bookingRef,
+            'total_amount' => $deal->base_price,
+            'status' => $request->payment_method === 'offline' ? 'confirmed' : 'pending',
+        ];
+
+        // Add deal-specific data
+        if ($deal->type === 'tour') {
+            $bookingData['check_in'] = $request->check_in;
+            $bookingData['guests'] = $request->guests;
+        } elseif ($deal->type === 'car') {
+            $bookingData['pickup_date'] = $request->pickup_date;
+            $bookingData['return_date'] = $request->return_date;
+        } elseif (in_array($deal->type, ['hotel', 'apartment'])) {
+            $bookingData['check_in'] = $request->check_in;
+            $bookingData['check_out'] = $request->check_out;
+            $bookingData['guests'] = $request->guests;
+            $bookingData['rooms'] = $request->rooms ?? 1;
+        }
+
         // Process the booking based on payment method
         if ($request->payment_method === 'pesapal') {
+            // Store booking data in session for payment processing
+            session(['pending_booking' => $bookingData]);
             // Redirect to Pesapal payment gateway
-            return redirect()->route('pesapal.payment')->with('booking_data', $request->all());
+            return redirect()->route('pesapal.payment')->with('booking_data', $bookingData);
         } else {
-            // Process offline payment
-            // Save booking to database
-            // Send confirmation email
+            // Process offline payment - save booking directly
+            // Note: You'll need to create a Booking model and save the data
+            session(['booking_confirmation' => $bookingData]);
             return redirect()->route('booking.success')->with('success', 'Your booking has been confirmed! You will pay on arrival.');
         }
+    }
+
+    //viewTour
+    public function viewTour($id)
+    {
+        $hashids = $this->getHashids();
+        
+        // Decode the hashed ID
+        $decodedIds = $hashids->decode($id);
+        if (empty($decodedIds)) {
+            abort(404, 'Tour not found');
+        }
+        $tourId = $decodedIds[0];
+
+        $tour = Deal::where('type', 'tour')
+            ->where('id', $tourId)
+            ->with(['category', 'photos', 'tours', 'features'])
+            ->firstOrFail();
+
+        // Fetch nearby tours (up to 3) in the same location, or random if none found
+        $nearbyTours = Deal::where('type', 'tour')
+            ->where('id', '!=', $tour->id)
+            ->where('location', $tour->location)
+            ->with(['category', 'photos'])
+            ->limit(3)
+            ->get();
+
+        // If no tours in same location, get random tours
+        if ($nearbyTours->isEmpty()) {
+            $nearbyTours = Deal::where('type', 'tour')
+                ->where('id', '!=', $tour->id)
+                ->with(['category', 'photos'])
+                ->limit(3)
+                ->get();
+        }
+
+        return view('website.pages.view_tour', compact('tour', 'nearbyTours', 'hashids'));
     }
 }
