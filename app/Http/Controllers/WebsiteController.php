@@ -122,79 +122,19 @@ class WebsiteController extends Controller
     // hotels
     public function hotels()
     {
-        // Fetch hotels and apartments with coordinates - paginated by 6
-        $hotels = Deal::whereIn('type', ['hotel', 'apartment'])
-            ->with(['category', 'photos'])
-            ->paginate(6);
-
-        // Fetch categories for filter dropdown
-        $categories = Category::whereIn('type', ['hotel', 'apartment'])
-            ->get();
-
-        // Get unique locations for filter dropdown
-        $locations = Deal::whereIn('type', ['hotel', 'apartment'])
-            ->whereNotNull('location')
-            ->distinct()
-            ->pluck('location')
-            ->filter()
-            ->sort()
-            ->values();
-
-        $hashids = $this->getHashids();
-
-        return view('website.pages.hotels', compact('hotels', 'categories', 'locations', 'hashids'));
+        return view('website.pages.hotels');
     }
 
     // apartments
     public function apartments()
     {
-        // Fetch only apartments with coordinates - paginated by 6
-        $apartments = Deal::where('type', 'apartment')
-            ->with(['category', 'photos'])
-            ->paginate(6);
-
-        // Fetch apartment categories for filter dropdown
-        $categories = Category::where('type', 'apartment')
-            ->get();
-
-        // Get unique locations for filter dropdown
-        $locations = Deal::where('type', 'apartment')
-            ->whereNotNull('location')
-            ->distinct()
-            ->pluck('location')
-            ->filter()
-            ->sort()
-            ->values();
-
-        $hashids = $this->getHashids();
-
-        return view('website.pages.apartments', compact('apartments', 'categories', 'locations', 'hashids'));
+        return view('website.pages.apartments');
     }
 
     // tours
     public function tours()
     {
-        // Fetch tours with coordinates - paginated by 6
-        $tours = Deal::where('type', 'tour')
-            ->with(['category', 'photos', 'tours'])
-            ->paginate(6);
-
-        // Fetch tour categories for filter dropdown
-        $categories = Category::where('type', 'tour')
-            ->get();
-
-        // Get unique locations for filter dropdown
-        $locations = Deal::where('type', 'tour')
-            ->whereNotNull('location')
-            ->distinct()
-            ->pluck('location')
-            ->filter()
-            ->sort()
-            ->values();
-
-        $hashids = $this->getHashids();
-
-        return view('website.pages.tours', compact('tours', 'categories', 'locations', 'hashids'));
+        return view('website.pages.tours');
     }
 
     
@@ -287,27 +227,7 @@ class WebsiteController extends Controller
     // cars
     public function cars()
     {
-        // Fetch cars with coordinates - paginated by 6
-        $cars = Deal::where('type', 'car')
-            ->with(['category', 'photos', 'car'])
-            ->paginate(6);
-
-        // Fetch car categories for filter dropdown
-        $categories = Category::where('type', 'car')
-            ->get();
-
-        // Get unique locations for filter dropdown
-        $locations = Deal::where('type', 'car')
-            ->whereNotNull('location')
-            ->distinct()
-            ->pluck('location')
-            ->filter()
-            ->sort()
-            ->values();
-
-        $hashids = $this->getHashids();
-
-        return view('website.pages.cars', compact('cars', 'categories', 'locations', 'hashids'));
+        return view('website.pages.cars');
     }
 
     /**

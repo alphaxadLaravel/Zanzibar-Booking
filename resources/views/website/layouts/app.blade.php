@@ -8,6 +8,7 @@
     </title>
     <link rel="shortcut icon" type="image/png" href="{{asset('logo.png')}}" />
     @yield('meta')
+    @livewireStyles()
     @include('website.layouts.styles')
 </head>
 
@@ -223,7 +224,7 @@
             </div>
         </div>
     </div>
-
+@livewireScripts()
     @include('website.layouts.js')
 </body>
 

@@ -31,16 +31,16 @@
                         <a href="{{ route('index') }}">Home</a>
                     </li>
                     <li class="menu-item menu-item-2">
-                        <a href="{{ route('hotels') }}">Hotels</a>
+                        <a wire:navigate href="{{ route('hotels') }}">Hotels</a>
                     </li>
                     <li class="menu-item menu-item-5">
-                        <a href="{{route('apartments')}}">Apartments</a>
+                        <a wire:navigate href="{{route('apartments')}}">Apartments</a>
                     </li>
                     <li class="menu-item menu-item-5">
-                        <a href="{{ route('tours') }}">Tours</a>
+                        <a wire:navigate href="{{ route('tours') }}">Tours</a>
                     </li>
                     <li class="menu-item menu-item-5">
-                        <a href="{{ route('cars') }}">Cars</a>
+                        <a wire:navigate href="{{ route('cars') }}">Cars</a>
                     </li>
                     <li class="menu-item menu-item-5">
                         <a href="{{ route('flights') }}">Flights</a>

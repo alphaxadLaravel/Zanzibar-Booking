@@ -58,9 +58,9 @@
                 </div>
                 <div class="col-md-3">
                     <div class="widget widget-select">
-                        <h4 class="widget__title">PAY VIA PESAPAL</h4>
+                        <h4 class="widget__title">BOOK & PAY VIA PESAPAL</h4>
 
-                        <img src="images/pesa.png" style="height: 150px; width: 100%" class="img-fluid my-2" />
+                        <img src="https://mac-more.com/wp-content/uploads/2023/05/Pesapal_Logos_large.webp" style="height: 150px; width: 100%" class="img-fluid my-2" />
                     </div>
                 </div>
             </div>
