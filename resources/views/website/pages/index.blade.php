@@ -30,7 +30,7 @@
                 ">
                     Find a great ride with Zanzibar Bookings
                 </p>
-                <form action="#" method="GET" class="search-card p-3 rounded shadow" style="
+                <form action="{{ route('search') }}" method="GET" class="search-card p-3 rounded shadow" id="searchForm" style="
                         background: rgba(255,255,255,0.97);
                         width: 100%;
                         max-width: 1280px;
@@ -490,3 +490,101 @@
 </section>
 
 @endsection
+
+@push('styles')
+<style>
+/* Search form responsive improvements */
+@media (max-width: 768px) {
+    .search-center__title--desktop {
+        display: none !important;
+    }
+    .search-center__title--mobile {
+        display: block !important;
+    }
+    
+    .search-card {
+        margin: 0 10px !important;
+    }
+    
+    .search-card .row .col-12 {
+        margin-bottom: 10px;
+    }
+}
+
+@media (min-width: 769px) {
+    .search-center__title--mobile {
+        display: none !important;
+    }
+}
+
+/* Search button hover effects */
+.btn-primary:hover {
+    background-color: #003580 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 53, 128, 0.3);
+    transition: all 0.3s ease;
+}
+
+/* Form field focus effects */
+.form-control:focus {
+    border-color: #003580;
+    box-shadow: 0 0 0 0.2rem rgba(0, 53, 128, 0.25);
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.fa-spinner {
+    animation: spin 1s linear infinite;
+}
+</style>
+@endpush
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchForm = document.getElementById('searchForm');
+    const searchButton = searchForm.querySelector('button[type="submit"]');
+    
+    // Add loading state to search button
+    searchForm.addEventListener('submit', function(e) {
+        const originalText = searchButton.innerHTML;
+        searchButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Searching...';
+        searchButton.disabled = true;
+        
+        // Re-enable button after 3 seconds as fallback
+        setTimeout(() => {
+            searchButton.innerHTML = originalText;
+            searchButton.disabled = false;
+        }, 3000);
+    });
+    
+    // Auto-submit form when location or category changes
+    const locationSelect = document.getElementById('search_location');
+    const categorySelect = document.getElementById('search_category');
+    
+    [locationSelect, categorySelect].forEach(select => {
+        select.addEventListener('change', function() {
+            // Only auto-submit if there's a value selected
+            if (this.value) {
+                setTimeout(() => {
+                    searchForm.submit();
+                }, 500);
+            }
+        });
+    });
+    
+    // Add enter key support for name field
+    const nameInput = document.getElementById('search_name');
+    nameInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            searchForm.submit();
+        }
+    });
+});
+</script>
+@endpush

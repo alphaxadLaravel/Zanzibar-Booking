@@ -7,11 +7,8 @@ use App\Models\Deal;
 use Livewire\Component;
 use Hashids\Hashids;
 
-class AllDealsListing extends Component
+class SearchResults extends Component
 {
-    // mount deal type
-    public $dealType;
-    
     // Filter properties
     public $searchLocation = '';
     public $searchCategory = '';
@@ -21,9 +18,11 @@ class AllDealsListing extends Component
     // Deals data for JavaScript access
     public $dealsData = [];
 
-    public function mount($dealType)
+    public function mount($location = '', $category = '', $name = '')
     {
-        $this->dealType = $dealType;
+        $this->searchLocation = $location;
+        $this->searchCategory = $category;
+        $this->searchName = $name;
     }
     
     /**
@@ -45,7 +44,6 @@ class AllDealsListing extends Component
         $this->sortBy = $sortValue;
     }
     
-
     /**
      * Create Hashids instance
      */
@@ -77,60 +75,44 @@ class AllDealsListing extends Component
     }
 
     /**
-     * Get the appropriate price unit for a deal type
-     */
-    public function getPriceUnit($dealType)
-    {
-        switch ($dealType) {
-            case 'hotel':
-            case 'apartment':
-                return '/night';
-            case 'tour':
-                return '/person';
-            case 'car':
-                return '/day';
-            default:
-                return '';
-        }
-    }
-
-    /**
      * Get default image for deal type
      */
     public function getDefaultImage($dealType)
     {
         switch ($dealType) {
             case 'hotel':
-                return 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=360&h=240&fit=crop&crop=center';
+                return asset('images/default-hotel.jpg');
             case 'apartment':
-                return 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=360&h=240&fit=crop&crop=center';
+                return asset('images/default-apartment.jpg');
             case 'tour':
-                return 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=360&h=240&fit=crop&crop=center';
+                return asset('images/default-tour.jpg');
             case 'car':
-                return 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=360&h=240&fit=crop&crop=center';
+                return asset('images/default-car.jpg');
             default:
-                return 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=360&h=240&fit=crop&crop=center';
+                return asset('images/default-placeholder.jpg');
         }
     }
 
     public function render()
     {
-        // Build the query with appropriate relationships based on deal type
-        $query = Deal::where('type', $this->dealType);
-        
-        // Apply filters
+        // Start building the query
+        $query = Deal::active();
+
+        // Apply location filter
         if ($this->searchLocation) {
             $query->where('location', 'like', '%' . $this->searchLocation . '%');
         }
-        
+
+        // Apply category filter
         if ($this->searchCategory) {
             $query->where('category_id', $this->searchCategory);
         }
-        
+
+        // Apply name/title filter
         if ($this->searchName) {
             $query->where('title', 'like', '%' . $this->searchName . '%');
         }
-        
+
         // Apply sorting
         switch ($this->sortBy) {
             case 'price_asc':
@@ -147,34 +129,20 @@ class AllDealsListing extends Component
                 break;
             case 'new':
             default:
-                $query->orderBy('created_at', 'desc');
-                break;
-        }
-        
-        // Add specific relationships based on deal type
-        switch ($this->dealType) {
-            case 'hotel':
-            case 'apartment':
-                $query->with(['category', 'photos', 'rooms.photos']);
-                break;
-            case 'tour':
-                $query->with(['category', 'photos', 'tours']);
-                break;
-            case 'car':
-                $query->with(['category', 'photos', 'car']);
-                break;
-            default:
-                $query->with(['category', 'photos']);
+                $query->orderBy('is_featured', 'desc')->orderBy('created_at', 'desc');
                 break;
         }
 
-        $deals = $query->paginate(6);
+        // Get all matching deals with relationships
+        $deals = $query->with(['category', 'photos'])
+            ->paginate(12);
 
-        $categories = Category::where('type', $this->dealType)
+        // Get categories for filter dropdown
+        $categories = Category::whereIn('type', ['hotel', 'apartment', 'tour', 'car'])
             ->get();
 
-        $locations = Deal::where('type', $this->dealType)
-            ->whereNotNull('location')
+        // Get locations for filter dropdown
+        $locations = Deal::active()
             ->distinct()
             ->pluck('location')
             ->filter()
@@ -183,8 +151,8 @@ class AllDealsListing extends Component
 
         $hashids = $this->getHashids();
 
-        // Prepare deal data with routes and additional info
-        $deals->getCollection()->transform(function ($deal) {
+        // Prepare deal data with routes and default images
+        $deals->getCollection()->transform(function ($deal) use ($hashids) {
             $deal->view_route = $this->getViewRoute($deal);
             $deal->default_image = $this->getDefaultImage($deal->type);
             return $deal;
@@ -193,13 +161,11 @@ class AllDealsListing extends Component
         // Store deals data for JavaScript access (only the items, not the pagination object)
         $this->dealsData = $deals->items();
 
-        return view('livewire.all-deals-listing', [
+        return view('livewire.search-results', [
             'deals' => $deals,
             'categories' => $categories,
             'locations' => $locations,
-            'dealType' => $this->dealType,
             'hashids' => $hashids,
-            'priceUnit' => $this->getPriceUnit($this->dealType),
         ]);
     }
 }

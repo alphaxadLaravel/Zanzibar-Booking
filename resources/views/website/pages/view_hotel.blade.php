@@ -4,6 +4,34 @@
 use Illuminate\Support\Str;
 @endphp
 
+@section('title')
+{{ $hotel->seo_title ?: $hotel->title }} - Zanzibar Bookings
+@endsection
+
+@section('meta')
+<meta name="description" content="{{ $hotel->seo_description ?: Str::limit(strip_tags($hotel->description), 160) }}">
+@if($hotel->seo_keywords)
+<meta name="keywords" content="{{ $hotel->seo_keywords }}">
+@endif
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ request()->url() }}">
+<meta property="og:title" content="{{ $hotel->seo_title ?: $hotel->title }}">
+<meta property="og:description"
+    content="{{ $hotel->seo_description ?: Str::limit(strip_tags($hotel->description), 160) }}">
+<meta property="og:image"
+    content="{{ $hotel->seo_image ? asset('storage/' . $hotel->seo_image) : ($hotel->cover_photo ? asset('storage/' . $hotel->cover_photo) : asset('logo.png')) }}">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="{{ request()->url() }}">
+<meta property="twitter:title" content="{{ $hotel->seo_title ?: $hotel->title }}">
+<meta property="twitter:description"
+    content="{{ $hotel->seo_description ?: Str::limit(strip_tags($hotel->description), 160) }}">
+<meta property="twitter:image"
+    content="{{ $hotel->seo_image ? asset('storage/' . $hotel->seo_image) : ($hotel->cover_photo ? asset('storage/' . $hotel->cover_photo) : asset('logo.png')) }}">
+@endsection
+
 @section('pages')
 <section class="gallery">
     <div class="gmz-carousel-with-lightbox" data-count="{{ $hotel->photos->count() }}">
@@ -22,6 +50,8 @@ use Illuminate\Support\Str;
         @endforelse
     </div>
 </section>
+
+
 <div class="breadcrumb">
     <div class="container">
         <ul>
@@ -49,31 +79,64 @@ use Illuminate\Support\Str;
                     {{ $hotel->title }}
                 </h2>
             </div>
+            @if ($hotel->location)
             <p class="location">
                 <i class="fal fa-map-marker-alt"></i> {{ $hotel->location }}
             </p>
+            @endif
+
 
             <div class="meta">
-                <ul class="row gx-3 gy-2" style="list-style:none;padding:0;margin:0;">
-                    <li class="col-6 col-md-4 mb-2">
-                        <div class="d-flex flex-column">
-                            <span class="label text-muted" style="font-size:13px;">Type</span>
-                            <span class="value fw-semibold" style="font-size:15px;">{{ $hotel->category ?
-                                $hotel->category->category : 'Hotel' }}</span>
+                <ul class="meta row  gy-2 mb-4" style="list-style: none; padding: 0; margin: 0;">
+                    <li class="col-6 col-md-4 d-flex align-items-stretch mb-3 mb-md-0">
+                        <div class="d-flex flex-nowrap align-items-center w-100 border rounded bg-white px-3 py-2 h-100"
+                            style="min-height:70px; border-color: #218080;">
+                            <span
+                                class="d-flex align-items-center justify-content-center rounded bg-light flex-shrink-0"
+                                style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 18px;">
+                                <i class="mdi mdi-home-city" style="color: #218080; font-size: 1.2rem;"></i>
+                            </span>
+                            <div class="flex-grow-1" style="min-width:0;">
+                                <div class="fw-bold text-dark"
+                                    style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                    {{ $hotel->category ? $hotel->category->category : 'Hotel' }}
+                                </div>
+                                <div class="text-muted small" style="white-space:nowrap;">Type</div>
+                            </div>
                         </div>
                     </li>
-                    <li class="col-6 col-md-4 mb-2">
-                        <div class="d-flex flex-column">
-                            <span class="label text-muted" style="font-size:13px;">Price</span>
-                            <span class="value fw-semibold" style="font-size:15px;">USD {{
-                                number_format($hotel->base_price, 2) }}/night</span>
+                    <li class="col-6 col-md-4 d-flex align-items-stretch mb-3 mb-md-0">
+                        <div class="d-flex flex-nowrap align-items-center w-100 border rounded bg-white px-3 py-2 h-100"
+                            style="min-height:70px; border-color: #218080;">
+                            <span
+                                class="d-flex align-items-center justify-content-center rounded bg-light flex-shrink-0"
+                                style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 18px;">
+                                <i class="mdi mdi-currency-usd" style="color: #218080; font-size: 1.2rem;"></i>
+                            </span>
+                            <div class="flex-grow-1" style="min-width:0;">
+                                <div class="fw-bold text-dark"
+                                    style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                    USD {{ number_format($hotel->base_price, 2) }}/night
+                                </div>
+                                <div class="text-muted small" style="white-space:nowrap;">Price</div>
+                            </div>
                         </div>
                     </li>
-                    <li class="col-6 col-md-4 mb-2">
-                        <div class="d-flex flex-column">
-                            <span class="label text-muted" style="font-size:13px;">Rating</span>
-                            <span class="value fw-semibold" style="font-size:15px;">{{ $hotel->ratings ?
-                                number_format($hotel->ratings, 1) : '5.0' }}/5</span>
+                    <li class="col-6 col-md-4 d-flex align-items-stretch mb-3 mb-md-0">
+                        <div class="d-flex flex-nowrap align-items-center w-100 border rounded bg-white px-3 py-2 h-100"
+                            style="min-height:70px; border-color: #218080;">
+                            <span
+                                class="d-flex align-items-center justify-content-center rounded bg-light flex-shrink-0"
+                                style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 18px;">
+                                <i class="mdi mdi-star" style="color: #218080; font-size: 1.2rem;"></i>
+                            </span>
+                            <div class="flex-grow-1" style="min-width:0;">
+                                <div class="fw-bold text-dark"
+                                    style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                    {{ $hotel->ratings ? number_format($hotel->ratings, 1) : '5.0' }}/5
+                                </div>
+                                <div class="text-muted small" style="white-space:nowrap;">Rating</div>
+                            </div>
                         </div>
                     </li>
                 </ul>
@@ -102,7 +165,8 @@ use Illuminate\Support\Str;
                             <i class="mdi mdi-check-circle me-2"
                                 style="font-size: 1.2rem; color: #2e8b57; width: 20px; text-align: center;"></i>
                             @endif
-                            <span style="font-size: 13px; font-weight: 500; color: #333; line-height: 1.3;">{{ $feature->name }}</span>
+                            <span style="font-size: 13px; font-weight: 500; color: #333; line-height: 1.3;">{{
+                                $feature->name }}</span>
                         </div>
                         @empty
                         <div class="text-muted" style="font-size: 14px;">No facilities listed.</div>
@@ -111,74 +175,117 @@ use Illuminate\Support\Str;
                 </div>
             </section>
             <hr>
-            <section class="feature">
-                <h2 class="section-title">Hotel Services</h2>
-                <div class="section-content">
-                    <div class="d-flex flex-wrap">
-                        <div class="service-card d-flex align-items-center p-3 mb-3 mx-2"
-                            style="background: white; border-radius: 8px; border: 1px solid #e0e0e0; min-height: 60px; flex: 0 0 auto; min-width: 200px;">
-                            <i class="fas fa-spa me-3"
-                                style="font-size: 1.5rem; color: #333; width: 24px; text-align: center;"></i>
-                            <span
-                                style="font-size: 14px; font-weight: 500; color: #333; line-height: 1.4;">Massages</span>
-                        </div>
-                        <div class="service-card d-flex align-items-center p-3 mb-3 mx-2"
-                            style="background: white; border-radius: 8px; border: 1px solid #e0e0e0; min-height: 60px; flex: 0 0 auto; min-width: 200px;">
-                            <i class="fas fa-concierge-bell me-3"
-                                style="font-size: 1.5rem; color: #333; width: 24px; text-align: center;"></i>
-                            <span style="font-size: 14px; font-weight: 500; color: #333; line-height: 1.4;">Concierge
-                                Service</span>
-                        </div>
-                        <div class="service-card d-flex align-items-center p-3 mb-3 mx-2"
-                            style="background: white; border-radius: 8px; border: 1px solid #e0e0e0; min-height: 60px; flex: 0 0 auto; min-width: 200px;">
-                            <i class="fas fa-utensils me-3"
-                                style="font-size: 1.5rem; color: #333; width: 24px; text-align: center;"></i>
-                            <span style="font-size: 14px; font-weight: 500; color: #333; line-height: 1.4;">Room
-                                Service</span>
-                        </div>
-                        <div class="service-card d-flex align-items-center p-3 mb-3 mx-2"
-                            style="background: white; border-radius: 8px; border: 1px solid #e0e0e0; min-height: 60px; flex: 0 0 auto; min-width: 200px;">
-                            <i class="fas fa-broom me-3"
-                                style="font-size: 1.5rem; color: #333; width: 24px; text-align: center;"></i>
-                            <span
-                                style="font-size: 14px; font-weight: 500; color: #333; line-height: 1.4;">Housekeeping</span>
-                        </div>
-                        <div class="service-card d-flex align-items-center p-3 mb-3 mx-2"
-                            style="background: white; border-radius: 8px; border: 1px solid #e0e0e0; min-height: 60px; flex: 0 0 auto; min-width: 200px;">
-                            <i class="fas fa-car me-3"
-                                style="font-size: 1.5rem; color: #333; width: 24px; text-align: center;"></i>
-                            <span style="font-size: 14px; font-weight: 500; color: #333; line-height: 1.4;">Airport
-                                Transfer</span>
-                        </div>
-                        <div class="service-card d-flex align-items-center p-3 mb-3 mx-2"
-                            style="background: white; border-radius: 8px; border: 1px solid #e0e0e0; min-height: 60px; flex: 0 0 auto; min-width: 200px;">
-                            <i class="fas fa-plane me-3"
-                                style="font-size: 1.5rem; color: #333; width: 24px; text-align: center;"></i>
-                            <span style="font-size: 14px; font-weight: 500; color: #333; line-height: 1.4;">Tour
-                                Booking</span>
-                        </div>
-                        <div class="service-card d-flex align-items-center p-3 mb-3 mx-2"
-                            style="background: white; border-radius: 8px; border: 1px solid #e0e0e0; min-height: 60px; flex: 0 0 auto; min-width: 200px;">
-                            <i class="fas fa-tshirt me-3"
-                                style="font-size: 1.5rem; color: #333; width: 24px; text-align: center;"></i>
-                            <span style="font-size: 14px; font-weight: 500; color: #333; line-height: 1.4;">Laundry
-                                Service</span>
-                        </div>
-                        <div class="service-card d-flex align-items-center p-3 mb-3 mx-2"
-                            style="background: white; border-radius: 8px; border: 1px solid #e0e0e0; min-height: 60px; flex: 0 0 auto; min-width: 200px;">
-                            <i class="fas fa-phone me-3"
-                                style="font-size: 1.5rem; color: #333; width: 24px; text-align: center;"></i>
-                            <span style="font-size: 14px; font-weight: 500; color: #333; line-height: 1.4;">24/7
-                                Support</span>
+
+            @if($hotel->video_link)
+            <section class="video-section">
+                <h4 class="section-title">Video</h4>
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-md-12">
+                            <div class="video-container"
+                                style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%; background: #000; border-radius: 8px; overflow: hidden;">
+                                @php
+                                $videoUrl = $hotel->video_link;
+                                $embedUrl = '';
+
+                                // YouTube
+                                if (strpos($videoUrl, 'youtube.com') !== false || strpos($videoUrl, 'youtu.be') !==
+                                false) {
+                                if (strpos($videoUrl, 'youtu.be') !== false) {
+                                $videoId = substr($videoUrl, strrpos($videoUrl, '/') + 1);
+                                } else {
+                                parse_str(parse_url($videoUrl, PHP_URL_QUERY), $query);
+                                $videoId = $query['v'] ?? '';
+                                }
+                                $embedUrl = 'https://www.youtube.com/embed/' . $videoId . '?rel=0&modestbranding=1';
+                                }
+                                // Vimeo
+                                elseif (strpos($videoUrl, 'vimeo.com') !== false) {
+                                $videoId = substr($videoUrl, strrpos($videoUrl, '/') + 1);
+                                $embedUrl = 'https://player.vimeo.com/video/' . $videoId .
+                                '?title=0&byline=0&portrait=0';
+                                }
+                                // Direct video file or other platforms
+                                else {
+                                $embedUrl = $videoUrl;
+                                }
+                                @endphp
+
+                                @if($embedUrl)
+                                <iframe src="{{ $embedUrl }}"
+                                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
+                                    frameborder="0" allowfullscreen
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
+                                </iframe>
+                                @else
+                                <div
+                                    style="display: flex; align-items: center; justify-content: center; height: 100%; color: white; text-align: center;">
+                                    <div>
+                                        <i class="fas fa-play-circle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                        <p>Video preview not available</p>
+                                        <a href="{{ $videoUrl }}" target="_blank" class="btn btn-primary">Watch
+                                            Video</a>
+                                    </div>
+                                </div>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
-            </section>
-
+            @endif
             <hr>
+            @if($hotel->nearbyLocations && $hotel->nearbyLocations->count() > 0)
+            <section class="nearby-locations">
+                <h4 class="section-title mb-3">Nearby Locations</h4>
+                <div class="section-content">
+                    <div class="d-flex flex-wrap" style="gap: 10px;">
+                        @foreach($hotel->nearbyLocations as $location)
+                        <div class="facility-card d-flex align-items-center px-3 py-2 mb-2"
+                            style="background: #fff; border-radius: 6px; border: 1px solid #e0e0e0; min-height: 38px; flex: 0 0 auto; min-width: 180px; max-width: 320px; width: calc(100%/6 - 10px);">
+                            <span class="me-2" style="width: 22px; text-align: center;">
+                                @php
+                                $iconMap = [
+                                'Airport' => 'mdi-airplane',
+                                'Beach' => 'mdi-beach',
+                                'School' => 'mdi-school',
+                                'Hospital' => 'mdi-hospital',
+                                'Shopping Center' => 'mdi-shopping',
+                                'Restaurant' => 'mdi-food',
+                                'Bank' => 'mdi-bank',
+                                'ATM' => 'mdi-credit-card',
+                                'Gas Station' => 'mdi-gas-station',
+                                'Bus Station' => 'mdi-bus',
+                                'Train Station' => 'mdi-train',
+                                'Tourist Attraction' => 'mdi-camera',
+                                'Market' => 'mdi-store',
+                                'Pharmacy' => 'mdi-pill',
+                                'Police Station' => 'mdi-shield',
+                                'Post Office' => 'mdi-mail',
+                                'Gym' => 'mdi-dumbbell',
+                                'Park' => 'mdi-tree',
+                                'Mosque' => 'mdi-mosque',
+                                'Church' => 'mdi-church',
+                                ];
+                                $icon = $iconMap[$location->category] ?? 'mdi-map-marker';
+                                @endphp
+                                <i class="mdi {{ $icon }}" style="font-size: 1.2rem; color: #2e8b57;"></i>
+                            </span>
+                            <span style="font-size: 13px; font-weight: 500; color: #333; line-height: 1.3; flex:1;">
+                                {{ $location->title }}
+                            </span>
+                            <span class="ms-2 text-nowrap" style="font-size: 13px; color: #2e8b57; font-weight: 600;">
+                                {{ $location->formatted_distance }}
+                            </span>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+            </section>
+            <hr>
+            @endif
             <section class="map">
-                <h2 class="section-title">Hotel Location On Map</h2>
+                <h4 class="section-title mb-4">Hotel Location On Map</h4>
                 <div id="address-map-container" style="width: 100%; height: 400px">
                     @if($hotel->lat && $hotel->long)
                     <iframe width="100%" height="100%" frameborder="0" style="border:0; border-radius: 8px;"
@@ -197,7 +304,121 @@ use Illuminate\Support\Str;
 
 
             <div class="reviews-section mt-4" id="review-section">
-                <h3 class="comment-count mb-4">Reviews for this Hotel</h3>
+                <div class="d-flex justify-content-between align-items-center my-3">
+                    <h4 class="comment-count">Reviews for this Hotel</h4>
+
+                    <div class="d-flex justify-content-center">
+                        <button type="button" class="btn btn-outline-primary btn-lg fw-semibold" data-bs-toggle="modal"
+                            data-bs-target="#leaveReviewModal">
+                            <i class="fa fa-pen"></i> Leave a Review
+                        </button>
+                    </div>
+                    <div class="modal fade" id="leaveReviewModal" tabindex="-1" aria-labelledby="leaveReviewModalLabel"
+                        aria-hidden="true">
+                        <div class="modal-dialog modal-lg modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h3 class="modal-title" id="leaveReviewModalLabel">Leave a Review</h3>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="comment-form-wrapper">
+                                        <form action="https://www.zanzibarbookings.com/add-comment"
+                                            class="comment-form form-sm gmz-form-action form-add-post-comment"
+                                            method="post" data-reload-time="1000">
+                                            <p class="notice mb-4 text-muted">
+                                                Your email address will not be published. Required fields are marked *
+                                            </p>
+
+                                            <div class="gmz-loader">
+                                                <div class="loader-inner">
+                                                    <div class="spinner-grow text-info align-self-center loader-lg">
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <input type="hidden" name="post_id" value="121" />
+                                            <input type="hidden" name="comment_id" value="0" />
+                                            <input type="hidden" name="comment_type" value="hotel" />
+
+                                            <div class="row g-3">
+                                                <div class="col-12">
+                                                    <div class="review-select-rate mb-3">
+                                                        <label class="form-label fw-semibold">Your rating *</label>
+                                                        <div class="fas-star mt-2">
+                                                            <i class="fa fa-star"></i>
+                                                            <i class="fa fa-star"></i>
+                                                            <i class="fa fa-star"></i>
+                                                            <i class="fa fa-star"></i>
+                                                            <i class="fa fa-star"></i>
+                                                        </div>
+                                                        <input type="hidden" name="review_star" value="5"
+                                                            class="review_star" />
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="comment-name" class="form-label fw-semibold">Your
+                                                            Name *</label>
+                                                        <input id="comment-name" type="text" name="comment_name"
+                                                            class="form-control gmz-validation"
+                                                            placeholder="Enter your full name"
+                                                            data-validation="required" />
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="comment-email" class="form-label fw-semibold">Your
+                                                            Email *</label>
+                                                        <input id="comment-email" type="email" name="comment_email"
+                                                            class="form-control gmz-validation"
+                                                            placeholder="Enter your email address"
+                                                            data-validation="required" />
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-12">
+                                                    <div class="form-group">
+                                                        <label for="comment-title" class="form-label fw-semibold">Review
+                                                            Title *</label>
+                                                        <input id="comment-title" type="text" name="comment_title"
+                                                            class="form-control gmz-validation"
+                                                            placeholder="Give your review a title"
+                                                            data-validation="required" />
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-12">
+                                                    <div class="form-group">
+                                                        <label for="comment-content" class="form-label fw-semibold">Your
+                                                            Review *</label>
+                                                        <textarea id="comment-content" name="comment_content"
+                                                            placeholder="Share your experience with this hotel..."
+                                                            class="form-control gmz-validation"
+                                                            data-validation="required" rows="5"></textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="gmz-message mt-3"></div>
+
+                                            <div class="d-grid mt-4">
+                                                <button type="submit"
+                                                    class="btn btn-primary btn-lg text-uppercase fw-semibold">
+                                                    Submit Review
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
 
                 <!-- Sample Reviews -->
                 <div class="reviews-list">
@@ -235,194 +456,14 @@ use Illuminate\Support\Str;
                             </p>
                         </div>
                     </div>
-
-                    <!-- Review 2 -->
-                    <div class="review-item d-flex mb-4 p-3"
-                        style="background: #f8f9fa; border-radius: 12px; border: 1px solid #e9ecef;">
-                        <div class="review-avatar me-3" style="flex-shrink: 0;">
-                            <img src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=60&h=60&fit=crop&crop=face"
-                                alt="Sarah Wilson"
-                                style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; display: block;">
-                        </div>
-                        <div class="review-content flex-grow-1">
-                            <div class="review-header d-flex justify-content-between align-items-start mb-2">
-                                <div>
-                                    <h5 class="reviewer-name mb-1"
-                                        style="font-size: 16px; font-weight: 600; color: #333;">Sarah Wilson</h5>
-                                    <div class="review-rating mb-1">
-                                        <i class="fa fa-star text-warning"></i>
-                                        <i class="fa fa-star text-warning"></i>
-                                        <i class="fa fa-star text-warning"></i>
-                                        <i class="fa fa-star text-warning"></i>
-                                        <i class="fa fa-star text-warning"></i>
-                                    </div>
-                                </div>
-                                <small class="text-muted">1 week ago</small>
-                            </div>
-                            <h6 class="review-title mb-2" style="font-size: 14px; font-weight: 500; color: #555;">
-                                Perfect location and excellent service</h6>
-                            <p class="review-text mb-0" style="font-size: 14px; color: #666; line-height: 1.5;">
-                                We had a wonderful time at this hotel. The location is perfect - right on the beach with
-                                easy access to local attractions.
-                                The concierge team helped us book amazing tours and the room service was prompt and
-                                delicious.
-                                The balcony view was breathtaking!
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- Review 3 -->
-                    <div class="review-item d-flex mb-4 p-3"
-                        style="background: #f8f9fa; border-radius: 12px; border: 1px solid #e9ecef;">
-                        <div class="review-avatar me-3" style="flex-shrink: 0;">
-                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop&crop=face"
-                                alt="Mike Johnson"
-                                style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; display: block;">
-                        </div>
-                        <div class="review-content flex-grow-1">
-                            <div class="review-header d-flex justify-content-between align-items-start mb-2">
-                                <div>
-                                    <h5 class="reviewer-name mb-1"
-                                        style="font-size: 16px; font-weight: 600; color: #333;">Mike Johnson</h5>
-                                    <div class="review-rating mb-1">
-                                        <i class="fa fa-star text-warning"></i>
-                                        <i class="fa fa-star text-warning"></i>
-                                        <i class="fa fa-star text-warning"></i>
-                                        <i class="fa fa-star text-warning"></i>
-                                        <i class="fa fa-star-o text-muted"></i>
-                                    </div>
-                                </div>
-                                <small class="text-muted">2 weeks ago</small>
-                            </div>
-                            <h6 class="review-title mb-2" style="font-size: 14px; font-weight: 500; color: #555;">Great
-                                facilities and friendly staff</h6>
-                            <p class="review-text mb-0" style="font-size: 14px; color: #666; line-height: 1.5;">
-                                The hotel has excellent facilities including a great swimming pool and fitness center.
-                                The staff was very accommodating and helped with all our requests. The only minor issue
-                                was
-                                the WiFi speed in our room, but overall it was a great experience.
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- Review 4 -->
-                    <div class="review-item d-flex mb-4 p-3"
-                        style="background: #f8f9fa; border-radius: 12px; border: 1px solid #e9ecef;">
-                        <div class="review-avatar me-3" style="flex-shrink: 0;">
-                            <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=60&h=60&fit=crop&crop=face"
-                                alt="Emma Davis"
-                                style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; display: block;">
-                        </div>
-                        <div class="review-content flex-grow-1">
-                            <div class="review-header d-flex justify-content-between align-items-start mb-2">
-                                <div>
-                                    <h5 class="reviewer-name mb-1"
-                                        style="font-size: 16px; font-weight: 600; color: #333;">Emma Davis</h5>
-                                    <div class="review-rating mb-1">
-                                        <i class="fa fa-star text-warning"></i>
-                                        <i class="fa fa-star text-warning"></i>
-                                        <i class="fa fa-star text-warning"></i>
-                                        <i class="fa fa-star text-warning"></i>
-                                        <i class="fa fa-star text-warning"></i>
-                                    </div>
-                                </div>
-                                <small class="text-muted">3 weeks ago</small>
-                            </div>
-                            <h6 class="review-title mb-2" style="font-size: 14px; font-weight: 500; color: #555;">Luxury
-                                experience with attention to detail</h6>
-                            <p class="review-text mb-0" style="font-size: 14px; color: #666; line-height: 1.5;">
-                                This hotel truly delivers a luxury experience. Every detail was perfect - from the
-                                welcome drink
-                                to the turn-down service. The spa treatments were exceptional and the restaurant served
-                                delicious local cuisine. We'll definitely be back!
-                            </p>
-                        </div>
-                    </div>
                 </div>
             </div>
 
-            <div class="post-comment parent-form" id="gmz-comment-section">
-                <div class="comment-form-wrapper">
-                    <form action="https://www.zanzibarbookings.com/add-comment"
-                        class="comment-form form-sm gmz-form-action form-add-post-comment" method="post"
-                        data-reload-time="1000">
-                        <h3 class="comment-title mb-4">Leave a Review</h3>
-                        <p class="notice mb-4 text-muted">
-                            Your email address will not be published. Required fields are marked *
-                        </p>
-
-                        <div class="gmz-loader">
-                            <div class="loader-inner">
-                                <div class="spinner-grow text-info align-self-center loader-lg"></div>
-                            </div>
-                        </div>
-
-                        <input type="hidden" name="post_id" value="121" />
-                        <input type="hidden" name="comment_id" value="0" />
-                        <input type="hidden" name="comment_type" value="hotel" />
-
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <div class="review-select-rate mb-3">
-                                    <label class="form-label fw-semibold">Your rating *</label>
-                                    <div class="fas-star mt-2">
-                                        <i class="fa fa-star"></i>
-                                        <i class="fa fa-star"></i>
-                                        <i class="fa fa-star"></i>
-                                        <i class="fa fa-star"></i>
-                                        <i class="fa fa-star"></i>
-                                    </div>
-                                    <input type="hidden" name="review_star" value="5" class="review_star" />
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="comment-name" class="form-label fw-semibold">Your Name *</label>
-                                    <input id="comment-name" type="text" name="comment_name"
-                                        class="form-control gmz-validation" placeholder="Enter your full name"
-                                        data-validation="required" />
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="comment-email" class="form-label fw-semibold">Your Email *</label>
-                                    <input id="comment-email" type="email" name="comment_email"
-                                        class="form-control gmz-validation" placeholder="Enter your email address"
-                                        data-validation="required" />
-                                </div>
-                            </div>
-
-                            <div class="col-12">
-                                <div class="form-group">
-                                    <label for="comment-title" class="form-label fw-semibold">Review Title *</label>
-                                    <input id="comment-title" type="text" name="comment_title"
-                                        class="form-control gmz-validation" placeholder="Give your review a title"
-                                        data-validation="required" />
-                                </div>
-                            </div>
-
-                            <div class="col-12">
-                                <div class="form-group">
-                                    <label for="comment-content" class="form-label fw-semibold">Your Review *</label>
-                                    <textarea id="comment-content" name="comment_content"
-                                        placeholder="Share your experience with this hotel..."
-                                        class="form-control gmz-validation" data-validation="required"
-                                        rows="5"></textarea>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="gmz-message mt-3"></div>
-
-                        <div class="d-grid mt-4">
-                            <button type="submit" class="btn btn-primary btn-lg text-uppercase fw-semibold">
-                                Submit Review
-                            </button>
-                        </div>
-                    </form>
-                </div>
+            <!-- Load More Reviews Button -->
+            <div class="d-flex justify-content-center my-4">
+                <button type="button" class="btn btn-outline-secondary btn-lg fw-semibold" id="loadMoreReviewsBtn">
+                    <i class="fa fa-arrow-down"></i> Load More Reviews
+                </button>
             </div>
         </div>
 
@@ -431,7 +472,7 @@ use Illuminate\Support\Str;
         <div class="col-lg-4">
             <div class="siderbar-single">
                 <h4 class="post-title my-2 bold">
-                    Hotel Rooms To Book 
+                    Hotel Rooms To Book
                 </h4>
                 @forelse($rooms as $room)
                 <div class="card mb-4 room-card rounded"
@@ -446,13 +487,14 @@ use Illuminate\Support\Str;
                                     style="width: 100%; height: 100%; object-fit: cover;">
                             </div>
                         </div>
-                        <div class="col-8">
+                        <div class="col-8 px-3">
                             <div class="card-body p-3">
                                 <h5 class="card-title mb-1" style="font-size: 1.1rem; font-weight: 600;">{{
                                     $room->title ?? 'Standard Room' }}</h5>
                                 <div class="mb-2" style="font-size: 13px; color: #666;">
                                     <i class="fa fa-user"></i> {{ $room->people ?? '2' }} Guests &nbsp; | &nbsp;
-                                    <i class="fa fa-bed"></i> {{ $room->beds ?? '1' }} {{ $room->beds == 1 ? 'Bed' : 'Beds' }}
+                                    <i class="fa fa-bed"></i> {{ $room->beds ?? '1' }} {{ $room->beds == 1 ? 'Bed' :
+                                    'Beds' }}
                                 </div>
                                 <div class="d-flex align-items-center justify-content-between">
                                     <div>
@@ -460,20 +502,22 @@ use Illuminate\Support\Str;
                                             number_format($room->price ?? $hotel->base_price, 0) }}</span>
                                         <span style="font-size: 13px; color: #888;">/ night</span>
                                     </div>
-                                    <a href="{{ route('confirm-booking', ['deal_id' => $hotel->id]) }}" class="btn btn-primary btn-sm"
-                                        style="font-size: 13px;">Book Now</a>
+                                    <a href="{{ route('confirm-booking', ['deal_id' => $hotel->id]) }}"
+                                        class="btn btn-primary btn-sm" style="font-size: 13px;">Book Now</a>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 @empty
-                <div class="well my-4 d-flex flex-column align-items-center justify-content-center text-center py-5" style="background: #f8f9fa; border-radius: 12px; border: 1px solid #e0e0e0;">
+                <div class="well my-4 d-flex flex-column align-items-center justify-content-center text-center py-5"
+                    style="background: #f8f9fa; border-radius: 12px; border: 1px solid #e0e0e0;">
                     <div class="mb-3">
                         <i class="mdi mdi-bed-empty" style="font-size: 2.5rem; color: #bdbdbd;"></i>
                     </div>
                     <h5 class="mb-2" style="color: #888;">No rooms available</h5>
-                    <p class="mb-0" style="color: #aaa; font-size: 1rem;">Please check back later or contact the hotel for more information.</p>
+                    <p class="mb-0" style="color: #aaa; font-size: 1rem;">Please check back later or contact the hotel
+                        for more information.</p>
                 </div>
                 @endforelse
             </div>
@@ -495,7 +539,8 @@ use Illuminate\Support\Str;
                         <span class="tour-item__label position-absolute"
                             style="top: 12px; left: 12px; z-index: 2; background: #ff5722; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 14px;">Featured</span>
                         @endif
-                        <a href="{{route('view-hotel', ['id' => $hashids->encode($nearbyHotel->id)])}}" style="display:block;">
+                        <a href="{{route('view-hotel', ['id' => $hashids->encode($nearbyHotel->id)])}}"
+                            style="display:block;">
                             <img src="{{ $nearbyHotel->cover_photo ? asset('storage/' . $nearbyHotel->cover_photo) : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=360&h=240&fit=crop&crop=center' }}"
                                 alt="{{ $nearbyHotel->title }}" loading="eager" width="360" height="240"
                                 style="width:100%;height:220px;object-fit:cover;border-radius:12px;" />
@@ -628,7 +673,7 @@ use Illuminate\Support\Str;
                     <div class="spinner-grow text-info align-self-center loader-lg"></div>
                 </div>
             </div>
-            
+
             <div class="row g-3">
                 <div class="col-md-6">
                     <div class="field-wrapper">
@@ -652,7 +697,7 @@ use Illuminate\Support\Str;
                             <option value="">Select rooms</option>
                             @for($i = 1; $i <= $room->number_of_rooms; $i++)
                                 <option value="{{ $i }}">{{ $i }} {{ $i == 1 ? 'Room' : 'Rooms' }}</option>
-                            @endfor
+                                @endfor
                         </select>
                     </div>
                 </div>
@@ -664,7 +709,7 @@ use Illuminate\Support\Str;
                             <option value="">Select guests</option>
                             @for($i = 1; $i <= $room->people; $i++)
                                 <option value="{{ $i }}">{{ $i }} {{ $i == 1 ? 'Guest' : 'Guests' }}</option>
-                            @endfor
+                                @endfor
                         </select>
                     </div>
                 </div>
@@ -700,13 +745,15 @@ use Illuminate\Support\Str;
                     <div class="field-wrapper">
                         <label>Special Requests</label>
                         <i class="fas fa-comment"></i>
-                        <textarea id="special_requests-{{ $room->id }}" name="special_requests" rows="3" placeholder="Any special requests or notes..."></textarea>
+                        <textarea id="special_requests-{{ $room->id }}" name="special_requests" rows="3"
+                            placeholder="Any special requests or notes..."></textarea>
                     </div>
                 </div>
             </div>
-            
+
             <!-- Price Calculation -->
-            <div class="price-calculation mt-4 p-3" style="background: #f8f9fa; border-radius: 8px; border: 1px solid #e0e0e0;">
+            <div class="price-calculation mt-4 p-3"
+                style="background: #f8f9fa; border-radius: 8px; border: 1px solid #e0e0e0;">
                 <h6 class="mb-3">Price Summary</h6>
                 <div class="calculation-item">
                     <span class="label">Room Price:</span>
@@ -727,10 +774,11 @@ use Illuminate\Support\Str;
                 <hr>
                 <div class="calculation-item">
                     <span class="label"><strong>Total Price:</strong></span>
-                    <span class="value" id="total-price-{{ $room->id }}" style="color: #2e8b57; font-weight: bold;">$0</span>
+                    <span class="value" id="total-price-{{ $room->id }}"
+                        style="color: #2e8b57; font-weight: bold;">$0</span>
                 </div>
             </div>
-            
+
             <div class="d-grid mt-4">
                 <button type="submit" class="btn btn-primary btn-lg">
                     <i class="fas fa-credit-card me-2"></i>Confirm Booking

@@ -88,7 +88,6 @@
         }
     </style>
 
-
     <section class="hero-slider" style="min-height: 160px; position: relative;">
         <div class="container-fluid no-gutters p-0">
             <div class="single-hero-image" style="position: relative;">
@@ -126,45 +125,27 @@
                             margin-bottom: 15px;
                             display: none;
                         ">
-                            @switch($dealType)
-                                @case('hotel')
-                                    Find Your Perfect Hotel in Zanzibar
-                                    @break
-                                @case('apartment')
-                                    Find Your Perfect Apartment in Zanzibar
-                                    @break
-                                @case('tour')
-                                    Discover Amazing Tours in Zanzibar
-                                    @break
-                                @case('car')
-                                    Rent Your Perfect Car in Zanzibar
-                                    @break
-                                @default
-                                    Find Your Perfect {{ ucfirst($dealType) }} in Zanzibar
-                            @endswitch
+                            Search Results for Zanzibar Bookings
                         </p>
                         <div class="row g-3" style="width: 100%; margin: 0;">
                             <div class="col-12 col-md-3 d-flex flex-column" style="min-width: 0;">
-                                <select class="form-control flex-grow-1" id="search_location" wire:model.live="searchLocation"
-                                    style="height: 45px;">
+                                <select class="form-control flex-grow-1" wire:model.live="searchLocation" style="height: 45px;">
                                     <option value="">All Locations</option>
                                     @foreach($locations as $location)
-                                    <option value="{{ $location }}">{{ $location }}</option>
+                                        <option value="{{ $location }}">{{ $location }}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="col-12 col-md-3 d-flex flex-column" style="min-width: 0;">
-                                <select class="form-control flex-grow-1" id="search_category" wire:model.live="searchCategory"
-                                    style="height: 45px;">
-                                    <option value="">All {{ ucfirst($dealType) }} Types</option>
+                                <select class="form-control flex-grow-1" wire:model.live="searchCategory" style="height: 45px;">
+                                    <option value="">All Categories</option>
                                     @foreach($categories as $category)
-                                    <option value="{{ $category->id }}">{{ $category->category }}</option>
+                                        <option value="{{ $category->id }}">{{ $category->category }}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="col-12 col-md-3 d-flex flex-column" style="min-width: 0;">
-                                <input type="text" class="form-control flex-grow-1" id="search_name" wire:model.live.debounce.300ms="searchName"
-                                    placeholder="{{ ucfirst($dealType) }} name..." style="height: 45px;">
+                                <input type="text" class="form-control flex-grow-1" wire:model.live.debounce.300ms="searchName" placeholder="Hotel, Apartment, Tour..." style="height: 45px;">
                             </div>
                             <div class="col-12 col-md-3 d-flex flex-column justify-content-end" style="min-width: 0;">
                                 <button type="button" class="btn btn-primary w-100" wire:click="resetFilters" style="
@@ -186,14 +167,21 @@
 
     <section class="container-fluid">
         <div class="row">
-            <!-- Hotel List -->
+            <!-- Search Results List -->
             <div class="col-lg-7 my-5">
                 <div class="list-hotel h-100 d-flex flex-column">
                     <div class="list-hotel__content flex-grow-1" data-plugin="nicescroll" tabindex="1"
                         style="overflow: hidden; outline: none; touch-action: none;">
                         <div class="results-count d-flex align-items-center justify-content-between">
                             <div>
-                                Found <b>{{ $deals->total() }} {{ ucfirst($dealType) }}s</b>
+                                Found <b>{{ $deals->total() }} Results</b>
+                                @if($searchLocation || $searchCategory || $searchName)
+                                    <small class="text-muted ml-2">
+                                        @if($searchLocation) Location: {{ $searchLocation }} @endif
+                                        @if($searchCategory) | Category: {{ $categories->where('id', $searchCategory)->first()->category ?? 'Selected' }} @endif
+                                        @if($searchName) | Name: {{ $searchName }} @endif
+                                    </small>
+                                @endif
                             </div>
                             <div class="d-flex align-items-center justify-content-between">
                                 <div class="sort">
@@ -243,7 +231,6 @@
                                         </div>
                                     </div>
                                 </div>
-
                             </div>
                         </div>
 
@@ -260,7 +247,7 @@
                                         @endif
                                         <a href="{{ $deal->view_route }}"
                                             style="display:block;">
-                                            <img src="{{ $deal->cover_photo ? asset('storage/' . $deal->cover_photo) : $deal->default_image }}"
+                                            <img src="{{ $deal->cover_photo ? asset('storage/' . $deal->cover_photo) : ($deal->photos->count() > 0 ? asset('storage/' . $deal->photos->first()->photo) : $deal->default_image) }}"
                                                 alt="{{ $deal->title }}" loading="eager" width="360" height="160"
                                                 style="width:100%;height:140px;object-fit:cover;border-radius:8px;" />
                                         </a>
@@ -281,11 +268,9 @@
                                     <div class="hotel-item__details" style="padding-top:18px;">
                                         <div class="star-rating mb-2">
                                             <div class="star-rating">
-                                                <i class="fa fa-star text-warning"></i>
-                                                <i class="fa fa-star text-warning"></i>
-                                                <i class="fa fa-star text-warning"></i>
-                                                <i class="fa fa-star text-warning"></i>
-                                                <i class="fa fa-star text-warning"></i>
+                                                @for($i = 1; $i <= 5; $i++)
+                                                    <i class="fa fa-star {{ $i <= ($deal->ratings ?? 5) ? 'text-warning' : 'text-muted' }}"></i>
+                                                @endfor
                                             </div>
                                         </div>
                                         <h3 class="hotel-item__title" style="font-size:1.25rem;font-weight:600;">
@@ -303,7 +288,15 @@
                                             <span class="_retail"
                                                 style="color:#2e8b57;font-size:1.3rem;font-weight:600;">USD {{
                                                 number_format($deal->base_price, 2) }}</span>
-                                            <span class="_unit" style="color:#2e8b57;font-size:1rem;">{{ $priceUnit }}</span>
+                                            <span class="_unit" style="color:#2e8b57;font-size:1rem;">
+                                                @if($deal->type == 'hotel' || $deal->type == 'apartment')
+                                                    per night
+                                                @elseif($deal->type == 'tour')
+                                                    per person
+                                                @elseif($deal->type == 'car')
+                                                    per day
+                                                @endif
+                                            </span>
                                         </div>
                                         <a class="btn btn-primary btn-sm hotel-item__view-detail w-100 d-flex justify-content-center align-items-center"
                                             href="{{ $deal->view_route }}"
@@ -317,12 +310,12 @@
                             <div class="col-12">
                                 <div class="text-center py-5">
                                     <i class="fas fa-search fa-3x text-muted mb-3"></i>
-                                    <h4>No {{ ucfirst($dealType) }}s Found</h4>
+                                    <h4>No Results Found</h4>
                                     <p class="text-muted">
                                         @if($searchLocation || $searchCategory || $searchName)
-                                            No {{ $dealType }}s match your current filters. Try adjusting your search criteria.
+                                            No deals match your current search criteria. Try adjusting your filters.
                                         @else
-                                            No {{ $dealType }}s are currently available.
+                                            No deals are currently available.
                                         @endif
                                     </p>
                                     @if($searchLocation || $searchCategory || $searchName)
@@ -350,6 +343,7 @@
             </div>
         </div>
     </section>
+    
     <script>
         let map = null;
         let markers = [];
@@ -365,40 +359,29 @@
         });
 
         function initMap() {
-            console.log('initMap called');
             // Check if map container exists
             const mapElement = document.getElementById("interactive-map");
-            console.log('Map element:', mapElement);
-            if (!mapElement || map) {
-                console.log('Map element not found or map already exists');
-                return;
-            }
+            if (!mapElement || map) return;
             
             // Zanzibar coordinates
             const zanzibar = { lat: -6.1659, lng: 39.2026 };
             
-            try {
-                // Create the map
-                map = new google.maps.Map(mapElement, {
-                    zoom: 8,
-                    center: zanzibar,
-                    mapTypeId: google.maps.MapTypeId.ROADMAP,
-                    styles: [
-                        {
-                            featureType: "poi",
-                            elementType: "labels",
-                            stylers: [{ visibility: "off" }]
-                        }
-                    ]
-                });
-                
-                console.log('Map created successfully');
-                
-                // Add initial markers
-                updateMapMarkers();
-            } catch (error) {
-                console.error('Error creating map:', error);
-            }
+            // Create the map
+            map = new google.maps.Map(mapElement, {
+                zoom: 8,
+                center: zanzibar,
+                mapTypeId: google.maps.MapTypeId.ROADMAP,
+                styles: [
+                    {
+                        featureType: "poi",
+                        elementType: "labels",
+                        stylers: [{ visibility: "off" }]
+                    }
+                ]
+            });
+            
+            // Add initial markers
+            updateMapMarkers();
         }
         
         function updateMapMarkers() {
@@ -436,7 +419,10 @@
                                     <i class="fas fa-map-marker-alt"></i> ${deal.location}
                                 </p>
                                 <p style="margin: 0 0 5px 0; color: #2e8b57; font-weight: 600;">
-                                    USD ${parseFloat(deal.base_price).toFixed(2)}{{ $priceUnit }}
+                                    USD ${parseFloat(deal.base_price).toFixed(2)}
+                                    ${deal.type === 'hotel' || deal.type === 'apartment' ? 'per night' : 
+                                      deal.type === 'tour' ? 'per person' : 
+                                      deal.type === 'car' ? 'per day' : ''}
                                 </p>
                                 ${deal.category ? `<span style="background: #2e8b57; color: white; padding: 2px 8px; border-radius: 3px; font-size: 12px;">${deal.category.category}</span>` : ''}
                             </div>

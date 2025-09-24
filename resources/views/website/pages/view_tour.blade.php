@@ -1,5 +1,34 @@
 @extends('website.layouts.app')
 
+@php
+use Illuminate\Support\Str;
+@endphp
+
+@section('title')
+{{ $tour->seo_title ?: $tour->title }} - Zanzibar Bookings
+@endsection
+
+@section('meta')
+<meta name="description" content="{{ $tour->seo_description ?: Str::limit(strip_tags($tour->description), 160) }}">
+@if($tour->seo_keywords)
+<meta name="keywords" content="{{ $tour->seo_keywords }}">
+@endif
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ request()->url() }}">
+<meta property="og:title" content="{{ $tour->seo_title ?: $tour->title }}">
+<meta property="og:description" content="{{ $tour->seo_description ?: Str::limit(strip_tags($tour->description), 160) }}">
+<meta property="og:image" content="{{ $tour->seo_image ? asset('storage/' . $tour->seo_image) : ($tour->cover_photo ? asset('storage/' . $tour->cover_photo) : asset('logo.png')) }}">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="{{ request()->url() }}">
+<meta property="twitter:title" content="{{ $tour->seo_title ?: $tour->title }}">
+<meta property="twitter:description" content="{{ $tour->seo_description ?: Str::limit(strip_tags($tour->description), 160) }}">
+<meta property="twitter:image" content="{{ $tour->seo_image ? asset('storage/' . $tour->seo_image) : ($tour->cover_photo ? asset('storage/' . $tour->cover_photo) : asset('logo.png')) }}">
+@endsection
+
 @section('pages')
 <section class="gallery">
     <div class="gmz-carousel-with-lightbox" data-count="{{ $tour->photos->count() }}">
@@ -20,6 +49,68 @@
         @endforelse
     </div>
 </section>
+
+@if($tour->video_link)
+<!-- Video Section -->
+<section class="video-section" style="background: #f8f9fa; padding: 40px 0;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="video-container" style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%; background: #000; border-radius: 8px; overflow: hidden;">
+                    @php
+                        $videoUrl = $tour->video_link;
+                        $embedUrl = '';
+                        
+                        // YouTube
+                        if (strpos($videoUrl, 'youtube.com') !== false || strpos($videoUrl, 'youtu.be') !== false) {
+                            if (strpos($videoUrl, 'youtu.be') !== false) {
+                                $videoId = substr($videoUrl, strrpos($videoUrl, '/') + 1);
+                            } else {
+                                parse_str(parse_url($videoUrl, PHP_URL_QUERY), $query);
+                                $videoId = $query['v'] ?? '';
+                            }
+                            $embedUrl = 'https://www.youtube.com/embed/' . $videoId . '?rel=0&modestbranding=1';
+                        }
+                        // Vimeo
+                        elseif (strpos($videoUrl, 'vimeo.com') !== false) {
+                            $videoId = substr($videoUrl, strrpos($videoUrl, '/') + 1);
+                            $embedUrl = 'https://player.vimeo.com/video/' . $videoId . '?title=0&byline=0&portrait=0';
+                        }
+                        // Direct video file or other platforms
+                        else {
+                            $embedUrl = $videoUrl;
+                        }
+                    @endphp
+                    
+                    @if($embedUrl)
+                        <iframe src="{{ $embedUrl }}" 
+                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" 
+                                frameborder="0" 
+                                allowfullscreen
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
+                        </iframe>
+                    @else
+                        <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: white; text-align: center;">
+                            <div>
+                                <i class="fas fa-play-circle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                <p>Video preview not available</p>
+                                <a href="{{ $videoUrl }}" target="_blank" class="btn btn-primary">Watch Video</a>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+                <div class="text-center mt-3">
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-video me-2"></i>
+                        Promotional video for {{ $tour->title }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+@endif
+
 <div class="breadcrumb">
     <div class="container">
         <ul>

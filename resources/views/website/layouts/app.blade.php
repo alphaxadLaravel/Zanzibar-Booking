@@ -226,6 +226,7 @@
     </div>
 @livewireScripts()
     @include('website.layouts.js')
+    @stack('scripts')
 </body>
 
 </html>

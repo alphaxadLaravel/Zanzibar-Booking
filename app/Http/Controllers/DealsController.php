@@ -14,6 +14,7 @@ use App\Models\TourItenary;
 use App\Models\Room;
 use App\Models\RoomPhotos;
 use App\Models\Near;
+use App\Models\NearbyLocation;
 use Hashids\Hashids;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -133,7 +134,12 @@ class DealsController extends Controller
             'map_location' => 'nullable|string',
             'cover_photo' => 'required|image|mimes:jpeg,png,jpg,gif',
             'other_images.*' => 'required|image|mimes:jpeg,png,jpg,gif',
-            'status' => 'nullable|in:publish,draft'
+            'status' => 'nullable|in:publish,draft',
+            'seo_title' => 'nullable|string|max:60',
+            'seo_description' => 'nullable|string|max:160',
+            'seo_keywords' => 'nullable|string',
+            'seo_image' => 'nullable|image|mimes:jpeg,png,jpg,gif',
+            'video_link' => 'nullable|url'
         ];
 
         // Type-specific validation rules
@@ -191,6 +197,12 @@ class DealsController extends Controller
                 $coverPhotoPath = $request->file('cover_photo')->store('deals/cover', 'public');
             }
 
+            // Handle SEO image upload
+            $seoImagePath = null;
+            if ($request->hasFile('seo_image')) {
+                $seoImagePath = $request->file('seo_image')->store('deals/seo', 'public');
+            }
+
             // Create the deal
             $deal = Deal::create([
                 'title' => $request->title,
@@ -205,12 +217,32 @@ class DealsController extends Controller
                 'cover_photo' => $coverPhotoPath,
                 'type' => $type, // Add deal type
                 'user_id' => 1, // Set user_id to 1 as requested
-                'status' => $request->status === 'publish' ? 1 : 0
+                'status' => $request->status === 'publish' ? 1 : 0,
+                'seo_title' => $request->seo_title,
+                'seo_description' => $request->seo_description,
+                'seo_keywords' => $request->seo_keywords,
+                'seo_image' => $seoImagePath,
+                'video_link' => $request->video_link
             ]);
 
             // Handle features
             if ($request->has('features')) {
                 $deal->features()->attach($request->features);
+            }
+
+            // Handle nearby locations (only for hotels)
+            if ($type === 'hotel' && $request->has('nearby_locations')) {
+                foreach ($request->nearby_locations as $locationData) {
+                    if (!empty($locationData['title']) && !empty($locationData['category']) && !empty($locationData['distance_km'])) {
+                        NearbyLocation::create([
+                            'deal_id' => $deal->id,
+                            'title' => $locationData['title'],
+                            'category' => $locationData['category'],
+                            'distance_km' => $locationData['distance_km'],
+                            'is_active' => true
+                        ]);
+                    }
+                }
             }
 
             // Handle other images
@@ -338,7 +370,7 @@ class DealsController extends Controller
 
 
         // Find deal with relationships
-        $deal = Deal::with(['category', 'features', 'photos'])
+        $deal = Deal::with(['category', 'features', 'photos', 'nearbyLocations'])
             ->where('type', $type)
             ->find($dealId);
 
@@ -410,7 +442,12 @@ class DealsController extends Controller
             'map_location' => 'nullable|string',
             'cover_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif',
             'other_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif',
-            'status' => 'nullable|in:publish,draft'
+            'status' => 'nullable|in:publish,draft',
+            'seo_title' => 'nullable|string|max:60',
+            'seo_description' => 'nullable|string|max:160',
+            'seo_keywords' => 'nullable|string',
+            'seo_image' => 'nullable|image|mimes:jpeg,png,jpg,gif',
+            'video_link' => 'nullable|url'
         ];
 
         // Type-specific validation rules
@@ -472,6 +509,16 @@ class DealsController extends Controller
                 $coverPhotoPath = $request->file('cover_photo')->store('deals/cover', 'public');
             }
 
+            // Handle SEO image upload
+            $seoImagePath = $deal->seo_image; // Keep existing if no new upload
+            if ($request->hasFile('seo_image')) {
+                // Delete old SEO image if exists
+                if ($deal->seo_image && Storage::disk('public')->exists($deal->seo_image)) {
+                    Storage::disk('public')->delete($deal->seo_image);
+                }
+                $seoImagePath = $request->file('seo_image')->store('deals/seo', 'public');
+            }
+
             // Update the deal
             $deal->update([
                 'title' => $request->title,
@@ -484,7 +531,12 @@ class DealsController extends Controller
                 'long' => $request->long,
                 'map_location' => $request->map_location,
                 'cover_photo' => $coverPhotoPath,
-                'status' => $request->status === 'publish' ? 1 : 0
+                'status' => $request->status === 'publish' ? 1 : 0,
+                'seo_title' => $request->seo_title,
+                'seo_description' => $request->seo_description,
+                'seo_keywords' => $request->seo_keywords,
+                'seo_image' => $seoImagePath,
+                'video_link' => $request->video_link
             ]);
 
             // Handle features
@@ -492,6 +544,24 @@ class DealsController extends Controller
                 $deal->features()->sync($request->features);
             } else {
                 $deal->features()->detach();
+            }
+
+            // Handle nearby locations - delete existing and recreate (only for hotels)
+            if ($type === 'hotel') {
+                $deal->nearbyLocations()->delete();
+                if ($request->has('nearby_locations')) {
+                    foreach ($request->nearby_locations as $locationData) {
+                        if (!empty($locationData['title']) && !empty($locationData['category']) && !empty($locationData['distance_km'])) {
+                            NearbyLocation::create([
+                                'deal_id' => $deal->id,
+                                'title' => $locationData['title'],
+                                'category' => $locationData['category'],
+                                'distance_km' => $locationData['distance_km'],
+                                'is_active' => true
+                            ]);
+                        }
+                    }
+                }
             }
 
             // Handle other images

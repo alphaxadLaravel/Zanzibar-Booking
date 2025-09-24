@@ -153,7 +153,7 @@ class WebsiteController extends Controller
         
         // Fetch specific hotel with all relationships
         $hotel = Deal::whereIn('type', ['hotel', 'apartment'])
-            ->with(['category', 'photos', 'rooms.photos', 'features'])
+            ->with(['category', 'photos', 'rooms.photos', 'features', 'nearbyLocations'])
             ->findOrFail($hotelId);
 
         // Ensure we have rooms data - if no rooms exist, we'll show default room in view
@@ -569,5 +569,110 @@ class WebsiteController extends Controller
         }
 
         return view('website.pages.view_tour', compact('tour', 'nearbyTours', 'hashids'));
+    }
+
+    /**
+     * Handle search functionality from homepage
+     */
+    public function search(Request $request)
+    {
+        $location = $request->get('location');
+        $category = $request->get('category');
+        $name = $request->get('name');
+
+        // Start building the query
+        $query = Deal::active();
+
+        // Apply location filter
+        if ($location) {
+            $query->where('location', 'like', '%' . $location . '%');
+        }
+
+        // Apply category filter
+        if ($category) {
+            $query->where('category_id', $category);
+        }
+
+        // Apply name/title filter
+        if ($name) {
+            $query->where('title', 'like', '%' . $name . '%');
+        }
+
+        // Get all matching deals with relationships
+        $deals = $query->with(['category', 'photos'])
+            ->orderBy('is_featured', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(12);
+
+        // Get categories for filter dropdown
+        $categories = Category::whereIn('type', ['hotel', 'apartment', 'tour', 'car'])
+            ->get();
+
+        // Get locations for filter dropdown
+        $locations = Deal::active()
+            ->distinct()
+            ->pluck('location')
+            ->filter()
+            ->sort()
+            ->values();
+
+        $hashids = $this->getHashids();
+
+        // Prepare deal data with routes and default images
+        $deals->getCollection()->transform(function ($deal) use ($hashids) {
+            $deal->view_route = $this->getViewRoute($deal, $hashids);
+            $deal->default_image = $this->getDefaultImage($deal->type);
+            return $deal;
+        });
+
+        return view('website.pages.search_results', compact(
+            'deals',
+            'categories',
+            'locations',
+            'hashids',
+            'location',
+            'category',
+            'name'
+        ));
+    }
+
+    /**
+     * Get the appropriate view route for a deal
+     */
+    private function getViewRoute($deal, $hashids)
+    {
+        $encodedId = $hashids->encode($deal->id);
+        
+        switch ($deal->type) {
+            case 'hotel':
+                return route('view-hotel', ['id' => $encodedId]);
+            case 'apartment':
+                return route('view-apartment', ['id' => $encodedId]);
+            case 'tour':
+                return route('view-tour', ['id' => $encodedId]);
+            case 'car':
+                return route('view-car', ['id' => $encodedId]);
+            default:
+                return '#';
+        }
+    }
+
+    /**
+     * Get default image for deal type
+     */
+    private function getDefaultImage($dealType)
+    {
+        switch ($dealType) {
+            case 'hotel':
+                return asset('images/default-hotel.jpg');
+            case 'apartment':
+                return asset('images/default-apartment.jpg');
+            case 'tour':
+                return asset('images/default-tour.jpg');
+            case 'car':
+                return asset('images/default-car.jpg');
+            default:
+                return asset('images/default-placeholder.jpg');
+        }
     }
 }

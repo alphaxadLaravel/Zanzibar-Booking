@@ -25,7 +25,12 @@ class Deal extends Model
         'policies',
         'type',
         'user_id',
-        'status'
+        'status',
+        'seo_title',
+        'seo_description',
+        'seo_keywords',
+        'seo_image',
+        'video_link'
     ];
 
     protected $casts = [
@@ -112,5 +117,15 @@ class Deal extends Model
     public function nearbyDeals(): HasMany
     {
         return $this->hasMany(Near::class, 'near_id');
+    }
+
+    public function nearbyLocations(): HasMany
+    {
+        return $this->hasMany(NearbyLocation::class);
+    }
+
+    public function activeNearbyLocations(): HasMany
+    {
+        return $this->hasMany(NearbyLocation::class)->active();
     }
 }

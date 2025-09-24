@@ -427,6 +427,148 @@
                     </div>
                     <small class="text-muted">You can drop or select multiple images.</small>
                 </div>
+                <div class="col-md-12">
+                    <label class="form-label">Video Link</label>
+                    <input type="url" class="form-control" name="video_link" 
+                           value="{{ old('video_link', $deal->video_link ?? '') }}" 
+                           placeholder="Enter video URL (YouTube, Vimeo, etc.)">
+                    <small class="text-muted">Add a promotional or showcase video for this deal. Supports YouTube, Vimeo, and other video platforms.</small>
+                    @error('video_link')
+                    <div class="text-danger">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+        </div>
+
+        @if($type === 'hotel')
+        <!-- Nearby Locations Card -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5>Nearby Locations</h5>
+                <button type="button" class="btn btn-sm btn-success" id="add-nearby-location">
+                    <i class="mdi mdi-plus"></i> Add Location
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="nearby-locations-container">
+                    @php
+                        // Get old input data for nearby locations
+                        $oldNearbyLocations = old('nearby_locations', []);
+                        $existingLocations = isset($deal) ? $deal->nearbyLocations->toArray() : [];
+                        
+                        // Merge old input with existing data
+                        $allLocations = [];
+                        $maxIndex = max(count($oldNearbyLocations), count($existingLocations));
+                        
+                        for ($i = 0; $i < $maxIndex; $i++) {
+                            if (isset($oldNearbyLocations[$i])) {
+                                $allLocations[$i] = $oldNearbyLocations[$i];
+                            } elseif (isset($existingLocations[$i])) {
+                                $allLocations[$i] = $existingLocations[$i];
+                            }
+                        }
+                    @endphp
+                    
+                    @if(count($allLocations) > 0)
+                        @foreach($allLocations as $index => $location)
+                            <div class="nearby-location-item border rounded p-3 mb-3" data-index="{{ $index }}">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Title <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" name="nearby_locations[{{ $index }}][title]" 
+                                               value="{{ $location['title'] ?? '' }}" 
+                                               placeholder="e.g., Zanzibar Airport" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Category <span class="text-danger">*</span></label>
+                                        <select class="form-select" name="nearby_locations[{{ $index }}][category]" required>
+                                            <option value="">Select Category</option>
+                                            @foreach(\App\Models\NearbyLocation::getAvailableCategories() as $key => $value)
+                                                <option value="{{ $key }}" {{ ($location['category'] ?? '') == $key ? 'selected' : '' }}>
+                                                    {{ $value }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Distance (km) <span class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" name="nearby_locations[{{ $index }}][distance_km]" 
+                                               value="{{ $location['distance_km'] ?? '' }}" 
+                                               step="0.1" min="0" placeholder="e.g., 2.5" required>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">Actions</label>
+                                        <div class="d-flex gap-1">
+                                            <button type="button" class="btn btn-sm btn-danger remove-nearby-location">
+                                                <i class="mdi mdi-delete"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="text-center text-muted py-4">
+                            <i class="mdi mdi-map-marker fa-2x mb-2"></i>
+                            <p>No nearby locations added yet. Click "Add Location" to get started.</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+        @endif
+
+        <!-- SEO Section Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>SEO Settings</h5>
+                <small class="text-muted">Configure SEO meta tags for better search engine visibility</small>
+            </div>
+            <div class="card-body row g-3">
+                <div class="col-md-12">
+                    <label class="form-label">SEO Title</label>
+                    <input type="text" class="form-control" name="seo_title" 
+                           value="{{ old('seo_title', $deal->seo_title ?? '') }}" 
+                           placeholder="Enter SEO title (recommended: 50-60 characters)"
+                           maxlength="60">
+                    <small class="text-muted">Leave empty to use deal title. Optimal length: 50-60 characters</small>
+                    @error('seo_title')
+                    <div class="text-danger">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label">SEO Description</label>
+                    <textarea class="form-control" name="seo_description" rows="3" 
+                              placeholder="Enter SEO description (recommended: 150-160 characters)"
+                              maxlength="160">{{ old('seo_description', $deal->seo_description ?? '') }}</textarea>
+                    <small class="text-muted">Leave empty to use deal description. Optimal length: 150-160 characters</small>
+                    @error('seo_description')
+                    <div class="text-danger">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label">SEO Keywords</label>
+                    <textarea class="form-control" name="seo_keywords" rows="2" 
+                              placeholder="Enter keywords separated by commas (e.g., hotel, beach, resort, luxury)">{{ old('seo_keywords', $deal->seo_keywords ?? '') }}</textarea>
+                    <small class="text-muted">Separate keywords with commas. Focus on relevant terms for this deal</small>
+                    @error('seo_keywords')
+                    <div class="text-danger">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label">SEO Image</label>
+                    <input type="file" class="form-control" name="seo_image" accept="image/*">
+                    <small class="text-muted">Recommended: 1200x630px for social media sharing. Leave empty to use cover photo</small>
+                    @if(isset($deal) && $deal->seo_image)
+                    <div class="mt-2">
+                        <small class="text-muted">Current SEO image: </small>
+                        <a href="{{ Storage::url($deal->seo_image) }}" target="_blank" class="text-primary">View Image</a>
+                    </div>
+                    @endif
+                    @error('seo_image')
+                    <div class="text-danger">{{ $message }}</div>
+                    @enderror
+                </div>
             </div>
         </div>
 
@@ -616,6 +758,81 @@
             }
         });
     }
+
+    // Nearby Locations Management
+    let nearbyLocationIndex = {{ count($allLocations ?? []) }};
+    
+    // Add new nearby location
+    document.getElementById('add-nearby-location').addEventListener('click', function() {
+        const container = document.getElementById('nearby-locations-container');
+        
+        // Remove empty state if it exists
+        const emptyState = container.querySelector('.text-center');
+        if (emptyState) {
+            emptyState.remove();
+        }
+        
+        const locationItem = document.createElement('div');
+        locationItem.className = 'nearby-location-item border rounded p-3 mb-3';
+        locationItem.setAttribute('data-index', nearbyLocationIndex);
+        
+        const categories = @json(\App\Models\NearbyLocation::getAvailableCategories());
+        let categoryOptions = '<option value="">Select Category</option>';
+        for (const [key, value] of Object.entries(categories)) {
+            categoryOptions += `<option value="${key}">${value}</option>`;
+        }
+        
+        locationItem.innerHTML = `
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Title <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="nearby_locations[${nearbyLocationIndex}][title]" 
+                           placeholder="e.g., Zanzibar Airport" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Category <span class="text-danger">*</span></label>
+                    <select class="form-select" name="nearby_locations[${nearbyLocationIndex}][category]" required>
+                        ${categoryOptions}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Distance (km) <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" name="nearby_locations[${nearbyLocationIndex}][distance_km]" 
+                           step="0.1" min="0" placeholder="e.g., 2.5" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Actions</label>
+                    <div class="d-flex gap-1">
+                        <button type="button" class="btn btn-sm btn-danger remove-nearby-location">
+                            <i class="mdi mdi-delete"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        container.appendChild(locationItem);
+        nearbyLocationIndex++;
+    });
+    
+    // Remove nearby location
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-nearby-location')) {
+            e.target.closest('.nearby-location-item').remove();
+            
+            // Show empty state if no locations left
+            const container = document.getElementById('nearby-locations-container');
+            const items = container.querySelectorAll('.nearby-location-item');
+            if (items.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        <i class="mdi mdi-map-marker fa-2x mb-2"></i>
+                        <p>No nearby locations added yet. Click "Add Location" to get started.</p>
+                    </div>
+                `;
+            }
+        }
+    });
 </script>
 <script
     src="https://maps.googleapis.com/maps/api/js?key={{ env('GOOGLE_MAPS_API_KEY') }}&libraries=places&callback=initMap"

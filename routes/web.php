@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [WebsiteController::class, 'index'])->name('index');
 
+// Search functionality
+Route::get('/search', [WebsiteController::class, 'search'])->name('search');
+
 // contact us
 Route::get('/contact-us', [WebsiteController::class, 'contactUs'])->name('contact-us');
 Route::get('/blog', [WebsiteController::class, 'blog'])->name('blog');
