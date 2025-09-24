@@ -4,6 +4,34 @@
 use Illuminate\Support\Str;
 @endphp
 
+@section('title')
+{{ $apartment->seo_title ?: $apartment->title }} - Zanzibar Bookings
+@endsection
+
+@section('meta')
+<meta name="description" content="{{ $apartment->seo_description ?: Str::limit(strip_tags($apartment->description), 160) }}">
+@if($apartment->seo_keywords)
+<meta name="keywords" content="{{ $apartment->seo_keywords }}">
+@endif
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ request()->url() }}">
+<meta property="og:title" content="{{ $apartment->seo_title ?: $apartment->title }}">
+<meta property="og:description"
+    content="{{ $apartment->seo_description ?: Str::limit(strip_tags($apartment->description), 160) }}">
+<meta property="og:image"
+    content="{{ $apartment->seo_image ? asset('storage/' . $apartment->seo_image) : ($apartment->cover_photo ? asset('storage/' . $apartment->cover_photo) : asset('logo.png')) }}">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="{{ request()->url() }}">
+<meta property="twitter:title" content="{{ $apartment->seo_title ?: $apartment->title }}">
+<meta property="twitter:description"
+    content="{{ $apartment->seo_description ?: Str::limit(strip_tags($apartment->description), 160) }}">
+<meta property="twitter:image"
+    content="{{ $apartment->seo_image ? asset('storage/' . $apartment->seo_image) : ($apartment->cover_photo ? asset('storage/' . $apartment->cover_photo) : asset('logo.png')) }}">
+@endsection
+
 @section('pages')
 <section class="gallery">
     <div class="gmz-carousel-with-lightbox" data-count="{{ $apartment->photos->count() }}">
@@ -22,10 +50,12 @@ use Illuminate\Support\Str;
         @endforelse
     </div>
 </section>
+
 <div class="breadcrumb">
     <div class="container">
         <ul>
             <li><a href="{{ route('index') }}">Home</a></li>
+            <li><a href="{{ route('apartments') }}">Apartments</a></li>
             <li><span>{{ $apartment->title }}</span></li>
         </ul>
     </div>
@@ -44,36 +74,68 @@ use Illuminate\Support\Str;
                     <i class="fa fa-star text-warning"></i>
                 </div>
             </div>
-            <div class="d-flex align-items-center mb-3" style="gap: 16px;">
-                <h2 class="post-title my-2 bold">
+            <div class="d-flex align-items-center" style="gap: 16px;">
+                <h2 class="post-title bold">
                     {{ $apartment->title }}
                 </h2>
             </div>
+            @if ($apartment->location)
             <p class="location">
                 <i class="fal fa-map-marker-alt"></i> {{ $apartment->location }}
             </p>
+            @endif
 
             <div class="meta">
-                <ul class="row gx-3 gy-2" style="list-style:none;padding:0;margin:0;">
-                    <li class="col-6 col-md-4 mb-2">
-                        <div class="d-flex flex-column">
-                            <span class="label text-muted" style="font-size:13px;">Type</span>
-                            <span class="value fw-semibold" style="font-size:15px;">{{ $apartment->category ?
-                                $apartment->category->category : 'Apartment' }}</span>
+                <ul class="meta row  gy-2 mb-4" style="list-style: none; padding: 0; margin: 0;">
+                    <li class="col-6 col-md-4 d-flex align-items-stretch mb-3 mb-md-0">
+                        <div class="d-flex flex-nowrap align-items-center w-100 border rounded bg-white pl-3 py-2 h-100"
+                            style="min-height:70px; border-color: #218080;">
+                            <span
+                                class="d-flex align-items-center justify-content-center rounded bg-light flex-shrink-0"
+                                style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 18px;">
+                                <i class="mdi mdi-home-city" style="color: #218080; font-size: 1.2rem;"></i>
+                            </span>
+                            <div class="flex-grow-1" style="min-width:0;">
+                                <div class="fw-bold text-dark"
+                                    style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                    {{ $apartment->category ? $apartment->category->category : 'Apartment' }}
+                                </div>
+                                <div class="text-muted small" style="white-space:nowrap;">Type</div>
+                            </div>
                         </div>
                     </li>
-                    <li class="col-6 col-md-4 mb-2">
-                        <div class="d-flex flex-column">
-                            <span class="label text-muted" style="font-size:13px;">Price</span>
-                            <span class="value fw-semibold" style="font-size:15px;">USD {{
-                                number_format($apartment->base_price, 2) }}/night</span>
+                    <li class="col-6 col-md-4 d-flex align-items-stretch mb-3 mb-md-0">
+                        <div class="d-flex flex-nowrap align-items-center w-100 border rounded bg-white px-3 py-2 h-100"
+                            style="min-height:70px; border-color: #218080;">
+                            <span
+                                class="d-flex align-items-center justify-content-center rounded bg-light flex-shrink-0"
+                                style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 18px;">
+                                <i class="mdi mdi-currency-usd" style="color: #218080; font-size: 1.2rem;"></i>
+                            </span>
+                            <div class="flex-grow-1" style="min-width:0;">
+                                <div class="fw-bold text-dark"
+                                    style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                    USD {{ number_format($apartment->base_price, 2) }}/night
+                                </div>
+                                <div class="text-muted small" style="white-space:nowrap;">Price</div>
+                            </div>
                         </div>
                     </li>
-                    <li class="col-6 col-md-4 mb-2">
-                        <div class="d-flex flex-column">
-                            <span class="label text-muted" style="font-size:13px;">Rating</span>
-                            <span class="value fw-semibold" style="font-size:15px;">{{ $apartment->ratings ?
-                                number_format($apartment->ratings, 1) : '5.0' }}/5</span>
+                    <li class="col-6 col-md-4 d-flex align-items-stretch mb-3 mb-md-0">
+                        <div class="d-flex flex-nowrap align-items-center w-100 border rounded bg-white px-3 py-2 h-100"
+                            style="min-height:70px; border-color: #218080;">
+                            <span
+                                class="d-flex align-items-center justify-content-center rounded bg-light flex-shrink-0"
+                                style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 18px;">
+                                <i class="mdi mdi-star" style="color: #218080; font-size: 1.2rem;"></i>
+                            </span>
+                            <div class="flex-grow-1" style="min-width:0;">
+                                <div class="fw-bold text-dark"
+                                    style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                    {{ $apartment->ratings ? number_format($apartment->ratings, 1) : '5.0' }}/5
+                                </div>
+                                <div class="text-muted small" style="white-space:nowrap;">Rating</div>
+                            </div>
                         </div>
                     </li>
                 </ul>
@@ -102,7 +164,8 @@ use Illuminate\Support\Str;
                             <i class="mdi mdi-check-circle me-2"
                                 style="font-size: 1.2rem; color: #2e8b57; width: 20px; text-align: center;"></i>
                             @endif
-                            <span style="font-size: 13px; font-weight: 500; color: #333; line-height: 1.3;">{{ $feature->name }}</span>
+                            <span style="font-size: 13px; font-weight: 500; color: #333; line-height: 1.3;">{{
+                                $feature->name }}</span>
                         </div>
                         @empty
                         <div class="text-muted" style="font-size: 14px;">No facilities listed.</div>
@@ -111,66 +174,8 @@ use Illuminate\Support\Str;
                 </div>
             </section>
             <hr>
-            <section class="feature">
-                <h2 class="section-title">Apartment Services</h2>
-                <div class="section-content">
-                    <div class="d-flex flex-wrap">
-                        <div class="service-card d-flex align-items-center p-3 mb-3 mx-2"
-                            style="background: white; border-radius: 8px; border: 1px solid #e0e0e0; min-height: 60px; flex: 0 0 auto; min-width: 200px;">
-                            <i class="fas fa-home me-3"
-                                style="font-size: 1.5rem; color: #333; width: 24px; text-align: center;"></i>
-                            <span style="font-size: 14px; font-weight: 500; color: #333; line-height: 1.4;">Self Catering</span>
-                        </div>
-                        <div class="service-card d-flex align-items-center p-3 mb-3 mx-2"
-                            style="background: white; border-radius: 8px; border: 1px solid #e0e0e0; min-height: 60px; flex: 0 0 auto; min-width: 200px;">
-                            <i class="fas fa-wifi me-3"
-                                style="font-size: 1.5rem; color: #333; width: 24px; text-align: center;"></i>
-                            <span style="font-size: 14px; font-weight: 500; color: #333; line-height: 1.4;">Free WiFi</span>
-                        </div>
-                        <div class="service-card d-flex align-items-center p-3 mb-3 mx-2"
-                            style="background: white; border-radius: 8px; border: 1px solid #e0e0e0; min-height: 60px; flex: 0 0 auto; min-width: 200px;">
-                            <i class="fas fa-car me-3"
-                                style="font-size: 1.5rem; color: #333; width: 24px; text-align: center;"></i>
-                            <span style="font-size: 14px; font-weight: 500; color: #333; line-height: 1.4;">Parking Space</span>
-                        </div>
-                        <div class="service-card d-flex align-items-center p-3 mb-3 mx-2"
-                            style="background: white; border-radius: 8px; border: 1px solid #e0e0e0; min-height: 60px; flex: 0 0 auto; min-width: 200px;">
-                            <i class="fas fa-tv me-3"
-                                style="font-size: 1.5rem; color: #333; width: 24px; text-align: center;"></i>
-                            <span style="font-size: 14px; font-weight: 500; color: #333; line-height: 1.4;">Smart TV</span>
-                        </div>
-                        <div class="service-card d-flex align-items-center p-3 mb-3 mx-2"
-                            style="background: white; border-radius: 8px; border: 1px solid #e0e0e0; min-height: 60px; flex: 0 0 auto; min-width: 200px;">
-                            <i class="fas fa-utensils me-3"
-                                style="font-size: 1.5rem; color: #333; width: 24px; text-align: center;"></i>
-                            <span style="font-size: 14px; font-weight: 500; color: #333; line-height: 1.4;">Fully Equipped Kitchen</span>
-                        </div>
-                        <div class="service-card d-flex align-items-center p-3 mb-3 mx-2"
-                            style="background: white; border-radius: 8px; border: 1px solid #e0e0e0; min-height: 60px; flex: 0 0 auto; min-width: 200px;">
-                            <i class="fas fa-swimming-pool me-3"
-                                style="font-size: 1.5rem; color: #333; width: 24px; text-align: center;"></i>
-                            <span style="font-size: 14px; font-weight: 500; color: #333; line-height: 1.4;">Swimming Pool</span>
-                        </div>
-                        <div class="service-card d-flex align-items-center p-3 mb-3 mx-2"
-                            style="background: white; border-radius: 8px; border: 1px solid #e0e0e0; min-height: 60px; flex: 0 0 auto; min-width: 200px;">
-                            <i class="fas fa-tshirt me-3"
-                                style="font-size: 1.5rem; color: #333; width: 24px; text-align: center;"></i>
-                            <span style="font-size: 14px; font-weight: 500; color: #333; line-height: 1.4;">Laundry Facilities</span>
-                        </div>
-                        <div class="service-card d-flex align-items-center p-3 mb-3 mx-2"
-                            style="background: white; border-radius: 8px; border: 1px solid #e0e0e0; min-height: 60px; flex: 0 0 auto; min-width: 200px;">
-                            <i class="fas fa-phone me-3"
-                                style="font-size: 1.5rem; color: #333; width: 24px; text-align: center;"></i>
-                            <span style="font-size: 14px; font-weight: 500; color: #333; line-height: 1.4;">24/7 Support</span>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            </section>
-
-            <hr>
             <section class="map">
-                <h2 class="section-title">Apartment Location On Map</h2>
+                <h4 class="section-title mb-4">Apartment Location On Map</h4>
                 <div id="address-map-container" style="width: 100%; height: 400px">
                     @if($apartment->lat && $apartment->long)
                     <iframe width="100%" height="100%" frameborder="0" style="border:0; border-radius: 8px;"
@@ -188,182 +193,178 @@ use Illuminate\Support\Str;
             <hr>
 
             <div class="reviews-section mt-4" id="review-section">
-                <h3 class="comment-count mb-4">Reviews for this Apartment</h3>
+                <div class="d-flex justify-content-between align-items-center my-3">
+                    <h4 class="comment-count">Reviews for this Apartment</h4>
 
-                <!-- Sample Reviews -->
-                <div class="reviews-list">
-                    <!-- Review 1 -->
+                    <div class="d-flex justify-content-center">
+                        <a href="#leaveReviewModal" class="btn btn-primary btn-lg fw-semibold gmz-box-popup"
+                            data-effect="mfp-zoom-in">
+                            <i class="fa fa-pen"></i> Leave a Review
+                        </a>
+                    </div>
+                    <div class="white-popup mfp-with-anim mfp-hide gmz-popup-form" id="leaveReviewModal">
+                        <div class="popup-inner">
+                            <h4 class="popup-title" id="leaveReviewModalLabel">Leave a Review</h4>
+                            <div class="popup-content">
+                                <div class="comment-form-wrapper">
+                                    <form action="{{ route('deals.reviews.store', $apartment->id) }}" class="comment-form form-sm" method="post">
+                                        @csrf
+
+                                        <div class="row g-3">
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label for="review-title" class="form-label fw-semibold">Review Title *</label>
+                                                    <input id="review-title" type="text" name="review_title"
+                                                        class="form-control" placeholder="Enter your review title" required />
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-12 mb-2">
+                                                <label for="comment_rating mb-2"
+                                                    class="form-label fw-semibold me-3 mb-0 d-flex align-items-center justify-content-between">
+                                                    <span>
+                                                        Your Rating *
+                                                    </span>
+                                                    <span id="star-display" class="ms-3"
+                                                        style="font-size: 1.3rem; color: #ffc107;"></span>
+
+                                                </label>
+                                                <select id="rating" name="rating" class="form-select form-control" required>
+                                                    <option value="">Select rating</option>
+                                                    <option value="1">1 Star</option>
+                                                    <option value="2">2 Stars</option>
+                                                    <option value="3">3 Stars</option>
+                                                    <option value="4">4 Stars</option>
+                                                    <option value="5">5 Stars</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="col-12">
+                                                <div class="form-group">
+                                                    <label for="review-content" class="form-label fw-semibold">Your Review *</label>
+                                                    <textarea id="review-content" name="review_content"
+                                                        placeholder="Share your experience with this apartment..."
+                                                        class="form-control" required rows="5"></textarea>
+                                                </div>
+                                            </div>
+                        </div>
+
+                                        <div class="d-grid mt-4">
+                                            <button type="submit"
+                                                class="btn btn-primary btn-lg text-uppercase fw-semibold">
+                                                Submit Review
+                                            </button>
+                                    </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Reviews List -->
+                <div class="reviews-list" id="reviews-list">
+                    @if(isset($paginatedReviews) && $paginatedReviews->count() > 0)
+                        @foreach($paginatedReviews as $review)
                     <div class="review-item d-flex mb-4 p-3"
                         style="background: #f8f9fa; border-radius: 12px; border: 1px solid #e9ecef;">
-                        <div class="review-avatar me-3" style="flex-shrink: 0;">
-                            <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=60&h=60&fit=crop&crop=face"
-                                alt="John Doe"
+                                <div class="review-avatar" style="flex-shrink: 0; margin-right: 2rem;">
+                                    <img src="https://ui-avatars.com/api/?name={{ urlencode($review->reviewer_name) }}&background=1C8D83&color=fff&size=60"
+                                        alt="{{ $review->reviewer_name }}"
                                 style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; display: block;">
                         </div>
                         <div class="review-content flex-grow-1">
                             <div class="review-header d-flex justify-content-between align-items-start mb-2">
                                 <div>
                                     <h5 class="reviewer-name mb-1"
-                                        style="font-size: 16px; font-weight: 600; color: #333;">John Doe</h5>
-                                    <div class="review-rating mb-1">
-                                        <i class="fa fa-star text-warning"></i>
-                                        <i class="fa fa-star text-warning"></i>
-                                        <i class="fa fa-star text-warning"></i>
-                                        <i class="fa fa-star text-warning"></i>
-                                        <i class="fa fa-star text-warning"></i>
+                                                style="font-size: 16px; font-weight: 600; color: #333;">{{ $review->reviewer_name }}</h5>
+                                            <div class="review-rating mb-1" style="font-size: 0.85rem;">
+                                                {!! $review->star_rating !!}
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">{{ $review->formatted_date }}</small>
                                     </div>
+                                    <h6 class="review-title mb-2" style="font-size: 14px; font-weight: 500; color: #555;">
+                                        {{ $review->review_title }}</h6>
+                                    <p class="review-text mb-0" style="font-size: 14px; color: #666; line-height: 1.5;">
+                                        {{ $review->review_content }}
+                                    </p>
                                 </div>
-                                <small class="text-muted">2 days ago</small>
                             </div>
-                            <h6 class="review-title mb-2" style="font-size: 14px; font-weight: 500; color: #555;">
-                                Perfect home away from home!</h6>
-                            <p class="review-text mb-0" style="font-size: 14px; color: #666; line-height: 1.5;">
-                                This apartment exceeded our expectations. It was clean, comfortable, and had everything we needed for a perfect stay.
-                                The kitchen was fully equipped, the WiFi was fast, and the location was ideal. Highly recommended for families!
-                            </p>
+                        @endforeach
+                    @else
+                        <div class="text-center py-4">
+                            <i class="mdi mdi-star-outline fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No reviews yet. Be the first to leave a review!</p>
                         </div>
-                    </div>
-
-                    <!-- Review 2 -->
-                    <div class="review-item d-flex mb-4 p-3"
-                        style="background: #f8f9fa; border-radius: 12px; border: 1px solid #e9ecef;">
-                        <div class="review-avatar me-3" style="flex-shrink: 0;">
-                            <img src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=60&h=60&fit=crop&crop=face"
-                                alt="Sarah Wilson"
-                                style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; display: block;">
-                        </div>
-                        <div class="review-content flex-grow-1">
-                            <div class="review-header d-flex justify-content-between align-items-start mb-2">
-                                <div>
-                                    <h5 class="reviewer-name mb-1"
-                                        style="font-size: 16px; font-weight: 600; color: #333;">Sarah Wilson</h5>
-                                    <div class="review-rating mb-1">
-                                        <i class="fa fa-star text-warning"></i>
-                                        <i class="fa fa-star text-warning"></i>
-                                        <i class="fa fa-star text-warning"></i>
-                                        <i class="fa fa-star text-warning"></i>
-                                        <i class="fa fa-star text-warning"></i>
-                                    </div>
-                                </div>
-                                <small class="text-muted">1 week ago</small>
-                            </div>
-                            <h6 class="review-title mb-2" style="font-size: 14px; font-weight: 500; color: #555;">
-                                Excellent location and amenities</h6>
-                            <p class="review-text mb-0" style="font-size: 14px; color: #666; line-height: 1.5;">
-                                We had a wonderful time at this apartment. The location is perfect - close to all attractions and the beach.
-                                The apartment had everything we needed including a great kitchen and comfortable living space.
-                                The balcony view was amazing!
-                            </p>
-                        </div>
-                    </div>
+                    @endif
                 </div>
             </div>
 
-            <div class="post-comment parent-form" id="gmz-comment-section">
-                <div class="comment-form-wrapper">
-                    <form action="https://www.zanzibarbookings.com/add-comment"
-                        class="comment-form form-sm gmz-form-action form-add-post-comment" method="post"
-                        data-reload-time="1000">
-                        <h3 class="comment-title mb-4">Leave a Review</h3>
-                        <p class="notice mb-4 text-muted">
-                            Your email address will not be published. Required fields are marked *
-                        </p>
-
-                        <div class="gmz-loader">
-                            <div class="loader-inner">
-                                <div class="spinner-grow text-info align-self-center loader-lg"></div>
-                            </div>
-                        </div>
-
-                        <input type="hidden" name="post_id" value="{{ $apartment->id }}" />
-                        <input type="hidden" name="comment_id" value="0" />
-                        <input type="hidden" name="comment_type" value="apartment" />
-
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <div class="review-select-rate mb-3">
-                                    <label class="form-label fw-semibold">Your rating *</label>
-                                    <div class="fas-star mt-2">
-                                        <i class="fa fa-star"></i>
-                                        <i class="fa fa-star"></i>
-                                        <i class="fa fa-star"></i>
-                                        <i class="fa fa-star"></i>
-                                        <i class="fa fa-star"></i>
-                                    </div>
-                                    <input type="hidden" name="review_star" value="5" class="review_star" />
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="comment-name" class="form-label fw-semibold">Your Name *</label>
-                                    <input id="comment-name" type="text" name="comment_name"
-                                        class="form-control gmz-validation" placeholder="Enter your full name"
-                                        data-validation="required" />
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="comment-email" class="form-label fw-semibold">Your Email *</label>
-                                    <input id="comment-email" type="email" name="comment_email"
-                                        class="form-control gmz-validation" placeholder="Enter your email address"
-                                        data-validation="required" />
-                                </div>
-                            </div>
-
-                            <div class="col-12">
-                                <div class="form-group">
-                                    <label for="comment-title" class="form-label fw-semibold">Review Title *</label>
-                                    <input id="comment-title" type="text" name="comment_title"
-                                        class="form-control gmz-validation" placeholder="Give your review a title"
-                                        data-validation="required" />
-                                </div>
-                            </div>
-
-                            <div class="col-12">
-                                <div class="form-group">
-                                    <label for="comment-content" class="form-label fw-semibold">Your Review *</label>
-                                    <textarea id="comment-content" name="comment_content"
-                                        placeholder="Share your experience with this apartment..."
-                                        class="form-control gmz-validation" data-validation="required"
-                                        rows="5"></textarea>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="gmz-message mt-3"></div>
-
-                        <div class="d-grid mt-4">
-                            <button type="submit" class="btn btn-primary btn-lg text-uppercase fw-semibold">
-                                Submit Review
-                            </button>
-                        </div>
-                    </form>
+            {{-- Pagination for reviews --}}
+            @if(isset($paginatedReviews) && $paginatedReviews->hasPages())
+                <div class="d-flex justify-content-center my-4">
+                    {{ $paginatedReviews->links() }}
                 </div>
-            </div>
+            @endif
         </div>
-
 
         {{-- ################ BOOKING SECTION ################ --}}
         <div class="col-lg-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title mb-4">Book This Apartment</h5>
-                    
-                    <div class="mb-4">
-                        <div class="d-flex align-items-baseline mb-1">
-                            <h3 class="text-primary mb-0 me-2" style="font-size:2rem;">USD {{ number_format($apartment->base_price, 0) }}</h3>
+            <div class="siderbar-single">
+                <h4 class="post-title my-2 bold">
+                    Book This Apartment
+                </h4>
+                
+                {{-- booking card --}}
+                <div class="card mb-4 booking-card rounded"
+                    style="overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                    <div class="card-header" style="background: #2e8b57; color: white; padding: 15px;">
+                        <h5 class="mb-0" style="font-size: 1.2rem; font-weight: 600;">
+                            <i class="fas fa-home me-2"></i>Book This Apartment
+                        </h5>
+                            </div>
+                    <div class="card-body p-3">
+                        <div class="price-display mb-3 text-center">
+                            <span class="fw-bold" style="font-size: 1.5rem; color: #2e8b57;">USD {{ number_format($apartment->base_price, 2) }}</span>
+                            <span style="font-size: 14px; color: #888;">/night</span>
                         </div>
-                        <p class="text-muted mb-0" style="font-size:1rem;">per night</p>
-                    </div>
-                    
-                    <div class="d-flex justify-content-center">
-                        <a href="{{ route('confirm-booking', ['deal_id' => $apartment->id]) }}" 
-                           class="btn btn-primary btn-lg w-100 text-uppercase fw-semibold"
-                           style="padding: 14px 0; text-align: center;">
-                            Book This Apartment
-                        </a>
+
+                        <div class="d-grid">
+                            <a href="{{ route('confirm-booking', ['deal_id' => $apartment->id]) }}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-home me-2"></i>Book This Apartment
+                            </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                {{-- contact info --}}
+                <div class="card mb-4 contact-card rounded"
+                    style="overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                    <div class="card-header" style="background: #f8f9fa; padding: 15px;">
+                        <h5 class="mb-0" style="font-size: 1.2rem; font-weight: 600; color: #333;">
+                            <i class="fas fa-phone me-2"></i>Need Help?
+                        </h5>
+                                </div>
+                    <div class="card-body p-3">
+                        <p class="mb-3" style="color: #666; font-size: 14px;">
+                            Contact us for more information about this apartment.
+                        </p>
+                        <div class="contact-info">
+                            <div class="contact-item d-flex align-items-center mb-2">
+                                <i class="fas fa-phone me-2" style="color: #2e8b57; width: 20px;"></i>
+                                <span style="font-size: 14px; color: #333;">+255 123 456 789</span>
+                            </div>
+                            <div class="contact-item d-flex align-items-center mb-2">
+                                <i class="fas fa-envelope me-2" style="color: #2e8b57; width: 20px;"></i>
+                                <span style="font-size: 14px; color: #333;">info@zanzibarbookings.com</span>
+                            </div>
+                            <div class="contact-item d-flex align-items-center">
+                                <i class="fas fa-clock me-2" style="color: #2e8b57; width: 20px;"></i>
+                                <span style="font-size: 14px; color: #333;">24/7 Support</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -371,8 +372,7 @@ use Illuminate\Support\Str;
     </div>
 </div>
 
-
-@if($nearbyHotels->isNotEmpty())
+@if(isset($nearbyHotels) && $nearbyHotels->isNotEmpty())
 <section class="list-hotel list-hotel--grid py-40 bg-gray-100 mb-0 nearby">
     <div class="container">
         <h4 class="section-title mb-20">Nearby Hotels & Apartments</h4>
@@ -437,7 +437,7 @@ use Illuminate\Support\Str;
 </section>
 @endif
 
-@if($nearbyTours->isNotEmpty())
+@if(isset($nearbyTours) && $nearbyTours->isNotEmpty())
 <section class="list-tour list-tour--grid py-40 bg-white mb-0 nearby-activities">
     <div class="container">
         <h4 class="section-title mb-20">Nearby Activities</h4>
@@ -506,5 +506,112 @@ use Illuminate\Support\Str;
     </div>
 </section>
 @endif
+
+<style>
+    /* Fix modal z-index to appear above header */
+    .white-popup.gmz-popup-form {
+        z-index: 2147483647 !important;
+    }
+
+    .mfp-bg {
+        z-index: 2147483646 !important;
+    }
+
+    .mfp-wrap {
+        z-index: 2147483646 !important;
+    }
+
+    .mfp-container {
+        z-index: 2147483646 !important;
+    }
+
+    /* Ensure modal content is properly positioned */
+    .mfp-content {
+        z-index: 2147483647 !important;
+    }
+
+    /* Fix for Magnific Popup modal positioning */
+    .mfp-ready .mfp-bg {
+        opacity: 0.8;
+    }
+
+    .mfp-ready .mfp-wrap {
+        opacity: 1;
+    }
+
+    /* Ensure modal is centered and visible */
+    .white-popup {
+        position: relative;
+        background: white;
+        padding: 0;
+        width: auto;
+        max-width: 500px;
+        margin: 0 auto;
+        border-radius: 8px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .popup-inner {
+        padding: 15px;
+    }
+
+    .popup-title {
+        margin-bottom: 15px;
+        font-size: 20px;
+        font-weight: 600;
+        color: #333;
+        text-align: center;
+        border-bottom: 2px solid #f0f0f0;
+        padding-bottom: 10px;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    // Fix modal z-index issues
+    function fixModalZIndex() {
+        // Ensure modals are above header
+        const modals = document.querySelectorAll('.white-popup.gmz-popup-form');
+        modals.forEach(modal => {
+            modal.style.zIndex = '2147483647';
+        });
+        
+        // Fix Magnific Popup z-index
+        if (typeof $.magnificPopup !== 'undefined') {
+            $.magnificPopup.instance = null;
+        }
+    }
+    
+    // Call fix on load
+    fixModalZIndex();
+    
+    // Re-apply fix when modals are opened
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('gmz-box-popup')) {
+            setTimeout(fixModalZIndex, 100);
+        }
+    });
+});
+
+// Simple star rating display
+document.addEventListener('DOMContentLoaded', function() {
+    const select = document.getElementById('rating');
+    const starDisplay = document.getElementById('star-display');
+    if (select && starDisplay) {
+        select.addEventListener('change', function () {
+            let val = parseInt(this.value);
+            if (!val) {
+                starDisplay.innerHTML = '';
+                return;
+            }
+            let stars = '';
+            for (let i = 0; i < val; i++) {
+                stars += '★';
+            }
+            starDisplay.textContent = stars;
+        });
+    }
+});
+</script>
 
 @endsection

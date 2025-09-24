@@ -14,19 +14,22 @@ use Illuminate\Support\Str;
 <meta name="keywords" content="{{ $car->seo_keywords }}">
 @endif
 
-<!-- Open Graph / Facebook -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="{{ request()->url() }}">
 <meta property="og:title" content="{{ $car->seo_title ?: $car->title }}">
-<meta property="og:description" content="{{ $car->seo_description ?: Str::limit(strip_tags($car->description), 160) }}">
-<meta property="og:image" content="{{ $car->seo_image ? asset('storage/' . $car->seo_image) : ($car->cover_photo ? asset('storage/' . $car->cover_photo) : asset('logo.png')) }}">
+<meta property="og:description"
+    content="{{ $car->seo_description ?: Str::limit(strip_tags($car->description), 160) }}">
+<meta property="og:image"
+    content="{{ $car->seo_image ? asset('storage/' . $car->seo_image) : ($car->cover_photo ? asset('storage/' . $car->cover_photo) : asset('logo.png')) }}">
 
 <!-- Twitter -->
 <meta property="twitter:card" content="summary_large_image">
 <meta property="twitter:url" content="{{ request()->url() }}">
 <meta property="twitter:title" content="{{ $car->seo_title ?: $car->title }}">
-<meta property="twitter:description" content="{{ $car->seo_description ?: Str::limit(strip_tags($car->description), 160) }}">
-<meta property="twitter:image" content="{{ $car->seo_image ? asset('storage/' . $car->seo_image) : ($car->cover_photo ? asset('storage/' . $car->cover_photo) : asset('logo.png')) }}">
+<meta property="twitter:description"
+    content="{{ $car->seo_description ?: Str::limit(strip_tags($car->description), 160) }}">
+<meta property="twitter:image"
+    content="{{ $car->seo_image ? asset('storage/' . $car->seo_image) : ($car->cover_photo ? asset('storage/' . $car->cover_photo) : asset('logo.png')) }}">
 @endsection
 
 @section('pages')
@@ -142,53 +145,79 @@ use Illuminate\Support\Str;
 
 <div class="container">
     <div class="row">
+        {{-- ############## MAIN ############################# --}}
         <div class="col-lg-8 pb-5">
-            <h4 class="post-title">
-                <div class="add-wishlist-wrapper">
-                    <a href="#gmz-login-popup" class="add-wishlist gmz-box-popup" data-effect="mfp-zoom-in"></a>
+            <div class="hotel-star">
+                <div class="star-rating">
+                    <i class="fa fa-star text-warning"></i>
+                    <i class="fa fa-star text-warning"></i>
+                    <i class="fa fa-star text-warning"></i>
+                    <i class="fa fa-star text-warning"></i>
+                    <i class="fa fa-star text-warning"></i>
                 </div>
-                {{ $car->title }}
-            </h4>
-            <p class="location text-primary">
+            </div>
+            <div class="d-flex align-items-center" style="gap: 16px;">
+                <h2 class="post-title bold">
+                    {{ $car->title }}
+                </h2>
+            </div>
+            @if ($car->location)
+            <p class="location">
                 <i class="fal fa-map-marker-alt"></i> Available for pickup in {{ $car->location }}
             </p>
+            @endif
 
             <div class="meta">
-                <ul class="row gx-3 gy-2" style="list-style:none;padding:0;margin:0;">
-                    <li class="col-6 col-md-4 mb-2">
-                        <div class="d-flex flex-column">
-                            <span class="label text-muted" style="font-size:13px;">Vehicle Type</span>
-                            <span class="value fw-semibold" style="font-size:15px;">{{ $car->category->category }}</span>
+                <ul class="meta row  gy-2 mb-4" style="list-style: none; padding: 0; margin: 0;">
+                    <li class="col-6 col-md-4 d-flex align-items-stretch mb-3 mb-md-0">
+                        <div class="d-flex flex-nowrap align-items-center w-100 border rounded bg-white pl-3 py-2 h-100"
+                            style="min-height:70px; border-color: #218080;">
+                            <span
+                                class="d-flex align-items-center justify-content-center rounded bg-light flex-shrink-0"
+                                style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 18px;">
+                                <i class="mdi mdi-car" style="color: #218080; font-size: 1.2rem;"></i>
+                            </span>
+                            <div class="flex-grow-1" style="min-width:0;">
+                                <div class="fw-bold text-dark"
+                                    style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                    {{ $car->category ? $car->category->category : 'Vehicle' }}
+                                </div>
+                                <div class="text-muted small" style="white-space:nowrap;">Type</div>
+                            </div>
                         </div>
                     </li>
-                    <li class="col-6 col-md-4 mb-2">
-                        <div class="d-flex flex-column">
-                            <span class="label text-muted" style="font-size:13px;">Price</span>
-                            <span class="value fw-semibold" style="font-size:15px;">USD {{ number_format($car->base_price, 2) }}/day</span>
+                    <li class="col-6 col-md-4 d-flex align-items-stretch mb-3 mb-md-0">
+                        <div class="d-flex flex-nowrap align-items-center w-100 border rounded bg-white px-3 py-2 h-100"
+                            style="min-height:70px; border-color: #218080;">
+                            <span
+                                class="d-flex align-items-center justify-content-center rounded bg-light flex-shrink-0"
+                                style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 18px;">
+                                <i class="mdi mdi-currency-usd" style="color: #218080; font-size: 1.2rem;"></i>
+                            </span>
+                            <div class="flex-grow-1" style="min-width:0;">
+                                <div class="fw-bold text-dark"
+                                    style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                    USD {{ number_format($car->base_price, 2) }}/day
+                                </div>
+                                <div class="text-muted small" style="white-space:nowrap;">Price</div>
+                            </div>
                         </div>
                     </li>
-                    <li class="col-6 col-md-4 mb-2">
-                        <div class="d-flex flex-column">
-                            <span class="label text-muted" style="font-size:13px;">Rating</span>
-                            <span class="value fw-semibold" style="font-size:15px;">{{ $car->ratings ? number_format($car->ratings, 1) : '5.0' }}/5</span>
-                        </div>
-                    </li>
-                    <li class="col-6 col-md-4 mb-2">
-                        <div class="d-flex flex-column">
-                            <span class="label text-muted" style="font-size:13px;">Seating Capacity</span>
-                            <span class="value fw-semibold" style="font-size:15px;">{{ $car->car->seating_capacity ?? '5' }} Passengers</span>
-                        </div>
-                    </li>
-                    <li class="col-6 col-md-4 mb-2">
-                        <div class="d-flex flex-column">
-                            <span class="label text-muted" style="font-size:13px;">Transmission</span>
-                            <span class="value fw-semibold" style="font-size:15px;">{{ $car->car->transmission ?? 'Automatic' }}</span>
-                        </div>
-                    </li>
-                    <li class="col-6 col-md-4 mb-2">
-                        <div class="d-flex flex-column">
-                            <span class="label text-muted" style="font-size:13px;">Fuel Type</span>
-                            <span class="value fw-semibold" style="font-size:15px;">{{ $car->car->fuel_type ?? 'Petrol' }}</span>
+                    <li class="col-6 col-md-4 d-flex align-items-stretch mb-3 mb-md-0">
+                        <div class="d-flex flex-nowrap align-items-center w-100 border rounded bg-white px-3 py-2 h-100"
+                            style="min-height:70px; border-color: #218080;">
+                            <span
+                                class="d-flex align-items-center justify-content-center rounded bg-light flex-shrink-0"
+                                style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 18px;">
+                                <i class="mdi mdi-star" style="color: #218080; font-size: 1.2rem;"></i>
+                            </span>
+                            <div class="flex-grow-1" style="min-width:0;">
+                                <div class="fw-bold text-dark"
+                                    style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                    {{ $car->ratings ? number_format($car->ratings, 1) : '5.0' }}/5
+                                </div>
+                                <div class="text-muted small" style="white-space:nowrap;">Rating</div>
+                            </div>
                         </div>
                     </li>
                 </ul>

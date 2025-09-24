@@ -207,6 +207,12 @@ class WebsiteController extends Controller
             ->with(['category', 'photos', 'features'])
             ->findOrFail($apartmentId);
 
+        // Paginate reviews separately
+        $paginatedReviews = $apartment->approvedReviews()
+            ->with('user')
+            ->orderBy('created_at', 'desc')
+            ->paginate(5);
+
         // Fetch nearby deals from the nears table
         $nearbyDeals = Near::where('deal_id', $apartmentId)
             ->with(['nearDeal.category', 'nearDeal.photos', 'nearDeal.tours'])
@@ -228,7 +234,7 @@ class WebsiteController extends Controller
         $nearbyHotels = $nearbyHotels->take(3);
         $nearbyTours = $nearbyTours->take(6);
 
-        return view('website.pages.view_apartment', compact('apartment', 'nearbyHotels', 'nearbyTours', 'hashids'));
+        return view('website.pages.view_apartment', compact('apartment', 'nearbyHotels', 'nearbyTours', 'paginatedReviews', 'hashids'));
     }
 
     // cars
@@ -435,15 +441,33 @@ class WebsiteController extends Controller
             ->with(['category', 'photos', 'car', 'features'])
             ->firstOrFail();
 
-        // Fetch nearby cars (up to 3) in the same location, or random if none found
-        $nearbyCars = Deal::where('type', 'car')
-            ->where('id', '!=', $car->id)
-            ->where('location', $car->location)
-            ->with(['category', 'photos'])
-            ->limit(3)
+        // Paginate reviews separately
+        $paginatedReviews = $car->approvedReviews()
+            ->with('user')
+            ->orderBy('created_at', 'desc')
+            ->paginate(5);
+
+        // Fetch nearby deals from the nears table
+        $nearbyDeals = Near::where('deal_id', $carId)
+            ->with(['nearDeal.category', 'nearDeal.photos', 'nearDeal.car'])
             ->get();
 
-        // If no cars in same location, get random cars
+        // Separate nearby deals by type
+        $nearbyHotels = collect();
+        $nearbyTours = collect();
+        $nearbyCars = collect();
+
+        foreach ($nearbyDeals as $near) {
+            if ($near->type === 'hotel' || $near->type === 'apartment') {
+                $nearbyHotels->push($near->nearDeal);
+            } elseif ($near->type === 'tour') {
+                $nearbyTours->push($near->nearDeal);
+            } elseif ($near->type === 'car') {
+                $nearbyCars->push($near->nearDeal);
+            }
+        }
+
+        // If no nearby cars, get random cars
         if ($nearbyCars->isEmpty()) {
             $nearbyCars = Deal::where('type', 'car')
                 ->where('id', '!=', $car->id)
@@ -452,7 +476,12 @@ class WebsiteController extends Controller
                 ->get();
         }
 
-        return view('website.pages.view_car', compact('car', 'nearbyCars', 'hashids'));
+        // Limit to reasonable numbers
+        $nearbyHotels = $nearbyHotels->take(3);
+        $nearbyTours = $nearbyTours->take(3);
+        $nearbyCars = $nearbyCars->take(3);
+
+        return view('website.pages.view_car', compact('car', 'nearbyHotels', 'nearbyTours', 'nearbyCars', 'paginatedReviews', 'hashids'));
     }
 
 
@@ -555,18 +584,33 @@ class WebsiteController extends Controller
 
         $tour = Deal::where('type', 'tour')
             ->where('id', $tourId)
-            ->with(['category', 'photos', 'tours', 'features'])
+            ->with(['category', 'photos', 'tours', 'features', 'tourIncludes.feature'])
             ->firstOrFail();
 
-        // Fetch nearby tours (up to 3) in the same location, or random if none found
-        $nearbyTours = Deal::where('type', 'tour')
-            ->where('id', '!=', $tour->id)
-            ->where('location', $tour->location)
-            ->with(['category', 'photos'])
-            ->limit(3)
+        // Paginate reviews separately
+        $paginatedReviews = $tour->approvedReviews()
+            ->with('user')
+            ->orderBy('created_at', 'desc')
+            ->paginate(5);
+
+        // Fetch nearby deals from the nears table
+        $nearbyDeals = Near::where('deal_id', $tourId)
+            ->with(['nearDeal.category', 'nearDeal.photos', 'nearDeal.tours'])
             ->get();
 
-        // If no tours in same location, get random tours
+        // Separate nearby deals by type
+        $nearbyHotels = collect();
+        $nearbyTours = collect();
+
+        foreach ($nearbyDeals as $near) {
+            if ($near->type === 'hotel' || $near->type === 'apartment') {
+                $nearbyHotels->push($near->nearDeal);
+            } elseif ($near->type === 'tour') {
+                $nearbyTours->push($near->nearDeal);
+            }
+        }
+
+        // If no nearby deals, get random tours
         if ($nearbyTours->isEmpty()) {
             $nearbyTours = Deal::where('type', 'tour')
                 ->where('id', '!=', $tour->id)
@@ -575,7 +619,11 @@ class WebsiteController extends Controller
                 ->get();
         }
 
-        return view('website.pages.view_tour', compact('tour', 'nearbyTours', 'hashids'));
+        // Limit to reasonable numbers
+        $nearbyHotels = $nearbyHotels->take(3);
+        $nearbyTours = $nearbyTours->take(6);
+
+        return view('website.pages.view_tour', compact('tour', 'nearbyHotels', 'nearbyTours', 'paginatedReviews', 'hashids'));
     }
 
     /**
