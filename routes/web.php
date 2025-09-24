@@ -29,6 +29,9 @@ Route::get('/cars', [WebsiteController::class, 'cars'])->name('cars');
 Route::get('/view/car/{id}', [WebsiteController::class, 'viewCar'])->name('view-car');
 Route::get('/flights', [WebsiteController::class, 'flights'])->name('flights');
 
+// Review routes
+Route::post('/deals/{id}/reviews', [WebsiteController::class, 'storeReview'])->name('deals.reviews.store');
+
 // Booking routes
 Route::get('/confirm-booking', [WebsiteController::class, 'confirmBooking'])->name('confirm-booking');
 Route::post('/process-booking', [WebsiteController::class, 'processBooking'])->name('process.booking');

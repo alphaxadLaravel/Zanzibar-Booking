@@ -74,8 +74,8 @@ use Illuminate\Support\Str;
                     <i class="fa fa-star text-warning"></i>
                 </div>
             </div>
-            <div class="d-flex align-items-center mb-3" style="gap: 16px;">
-                <h2 class="post-title my-2 bold">
+            <div class="d-flex align-items-center" style="gap: 16px;">
+                <h2 class="post-title bold">
                     {{ $hotel->title }}
                 </h2>
             </div>
@@ -89,7 +89,7 @@ use Illuminate\Support\Str;
             <div class="meta">
                 <ul class="meta row  gy-2 mb-4" style="list-style: none; padding: 0; margin: 0;">
                     <li class="col-6 col-md-4 d-flex align-items-stretch mb-3 mb-md-0">
-                        <div class="d-flex flex-nowrap align-items-center w-100 border rounded bg-white px-3 py-2 h-100"
+                        <div class="d-flex flex-nowrap align-items-center w-100 border rounded bg-white pl-3 py-2 h-100"
                             style="min-height:70px; border-color: #218080;">
                             <span
                                 class="d-flex align-items-center justify-content-center rounded bg-light flex-shrink-0"
@@ -308,111 +308,65 @@ use Illuminate\Support\Str;
                     <h4 class="comment-count">Reviews for this Hotel</h4>
 
                     <div class="d-flex justify-content-center">
-                        <button type="button" class="btn btn-outline-primary btn-lg fw-semibold" data-bs-toggle="modal"
-                            data-bs-target="#leaveReviewModal">
+                        <a href="#leaveReviewModal" class="btn btn-primary btn-lg fw-semibold gmz-box-popup"
+                            data-effect="mfp-zoom-in">
                             <i class="fa fa-pen"></i> Leave a Review
-                        </button>
+                        </a>
                     </div>
-                    <div class="modal fade" id="leaveReviewModal" tabindex="-1" aria-labelledby="leaveReviewModalLabel"
-                        aria-hidden="true">
-                        <div class="modal-dialog modal-lg modal-dialog-centered">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h3 class="modal-title" id="leaveReviewModalLabel">Leave a Review</h3>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                        aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="comment-form-wrapper">
-                                        <form action="https://www.zanzibarbookings.com/add-comment"
-                                            class="comment-form form-sm gmz-form-action form-add-post-comment"
-                                            method="post" data-reload-time="1000">
-                                            <p class="notice mb-4 text-muted">
-                                                Your email address will not be published. Required fields are marked *
-                                            </p>
+                    <div class="white-popup mfp-with-anim mfp-hide gmz-popup-form" id="leaveReviewModal">
+                        <div class="popup-inner">
+                            <h4 class="popup-title" id="leaveReviewModalLabel">Leave a Review</h4>
+                            <div class="popup-content">
+                                <div class="comment-form-wrapper">
+                                    <form action="{{ route('deals.reviews.store', $hotel->id) }}" class="comment-form form-sm" method="post">
+                                        @csrf
 
-                                            <div class="gmz-loader">
-                                                <div class="loader-inner">
-                                                    <div class="spinner-grow text-info align-self-center loader-lg">
-                                                    </div>
+                                        <div class="row g-3">
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label for="review-title" class="form-label fw-semibold">Review Title *</label>
+                                                    <input id="review-title" type="text" name="review_title"
+                                                        class="form-control" placeholder="Enter your review title" required />
                                                 </div>
                                             </div>
 
-                                            <input type="hidden" name="post_id" value="121" />
-                                            <input type="hidden" name="comment_id" value="0" />
-                                            <input type="hidden" name="comment_type" value="hotel" />
+                                            <div class="col-md-12 mb-2">
+                                                <label for="comment_rating mb-2"
+                                                    class="form-label fw-semibold me-3 mb-0 d-flex align-items-center justify-content-between">
+                                                    <span>
+                                                        Your Rating *
+                                                    </span>
+                                                    <span id="star-display" class="ms-3"
+                                                        style="font-size: 1.3rem; color: #ffc107;"></span>
 
-                                            <div class="row g-3">
-                                                <div class="col-12">
-                                                    <div class="review-select-rate mb-3">
-                                                        <label class="form-label fw-semibold">Your rating *</label>
-                                                        <div class="fas-star mt-2">
-                                                            <i class="fa fa-star"></i>
-                                                            <i class="fa fa-star"></i>
-                                                            <i class="fa fa-star"></i>
-                                                            <i class="fa fa-star"></i>
-                                                            <i class="fa fa-star"></i>
-                                                        </div>
-                                                        <input type="hidden" name="review_star" value="5"
-                                                            class="review_star" />
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label for="comment-name" class="form-label fw-semibold">Your
-                                                            Name *</label>
-                                                        <input id="comment-name" type="text" name="comment_name"
-                                                            class="form-control gmz-validation"
-                                                            placeholder="Enter your full name"
-                                                            data-validation="required" />
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label for="comment-email" class="form-label fw-semibold">Your
-                                                            Email *</label>
-                                                        <input id="comment-email" type="email" name="comment_email"
-                                                            class="form-control gmz-validation"
-                                                            placeholder="Enter your email address"
-                                                            data-validation="required" />
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-12">
-                                                    <div class="form-group">
-                                                        <label for="comment-title" class="form-label fw-semibold">Review
-                                                            Title *</label>
-                                                        <input id="comment-title" type="text" name="comment_title"
-                                                            class="form-control gmz-validation"
-                                                            placeholder="Give your review a title"
-                                                            data-validation="required" />
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-12">
-                                                    <div class="form-group">
-                                                        <label for="comment-content" class="form-label fw-semibold">Your
-                                                            Review *</label>
-                                                        <textarea id="comment-content" name="comment_content"
-                                                            placeholder="Share your experience with this hotel..."
-                                                            class="form-control gmz-validation"
-                                                            data-validation="required" rows="5"></textarea>
-                                                    </div>
-                                                </div>
+                                                </label>
+                                                <select id="rating" name="rating" class="form-select form-control" required>
+                                                    <option value="">Select rating</option>
+                                                    <option value="1">1 Star</option>
+                                                    <option value="2">2 Stars</option>
+                                                    <option value="3">3 Stars</option>
+                                                    <option value="4">4 Stars</option>
+                                                    <option value="5">5 Stars</option>
+                                                </select>
                                             </div>
 
-                                            <div class="gmz-message mt-3"></div>
-
-                                            <div class="d-grid mt-4">
-                                                <button type="submit"
-                                                    class="btn btn-primary btn-lg text-uppercase fw-semibold">
-                                                    Submit Review
-                                                </button>
+                                            <div class="col-12">
+                                                <div class="form-group">
+                                                    <label for="review-content" class="form-label fw-semibold">Your Review *</label>
+                                                    <textarea id="review-content" name="review_content"
+                                                        placeholder="Share your experience with this hotel..."
+                                                        class="form-control" required rows="5"></textarea>
+                                                </div>
                                             </div>
-                                        </form>
-                                    </div>
+                                        </div>
+
+                                        <div class="d-grid mt-4">
+                                            <button type="submit"
+                                                class="btn btn-primary btn-lg text-uppercase fw-semibold">
+                                                Submit Review
+                                            </button>
+                                        </div>
+                                    </form>
                                 </div>
                             </div>
                         </div>
@@ -420,51 +374,51 @@ use Illuminate\Support\Str;
 
                 </div>
 
-                <!-- Sample Reviews -->
-                <div class="reviews-list">
-                    <!-- Review 1 -->
-                    <div class="review-item d-flex mb-4 p-3"
-                        style="background: #f8f9fa; border-radius: 12px; border: 1px solid #e9ecef;">
-                        <div class="review-avatar me-3" style="flex-shrink: 0;">
-                            <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=60&h=60&fit=crop&crop=face"
-                                alt="John Doe"
-                                style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; display: block;">
-                        </div>
-                        <div class="review-content flex-grow-1">
-                            <div class="review-header d-flex justify-content-between align-items-start mb-2">
-                                <div>
-                                    <h5 class="reviewer-name mb-1"
-                                        style="font-size: 16px; font-weight: 600; color: #333;">John Doe</h5>
-                                    <div class="review-rating mb-1">
-                                        <i class="fa fa-star text-warning"></i>
-                                        <i class="fa fa-star text-warning"></i>
-                                        <i class="fa fa-star text-warning"></i>
-                                        <i class="fa fa-star text-warning"></i>
-                                        <i class="fa fa-star text-warning"></i>
-                                    </div>
+                <!-- Reviews List -->
+                <div class="reviews-list" id="reviews-list">
+                    @if($paginatedReviews->count() > 0)
+                        @foreach($paginatedReviews as $review)
+                            <div class="review-item d-flex mb-4 p-3"
+                                style="background: #f8f9fa; border-radius: 12px; border: 1px solid #e9ecef;">
+                                <div class="review-avatar" style="flex-shrink: 0; margin-right: 2rem;">
+                                    <img src="https://ui-avatars.com/api/?name={{ urlencode($review->reviewer_name) }}&background=1C8D83&color=fff&size=60"
+                                        alt="{{ $review->reviewer_name }}"
+                                        style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; display: block;">
                                 </div>
-                                <small class="text-muted">2 days ago</small>
+                                <div class="review-content flex-grow-1">
+                                    <div class="review-header d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h5 class="reviewer-name mb-1"
+                                                style="font-size: 16px; font-weight: 600; color: #333;">{{ $review->reviewer_name }}</h5>
+                                            <div class="review-rating mb-1" style="font-size: 0.85rem;">
+                                                {!! $review->star_rating !!}
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">{{ $review->formatted_date }}</small>
+                                    </div>
+                                    <h6 class="review-title mb-2" style="font-size: 14px; font-weight: 500; color: #555;">
+                                        {{ $review->review_title }}</h6>
+                                    <p class="review-text mb-0" style="font-size: 14px; color: #666; line-height: 1.5;">
+                                        {{ $review->review_content }}
+                                    </p>
+                                </div>
                             </div>
-                            <h6 class="review-title mb-2" style="font-size: 14px; font-weight: 500; color: #555;">
-                                Amazing stay with beautiful views!</h6>
-                            <p class="review-text mb-0" style="font-size: 14px; color: #666; line-height: 1.5;">
-                                The hotel exceeded our expectations. The room was clean, comfortable, and had a stunning
-                                view of the ocean.
-                                The staff was incredibly friendly and helpful throughout our stay. The facilities were
-                                top-notch,
-                                especially the swimming pool and spa services. Highly recommended!
-                            </p>
+                        @endforeach
+                    @else
+                        <div class="text-center py-4">
+                            <i class="mdi mdi-star-outline fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No reviews yet. Be the first to leave a review!</p>
                         </div>
-                    </div>
+                    @endif
                 </div>
             </div>
 
-            <!-- Load More Reviews Button -->
-            <div class="d-flex justify-content-center my-4">
-                <button type="button" class="btn btn-outline-secondary btn-lg fw-semibold" id="loadMoreReviewsBtn">
-                    <i class="fa fa-arrow-down"></i> Load More Reviews
-                </button>
-            </div>
+            {{-- Pagination for reviews --}}
+            @if($paginatedReviews->hasPages())
+                <div class="d-flex justify-content-center my-4">
+                    {{ $paginatedReviews->links() }}
+                </div>
+            @endif
         </div>
 
 
@@ -1085,6 +1039,27 @@ use Illuminate\Support\Str;
         });
     })();
     @endforeach
+});
+
+// Simple star rating display
+document.addEventListener('DOMContentLoaded', function() {
+    const select = document.getElementById('rating');
+    const starDisplay = document.getElementById('star-display');
+    if (select && starDisplay) {
+        select.addEventListener('change', function () {
+            let val = parseInt(this.value);
+            if (!val) {
+                starDisplay.innerHTML = '';
+                return;
+            }
+            let stars = '';
+            for (let i = 0; i < val; i++) {
+                stars += '★';
+            }
+            starDisplay.textContent = stars;
+        });
+    }
+
 });
 </script>
 

@@ -9,6 +9,7 @@ use App\Models\Tours;
 use App\Models\Car;
 use App\Models\Blog;
 use App\Models\Near;
+use App\Models\DealReviews;
 use Illuminate\Support\Facades\Log;
 use Hashids\Hashids;
 
@@ -155,6 +156,12 @@ class WebsiteController extends Controller
         $hotel = Deal::whereIn('type', ['hotel', 'apartment'])
             ->with(['category', 'photos', 'rooms.photos', 'features', 'nearbyLocations'])
             ->findOrFail($hotelId);
+            
+        // Paginate reviews separately
+        $paginatedReviews = $hotel->approvedReviews()
+            ->with('user')
+            ->orderBy('created_at', 'desc')
+            ->paginate(5);
 
         // Ensure we have rooms data - if no rooms exist, we'll show default room in view
         $rooms = $hotel->rooms()->active()->available()->get();
@@ -180,7 +187,7 @@ class WebsiteController extends Controller
         $nearbyHotels = $nearbyHotels->take(3);
         $nearbyTours = $nearbyTours->take(6);
 
-        return view('website.pages.view_hotel', compact('hotel', 'rooms', 'nearbyHotels', 'nearbyTours', 'hashids'));
+        return view('website.pages.view_hotel', compact('hotel', 'rooms', 'nearbyHotels', 'nearbyTours', 'paginatedReviews', 'hashids'));
     }
 
     // viewApartment
@@ -675,4 +682,39 @@ class WebsiteController extends Controller
                 return asset('images/default-placeholder.jpg');
         }
     }
+
+    // Store Review
+    public function storeReview(Request $request, $id)
+    {
+        
+        $dealId = $id;
+        $deal = Deal::find($dealId);
+        
+        if (!$deal) {
+            return response()->json(['error' => 'Deal not found'], 404);
+        }
+
+        $request->validate([
+            'review_title' => 'required|string|max:255',
+            'review_content' => 'required|string',
+            'rating' => 'required|integer|min:1|max:5'
+        ]);
+
+        try {
+            $review = DealReviews::create([
+                'deal_id' => $dealId,
+                'user_id' => 1, // Set to 1 as requested
+                'review_title' => $request->review_title,
+                'review_content' => $request->review_content,
+                'rating' => $request->rating,
+                'is_approved' => true
+            ]);
+
+            return redirect()->back()->with('success', 'Review submitted successfully!');
+        } catch (\Exception $e) {
+            Log::error('Review submission failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to submit review. Please try again.');
+        }
+    }
+
 }

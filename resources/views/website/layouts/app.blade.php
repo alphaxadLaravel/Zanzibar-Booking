@@ -227,6 +227,150 @@
 @livewireScripts()
     @include('website.layouts.js')
     @stack('scripts')
+
+    <!-- Toast Notification System -->
+    <div id="toast-container" style="position: fixed; top: 100px; right: 20px; z-index: 999999;"></div>
+
+    <script>
+        // Toast notification system
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toastId = 'toast-' + Date.now();
+            
+            // Toast HTML
+            const toastHtml = `
+                <div id="${toastId}" class="toast-notification toast-${type}" style="
+                    background: ${type === 'success' ? '#28a745' : '#dc3545'};
+                    color: white;
+                    padding: 15px 20px;
+                    border-radius: 8px;
+                    margin-bottom: 10px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    transform: translateX(400px);
+                    transition: transform 0.3s ease-in-out;
+                    min-width: 300px;
+                    max-width: 400px;
+                    position: relative;
+                    cursor: pointer;
+                    z-index: 999999;
+                ">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center;">
+                            <i class="${type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'}" 
+                               style="margin-right: 10px; font-size: 18px;"></i>
+                            <span style="font-weight: 500;">${message}</span>
+                        </div>
+                        <button onclick="closeToast('${toastId}')" style="
+                            background: none;
+                            border: none;
+                            color: white;
+                            font-size: 18px;
+                            cursor: pointer;
+                            margin-left: 15px;
+                            opacity: 0.8;
+                        ">&times;</button>
+                    </div>
+                </div>
+            `;
+            
+            container.insertAdjacentHTML('beforeend', toastHtml);
+            
+            // Animate in
+            setTimeout(() => {
+                const toast = document.getElementById(toastId);
+                if (toast) {
+                    toast.style.transform = 'translateX(0)';
+                }
+            }, 100);
+            
+            // Auto close after 5 seconds
+            setTimeout(() => {
+                closeToast(toastId);
+            }, 5000);
+        }
+        
+        function closeToast(toastId) {
+            const toast = document.getElementById(toastId);
+            if (toast) {
+                toast.style.transform = 'translateX(400px)';
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }
+        }
+        
+        // Show toasts from Laravel session messages
+        @if(session('success'))
+            showToast('{{ session('success') }}', 'success');
+        @endif
+        
+        @if(session('error'))
+            showToast('{{ session('error') }}', 'error');
+        @endif
+        
+        @if(session('warning'))
+            showToast('{{ session('warning') }}', 'warning');
+        @endif
+        
+        @if(session('info'))
+            showToast('{{ session('info') }}', 'info');
+        @endif
+        
+        // Handle validation errors
+        @if($errors->any())
+            @foreach($errors->all() as $error)
+                showToast('{{ $error }}', 'error');
+            @endforeach
+        @endif
+        
+        // Add click to close functionality
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.toast-notification')) {
+                const toast = e.target.closest('.toast-notification');
+                closeToast(toast.id);
+            }
+        });
+    </script>
+
+    <style>
+        /* Additional toast styles for warning and info */
+        .toast-warning {
+            background: #ffc107 !important;
+            color: #212529 !important;
+        }
+        
+        .toast-info {
+            background: #17a2b8 !important;
+            color: white !important;
+        }
+        
+        /* Toast animation improvements */
+        #toast-container {
+            z-index: 999999 !important;
+            position: fixed !important;
+        }
+        
+        .toast-notification {
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            z-index: 999999 !important;
+            position: relative !important;
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            #toast-container {
+                left: 10px;
+                right: 10px;
+                top: 10px;
+            }
+            
+            .toast-notification {
+                min-width: auto !important;
+                max-width: none !important;
+            }
+        }
+    </style>
 </body>
 
 </html>

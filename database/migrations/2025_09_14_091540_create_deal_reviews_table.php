@@ -13,15 +13,16 @@ return new class extends Migration
     {
         Schema::create('deal_reviews', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('deal_id');
-            $table->unsignedBigInteger('user_id');
-            $table->string('title')->nullable();
-            $table->text('review');
-            $table->float('ratings');
+            $table->foreignId('deal_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->default(1)->constrained()->onDelete('cascade');
+            $table->string('review_title');
+            $table->text('review_content');
+            $table->integer('rating')->unsigned(); // 1-5 stars
+            $table->boolean('is_approved')->default(true);
             $table->timestamps();
-
-            $table->foreign('deal_id')->references('id')->on('deals')->onDelete('cascade');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            
+            $table->index(['deal_id', 'is_approved']);
+            $table->index(['rating']);
         });
     }
 

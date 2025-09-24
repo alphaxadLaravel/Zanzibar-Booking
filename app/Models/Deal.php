@@ -128,4 +128,26 @@ class Deal extends Model
     {
         return $this->hasMany(NearbyLocation::class)->active();
     }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(DealReviews::class);
+    }
+
+    public function approvedReviews(): HasMany
+    {
+        return $this->hasMany(DealReviews::class)->approved();
+    }
+
+    // Get average rating
+    public function getAverageRatingAttribute()
+    {
+        return $this->approvedReviews()->avg('rating') ?: 0;
+    }
+
+    // Get total reviews count
+    public function getTotalReviewsAttribute()
+    {
+        return $this->approvedReviews()->count();
+    }
 }
