@@ -150,6 +150,39 @@ use Illuminate\Support\Str;
                 </div>
             </section>
             <hr>
+            <section class="itinerary">
+                <h4 class="section-title">Tour Itinerary</h4>
+                <div class="section-content">
+                    @if($tour->itineraries && $tour->itineraries->count())
+                        <div class="accordion" id="itineraryAccordion">
+                            @foreach($tour->itineraries as $index => $itinerary)
+                                <div class="accordion-item mb-2">
+                                    <h2 class="accordion-header" id="heading{{ $index }}">
+                                        <button class="accordion-button {{ $index > 0 ? 'collapsed' : '' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $index }}" aria-expanded="{{ $index == 0 ? 'true' : 'false' }}" aria-controls="collapse{{ $index }}">
+                                            {{ $itinerary->title ?? 'Day ' . ($index + 1) }}
+                                        </button>
+                                    </h2>
+                                    <div id="collapse{{ $index }}" class="accordion-collapse collapse {{ $index == 0 ? 'show' : '' }}" aria-labelledby="heading{{ $index }}" data-bs-parent="#itineraryAccordion">
+                                        <div class="accordion-body">
+                                            {!! $itinerary->description !!}
+                                            @if(!empty($itinerary->time))
+                                                <div class="text-muted small mt-2">
+                                                    <i class="mdi mdi-clock-outline"></i>
+                                                    {{ $itinerary->time }}
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="text-muted" style="font-size: 14px;">No itinerary details available for this tour.</div>
+                    @endif
+                </div>
+            </section>
+
+            <hr>
             <section class="feature">
                 <h4 class="section-title">Tour Includes</h4>
                 <div class="section-content">

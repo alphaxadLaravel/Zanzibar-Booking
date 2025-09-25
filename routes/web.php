@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\BookingController;
 use App\Http\Controllers\CategoriesController;
 use App\Http\Controllers\DealsController;
 use App\Http\Controllers\FeatureController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\WebsiteController;
 use Illuminate\Support\Facades\Route;
 
@@ -33,8 +35,34 @@ Route::get('/flights', [WebsiteController::class, 'flights'])->name('flights');
 Route::post('/deals/{id}/reviews', [WebsiteController::class, 'storeReview'])->name('deals.reviews.store');
 
 // Booking routes
-Route::get('/confirm-booking', [WebsiteController::class, 'confirmBooking'])->name('confirm-booking');
-Route::post('/process-booking', [WebsiteController::class, 'processBooking'])->name('process.booking');
+Route::get('/confirm-booking', [BookingController::class, 'confirmBooking'])->name('confirm-booking');
+Route::post('/process-booking', [BookingController::class, 'processBooking'])->name('process.booking');
+Route::get('/booking/{id}', [BookingController::class, 'viewBooking'])->name('booking.view');
+Route::post('/booking/{id}/cancel', [BookingController::class, 'cancelBooking'])->name('booking.cancel');
+
+// Payment routes
+Route::get('/payment/{bookingId}', [PaymentController::class, 'processPayment'])->name('payment.process');
+
+// Pesapal callback routes (excluded from CSRF protection)
+Route::match(['get', 'post'], '/payment/success', [PaymentController::class, 'paymentSuccess'])->name('payment.success')->withoutMiddleware(['csrf']);
+Route::match(['get', 'post'], '/payment/callback', [PaymentController::class, 'paymentSuccess'])->name('payment.callback')->withoutMiddleware(['csrf']); // Alternative callback URL
+Route::match(['get', 'post'], '/payment/confirmation', [PaymentController::class, 'paymentConfirmation'])->name('payment.confirmation')->withoutMiddleware(['csrf']);
+Route::match(['get', 'post'], '/payment/ipn', [PaymentController::class, 'paymentConfirmation'])->name('payment.ipn')->withoutMiddleware(['csrf']); // IPN callback
+
+// Test callback routes (remove in production)
+Route::get('/test/payment-callback', function() {
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Payment callback endpoint is accessible',
+        'timestamp' => now(),
+        'urls' => [
+            'success' => route('payment.success'),
+            'confirmation' => route('payment.confirmation'),
+            'callback' => route('payment.callback'),
+            'ipn' => route('payment.ipn')
+        ]
+    ]);
+})->name('test.payment.callback');
 
 
 ##########################################################################################

@@ -284,6 +284,17 @@ use Illuminate\Support\Str;
             </section>
             <hr>
             @endif
+
+            <section class="description">
+                <h4 class="section-title">Our Policies</h4>
+                <div class="section-content">
+                    <p>
+                        {!! $hotel->policies !!}
+                    </p>
+                </div>
+            </section>
+            <hr>
+
             <section class="map">
                 <h4 class="section-title mb-4">Hotel Location On Map</h4>
                 <div id="address-map-container" style="width: 100%; height: 400px">
@@ -456,7 +467,7 @@ use Illuminate\Support\Str;
                                             number_format($room->price ?? $hotel->base_price, 0) }}</span>
                                         <span style="font-size: 13px; color: #888;">/ night</span>
                                     </div>
-                                    <a href="{{ route('confirm-booking', ['deal_id' => $hotel->id]) }}"
+                                    <a href="{{ route('confirm-booking', ['deal_id' => $hotel->id, 'room_id' => $room->id]) }}"
                                         class="btn btn-primary btn-sm" style="font-size: 13px;">Book Now</a>
                                 </div>
                             </div>

@@ -139,6 +139,11 @@ class Deal extends Model
         return $this->hasMany(DealReviews::class)->approved();
     }
 
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class);
+    }
+
     // Get average rating
     public function getAverageRatingAttribute()
     {
