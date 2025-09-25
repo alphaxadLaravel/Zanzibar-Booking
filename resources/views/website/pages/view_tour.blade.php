@@ -142,45 +142,82 @@ use Illuminate\Support\Str;
             </div>
             <hr>
             <section class="description">
-                <h4 class="section-title">Detail</h4>
+                <h4 class="section-title">Activity Overview</h4>
                 <div class="section-content">
                     <p>
-                        {!! $tour->description ?: 'Experience an unforgettable adventure with ' . $tour->title . '. Located in ' . $tour->location . ', this tour offers exceptional experiences and memorable moments for an amazing journey.' !!}
+                        {!! $tour->description !!}
                     </p>
                 </div>
             </section>
             <hr>
-            <section class="itinerary">
-                <h4 class="section-title">Tour Itinerary</h4>
-                <div class="section-content">
-                    @if($tour->itineraries && $tour->itineraries->count())
-                        <div class="accordion" id="itineraryAccordion">
-                            @foreach($tour->itineraries as $index => $itinerary)
-                                <div class="accordion-item mb-2">
-                                    <h2 class="accordion-header" id="heading{{ $index }}">
-                                        <button class="accordion-button {{ $index > 0 ? 'collapsed' : '' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $index }}" aria-expanded="{{ $index == 0 ? 'true' : 'false' }}" aria-controls="collapse{{ $index }}">
-                                            {{ $itinerary->title ?? 'Day ' . ($index + 1) }}
-                                        </button>
-                                    </h2>
-                                    <div id="collapse{{ $index }}" class="accordion-collapse collapse {{ $index == 0 ? 'show' : '' }}" aria-labelledby="heading{{ $index }}" data-bs-parent="#itineraryAccordion">
-                                        <div class="accordion-body">
-                                            {!! $itinerary->description !!}
-                                            @if(!empty($itinerary->time))
-                                                <div class="text-muted small mt-2">
-                                                    <i class="mdi mdi-clock-outline"></i>
-                                                    {{ $itinerary->time }}
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
+            <style>
+                .timeline::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 22px;
+                    /* centers line with badge */
+                    width: 2px;
+                    height: 100%;
+                    background: #dee2e6;
+                    /* Bootstrap gray */
+                    z-index: 0;
+                }
+
+                .timeline-marker {
+                    position: relative;
+                    z-index: 1;
+                }
+            </style>
+
+            <section class="itinerary my-4">
+                <h4 class="fw-bold mb-4">Itinerary</h4>
+
+                <div class="timeline position-relative">
+                    @foreach($tour->itineraries as $index => $itinerary)
+                    <div class="timeline-item d-flex mb-5">
+                        <!-- Circle with number -->
+                        <div class="timeline-marker d-flex flex-column align-items-center">
+                            <span
+                                class="badge rounded-circle bg-dark text-white fs-6 d-flex align-items-center justify-content-center"
+                                style="width:45px; height:45px;">
+                                {{ $index + 1 }}
+                            </span>
+                            @if(!$loop->last)
+                            <div class="timeline-line flex-grow-1 bg-dark" style="width:2px;"></div>
+                            @endif
                         </div>
-                    @else
-                        <div class="text-muted" style="font-size: 14px;">No itinerary details available for this tour.</div>
-                    @endif
+
+                        <!-- Content -->
+                        <div class="ms-4">
+                            <h6 class="fw-bold mb-2">{{ $itinerary->title ?? 'Day ' . ($index + 1) }}</h6>
+                            <p class="mb-3">{!! $itinerary->description !!}</p>
+
+                            <div class="d-flex flex-wrap gap-3 small text-muted align-items-center">
+                                @if(!empty($itinerary->location))
+                                <div>
+                                    <i class="bi bi-geo-alt me-1"></i>{{ $itinerary->location }}
+                                </div>
+                                @endif
+
+                                @if(!empty($itinerary->location) && !empty($itinerary->time))
+                                <span class="mx-1">•</span>
+                                @endif
+
+                                @if(!empty($itinerary->time))
+                                <div>
+                                    <i class="bi bi-clock me-1"></i>{{ $itinerary->time }}
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
                 </div>
             </section>
+
+
+
 
             <hr>
             <section class="feature">
@@ -228,6 +265,16 @@ use Illuminate\Support\Str;
                         <div class="text-muted" style="font-size: 14px;">No excludes listed.</div>
                         @endforelse
                     </div>
+                </div>
+            </section>
+            <hr>
+
+            <section class="description">
+                <h4 class="section-title">Our Policies</h4>
+                <div class="section-content">
+                    <p>
+                        {!! $tour->policies !!}
+                    </p>
                 </div>
             </section>
             <hr>
@@ -291,6 +338,7 @@ use Illuminate\Support\Str;
             </section>
             @endif
             <hr>
+
             <section class="map">
                 <h4 class="section-title mb-4">Tour Location On Map</h4>
                 <div id="address-map-container" style="width: 100%; height: 400px">
@@ -324,15 +372,18 @@ use Illuminate\Support\Str;
                             <h4 class="popup-title" id="leaveReviewModalLabel">Leave a Review</h4>
                             <div class="popup-content">
                                 <div class="comment-form-wrapper">
-                                    <form action="{{ route('deals.reviews.store', $tour->id) }}" class="comment-form form-sm" method="post">
+                                    <form action="{{ route('deals.reviews.store', $tour->id) }}"
+                                        class="comment-form form-sm" method="post">
                                         @csrf
 
                                         <div class="row g-3">
                                             <div class="col-md-12">
                                                 <div class="form-group">
-                                                    <label for="review-title" class="form-label fw-semibold">Review Title *</label>
+                                                    <label for="review-title" class="form-label fw-semibold">Review
+                                                        Title *</label>
                                                     <input id="review-title" type="text" name="review_title"
-                                                        class="form-control" placeholder="Enter your review title" required />
+                                                        class="form-control" placeholder="Enter your review title"
+                                                        required />
                                                 </div>
                                             </div>
 
@@ -346,7 +397,8 @@ use Illuminate\Support\Str;
                                                         style="font-size: 1.3rem; color: #ffc107;"></span>
 
                                                 </label>
-                                                <select id="rating" name="rating" class="form-select form-control" required>
+                                                <select id="rating" name="rating" class="form-select form-control"
+                                                    required>
                                                     <option value="">Select rating</option>
                                                     <option value="1">1 Star</option>
                                                     <option value="2">2 Stars</option>
@@ -358,7 +410,8 @@ use Illuminate\Support\Str;
 
                                             <div class="col-12">
                                                 <div class="form-group">
-                                                    <label for="review-content" class="form-label fw-semibold">Your Review *</label>
+                                                    <label for="review-content" class="form-label fw-semibold">Your
+                                                        Review *</label>
                                                     <textarea id="review-content" name="review_content"
                                                         placeholder="Share your experience with this tour..."
                                                         class="form-control" required rows="5"></textarea>
@@ -383,80 +436,92 @@ use Illuminate\Support\Str;
                 <!-- Reviews List -->
                 <div class="reviews-list" id="reviews-list">
                     @if(isset($paginatedReviews) && $paginatedReviews->count() > 0)
-                        @foreach($paginatedReviews as $review)
-                            <div class="review-item d-flex mb-4 p-3"
-                                style="background: #f8f9fa; border-radius: 12px; border: 1px solid #e9ecef;">
-                                <div class="review-avatar" style="flex-shrink: 0; margin-right: 2rem;">
-                                    <img src="https://ui-avatars.com/api/?name={{ urlencode($review->reviewer_name) }}&background=1C8D83&color=fff&size=60"
-                                        alt="{{ $review->reviewer_name }}"
-                                        style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; display: block;">
-                                </div>
-                                <div class="review-content flex-grow-1">
-                                    <div class="review-header d-flex justify-content-between align-items-start mb-2">
-                                        <div>
-                                            <h5 class="reviewer-name mb-1"
-                                                style="font-size: 16px; font-weight: 600; color: #333;">{{ $review->reviewer_name }}</h5>
-                                            <div class="review-rating mb-1" style="font-size: 0.85rem;">
-                                                {!! $review->star_rating !!}
-                                            </div>
-                                        </div>
-                                        <small class="text-muted">{{ $review->formatted_date }}</small>
-                                    </div>
-                                    <h6 class="review-title mb-2" style="font-size: 14px; font-weight: 500; color: #555;">
-                                        {{ $review->review_title }}</h6>
-                                    <p class="review-text mb-0" style="font-size: 14px; color: #666; line-height: 1.5;">
-                                        {{ $review->review_content }}
-                                    </p>
-                                </div>
-                            </div>
-                        @endforeach
-                    @else
-                        <div class="text-center py-4">
-                            <i class="mdi mdi-star-outline fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">No reviews yet. Be the first to leave a review!</p>
+                    @foreach($paginatedReviews as $review)
+                    <div class="review-item d-flex mb-4 p-3"
+                        style="background: #f8f9fa; border-radius: 12px; border: 1px solid #e9ecef;">
+                        <div class="review-avatar" style="flex-shrink: 0; margin-right: 2rem;">
+                            <img src="https://ui-avatars.com/api/?name={{ urlencode($review->reviewer_name) }}&background=1C8D83&color=fff&size=60"
+                                alt="{{ $review->reviewer_name }}"
+                                style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; display: block;">
                         </div>
+                        <div class="review-content flex-grow-1">
+                            <div class="review-header d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h5 class="reviewer-name mb-1"
+                                        style="font-size: 16px; font-weight: 600; color: #333;">{{
+                                        $review->reviewer_name }}</h5>
+                                    <div class="review-rating mb-1" style="font-size: 0.85rem;">
+                                        {!! $review->star_rating !!}
+                                    </div>
+                                </div>
+                                <small class="text-muted">{{ $review->formatted_date }}</small>
+                            </div>
+                            <h6 class="review-title mb-2" style="font-size: 14px; font-weight: 500; color: #555;">
+                                {{ $review->review_title }}</h6>
+                            <p class="review-text mb-0" style="font-size: 14px; color: #666; line-height: 1.5;">
+                                {{ $review->review_content }}
+                            </p>
+                        </div>
+                    </div>
+                    @endforeach
+                    @else
+                    <div class="text-center py-4">
+                        <i class="mdi mdi-star-outline fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No reviews yet. Be the first to leave a review!</p>
+                    </div>
                     @endif
                 </div>
             </div>
 
             {{-- Pagination for reviews --}}
             @if(isset($paginatedReviews) && $paginatedReviews->hasPages())
-                <div class="d-flex justify-content-center my-4">
-                    {{ $paginatedReviews->links() }}
-                </div>
+            <div class="d-flex justify-content-center my-4">
+                {{ $paginatedReviews->links() }}
+            </div>
             @endif
         </div>
 
         {{-- ################ BOOKING SECTION ################ --}}
         <div class="col-lg-4">
             <div class="siderbar-single">
-                <h4 class="post-title my-2 bold">
-                    Book This Tour
+                <h4 class="post-title my-3 fw-bold ">
+                    Reserve Your Spot
                 </h4>
-                
+            
                 {{-- booking card --}}
-                <div class="card mb-4 booking-card rounded shadow-sm" style="overflow: hidden;">
-                    <div class="card-header bg-success text-white py-3 px-4" style="background: #1C8D83 !important;">
-                        <h5 class="mb-0" style="font-size: 1.15rem; font-weight: 700;">
-                            <i class="fas fa-calendar-check me-2"></i>Book This Tour
+                <div class="card booking-card border rounded">
+                    <!-- Header -->
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0 fw-bold">
+                            <i class="fas fa-calendar-check me-2"></i>Reservation Details
                         </h5>
                     </div>
+            
+                    <!-- Body -->
                     <div class="card-body p-4">
-                        <div class="price-display mb-3 text-center">
-                            <span class="fw-bold" style="font-size: 2rem; color: #1C8D83;">
+                        <!-- Price + button -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="fw-bold text-dark" style="font-size: 2rem;">
                                 USD {{ number_format($tour->base_price, 2) }}
-                            </span>
-                            <span style="font-size: 15px; color: #888;">/person</span>
+                                <small class="text-muted" style="font-size: 1rem;">/person</small>
+                            </div>
                         </div>
+            
+                        <!-- Button -->
                         <div class="d-grid">
-                            <a href="{{ route('confirm-booking', ['deal_id' => $tour->id]) }}" class="btn btn-primary btn-lg w-100">
-                                <i class="fas fa-calendar-check me-2"></i>Book This Tour
+                            <a href="{{ route('confirm-booking', ['deal_id' => $tour->id]) }}"
+                               class="btn btn-primary btn-lg w-100 text-center fw-bold d-flex align-items-center justify-content-between">
+                                <span class="d-flex align-items-center">
+                                    <i class="fas fa-calendar-check me-2"></i>
+                                    Reserve Now
+                                </span>
+                                <i class="fas fa-arrow-right ms-2"></i>
                             </a>
                         </div>
                     </div>
                 </div>
-               
             </div>
+            
         </div>
     </div>
 </div>
