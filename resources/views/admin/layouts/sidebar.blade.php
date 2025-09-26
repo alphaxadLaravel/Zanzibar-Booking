@@ -35,7 +35,7 @@
 
             <!-- HOTELS -->
             <li class="side-nav-item">
-                <a href="{{ route('admin.hotels') }}" class="side-nav-link">
+                <a href="{{ route('admin.deal', 'hotel') }}" class="side-nav-link">
                     <span class="menu-icon"><i class="mdi mdi-city-variant-outline"></i></span>
                     <span class="menu-text">Hotels</span>
                 </a>
@@ -43,15 +43,22 @@
 
             <!-- TOURS -->
             <li class="side-nav-item">
-                <a href="{{ route('admin.tours') }}" class="side-nav-link">
+                <a href="{{ route('admin.deal', 'package') }}" class="side-nav-link">
                     <span class="menu-icon"><i class="mdi mdi-map-marker-radius"></i></span>
-                    <span class="menu-text">Tours</span>
+                    <span class="menu-text">Packages</span>
+                </a>
+            </li>
+
+            <li class="side-nav-item">
+                <a href="{{ route('admin.deal', 'activity') }}" class="side-nav-link">
+                    <span class="menu-icon"><i class="mdi mdi-map-marker-radius"></i></span>
+                    <span class="menu-text">Activities</span>
                 </a>
             </li>
 
             <!-- CARS -->
             <li class="side-nav-item">
-                <a href="{{ route('admin.cars') }}" class="side-nav-link">
+                <a href="{{ route('admin.deal', 'car') }}" class="side-nav-link">
                     <span class="menu-icon"><i class="mdi mdi-car"></i></span>
                     <span class="menu-text">Cars</span>
                 </a>
@@ -59,7 +66,7 @@
 
             <!-- APARTMENTS -->
             <li class="side-nav-item">
-                <a href="{{ route('admin.apartments') }}" class="side-nav-link">
+                <a href="{{ route('admin.deal', 'apartment') }}" class="side-nav-link">
                     <span class="menu-icon"><i class="mdi mdi-home-city"></i></span>
                     <span class="menu-text">Apartments</span>
                 </a>

@@ -5,6 +5,20 @@
 @section('content')
 <div class="container-fluid">
 
+    <div class="d-flex flex-wrap align-items-center justify-content-between my-3">
+        <div>
+            <h4 class="page-title mb-0">{{ ucfirst($type) }} Management</h4>
+        </div>
+        <div>
+            <ol class="breadcrumb m-0 bg-transparent p-0">
+                <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">{{ ucfirst($type) }} Management</li>
+            </ol>
+        </div>
+    </div>
+
+    @include('admin.layouts.alerts')
+
     <form id="dealForm"
         action="{{ isset($deal) ? route('admin.manage-deal.update', [$deal->id, $type]) : route('admin.manage-deal.store', $type) }}"
         method="POST" enctype="multipart/form-data" autocomplete="off">
@@ -15,7 +29,8 @@
         <!-- Deal Details Card -->
         <div class="card mb-4">
             <div class="card-header">
-                <h5>Deal Details</h5>
+                <h5>
+                    {{ ucfirst($type) }} Details</h5>
             </div>
             <div class="card-body row g-3">
                 <div class="col-md-4">
@@ -80,10 +95,9 @@
                     @enderror
                 </div>
 
-                {{-- Show Tour Inputs only if $type == "tour" --}}
-                @if($type == 'tour')
+                @if($type == 'package')
                 <div class="col-md-4">
-                    <label class="form-label">Tour Period <span class="text-danger">*</span></label>
+                    <label class="form-label">Package Period <span class="text-danger">*</span></label>
                     <div class="input-group mb-3">
                         <input type="number" class="form-control" name="tour_period"
                             value="{{ old('tour_period', $typeSpecificData['tour']->period ?? '') }}"
@@ -96,6 +110,11 @@
                     <div class="text-danger">{{ $message }}</div>
                     @enderror
                 </div>
+                @endif
+                @if($type == 'activity')
+                <input type="hidden" name="tour_period" value="1">
+                @endif
+                @if($type == 'package' || $type == 'activity')
                 <div class="col-md-4">
                     <label class="form-label">Max People <span class="text-danger">*</span></label>
                     <input type="number" class="form-control" name="max_people"
@@ -125,7 +144,6 @@
                 </div>
                 @endif
 
-                {{-- Show Car Inputs only if $type == "car" --}}
                 @if($type == 'car')
                 <div class="col-md-3">
                     <label class="form-label">Car Capacity <span class="text-danger">*</span></label>
@@ -251,10 +269,10 @@
         @endif
 
 
-        @if ($type == 'tour')
+        @if ($type == 'package' || $type == 'activity')
         <div class="card mb-4">
             <div class="card-header">
-                <h5>Tour Includes (Count: {{ $tourIncludes->count() }})</h5>
+                <h5>{{ ucfirst($type) }} Includes (Count: {{ $tourIncludes->count() }})</h5>
             </div>
             <div class="card-body row g-3">
                 <div class="col-12">
@@ -267,7 +285,8 @@
                                     value="{{ $include->id }}" id="tour-include-{{ $include->id }}" {{
                                     in_array($include->id, old('tour_includes',
                                 isset($typeSpecificData['tour_includes']) ?
-                                $typeSpecificData['tour_includes']->pluck('feature_id')->toArray() : [])) ? 'checked' : ''
+                                $typeSpecificData['tour_includes']->pluck('feature_id')->toArray() : [])) ? 'checked' :
+                                ''
                                 }}>
                                 <label class="form-check-label d-flex align-items-center"
                                     for="tour-include-{{ $include->id }}" style="cursor: pointer;">
@@ -282,7 +301,7 @@
                     @else
                     <div class="alert alert-info">
                         <i class="mdi mdi-information-outline me-2"></i>
-                        No tour includes available. <a href="{{ route('admin.features') }}" class="alert-link">Add some
+                        No {{ $type }} includes available. <a href="{{ route('admin.features') }}" class="alert-link">Add some
                             include features</a> first.
                     </div>
                     @endif
@@ -295,7 +314,7 @@
 
         <div class="card mb-4">
             <div class="card-header">
-                <h5>Tour Excludes (Count: {{ $tourExcludes->count() }})</h5>
+                <h5>{{ ucfirst($type) }} Excludes (Count: {{ $tourExcludes->count() }})</h5>
             </div>
             <div class="card-body row g-3">
                 <div class="col-12">
@@ -308,7 +327,8 @@
                                     value="{{ $exclude->id }}" id="tour-exclude-{{ $exclude->id }}" {{
                                     in_array($exclude->id, old('tour_excludes',
                                 isset($typeSpecificData['tour_excludes']) ?
-                                $typeSpecificData['tour_excludes']->pluck('feature_id')->toArray() : [])) ? 'checked' : ''
+                                $typeSpecificData['tour_excludes']->pluck('feature_id')->toArray() : [])) ? 'checked' :
+                                ''
                                 }}>
                                 <label class="form-check-label d-flex align-items-center"
                                     for="tour-exclude-{{ $exclude->id }}" style="cursor: pointer;">
@@ -323,7 +343,7 @@
                     @else
                     <div class="alert alert-info">
                         <i class="mdi mdi-information-outline me-2"></i>
-                        No tour excludes available. <a href="{{ route('admin.features') }}" class="alert-link">Add some
+                        No {{ $type }} excludes available. <a href="{{ route('admin.features') }}" class="alert-link">Add some
                             exclude features</a> first.
                     </div>
                     @endif
@@ -429,10 +449,11 @@
                 </div>
                 <div class="col-md-12">
                     <label class="form-label">Video Link</label>
-                    <input type="url" class="form-control" name="video_link" 
-                           value="{{ old('video_link', $deal->video_link ?? '') }}" 
-                           placeholder="Enter video URL (YouTube, Vimeo, etc.)">
-                    <small class="text-muted">Add a promotional or showcase video for this deal. Supports YouTube, Vimeo, and other video platforms.</small>
+                    <input type="url" class="form-control" name="video_link"
+                        value="{{ old('video_link', $deal->video_link ?? '') }}"
+                        placeholder="Enter video URL (YouTube, Vimeo, etc.)">
+                    <small class="text-muted">Add a promotional or showcase video for this deal. Supports YouTube,
+                        Vimeo, and other video platforms.</small>
                     @error('video_link')
                     <div class="text-danger">{{ $message }}</div>
                     @enderror
@@ -452,67 +473,63 @@
             <div class="card-body">
                 <div id="nearby-locations-container">
                     @php
-                        // Get old input data for nearby locations
-                        $oldNearbyLocations = old('nearby_locations', []);
-                        $existingLocations = isset($deal) ? $deal->nearbyLocations->toArray() : [];
-                        
-                        // Merge old input with existing data
-                        $allLocations = [];
-                        $maxIndex = max(count($oldNearbyLocations), count($existingLocations));
-                        
-                        for ($i = 0; $i < $maxIndex; $i++) {
-                            if (isset($oldNearbyLocations[$i])) {
-                                $allLocations[$i] = $oldNearbyLocations[$i];
-                            } elseif (isset($existingLocations[$i])) {
-                                $allLocations[$i] = $existingLocations[$i];
-                            }
-                        }
-                    @endphp
-                    
-                    @if(count($allLocations) > 0)
+                    // Get old input data for nearby locations
+                    $oldNearbyLocations = old('nearby_locations', []);
+                    $existingLocations = isset($deal) ? $deal->nearbyLocations->toArray() : [];
+
+                    // Merge old input with existing data
+                    $allLocations = [];
+                    $maxIndex = max(count($oldNearbyLocations), count($existingLocations));
+
+                    for ($i = 0; $i < $maxIndex; $i++) { if (isset($oldNearbyLocations[$i])) {
+                        $allLocations[$i]=$oldNearbyLocations[$i]; } elseif (isset($existingLocations[$i])) {
+                        $allLocations[$i]=$existingLocations[$i]; } } @endphp @if(count($allLocations)> 0)
                         @foreach($allLocations as $index => $location)
-                            <div class="nearby-location-item border rounded p-3 mb-3" data-index="{{ $index }}">
-                                <div class="row g-3">
-                                    <div class="col-md-4">
-                                        <label class="form-label">Title <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" name="nearby_locations[{{ $index }}][title]" 
-                                               value="{{ $location['title'] ?? '' }}" 
-                                               placeholder="e.g., Zanzibar Airport" required>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="form-label">Category <span class="text-danger">*</span></label>
-                                        <select class="form-select" name="nearby_locations[{{ $index }}][category]" required>
-                                            <option value="">Select Category</option>
-                                            @foreach(\App\Models\NearbyLocation::getAvailableCategories() as $key => $value)
-                                                <option value="{{ $key }}" {{ ($location['category'] ?? '') == $key ? 'selected' : '' }}>
-                                                    {{ $value }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="form-label">Distance (km) <span class="text-danger">*</span></label>
-                                        <input type="number" class="form-control" name="nearby_locations[{{ $index }}][distance_km]" 
-                                               value="{{ $location['distance_km'] ?? '' }}" 
-                                               step="0.1" min="0" placeholder="e.g., 2.5" required>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label class="form-label">Actions</label>
-                                        <div class="d-flex gap-1">
-                                            <button type="button" class="btn btn-sm btn-danger remove-nearby-location">
-                                                <i class="mdi mdi-delete"></i>
-                                            </button>
-                                        </div>
+                        <div class="nearby-location-item border rounded p-3 mb-3" data-index="{{ $index }}">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Title <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="nearby_locations[{{ $index }}][title]"
+                                        value="{{ $location['title'] ?? '' }}" placeholder="e.g., Zanzibar Airport"
+                                        required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Category <span class="text-danger">*</span></label>
+                                    <select class="form-select" name="nearby_locations[{{ $index }}][category]"
+                                        required>
+                                        <option value="">Select Category</option>
+                                        @foreach(\App\Models\NearbyLocation::getAvailableCategories() as $key => $value)
+                                        <option value="{{ $key }}" {{ ($location['category'] ?? '' )==$key ? 'selected'
+                                            : '' }}>
+                                            {{ $value }}
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Distance (km) <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control"
+                                        name="nearby_locations[{{ $index }}][distance_km]"
+                                        value="{{ $location['distance_km'] ?? '' }}" step="0.1" min="0"
+                                        placeholder="e.g., 2.5" required>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Actions</label>
+                                    <div class="d-flex gap-1">
+                                        <button type="button" class="btn btn-sm btn-danger remove-nearby-location">
+                                            <i class="mdi mdi-delete"></i>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
+                        </div>
                         @endforeach
-                    @else
+                        @else
                         <div class="text-center text-muted py-4">
                             <i class="mdi mdi-map-marker fa-2x mb-2"></i>
                             <p>No nearby locations added yet. Click "Add Location" to get started.</p>
                         </div>
-                    @endif
+                        @endif
                 </div>
             </div>
         </div>
@@ -527,10 +544,9 @@
             <div class="card-body row g-3">
                 <div class="col-md-12">
                     <label class="form-label">SEO Title</label>
-                    <input type="text" class="form-control" name="seo_title" 
-                           value="{{ old('seo_title', $deal->seo_title ?? '') }}" 
-                           placeholder="Enter SEO title (recommended: 50-60 characters)"
-                           maxlength="60">
+                    <input type="text" class="form-control" name="seo_title"
+                        value="{{ old('seo_title', $deal->seo_title ?? '') }}"
+                        placeholder="Enter SEO title (recommended: 50-60 characters)" maxlength="60">
                     <small class="text-muted">Leave empty to use deal title. Optimal length: 50-60 characters</small>
                     @error('seo_title')
                     <div class="text-danger">{{ $message }}</div>
@@ -538,19 +554,21 @@
                 </div>
                 <div class="col-md-12">
                     <label class="form-label">SEO Description</label>
-                    <textarea class="form-control" name="seo_description" rows="3" 
-                              placeholder="Enter SEO description (recommended: 150-160 characters)"
-                              maxlength="160">{{ old('seo_description', $deal->seo_description ?? '') }}</textarea>
-                    <small class="text-muted">Leave empty to use deal description. Optimal length: 150-160 characters</small>
+                    <textarea class="form-control" name="seo_description" rows="3"
+                        placeholder="Enter SEO description (recommended: 150-160 characters)"
+                        maxlength="160">{{ old('seo_description', $deal->seo_description ?? '') }}</textarea>
+                    <small class="text-muted">Leave empty to use deal description. Optimal length: 150-160
+                        characters</small>
                     @error('seo_description')
                     <div class="text-danger">{{ $message }}</div>
                     @enderror
                 </div>
                 <div class="col-md-12">
                     <label class="form-label">SEO Keywords</label>
-                    <textarea class="form-control" name="seo_keywords" rows="2" 
-                              placeholder="Enter keywords separated by commas (e.g., hotel, beach, resort, luxury)">{{ old('seo_keywords', $deal->seo_keywords ?? '') }}</textarea>
-                    <small class="text-muted">Separate keywords with commas. Focus on relevant terms for this deal</small>
+                    <textarea class="form-control" name="seo_keywords" rows="2"
+                        placeholder="Enter keywords separated by commas (e.g., hotel, beach, resort, luxury)">{{ old('seo_keywords', $deal->seo_keywords ?? '') }}</textarea>
+                    <small class="text-muted">Separate keywords with commas. Focus on relevant terms for this
+                        deal</small>
                     @error('seo_keywords')
                     <div class="text-danger">{{ $message }}</div>
                     @enderror
@@ -558,11 +576,13 @@
                 <div class="col-md-12">
                     <label class="form-label">SEO Image</label>
                     <input type="file" class="form-control" name="seo_image" accept="image/*">
-                    <small class="text-muted">Recommended: 1200x630px for social media sharing. Leave empty to use cover photo</small>
+                    <small class="text-muted">Recommended: 1200x630px for social media sharing. Leave empty to use cover
+                        photo</small>
                     @if(isset($deal) && $deal->seo_image)
                     <div class="mt-2">
                         <small class="text-muted">Current SEO image: </small>
-                        <a href="{{ Storage::url($deal->seo_image) }}" target="_blank" class="text-primary">View Image</a>
+                        <a href="{{ Storage::url($deal->seo_image) }}" target="_blank" class="text-primary">View
+                            Image</a>
                     </div>
                     @endif
                     @error('seo_image')

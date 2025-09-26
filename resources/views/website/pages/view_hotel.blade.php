@@ -247,6 +247,7 @@ use Illuminate\Support\Str;
                                 @php
                                 $iconMap = [
                                 'Airport' => 'mdi-airplane',
+                                'Ferry Port' => 'mdi-ferry',
                                 'Beach' => 'mdi-beach',
                                 'School' => 'mdi-school',
                                 'Hospital' => 'mdi-hospital',

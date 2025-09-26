@@ -69,6 +69,27 @@ Route::get('/test/payment-callback', function() {
 ### ADMIN
 Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
+// deals
+Route::get('/admin/deals/{dealType}', [DealsController::class, 'dealType'])->name('admin.deal');
+Route::get('/admin/manage-deal/{id}/{type}/edit', [DealsController::class, 'editDeal'])->name('admin.manage-deal.edit');
+Route::put('/admin/manage-deal/{id}/{type}/update', [DealsController::class, 'updateDeal'])->name('admin.manage-deal.update');
+Route::get('/admin/manage-deal/{type}', [DealsController::class, 'manageDeal'])->name('admin.manage-deal');
+Route::post('/admin/manage-deal/{type}/store', [DealsController::class, 'storeDeal'])->name('admin.manage-deal.store');
+
+// amanage tours
+Route::get('/admin/tours/{id}/manage', [DealsController::class, 'manageTour'])->name('admin.tours.manage');
+Route::post('/admin/tours/{tourId}/itinerary', [DealsController::class, 'storeItinerary'])->name('admin.tours.itinerary.store');
+Route::get('/admin/tours/{tourId}/itinerary/{itineraryId}', [DealsController::class, 'getItinerary'])->name('admin.tours.itinerary.get');
+Route::put('/admin/tours/{tourId}/itinerary/{itineraryId}', [DealsController::class, 'updateItinerary'])->name('admin.tours.itinerary.update');
+Route::delete('/admin/tours/{tourId}/itinerary/{itineraryId}', [DealsController::class, 'deleteItinerary'])->name('admin.tours.itinerary.delete');
+
+
+
+#######################################################################################################################
+
+
+
+
 // Hotel Rooms Management
 Route::get('/admin/hotels/{hotel_id}/rooms', [AdminController::class, 'hotelRooms'])->name('admin.hotels.rooms');
 Route::get('/admin/hotels/{hotel_id}/rooms/create', [AdminController::class, 'createHotelRoom'])->name('admin.hotels.rooms.create');
@@ -134,6 +155,7 @@ Route::put('/admin/profile', [AdminController::class, 'updateProfile'])->name('a
 // My Bookings
 Route::get('/admin/my-bookings', [AdminController::class, 'myBookings'])->name('admin.my-bookings');
 
+
 #############################################################
 
 // Categories Management
@@ -151,10 +173,7 @@ Route::delete('/admin/features/{id}', [FeatureController::class, 'destroy'])->na
 Route::put('/admin/features/{id}/toggle-status', [FeatureController::class, 'toggleStatus'])->name('admin.features.toggle-status');
 
 // manage deal (create and edit) - specific routes first
-Route::get('/admin/manage-deal/{id}/{type}/edit', [DealsController::class, 'editDeal'])->name('admin.manage-deal.edit');
-Route::put('/admin/manage-deal/{id}/{type}/update', [DealsController::class, 'updateDeal'])->name('admin.manage-deal.update');
-Route::get('/admin/manage-deal/{type}', [DealsController::class, 'manageDeal'])->name('admin.manage-deal');
-Route::post('/admin/manage-deal/{type}/store', [DealsController::class, 'storeDeal'])->name('admin.manage-deal.store');
+
 
 // hotels management
 Route::get('/admin/hotels', [DealsController::class, 'hotels'])->name('admin.hotels');
@@ -176,21 +195,28 @@ Route::put('/admin/cars/{id}', [DealsController::class, 'updateCar'])->name('adm
 Route::delete('/admin/cars/{id}', [DealsController::class, 'deleteCar'])->name('admin.cars.delete');
 
 // Tours Management
-Route::get('/admin/tours', [DealsController::class, 'tours'])->name('admin.tours');
-Route::get('/admin/tours/create', [DealsController::class, 'createTour'])->name('admin.tours.create');
-Route::post('/admin/tours/store', [DealsController::class, 'storeTour'])->name('admin.tours.store');
-Route::get('/admin/tours/{id}/edit', [DealsController::class, 'editTour'])->name('admin.tours.edit');
-Route::put('/admin/tours/{id}', [DealsController::class, 'updateTour'])->name('admin.tours.update');
-Route::delete('/admin/tours/{id}', [DealsController::class, 'deleteTour'])->name('admin.tours.delete');
+Route::get('/admin/activities', [DealsController::class, 'activities'])->name('admin.activities');
+Route::get('/admin/activities/create', [DealsController::class, 'createActivity'])->name('admin.activities.create');
+Route::post('/admin/activities/store', [DealsController::class, 'storeActivity'])->name('admin.activities.store');
+Route::get('/admin/activities/{id}/edit', [DealsController::class, 'editActivity'])->name('admin.activities.edit');
+Route::put('/admin/activities/{id}', [DealsController::class, 'updateActivity'])->name('admin.activities.update');
+Route::delete('/admin/activities/{id}', [DealsController::class, 'deleteActivity'])->name('admin.activities.delete');
 
 // Tour Management
-Route::get('/admin/tours/{id}/manage', [DealsController::class, 'manageTour'])->name('admin.tours.manage');
+Route::get('/admin/activities/{id}/manage', [DealsController::class, 'manageActivity'])->name('admin.activities.manage');
+
+// packages
+Route::get('/admin/packages', [DealsController::class, 'packages'])->name('admin.packages');
+Route::get('/admin/packages/create', [DealsController::class, 'createPackage'])->name('admin.packages.create');
+Route::post('/admin/packages/store', [DealsController::class, 'storePackage'])->name('admin.packages.store');
+Route::get('/admin/packages/{id}/edit', [DealsController::class, 'editPackage'])->name('admin.packages.edit');
+Route::put('/admin/packages/{id}', [DealsController::class, 'updatePackage'])->name('admin.packages.update');
+Route::delete('/admin/packages/{id}', [DealsController::class, 'deletePackage'])->name('admin.packages.delete');
+
+// Package Management
+Route::get('/admin/packages/{id}/manage', [DealsController::class, 'managePackage'])->name('admin.packages.manage');
 
 // Tour Itinerary CRUD
-Route::post('/admin/tours/{tourId}/itinerary', [DealsController::class, 'storeItinerary'])->name('admin.tours.itinerary.store');
-Route::get('/admin/tours/{tourId}/itinerary/{itineraryId}', [DealsController::class, 'getItinerary'])->name('admin.tours.itinerary.get');
-Route::put('/admin/tours/{tourId}/itinerary/{itineraryId}', [DealsController::class, 'updateItinerary'])->name('admin.tours.itinerary.update');
-Route::delete('/admin/tours/{tourId}/itinerary/{itineraryId}', [DealsController::class, 'deleteItinerary'])->name('admin.tours.itinerary.delete');
 
 // Nearby Deals Management
 Route::get('/admin/hotels/{hotelId}/get-deals-by-type/{type}', [DealsController::class, 'getDealsByType'])->name('admin.hotels.get-deals-by-type');

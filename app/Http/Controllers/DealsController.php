@@ -22,18 +22,13 @@ use Illuminate\Support\Facades\Log;
 
 class DealsController extends Controller
 {
-    // Hotels Management
-    public function hotels()
+
+    // dealType
+    public function dealType($dealType)
     {
-        $hashids = new Hashids('MchungajiZanzibarBookings', 10);
-        $hotels = Deal::with('category')
-            ->where('type', 'hotel')
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-
-        return view('admin.pages.hotels.index', compact('hotels', 'hashids'));
+        return view('admin.pages.deals', compact('dealType'));
     }
+
 
     // Apartments Management
     public function apartments()
@@ -105,14 +100,13 @@ class DealsController extends Controller
         // Filter features based on deal type
         $features = Features::active()->where('type', $type)->get();
 
-        // Get tour includes and excludes for tour type
+        // Get tour includes and excludes for package and activity types
         $tourIncludes = [];
         $tourExcludes = [];
 
-        if ($type === 'tour') {
+        if ($type === 'package' || $type === 'activity') {
             $tourIncludes = Features::active()->where('type', 'include')->get();
             $tourExcludes = Features::active()->where('type', 'exclude')->get();
-            
         }
 
         return view('admin.pages.manage_deal', compact('type', 'categories', 'features', 'tourIncludes', 'tourExcludes'));
@@ -167,7 +161,8 @@ class DealsController extends Controller
                 ];
                 break;
 
-            case 'tour':
+            case 'package':
+            case 'activity':
                 $typeSpecificRules = [
                     'features' => 'nullable|array',
                     'features.*' => 'exists:features,id',
@@ -258,11 +253,12 @@ class DealsController extends Controller
 
             // Handle type-specific data
             switch ($type) {
-                case 'tour':
+                case 'package':
+            case 'activity':
                     // Handle tour data
                     Tours::create([
                         'deal_id' => $deal->id,
-                        'period' => $request->tour_period,
+                        'period' => $type === 'activity' ? 1 : $request->tour_period,
                         'max_people' => $request->max_people,
                         'adult_price' => $request->adult_price,
                         'child_price' => $request->child_price
@@ -283,7 +279,7 @@ class DealsController extends Controller
                                     continue; // Skip invalid features
                                 }
                             }
-                            
+
                             TourInclude::create([
                                 'deal_id' => $deal->id,
                                 'feature_id' => $featureId,
@@ -307,7 +303,7 @@ class DealsController extends Controller
                                     continue; // Skip invalid features
                                 }
                             }
-                            
+
                             TourInclude::create([
                                 'deal_id' => $deal->id,
                                 'feature_id' => $featureId,
@@ -339,26 +335,15 @@ class DealsController extends Controller
 
                 case 'hotel':
                 case 'apartment':
-                    // For hotels and apartments, only features are handled above
-                    // No additional type-specific data needed
                     break;
             }
 
             DB::commit();
 
-            // Redirect based on deal type
-            $redirectRoute = match($type) {
-                'car' => 'admin.cars',
-                'tour' => 'admin.tours',
-                'hotel' => 'admin.hotels',
-                'apartment' => 'admin.apartments',
-                default => 'admin.hotels'
-            };
-            
-            return redirect()->route($redirectRoute)->with('success', 'Deal created successfully!');
+            return redirect()->route('admin.deal', $type)->with('success', ucfirst($type) . ' created successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Failed to create deal: ' . $e->getMessage())->withInput();
+            return redirect()->back()->with('error', 'Failed to create ' . ucfirst($type) . ': ' . $e->getMessage())->withInput();
         }
     }
 
@@ -384,11 +369,11 @@ class DealsController extends Controller
         // Filter features based on deal type
         $features = Features::active()->where('type', $type)->get();
 
-        // Get tour includes and excludes for tour type
+        // Get tour includes and excludes for package and activity types
         $tourIncludes = [];
         $tourExcludes = [];
 
-        if ($type === 'tour') {
+        if ($type === 'package' || $type === 'activity') {
             $tourIncludes = Features::active()->where('type', 'include')->get();
             $tourExcludes = Features::active()->where('type', 'exclude')->get();
         }
@@ -396,7 +381,8 @@ class DealsController extends Controller
         // Get type-specific data
         $typeSpecificData = [];
         switch ($type) {
-            case 'tour':
+            case 'package':
+            case 'activity':
                 $tourData = Tours::where('deal_id', $deal->id)->first();
                 $tourIncludeData = TourInclude::with('feature')->where('deal_id', $deal->id)->where('type', 'include')->get();
                 $tourExcludeData = TourInclude::with('feature')->where('deal_id', $deal->id)->where('type', 'exclude')->get();
@@ -475,7 +461,8 @@ class DealsController extends Controller
                 ];
                 break;
 
-            case 'tour':
+            case 'package':
+            case 'activity':
                 $typeSpecificRules = [
                     'features' => 'nullable|array',
                     'features.*' => 'exists:features,id',
@@ -586,12 +573,13 @@ class DealsController extends Controller
 
             // Handle type-specific data
             switch ($type) {
-                case 'tour':
+                case 'package':
+            case 'activity':
                     // Update tour data
                     $tourData = Tours::where('deal_id', $deal->id)->first();
                     if ($tourData) {
                         $tourData->update([
-                            'period' => $request->tour_period,
+                            'period' => $type === 'activity' ? 1 : $request->tour_period,
                             'max_people' => $request->max_people,
                             'adult_price' => $request->adult_price,
                             'child_price' => $request->child_price
@@ -599,7 +587,7 @@ class DealsController extends Controller
                     } else {
                         Tours::create([
                             'deal_id' => $deal->id,
-                            'period' => $request->tour_period,
+                            'period' => $type === 'activity' ? 1 : $request->tour_period,
                             'max_people' => $request->max_people,
                             'adult_price' => $request->adult_price,
                             'child_price' => $request->child_price
@@ -622,7 +610,7 @@ class DealsController extends Controller
                                     continue; // Skip invalid features
                                 }
                             }
-                            
+
                             TourInclude::create([
                                 'deal_id' => $deal->id,
                                 'feature_id' => $featureId,
@@ -647,7 +635,7 @@ class DealsController extends Controller
                                     continue; // Skip invalid features
                                 }
                             }
-                            
+
                             TourInclude::create([
                                 'deal_id' => $deal->id,
                                 'feature_id' => $featureId,
@@ -696,14 +684,15 @@ class DealsController extends Controller
             DB::commit();
 
             // Redirect based on deal type
-            $redirectRoute = match($type) {
+            $redirectRoute = match ($type) {
                 'car' => 'admin.cars',
-                'tour' => 'admin.tours',
+                'package' => 'admin.tours',
+                'activity' => 'admin.tours',
                 'hotel' => 'admin.hotels',
                 'apartment' => 'admin.apartments',
                 default => 'admin.hotels'
             };
-            
+
             return redirect()->route($redirectRoute)->with('success', 'Deal updated successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -1067,7 +1056,7 @@ class DealsController extends Controller
             ->whereHas('car') // Only get deals that have car data
             ->orderBy('created_at', 'desc')
             ->get();
-            
+
         return view('admin.pages.cars.index', compact('cars', 'hashids'));
     }
 
@@ -1099,12 +1088,12 @@ class DealsController extends Controller
     {
         try {
             $deal = Deal::where('type', 'car')->findOrFail($id);
-            
+
             // Delete associated car data
             if ($deal->car) {
                 $deal->car->delete();
             }
-            
+
             // Delete associated photos
             foreach ($deal->photos as $photo) {
                 if (Storage::exists($photo->photo)) {
@@ -1112,57 +1101,81 @@ class DealsController extends Controller
                 }
                 $photo->delete();
             }
-            
+
             // Delete cover photo
             if ($deal->cover_photo && Storage::exists($deal->cover_photo)) {
                 Storage::delete($deal->cover_photo);
             }
-            
+
             // Delete the deal
             $deal->delete();
-            
+
             return redirect()->route('admin.cars')->with('success', 'Car deleted successfully!');
         } catch (\Exception $e) {
             return redirect()->route('admin.cars')->with('error', 'Failed to delete car: ' . $e->getMessage());
         }
     }
 
-    // Tours Management
+    // Tours Management (now handles packages and activities)
     public function tours()
     {
         $hashids = new Hashids('MchungajiZanzibarBookings', 10);
-        
+
         $tours = Deal::with(['category', 'tours', 'photos'])
-            ->where('type', 'tour')
+            ->whereIn('type', ['package', 'activity'])
             ->whereHas('tours') // Only get deals that have tour data
             ->orderBy('created_at', 'desc')
             ->get();
-            
+
         return view('admin.pages.tours.index', compact('tours', 'hashids'));
     }
 
     public function createTour()
     {
-        // Redirect to the existing manageDeal method for tour type
-        return $this->manageDeal('tour');
+        // Redirect to the existing manageDeal method for package type
+        return $this->manageDeal('package');
+    }
+
+    public function createActivity()
+    {
+        // Redirect to the existing manageDeal method for activity type
+        return $this->manageDeal('activity');
     }
 
     public function storeTour(Request $request)
     {
-        // Redirect to the existing storeDeal method for tour type
-        return $this->storeDeal($request, 'tour');
+        // Redirect to the existing storeDeal method for package type
+        return $this->storeDeal($request, 'package');
+    }
+
+    public function storeActivity(Request $request)
+    {
+        // Redirect to the existing storeDeal method for activity type
+        return $this->storeDeal($request, 'activity');
     }
 
     public function editTour($id)
     {
-        // Redirect to the existing editDeal method for tour type
-        return $this->editDeal($id, 'tour');
+        // Redirect to the existing editDeal method for package type
+        return $this->editDeal($id, 'package');
+    }
+
+    public function editActivity($id)
+    {
+        // Redirect to the existing editDeal method for activity type
+        return $this->editDeal($id, 'activity');
     }
 
     public function updateTour(Request $request, $id)
     {
-        // Redirect to the existing updateDeal method for tour type
-        return $this->updateDeal($request, $id, 'tour');
+        // Redirect to the existing updateDeal method for package type
+        return $this->updateDeal($request, $id, 'package');
+    }
+
+    public function updateActivity(Request $request, $id)
+    {
+        // Redirect to the existing updateDeal method for activity type
+        return $this->updateDeal($request, $id, 'activity');
     }
 
     public function deleteTour($id)
@@ -1170,7 +1183,7 @@ class DealsController extends Controller
         $hashids = new Hashids('MchungajiZanzibarBookings', 10);
         $decodedTourId = $hashids->decode($id)[0];
 
-        $tour = Deal::where('type', 'tour')->find($decodedTourId);
+        $tour = Deal::whereIn('type', ['package', 'activity'])->find($decodedTourId);
 
         if (!$tour) {
             return redirect()->back()->with('error', 'Tour not found');
@@ -1183,10 +1196,10 @@ class DealsController extends Controller
             if ($tour->tours) {
                 $tour->tours->delete();
             }
-            
+
             // Delete associated tour includes/excludes
             TourInclude::where('deal_id', $tour->id)->delete();
-            
+
             // Delete associated photos
             foreach ($tour->photos as $photo) {
                 if (Storage::disk('public')->exists($photo->photo)) {
@@ -1194,15 +1207,15 @@ class DealsController extends Controller
                 }
                 $photo->delete();
             }
-            
+
             // Delete cover photo
             if ($tour->cover_photo && Storage::disk('public')->exists($tour->cover_photo)) {
                 Storage::disk('public')->delete($tour->cover_photo);
             }
-            
+
             // Detach features
             $tour->features()->detach();
-            
+
             // Delete the tour deal
             $tour->delete();
 
@@ -1215,21 +1228,21 @@ class DealsController extends Controller
         }
     }
 
-    // manageTour
+    // manageTour (now handles packages and activities)
     public function manageTour($id)
     {
         $hashids = new Hashids('MchungajiZanzibarBookings', 10);
         $decodedTourId = $hashids->decode($id)[0];
 
         $tour = Deal::with(['category', 'tours', 'photos', 'itineraries'])
-            ->where('type', 'tour')
+            ->whereIn('type', ['package', 'activity'])
             ->find($decodedTourId);
 
         if (!$tour) {
             return redirect()->back()->with('error', 'Tour not found');
         }
 
-        return view('admin.pages.tours.manage_tours', compact('tour', 'hashids'));
+        return view('admin.pages.manage_tours', compact('tour', 'hashids'));
     }
 
     // Itinerary CRUD Methods
@@ -1240,7 +1253,7 @@ class DealsController extends Controller
         $decodedItineraryId = $hashids->decode($itineraryId)[0];
 
         $itinerary = TourItenary::where('deal_id', $decodedTourId)->find($decodedItineraryId);
-        
+
         if (!$itinerary) {
             return response()->json(['error' => 'Itinerary item not found'], 404);
         }
@@ -1296,7 +1309,7 @@ class DealsController extends Controller
 
         try {
             $itinerary = TourItenary::where('deal_id', $decodedTourId)->find($decodedItineraryId);
-            
+
             if (!$itinerary) {
                 return redirect()->back()->with('error', 'Itinerary item not found');
             }
@@ -1322,7 +1335,7 @@ class DealsController extends Controller
 
         try {
             $itinerary = TourItenary::where('deal_id', $decodedTourId)->find($decodedItineraryId);
-            
+
             if (!$itinerary) {
                 return redirect()->back()->with('error', 'Itinerary item not found');
             }

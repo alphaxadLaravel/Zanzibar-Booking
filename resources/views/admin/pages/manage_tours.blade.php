@@ -11,13 +11,12 @@
         <div>
             <ol class="breadcrumb m-0 bg-transparent p-0">
                 <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('admin.tours') }}">Tours</a></li>
+                <li class="breadcrumb-item"><a href="#">Tours</a></li>
                 <li class="breadcrumb-item active">Tour Management</li>
             </ol>
         </div>
     </div>
 
-    <!-- Tour Details Card -->
     <div class="row ">
         <div class="col-12">
             <div class="card shadow-sm">
@@ -266,7 +265,6 @@
     </div>
 </div>
 
-<!-- Delete Itinerary Modal -->
 <div class="modal fade" id="deleteItineraryModal" tabindex="-1" aria-labelledby="deleteItineraryModalLabel"
     aria-hidden="true">
     <div class="modal-dialog">
@@ -294,36 +292,31 @@
     </div>
 </div>
 
-<!-- Delete Tour Modal -->
 <div class="modal fade" id="deleteTourModal" tabindex="-1" aria-labelledby="deleteTourModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="{{ route('admin.tours.delete', $hashids->encode($tour->id)) }}" method="POST">
-                @csrf
-                @method('DELETE')
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteTourModalLabel">Delete Tour</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteTourModalLabel">Delete Tour</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this tour?</p>
+                <div class="alert alert-danger">
+                    <strong>{{ $tour->title }}</strong>
                 </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to delete this tour?</p>
-                    <div class="alert alert-danger">
-                        <strong>{{ $tour->title }}</strong>
-                    </div>
-                    <p class="text-muted">This will permanently delete:</p>
-                    <ul class="text-muted">
-                        <li>Tour details and pricing</li>
-                        <li>All itinerary items</li>
-                        <li>Tour photos</li>
-                        <li>All associated data</li>
-                    </ul>
-                    <p class="text-danger"><strong>This action cannot be undone.</strong></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Delete Tour</button>
-                </div>
-            </form>
+                <p class="text-muted">This will permanently delete:</p>
+                <ul class="text-muted">
+                    <li>Tour details and pricing</li>
+                    <li>All itinerary items</li>
+                    <li>Tour photos</li>
+                    <li>All associated data</li>
+                </ul>
+                <p class="text-danger"><strong>This action cannot be undone.</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-danger">Delete Tour</button>
+            </div>
         </div>
     </div>
 </div>
