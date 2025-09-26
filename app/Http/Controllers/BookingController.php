@@ -15,35 +15,8 @@ class BookingController extends Controller
 {
     public function confirmBooking(Request $request)
     {
-        try {
-            $dealId = $request->get('deal_id');
-            $roomId = $request->get('room_id');
-            
-            if (!$dealId) {
-                return redirect()->route('index')->with('error', 'Invalid deal selected.');
-            }
+        return view('website.pages.confirm_booking');
 
-            $deal = Deal::with(['rooms', 'tour', 'car'])->findOrFail($dealId);
-            $room = $roomId ? Room::find($roomId) : null;
-
-            // Validate room availability for hotels/apartments
-            if (in_array($deal->type, ['hotel', 'apartment']) && $roomId) {
-                if (!$room || !$room->availability) {
-                    return redirect()->back()->with('error', 'Selected room is not available.');
-                }
-            }
-
-            return view('website.pages.confirm_booking', compact('deal', 'room'));
-            
-        } catch (\Exception $e) {
-            Log::error('Booking confirmation failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'request_data' => $request->all()
-            ]);
-            
-            return redirect()->route('index')->with('error', 'Unable to process booking. Please try again.');
-        }
     }
 
     public function processBooking(Request $request)

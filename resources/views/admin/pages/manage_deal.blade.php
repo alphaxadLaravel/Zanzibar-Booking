@@ -611,8 +611,13 @@
                     @enderror
                 </div>
                 <div class="col-md-6 text-end">
-                    <button type="submit" class="btn btn-primary">{{ isset($deal) ? 'Update Deal' : 'Create Deal'
-                        }}</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <span class="btn-text">{{ isset($deal) ? 'Update Deal' : 'Create Deal' }}</span>
+                        <span class="btn-loading d-none">
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            {{ isset($deal) ? 'Updating...' : 'Creating...' }}
+                        </span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -721,10 +726,19 @@
     descriptionQuill.root.innerHTML = document.getElementById('description').value;
     policiesQuill.root.innerHTML = document.getElementById('policies').value;
 
-    // On form submit, update textarea values with Quill HTML
+    // On form submit, update textarea values with Quill HTML and show loading
     document.getElementById('dealForm').addEventListener('submit', function(e) {
         document.getElementById('description').value = descriptionQuill.root.innerHTML;
         document.getElementById('policies').value = policiesQuill.root.innerHTML;
+        
+        // Show loading state
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = submitBtn.querySelector('.btn-text');
+        const btnLoading = submitBtn.querySelector('.btn-loading');
+        
+        submitBtn.disabled = true;
+        btnText.classList.add('d-none');
+        btnLoading.classList.remove('d-none');
     });
 
     // Google Maps Places Autocomplete and marker

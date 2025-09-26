@@ -6,19 +6,10 @@
 @endsection
 
 @section('pages')
-<div class="breadcrumb bg-white py-2 mb-4">
-    <div class="container">
-        <ul class="breadcrumb mb-0 p-0 d-flex">
-            <li class="me-2"><a href="#" class="text-decoration-none text-dark">Home</a></li>
-            <li><span class="text-muted">/ Book Now</span></li>
-        </ul>
-    </div>
-</div>
 
 <div class="container py-5">
     <div class="row">
 
-        <!-- Deal Summary Card -->
         <div class="col-lg-3 mb-4">
             <div class="card border rounded-1">
                 <img src="/images/placeholder.jpg" class="card-img-top" alt="Deal Image">
@@ -32,8 +23,7 @@
                 </div>
             </div>
         </div>
-
-        <!-- Booking Form Card -->
+        
         <div class="col-lg-9">
             <div class="card border rounded-1">
                 <div class="card-header bg-white border-bottom">
@@ -43,12 +33,12 @@
 
                     <form>
                         <!-- Booking Details -->
-                        <div class="mb-4">
+                        <div class="card mb-4 border rounded-1 p-3">
                             <h6 class="mb-3 fw-semibold">Booking Details</h6>
                             <div class="row g-3">
                                 <div class="col-md-3">
                                     <label class="form-label">Adults *</label>
-                                    <select class="form-control" required>
+                                    <select class="form-select" required>
                                         <option selected>1 Adult</option>
                                         <option>2 Adults</option>
                                         <option>3 Adults</option>
@@ -56,7 +46,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Children</label>
-                                    <select class="form-control">
+                                    <select class="form-select">
                                         <option selected>0 Children</option>
                                         <option>1 Child</option>
                                         <option>2 Children</option>
@@ -73,8 +63,8 @@
                             </div>
                         </div>
 
-                        <!-- Personal Info -->
-                        <div class="mb-4">
+                        <!-- Personal Info Card -->
+                        <div class="card mb-4 border rounded-1 p-3">
                             <h6 class="mb-3 fw-semibold">Personal Information</h6>
                             <div class="row g-3">
                                 <div class="col-md-6">
@@ -91,7 +81,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Country *</label>
-                                    <select class="form-control" required>
+                                    <select class="form-select" required>
                                         <option selected disabled>Select your country</option>
                                         <option>Tanzania</option>
                                         <option>Kenya</option>
@@ -103,23 +93,23 @@
                             </div>
                         </div>
 
-                        <!-- Payment Methods -->
-                        <div class="mb-4">
+                        <!-- Payment Methods Card -->
+                        <div class="card mb-4 border rounded-1 p-3">
                             <h6 class="mb-3 fw-semibold">Payment Method</h6>
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <div class="well border rounded-1 p-3 d-flex align-items-center" style="background:#f8f9fa;">
+                                    <div class="form-check border rounded-1 p-2 d-flex align-items-center">
                                         <input type="radio" class="form-check-input me-2" name="payment" checked>
-                                        <label class="form-check-label d-flex align-items-center w-100 mb-0">
+                                        <label class="form-check-label d-flex align-items-center w-100">
                                             <img src="https://www.pesapal.com/assets/images/logo.png" alt="Pesapal" width="80" class="me-2">
                                             Pay Online
                                         </label>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="well border rounded-1 p-3 d-flex align-items-center" style="background:#f8f9fa;">
+                                    <div class="form-check border rounded-1 p-2 d-flex align-items-center">
                                         <input type="radio" class="form-check-input me-2" name="payment">
-                                        <label class="form-check-label d-flex align-items-center w-100 mb-0">
+                                        <label class="form-check-label d-flex align-items-center w-100">
                                             <img src="https://img.icons8.com/ios-filled/50/000000/cash-in-hand.png" alt="Offline" width="40" class="me-2">
                                             Pay on Arrival
                                         </label>

@@ -683,17 +683,7 @@ class DealsController extends Controller
 
             DB::commit();
 
-            // Redirect based on deal type
-            $redirectRoute = match ($type) {
-                'car' => 'admin.cars',
-                'package' => 'admin.tours',
-                'activity' => 'admin.tours',
-                'hotel' => 'admin.hotels',
-                'apartment' => 'admin.apartments',
-                default => 'admin.hotels'
-            };
-
-            return redirect()->route($redirectRoute)->with('success', 'Deal updated successfully!');
+            return redirect()->route('admin.deal', $type)->with('success', 'Deal updated successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Failed to update deal: ' . $e->getMessage())->withInput();

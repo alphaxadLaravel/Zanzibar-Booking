@@ -14,7 +14,7 @@ class DealsList extends Component
     // mount dealType
     public $dealType;
     public $search = '';
-    public $perPage = 1;
+    public $perPage = 20;
 
     public function mount($dealType)
     {

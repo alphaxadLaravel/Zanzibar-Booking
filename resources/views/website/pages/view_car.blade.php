@@ -478,7 +478,7 @@ use Illuminate\Support\Str;
         <h4 class="section-title mb-20">Nearby Cars</h4>
         <div class="row">
             @foreach($nearbyCars as $nearbyCar)
-            <div class="col-lg-4 col-md-4 col-sm-12">
+            <div class="col-lg-4 col-md-6 col-sm-12">
                 <div class="tour-item tour-item--grid" data-plugin="matchHeight">
                     <div class="tour-item__thumbnail position-relative">
                         @if($nearbyCar->is_featured)

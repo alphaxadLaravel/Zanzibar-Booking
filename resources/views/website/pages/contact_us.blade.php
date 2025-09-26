@@ -2,16 +2,6 @@
 
 @section('pages')
 
-<div class="breadcrumb py-3 bg-light">
-    <div class="container">
-        <ul class="breadcrumb-list d-flex flex-wrap align-items-center mb-0" style="list-style: none; padding-left: 0;">
-            <li><a href="{{ route('index') }}" class="text-primary">Home</a></li>
-            <li class="mx-2 text-muted">/</li>
-            <li><span class="text-dark">Contact Us</span></li>
-        </ul>
-    </div>
-</div>
-
 <section 
     class="partner-form position-relative d-flex align-items-center"
     style="
