@@ -562,29 +562,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 3000);
     });
     
-    // Auto-submit form when location or category changes
-    const locationSelect = document.getElementById('search_location');
-    const categorySelect = document.getElementById('search_category');
-    
-    [locationSelect, categorySelect].forEach(select => {
-        select.addEventListener('change', function() {
-            // Only auto-submit if there's a value selected
-            if (this.value) {
-                setTimeout(() => {
-                    searchForm.submit();
-                }, 500);
-            }
-        });
-    });
-    
-    // Add enter key support for name field
-    const nameInput = document.getElementById('search_name');
-    nameInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            searchForm.submit();
-        }
-    });
+    // Form only submits when button is clicked - no auto-submit functionality
+    // Removed auto-submit on dropdown change and enter key press
 });
 </script>
 @endpush

@@ -1,5 +1,6 @@
 <script src="{{asset('html/assets/vendor/jquery-3.5.1.min.js')}}"></script>
-<script src="{{asset('html/assets/vendor/bootstrap-4.0.0/dist/js/bootstrap.bundle.min.js')}}"></script>
+<!-- Bootstrap 5 JavaScript CDN -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
 <script src="{{asset('html/assets/vendor/slick-1.8.1/slick.min.js')}}"></script>
 <script src="{{asset('vendors/glow-cookies/glowCookies.js')}}"></script>
 <script src="{{asset('vendors/magnific-popup/magnific-popup.js')}}"></script>

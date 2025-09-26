@@ -127,7 +127,7 @@
                         </a>
 
                         <div class="dropdown-divider"></div>
-                        <a href="javascript:void(0);" class="dropdown-item text-danger fw-semibold">
+                        <a href="#" onclick="handleLogout()" class="dropdown-item text-danger fw-semibold">
                             <i class="ti ti-logout-2 me-2 fs-17 align-middle"></i>
                             <span class="align-middle">Log Out</span>
                         </a>

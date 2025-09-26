@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="{{asset('html/assets/css/header.css')}}" />
+<link rel="stylesheet" href="{{asset('assets/css/header.css')}}" />
 
 <link rel="stylesheet" href="{{asset('vendors/fotorama-4.6.4/fotorama.css')}}">
 <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css" rel="stylesheet">
@@ -11,7 +11,6 @@
 <link rel="stylesheet" href="{{asset('html/assets/vendor/bootstrap-4.0.0/dist/css/bootstrap.min.css')}}" />
 <link rel="stylesheet" href="{{asset('html/assets/css/main6782.css?v=1.0.3.2')}}" />
 <link rel="stylesheet" href="{{asset('html/assets/scss/modern-cards6782.html?v=1.0.3.2')}}" />
-{{-- bot styles --}}
 <link rel="stylesheet" href="{{asset('bot/styles.css')}}" />
 <style>
     :root {

@@ -5,11 +5,19 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\CategoriesController;
 use App\Http\Controllers\DealsController;
 use App\Http\Controllers\FeatureController;
+use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\WebsiteController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [WebsiteController::class, 'index'])->name('index');
+
+// Authentication routes
+Route::post('/login', [LoginController::class, 'login'])->name('login');
+Route::post('/register', [LoginController::class, 'register'])->name('register');
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+Route::post('/forgot-password', [LoginController::class, 'forgotPassword'])->name('forgot-password');
+Route::post('/change-password', [LoginController::class, 'changePassword'])->name('change-password');
 
 // Search functionality
 Route::get('/search', [WebsiteController::class, 'search'])->name('search');

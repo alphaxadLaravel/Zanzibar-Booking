@@ -49,7 +49,28 @@
                     });
                 }
             });
-        });  
+        });
+
+        // Logout function
+        function handleLogout() {
+            if (confirm('Are you sure you want to logout?')) {
+                // Create a form to submit logout request
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{{ route("logout") }}';
+                
+                // Add CSRF token
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = '_token';
+                csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                form.appendChild(csrfToken);
+                
+                // Add to body and submit
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
     </script>
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/7.4.47/css/materialdesignicons.min.css"

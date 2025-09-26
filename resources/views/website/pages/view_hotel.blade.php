@@ -510,7 +510,7 @@ use Illuminate\Support\Str;
             </div>
 
             {{-- Contact Information --}}
-            <div class="card mb-4 contact-card rounded"
+            <div class="card my-4 contact-card rounded"
                 style="overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
                 <div class="card-header" style="background: #f8f9fa; padding: 15px;">
                     <h5 class="mb-0" style="font-size: 1.2rem; font-weight: 600; color: #333;">
