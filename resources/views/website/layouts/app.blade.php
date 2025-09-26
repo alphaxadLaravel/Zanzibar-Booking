@@ -520,7 +520,7 @@
                                 <span class="btn-loading" style="display: none;">
                                     <i class="fas fa-spinner fa-spin me-2"></i>REGISTERING...
                                 </span>
-                            </button>
+                                </button>
                         </div>
 
                         <p class="signup-link">
@@ -531,7 +531,7 @@
                 </div>
             </div>
         </div>
-    </div>
+                    </div>
 
     <!-- Forgot Password Modal -->
     <div class="modal fade" id="ForgotPassword" tabindex="-1" aria-labelledby="ForgotPasswordLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">

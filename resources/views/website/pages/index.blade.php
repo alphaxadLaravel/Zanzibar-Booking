@@ -174,6 +174,51 @@
             min-height: 260px !important;
         }
     }
+
+    /* Property type hover effects */
+    .hotel-type__item {
+        transition: all 0.3s ease;
+    }
+
+    .hotel-type__item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .hotel-type__item:hover .hotel-type__thumbnail img {
+        transform: scale(1.05);
+        transition: transform 0.3s ease;
+    }
+
+    /* Tour type hover effects */
+    .tour-type__item {
+        transition: all 0.3s ease;
+    }
+
+    .tour-type__item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .tour-type__item:hover .tour-type__thumbnail img {
+        transform: scale(1.05);
+        transition: transform 0.3s ease;
+    }
+
+    /* Car type hover effects */
+    .car-type__item {
+        transition: all 0.3s ease;
+    }
+
+    .car-type__item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .car-type__item:hover .car-type__right img {
+        transform: scale(1.05);
+        transition: transform 0.3s ease;
+    }
 </style>
 
 
@@ -186,9 +231,9 @@
         <div class="row">
             @forelse($propertyCategories as $category)
             <div class="col-lg-2 col-md-4 col-6">
-                <div class="hotel-type__item rounded" data-plugin="matchHeight">
+                <div class="hotel-type__item rounded" data-plugin="matchHeight" style="cursor: pointer;" onclick="searchByCategory('{{ $category->id }}')">
                     <div class="hotel-type__thumbnail">
-                        <a href="#">
+                        <a href="#" onclick="event.preventDefault(); searchByCategory('{{ $category->id }}');">
                             <img class="rounded" style="width:100%; height:120px; object-fit:cover;"
                                 src="{{ $category->image ? asset('storage/' . $category->image) : 'https://www.zanzibarbookings.com/storage/2023/09/12/dji-0973-hdr-sky5-3-1694521316-360x240.jpg' }}"
                                 alt="{{ $category->category }}" />
@@ -196,7 +241,7 @@
                     </div>
                     <div class="hotel-type__info">
                         <h3 class="hotel-type__name">
-                            <a href="#">{{ $category->category }}</a>
+                            <a href="#" onclick="event.preventDefault(); searchByCategory('{{ $category->id }}');">{{ $category->category }}</a>
                         </h3>
                         <div class="hotel-type__description"></div>
                     </div>
@@ -214,7 +259,7 @@
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-20">
             <h2 class="section-title mb-0">List Of Hotels</h2>
-            <a href="#" class="btn btn-primary">View All</a>
+            <a href="{{ route('hotels') }}" class="btn btn-primary">View All</a>
         </div>
         <div class="row">
             @forelse($featuredDeals as $deal)
@@ -292,14 +337,14 @@
 <section class="tour-type">
     <div class="container py-40">
         <div class="d-flex justify-content-between align-items-center mb-20">
-            <h2 class="section-title mb-0">Tour Types</h2>
+            <h2 class="section-title mb-0">Activities Types</h2>
         </div>
         <div class="row">
             @forelse($tourCategories as $category)
             <div class="col-lg-2 col-md-4 col-6">
-                <div class="tour-type__item" data-plugin="matchHeight">
+                <div class="tour-type__item" data-plugin="matchHeight" style="cursor: pointer;" onclick="searchByCategory('{{ $category->id }}')">
                     <div class="tour-type__thumbnail" style="width:170px; height:204px; overflow:hidden; margin:auto;">
-                        <a href="#">
+                        <a href="#" onclick="event.preventDefault(); searchByCategory('{{ $category->id }}');">
                             <img class="_image-tour"
                                 src="{{ $category->image ? asset('storage/' . $category->image) : 'https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=360&h=240&fit=crop&crop=center' }}"
                                 alt="{{ $category->category }}"
@@ -308,7 +353,7 @@
                     </div>
                     <div class="tour-type__info">
                         <h3 class="tour-type__name">
-                            <a href="#">{{ $category->category }}</a>
+                            <a href="#" onclick="event.preventDefault(); searchByCategory('{{ $category->id }}');">{{ $category->category }}</a>
                         </h3>
                         <div class="tour-type__description">Click here</div>
                     </div>
@@ -325,8 +370,8 @@
 <section class="list-tour list-tour--grid py-40 bg-gray-100">
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-20">
-            <h2 class="section-title mb-0">List Of Tours</h2>
-            <a href="#" class="btn btn-primary">View All</a>
+            <h2 class="section-title mb-0">Packages and Activities</h2>
+            <a href="{{ route('activities') }}" class="btn btn-primary">View All</a>
         </div>
         <div class="row">
             @forelse($featuredTours as $tour)
@@ -396,16 +441,16 @@
         <div class="row">
             @forelse($carCategories as $category)
             <div class="col-lg-4 col-md-6">
-                <div class="car-type__item" data-plugin="matchHeight">
+                <div class="car-type__item" data-plugin="matchHeight" style="cursor: pointer;" onclick="searchByCategory('{{ $category->id }}')">
                     <div class="car-type__left">
                         <h3 class="car-type__name">
-                            <a href="#">{{ $category->category }}</a>
+                            <a href="#" onclick="event.preventDefault(); searchByCategory('{{ $category->id }}');">{{ $category->category }}</a>
                         </h3>
                         <div class="car-type__description">Click here for details</div>
-                        <a href="#" class="btn btn-primary car-type__detail">View Detail</a>
+                        <a href="#" class="btn btn-primary car-type__detail" onclick="event.preventDefault(); searchByCategory('{{ $category->id }}');">View Detail</a>
                     </div>
                     <div class="car-type__right">
-                        <a href="#">
+                        <a href="#" onclick="event.preventDefault(); searchByCategory('{{ $category->id }}');">
                             <img class="rounded" style="width:120px; height:120px; object-fit:cover;"
                                 src="{{ $category->image ? asset('storage/' . $category->image) : 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=360&h=240&fit=crop&crop=center' }}"
                                 alt="{{ $category->category }}" />
@@ -425,7 +470,7 @@
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-20">
             <h2 class="section-title mb-0">List Of Cars</h2>
-            <a href="#" class="btn btn-primary">View All</a>
+            <a href="{{ route('cars') }}" class="btn btn-primary">View All</a>
         </div>
         <div class="row">
             @forelse($featuredCars as $car)
@@ -565,5 +610,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Form only submits when button is clicked - no auto-submit functionality
     // Removed auto-submit on dropdown change and enter key press
 });
+
+// Function to search by category ID
+function searchByCategory(categoryId) {
+    // Build search URL with category parameter
+    const searchUrl = '{{ route("search") }}?category=' + encodeURIComponent(categoryId);
+    
+    // Navigate to search page
+    window.location.href = searchUrl;
+}
 </script>
 @endpush
