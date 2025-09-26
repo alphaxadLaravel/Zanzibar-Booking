@@ -71,6 +71,10 @@ class AllDealsListing extends Component
                 return route('view-tour', ['id' => $encodedId]);
             case 'car':
                 return route('view-car', ['id' => $encodedId]);
+            case 'activity':
+                return route('view-activity', ['id' => $encodedId]);
+            case 'package':
+                return route('view-package', ['id' => $encodedId]);
             default:
                 return '#';
         }
@@ -86,9 +90,12 @@ class AllDealsListing extends Component
             case 'apartment':
                 return '/night';
             case 'tour':
+            case 'activity':
                 return '/person';
             case 'car':
                 return '/day';
+            case 'package':
+                return '/person';
             default:
                 return '';
         }
@@ -108,6 +115,10 @@ class AllDealsListing extends Component
                 return 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=360&h=240&fit=crop&crop=center';
             case 'car':
                 return 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=360&h=240&fit=crop&crop=center';
+            case 'activity':
+                return 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=360&h=240&fit=crop&crop=center';
+            case 'package':
+                return 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=360&h=240&fit=crop&crop=center';
             default:
                 return 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=360&h=240&fit=crop&crop=center';
         }
@@ -158,6 +169,8 @@ class AllDealsListing extends Component
                 $query->with(['category', 'photos', 'rooms.photos']);
                 break;
             case 'tour':
+            case 'activity':
+            case 'package':
                 $query->with(['category', 'photos', 'tours']);
                 break;
             case 'car':

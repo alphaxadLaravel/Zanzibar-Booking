@@ -11,7 +11,7 @@
         <div>
             <ol class="breadcrumb m-0 bg-transparent p-0">
                 <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('admin.hotels') }}">Hotels</a></li>
+                <li class="breadcrumb-item"><a href="#">Hotels</a></li>
                 <li class="breadcrumb-item active">Hotel Rooms</li>
             </ol>
         </div>
@@ -23,8 +23,10 @@
                 <div class="card-body d-flex align-items-center justify-content-between" style="gap: 1.5rem;">
                     <div style="flex: 0 0 120px; max-width: 120px;">
                         @if(isset($hotel) && $hotel->cover_photo)
-                        <img src="{{ asset('storage/' . $hotel->cover_photo) }}" alt="{{ $hotel->title }}"
-                            class="img-fluid rounded" style="max-height: 100px; width: 100px; object-fit: cover;">
+                        <div style="width: 100px; height: 100px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                            <img src="{{ asset('storage/' . $hotel->cover_photo) }}" alt="{{ $hotel->title }}"
+                                class="img-fluid rounded" style="width: 100px; height: 100px; object-fit: cover; object-position: center;">
+                        </div>
                         @else
                         <div class="bg-light rounded d-flex align-items-center justify-content-center"
                             style="height: 100px;">
@@ -48,7 +50,7 @@
                             onclick="deleteHotel('{{ $hashids->encode($hotelId) }}')">
                             <i class="ti ti-trash"></i> Delete Hotel
                         </button>
-                        <a href="" class="btn btn-outline-info btn-sm">
+                        <a href="{{ route('view-hotel', $hashids->encode($hotel->id)) }}" target="_blank" class="btn btn-outline-info btn-sm">
                             Preview Hotel
                         </a>
                     </div>
@@ -337,7 +339,7 @@
                                         <small class="text-muted">{{ ucfirst($near->nearDeal->type) }}</small>
                                     </td>
                                     <td>
-                                        <span class="badge bg-{{ $near->type == 'tour' ? 'info' : 'primary' }}">
+                                        <span class="badge bg-{{ $near->type == 'package' ? 'info' : ($near->type == 'activity' ? 'warning' : 'primary') }}">
                                             {{ ucfirst($near->type) }}
                                         </span>
                                     </td>
@@ -346,7 +348,7 @@
                                         <span class="fw-bold text-success">${{ number_format($near->nearDeal->base_price, 2) }}</span>
                                     </td>
                                     <td>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeNearbyDeal('{{ $near->id }}')">
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="showRemoveNearbyDealModal('{{ $near->id }}', '{{ $near->nearDeal->title }}')">
                                             <i class="ti ti-trash"></i> Remove
                                         </button>
                                     </td>
@@ -710,7 +712,8 @@
                             <label for="deal_type" class="form-label">Deal Type <span class="text-danger">*</span></label>
                             <select class="form-select" id="deal_type" name="deal_type" required>
                                 <option value="">Select deal type...</option>
-                                <option value="tour">Tours</option>
+                                <option value="package">Packages</option>
+                                <option value="activity">Activities</option>
                                 <option value="hotel">Hotels</option>
                                 <option value="apartment">Apartments</option>
                             </select>
@@ -740,6 +743,45 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Remove Nearby Deal Modal -->
+<div class="modal fade" id="removeNearbyDealModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="ti ti-alert-triangle me-2"></i>Confirm Nearby Deal Removal
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <i class="ti ti-trash" style="font-size: 3rem; color: #dc3545;"></i>
+                </div>
+                <p class="text-center mb-3">Are you sure you want to remove this nearby deal?</p>
+                <div class="alert alert-warning" role="alert">
+                    <i class="ti ti-alert-circle me-2"></i>
+                    <strong>Warning:</strong> This action will remove the nearby deal association. The deal itself will not be deleted.
+                </div>
+                <div class="text-center">
+                    <strong id="deal-title-to-remove"></strong>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="ti ti-x me-1"></i>Cancel
+                </button>
+                <form id="removeNearbyDealForm" method="POST" style="display: inline;">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger">
+                        <i class="ti ti-trash me-1"></i>Remove Deal
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
@@ -1049,30 +1091,74 @@
         }
     });
 
-    // Remove nearby deal function
-    function removeNearbyDeal(nearId) {
-        if (confirm('Are you sure you want to remove this nearby deal?')) {
-            fetch(`/admin/hotels/{{ $hotelId }}/remove-nearby/${nearId}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Content-Type': 'application/json',
-                },
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Error removing nearby deal: ' + (data.message || 'Unknown error'));
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error removing nearby deal');
-            });
-        }
+    // Show remove nearby deal modal
+    function showRemoveNearbyDealModal(nearId, dealTitle) {
+        // Set the deal title in the modal
+        document.getElementById('deal-title-to-remove').textContent = dealTitle;
+        
+        // Set the form action URL
+        const removeForm = document.getElementById('removeNearbyDealForm');
+        removeForm.action = `/admin/hotels/{{ $hotelId }}/remove-nearby/${nearId}`;
+        
+        // Show the modal
+        const removeModal = new bootstrap.Modal(document.getElementById('removeNearbyDealModal'));
+        removeModal.show();
     }
+
+    // Remove nearby deal function (called when form is submitted)
+    function removeNearbyDeal(nearId) {
+        fetch(`/admin/hotels/{{ $hotelId }}/remove-nearby/${nearId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error removing nearby deal: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error removing nearby deal');
+        });
+    }
+
+    // Handle form submission for removing nearby deals
+    document.getElementById('removeNearbyDealForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const form = this;
+        
+        fetch(form.action, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Hide the modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('removeNearbyDealModal'));
+                modal.hide();
+                
+                // Reload the page to show updated data
+                location.reload();
+            } else {
+                alert('Error removing nearby deal: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error removing nearby deal');
+        });
+    });
 
 </script>
 @endpush

@@ -37,19 +37,38 @@ use Illuminate\Support\Str;
     <div class="gmz-carousel-with-lightbox" data-count="{{ $hotel->photos->count() }}">
         @forelse($hotel->photos as $photo)
         <a href="{{ asset('storage/' . $photo->photo) }}">
-            <img src="{{ asset('storage/' . $photo->photo) }}" alt="{{ $hotel->title }}"
-                style="width: 100%; height: 400px; object-fit: cover; display: block;" loading="lazy" />
+            <img 
+                src="{{ asset('storage/' . $photo->photo) }}" 
+                alt="{{ $hotel->title }}"
+                class="gallery-img"
+                style="width: 100%; height: 400px; object-fit: cover; display: block; opacity: 0; transition: opacity 0.5s;" 
+                loading="lazy" 
+            />
         </a>
         @empty
         <a
             href="{{ $hotel->cover_photo ? asset('storage/' . $hotel->cover_photo) : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop&crop=center' }}">
-            <img src="{{ $hotel->cover_photo ? asset('storage/' . $hotel->cover_photo) : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop&crop=center' }}"
-                alt="{{ $hotel->title }}" style="width: 100%; height: 400px; object-fit: cover; display: block;"
-                loading="lazy" />
+            <img 
+                src="{{ $hotel->cover_photo ? asset('storage/' . $hotel->cover_photo) : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop&crop=center' }}"
+                alt="{{ $hotel->title }}" 
+                class="gallery-img"
+                style="width: 100%; height: 400px; object-fit: cover; display: block; opacity: 0; transition: opacity 0.5s;" 
+                loading="lazy" 
+            />
         </a>
         @endforelse
     </div>
 </section>
+<script>
+    // Prevent burst/flash on like opening, fade in after page load
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            document.querySelectorAll('.gallery-img').forEach(function(img) {
+                img.style.opacity = '1';
+            });
+        }, 100); // slight delay to ensure page is ready
+    });
+</script>
 
 
 <div class="breadcrumb">
@@ -442,7 +461,8 @@ use Illuminate\Support\Str;
                 </h4>
                 @forelse($rooms as $room)
                 <div class="card mb-4 room-card rounded"
-                    style=" overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                    style="overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04); cursor: pointer;"
+                    onclick="openRoomDetailsModal({{ $room->id }})">
                     <div class="row g-0 align-items-center">
                         <div class="col-4 d-flex align-items-center justify-content-center"
                             style="background: #f8f9fa;">
@@ -468,8 +488,9 @@ use Illuminate\Support\Str;
                                             number_format($room->price ?? $hotel->base_price, 0) }}</span>
                                         <span style="font-size: 13px; color: #888;">/ night</span>
                                     </div>
-                                    <a href="{{ route('confirm-booking', ['deal_id' => $hotel->id, 'room_id' => $room->id]) }}"
-                                        class="btn btn-primary btn-sm" style="font-size: 13px;">Book Now</a>
+                                    <button class="btn btn-outline-primary btn-sm" style="font-size: 13px;" onclick="event.stopPropagation(); openRoomDetailsModal({{ $room->id }})">
+                                        <i class="fas fa-eye me-1"></i>View Details
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -486,6 +507,35 @@ use Illuminate\Support\Str;
                         for more information.</p>
                 </div>
                 @endforelse
+            </div>
+
+            {{-- Contact Information --}}
+            <div class="card mb-4 contact-card rounded"
+                style="overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                <div class="card-header" style="background: #f8f9fa; padding: 15px;">
+                    <h5 class="mb-0" style="font-size: 1.2rem; font-weight: 600; color: #333;">
+                        <i class="fas fa-phone me-2"></i>Need Help?
+                    </h5>
+        </div>
+                <div class="card-body p-3">
+                    <p class="mb-3" style="color: #666; font-size: 14px;">
+                        Contact us for more information about this hotel.
+                    </p>
+                    <div class="contact-info">
+                        <div class="contact-item d-flex align-items-center mb-2">
+                            <i class="fas fa-phone me-2" style="color: #2e8b57; width: 20px;"></i>
+                            <span style="font-size: 14px; color: #333;">+255 123 456 789</span>
+                        </div>
+                        <div class="contact-item d-flex align-items-center mb-2">
+                            <i class="fas fa-envelope me-2" style="color: #2e8b57; width: 20px;"></i>
+                            <span style="font-size: 14px; color: #333;">info@zanzibarbookings.com</span>
+                        </div>
+                        <div class="contact-item d-flex align-items-center">
+                            <i class="fas fa-clock me-2" style="color: #2e8b57; width: 20px;"></i>
+                            <span style="font-size: 14px; color: #333;">24/7 Support</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -627,432 +677,7 @@ use Illuminate\Support\Str;
     </div>
 </section>
 @endif
-
-<!-- Booking Modal -->
-@foreach($rooms as $room)
-<div id="book-room-{{ $room->id }}" class="white-popup gmz-popup-form" style="display: none;">
-    <div class="popup-inner">
-        <h3 class="popup-title">Book {{ $room->title }}</h3>
-        <form id="booking-form-{{ $room->id }}" class="booking-form">
-            <div class="gmz-loader" style="display: none;">
-                <div class="loader-inner">
-                    <div class="spinner-grow text-info align-self-center loader-lg"></div>
-                </div>
-            </div>
-
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <div class="field-wrapper">
-                        <label>Check-in Date *</label>
-                        <i class="fas fa-calendar-alt"></i>
-                        <input type="date" id="checkin-{{ $room->id }}" name="checkin" required>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="field-wrapper">
-                        <label>Check-out Date *</label>
-                        <i class="fas fa-calendar-alt"></i>
-                        <input type="date" id="checkout-{{ $room->id }}" name="checkout" required>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="field-wrapper">
-                        <label>Number of Rooms *</label>
-                        <i class="fas fa-bed"></i>
-                        <select id="rooms-{{ $room->id }}" name="rooms" required>
-                            <option value="">Select rooms</option>
-                            @for($i = 1; $i <= $room->number_of_rooms; $i++)
-                                <option value="{{ $i }}">{{ $i }} {{ $i == 1 ? 'Room' : 'Rooms' }}</option>
-                                @endfor
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="field-wrapper">
-                        <label>Number of Guests *</label>
-                        <i class="fas fa-user"></i>
-                        <select id="guests-{{ $room->id }}" name="guests" required>
-                            <option value="">Select guests</option>
-                            @for($i = 1; $i <= $room->people; $i++)
-                                <option value="{{ $i }}">{{ $i }} {{ $i == 1 ? 'Guest' : 'Guests' }}</option>
-                                @endfor
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="field-wrapper">
-                        <label>First Name *</label>
-                        <i class="fas fa-user"></i>
-                        <input type="text" id="first_name-{{ $room->id }}" name="first_name" required>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="field-wrapper">
-                        <label>Last Name *</label>
-                        <i class="fas fa-user"></i>
-                        <input type="text" id="last_name-{{ $room->id }}" name="last_name" required>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="field-wrapper">
-                        <label>Email Address *</label>
-                        <i class="fas fa-envelope"></i>
-                        <input type="email" id="email-{{ $room->id }}" name="email" required>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="field-wrapper">
-                        <label>Phone Number *</label>
-                        <i class="fas fa-phone"></i>
-                        <input type="tel" id="phone-{{ $room->id }}" name="phone" required>
-                    </div>
-                </div>
-                <div class="col-12">
-                    <div class="field-wrapper">
-                        <label>Special Requests</label>
-                        <i class="fas fa-comment"></i>
-                        <textarea id="special_requests-{{ $room->id }}" name="special_requests" rows="3"
-                            placeholder="Any special requests or notes..."></textarea>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Price Calculation -->
-            <div class="price-calculation mt-4 p-3"
-                style="background: #f8f9fa; border-radius: 8px; border: 1px solid #e0e0e0;">
-                <h6 class="mb-3">Price Summary</h6>
-                <div class="calculation-item">
-                    <span class="label">Room Price:</span>
-                    <span class="value" id="room-price-{{ $room->id }}">${{ number_format($room->price, 0) }}</span>
-                </div>
-                <div class="calculation-item">
-                    <span class="label">Rooms:</span>
-                    <span class="value" id="rooms-count-{{ $room->id }}">0</span>
-                </div>
-                <div class="calculation-item">
-                    <span class="label">Nights:</span>
-                    <span class="value" id="nights-{{ $room->id }}">0</span>
-                </div>
-                <div class="calculation-item">
-                    <span class="label">Calculation:</span>
-                    <span class="value" id="calculation-{{ $room->id }}">0 × 0 = $0</span>
-                </div>
-                <hr>
-                <div class="calculation-item">
-                    <span class="label"><strong>Total Price:</strong></span>
-                    <span class="value" id="total-price-{{ $room->id }}"
-                        style="color: #2e8b57; font-weight: bold;">$0</span>
-                </div>
-            </div>
-
-            <div class="d-grid mt-4">
-                <button type="submit" class="btn btn-primary btn-lg">
-                    <i class="fas fa-credit-card me-2"></i>Confirm Booking
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-@endforeach
-
-<style>
-    /* Fix modal z-index to appear above header */
-    .white-popup.gmz-popup-form {
-        z-index: 2147483647 !important;
-    }
-
-    .mfp-bg {
-        z-index: 2147483646 !important;
-    }
-
-    .mfp-wrap {
-        z-index: 2147483646 !important;
-    }
-
-    .mfp-container {
-        z-index: 2147483646 !important;
-    }
-
-    /* Ensure modal content is properly positioned */
-    .mfp-content {
-        z-index: 2147483647 !important;
-    }
-
-    /* Fix for Magnific Popup modal positioning */
-    .mfp-ready .mfp-bg {
-        opacity: 0.8;
-    }
-
-    .mfp-ready .mfp-wrap {
-        opacity: 1;
-    }
-
-    /* Ensure modal is centered and visible */
-    .white-popup {
-        position: relative;
-        background: white;
-        padding: 0;
-        width: auto;
-        max-width: 500px;
-        margin: 0 auto;
-        border-radius: 8px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    }
-
-    .popup-inner {
-        padding: 15px;
-    }
-
-    .popup-title {
-        margin-bottom: 15px;
-        font-size: 20px;
-        font-weight: 600;
-        color: #333;
-        text-align: center;
-        border-bottom: 2px solid #f0f0f0;
-        padding-bottom: 10px;
-    }
-
-    .calculation-item {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 5px;
-        font-size: 13px;
-    }
-
-    .calculation-item .label {
-        color: #666;
-        font-weight: 500;
-    }
-
-    .calculation-item .value {
-        color: #333;
-        font-weight: 600;
-    }
-
-    .price-calculation {
-        transition: all 0.3s ease;
-    }
-
-    .price-calculation:hover {
-        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.15);
-    }
-
-    .booking-form .field-wrapper {
-        position: relative;
-    }
-
-    .booking-form .field-wrapper input,
-    .booking-form .field-wrapper select,
-    .booking-form .field-wrapper textarea {
-        padding: 8px 12px;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        transition: border-color 0.3s ease;
-        font-size: 14px;
-    }
-
-    .booking-form .field-wrapper input:focus,
-    .booking-form .field-wrapper select:focus,
-    .booking-form .field-wrapper textarea:focus {
-        border-color: #007bff;
-        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-    }
-
-    .booking-form label {
-        font-size: 11px;
-        font-weight: 600;
-        color: #333;
-        margin-bottom: 2px;
-        display: block;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .booking-form {
-        margin-bottom: 10px !important;
-    }
-
-    .booking-form .mb-4 {
-        margin-bottom: 15px !important;
-    }
-
-    .popup-title {
-        margin-bottom: 15px;
-        font-size: 20px;
-        font-weight: 600;
-        color: #333;
-        text-align: center;
-        border-bottom: 2px solid #f0f0f0;
-        padding-bottom: 10px;
-    }
-
-    .booking-form .field-wrapper {
-        position: relative;
-    }
-
-    .booking-form .field-wrapper i {
-        position: absolute;
-        left: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #666;
-        z-index: 2;
-        font-size: 12px;
-    }
-
-    .booking-form .field-wrapper input,
-    .booking-form .field-wrapper select,
-    .booking-form .field-wrapper textarea {
-        padding: 6px 6px 6px 35px;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        transition: border-color 0.3s ease;
-        font-size: 13px;
-    }
-</style>
-
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-    // Fix modal z-index issues
-    function fixModalZIndex() {
-        // Ensure modals are above header
-        const modals = document.querySelectorAll('.white-popup.gmz-popup-form');
-        modals.forEach(modal => {
-            modal.style.zIndex = '2147483647';
-        });
-        
-        // Fix Magnific Popup z-index
-        if (typeof $.magnificPopup !== 'undefined') {
-            $.magnificPopup.instance = null;
-        }
-    }
-    
-    // Call fix on load
-    fixModalZIndex();
-    
-    // Re-apply fix when modals are opened
-    document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('gmz-box-popup')) {
-            setTimeout(fixModalZIndex, 100);
-        }
-    });
-    
-    // Set minimum date to today for all booking forms
-    const today = new Date().toISOString().split('T')[0];
-    
-    // Initialize all booking forms
-    const roomPrices = {
-        @foreach($rooms as $room)
-        {{ $room->id }}: {{ $room->price }},
-        @endforeach
-    };
-    
-    // Price calculation function for specific room
-    function calculatePrice(roomId) {
-        const rooms = parseInt(document.getElementById(`rooms-${roomId}`).value) || 0;
-        const checkin = document.getElementById(`checkin-${roomId}`).value;
-        const checkout = document.getElementById(`checkout-${roomId}`).value;
-        const roomPrice = roomPrices[roomId];
-        
-        if (rooms > 0 && checkin && checkout) {
-            const checkinDate = new Date(checkin);
-            const checkoutDate = new Date(checkout);
-            
-            // Calculate number of nights
-            const timeDiff = checkoutDate.getTime() - checkinDate.getTime();
-            const nights = Math.ceil(timeDiff / (1000 * 3600 * 24));
-            
-            if (nights > 0) {
-                const total = rooms * nights * roomPrice;
-                
-                // Update display
-                document.getElementById(`room-price-${roomId}`).textContent = `$${roomPrice}`;
-                document.getElementById(`rooms-count-${roomId}`).textContent = rooms;
-                document.getElementById(`nights-${roomId}`).textContent = nights;
-                document.getElementById(`calculation-${roomId}`).textContent = `${rooms} × ${nights} × $${roomPrice} = $${total}`;
-                document.getElementById(`total-price-${roomId}`).textContent = `$${total}`;
-            } else {
-                resetPriceDisplay(roomId);
-            }
-        } else {
-            resetPriceDisplay(roomId);
-        }
-    }
-    
-    // Reset price display for specific room
-    function resetPriceDisplay(roomId) {
-        const roomPrice = roomPrices[roomId];
-        document.getElementById(`room-price-${roomId}`).textContent = `$${roomPrice}`;
-        document.getElementById(`rooms-count-${roomId}`).textContent = '0';
-        document.getElementById(`nights-${roomId}`).textContent = '0';
-        document.getElementById(`calculation-${roomId}`).textContent = '0 × 0 = $0';
-        document.getElementById(`total-price-${roomId}`).textContent = '$0';
-    }
-    
-    // Initialize event listeners for all booking forms
-    @foreach($rooms as $room)
-    (function() {
-        const roomId = {{ $room->id }};
-        
-        // Set minimum dates
-        document.getElementById(`checkin-${roomId}`).min = today;
-        document.getElementById(`checkout-${roomId}`).min = today;
-        
-        // Event listeners for price calculation
-        document.getElementById(`rooms-${roomId}`).addEventListener('change', () => calculatePrice(roomId));
-        document.getElementById(`checkin-${roomId}`).addEventListener('change', function() {
-            // Set minimum checkout date to day after checkin
-            const checkinDate = new Date(this.value);
-            const nextDay = new Date(checkinDate);
-            nextDay.setDate(nextDay.getDate() + 1);
-            document.getElementById(`checkout-${roomId}`).min = nextDay.toISOString().split('T')[0];
-            calculatePrice(roomId);
-        });
-        document.getElementById(`checkout-${roomId}`).addEventListener('change', () => calculatePrice(roomId));
-        
-        // Form submission
-        document.getElementById(`booking-form-${roomId}`).addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Get form data
-            const formData = {
-                room_id: roomId,
-                rooms: document.getElementById(`rooms-${roomId}`).value,
-                guests: document.getElementById(`guests-${roomId}`).value,
-                checkin: document.getElementById(`checkin-${roomId}`).value,
-                checkout: document.getElementById(`checkout-${roomId}`).value,
-                first_name: document.getElementById(`first_name-${roomId}`).value,
-                last_name: document.getElementById(`last_name-${roomId}`).value,
-                email: document.getElementById(`email-${roomId}`).value,
-                phone: document.getElementById(`phone-${roomId}`).value,
-                special_requests: document.getElementById(`special_requests-${roomId}`).value,
-                total_price: document.getElementById(`total-price-${roomId}`).textContent
-            };
-            
-            // Show loading
-            const loader = document.querySelector(`#booking-form-${roomId} .gmz-loader`);
-            loader.style.display = 'block';
-            
-            // Simulate booking process (replace with actual API call)
-            setTimeout(() => {
-                loader.style.display = 'none';
-                alert('Booking confirmed! You will receive a confirmation email shortly.');
-                
-                // Reset form
-                document.getElementById(`booking-form-${roomId}`).reset();
-                resetPriceDisplay(roomId);
-                
-                // Close modal (if using Magnific Popup)
-                if (typeof $.magnificPopup !== 'undefined') {
-                    $.magnificPopup.close();
-                }
-            }, 2000);
-        });
-    })();
-    @endforeach
-});
-
 // Simple star rating display
 document.addEventListener('DOMContentLoaded', function() {
     const select = document.getElementById('rating');

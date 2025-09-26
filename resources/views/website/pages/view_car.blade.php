@@ -33,105 +33,42 @@ use Illuminate\Support\Str;
 @endsection
 
 @section('pages')
-<style>
-    /* Prevent image distortion during loading */
-    .gallery img {
-        width: 100% !important;
-        height: 400px !important;
-        object-fit: cover !important;
-        display: block !important;
-        background-color: #f5f5f5;
-        transition: opacity 0.3s ease;
-    }
-    
-    .gallery img[loading="lazy"] {
-        opacity: 0;
-    }
-    
-    .gallery img.loaded {
-        opacity: 1;
-    }
-</style>
+
 <section class="gallery">
     <div class="gmz-carousel-with-lightbox" data-count="{{ $car->photos->count() }}">
         @forelse($car->photos as $photo)
         <a href="{{ asset('storage/' . $photo->photo) }}">
-            <img src="{{ asset('storage/' . $photo->photo) }}" 
-                 alt="{{ $car->title }}" 
-                 style="width: 100%; height: 400px; object-fit: cover; display: block;"
-                 loading="lazy" />
+            <img 
+                src="{{ asset('storage/' . $photo->photo) }}" 
+                alt="{{ $car->title }}"
+                class="gallery-img"
+                style="width: 100%; height: 400px; object-fit: cover; display: block; opacity: 0; transition: opacity 0.5s;" 
+                loading="lazy" 
+            />
         </a>
         @empty
         <a href="{{ $car->cover_photo ? asset('storage/' . $car->cover_photo) : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop&crop=center' }}">
-            <img src="{{ $car->cover_photo ? asset('storage/' . $car->cover_photo) : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop&crop=center' }}" 
-                 alt="{{ $car->title }}" 
-                 style="width: 100%; height: 400px; object-fit: cover; display: block;"
-                 loading="lazy" />
+            <img 
+                src="{{ $car->cover_photo ? asset('storage/' . $car->cover_photo) : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop&crop=center' }}" 
+                alt="{{ $car->title }}"
+                class="gallery-img"
+                style="width: 100%; height: 400px; object-fit: cover; display: block; opacity: 0; transition: opacity 0.5s;" 
+                loading="lazy" 
+            />
         </a>
         @endforelse
     </div>
 </section>
-
-@if($car->video_link)
-<!-- Video Section -->
-<section class="video-section" style="background: #f8f9fa; padding: 40px 0;">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
-                <div class="video-container" style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%; background: #000; border-radius: 8px; overflow: hidden;">
-                    @php
-                        $videoUrl = $car->video_link;
-                        $embedUrl = '';
-                        
-                        // YouTube
-                        if (strpos($videoUrl, 'youtube.com') !== false || strpos($videoUrl, 'youtu.be') !== false) {
-                            if (strpos($videoUrl, 'youtu.be') !== false) {
-                                $videoId = substr($videoUrl, strrpos($videoUrl, '/') + 1);
-                            } else {
-                                parse_str(parse_url($videoUrl, PHP_URL_QUERY), $query);
-                                $videoId = $query['v'] ?? '';
-                            }
-                            $embedUrl = 'https://www.youtube.com/embed/' . $videoId . '?rel=0&modestbranding=1';
-                        }
-                        // Vimeo
-                        elseif (strpos($videoUrl, 'vimeo.com') !== false) {
-                            $videoId = substr($videoUrl, strrpos($videoUrl, '/') + 1);
-                            $embedUrl = 'https://player.vimeo.com/video/' . $videoId . '?title=0&byline=0&portrait=0';
-                        }
-                        // Direct video file or other platforms
-                        else {
-                            $embedUrl = $videoUrl;
-                        }
-                    @endphp
-                    
-                    @if($embedUrl)
-                        <iframe src="{{ $embedUrl }}" 
-                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" 
-                                frameborder="0" 
-                                allowfullscreen
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
-                        </iframe>
-                    @else
-                        <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: white; text-align: center;">
-                            <div>
-                                <i class="fas fa-play-circle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                                <p>Video preview not available</p>
-                                <a href="{{ $videoUrl }}" target="_blank" class="btn btn-primary">Watch Video</a>
-                            </div>
-                        </div>
-                    @endif
-                </div>
-                <div class="text-center mt-3">
-                    <p class="text-muted mb-0">
-                        <i class="fas fa-video me-2"></i>
-                        Promotional video for {{ $car->title }}
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-@endif
+<script>
+    // Prevent burst/flash on page opening, fade in after page load
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            document.querySelectorAll('.gallery-img').forEach(function(img) {
+                img.style.opacity = '1';
+            });
+        }, 100); // slight delay to ensure page is ready
+    });
+</script>
 
 <div class="breadcrumb">
     <div class="container">
@@ -224,402 +161,308 @@ use Illuminate\Support\Str;
             </div>
 
             <section class="description">
-                <h4 class="section-title">Vehicle Description</h4>
+                <h4 class="section-title">Vehicle Overview</h4>
                 <div class="section-content">
-                    <p>{{ $car->description ?: 'Experience the ultimate comfort and reliability with our ' . $car->title . ' rental. This premium vehicle is perfect for exploring Zanzibar\'s diverse landscapes, from pristine beaches to historic Stone Town. With its modern amenities and reliable performance, it\'s the ideal choice for families and groups seeking both adventure and comfort.' }}</p>
+                    <p>{!! $car->description !!}</p>
                 </div>
             </section>
 
             <section class="feature">
-                <h4 class="section-title mb-4">Vehicle Features & Amenities</h4>
+                <h4 class="section-title">Vehicle Features & Amenities</h4>
                 <div class="section-content">
-                    @if($car->features->count() > 0)
-                    <div class="row">
-                        @foreach($car->features->chunk(ceil($car->features->count() / 2)) as $chunk)
-                        <div class="col-md-6">
-                            <ul class="feature-list" style="list-style: none; padding: 0;">
-                                @foreach($chunk as $feature)
-                                <li class="mb-2">
-                                    <i class="mdi {{ $feature->icon ?: 'mdi-check-circle' }} text-success me-2"></i>
-                                    {{ $feature->name }}
-                                </li>
-                                @endforeach
-                            </ul>
-                        </div>
-                        @endforeach
-                    </div>
+                    <div class="d-flex flex-wrap" style="gap: 10px;">
+                        @forelse($car->features as $feature)
+                        <div class="facility-card d-flex align-items-center px-3 py-2 mb-2"
+                            style="background: #fff; border-radius: 6px; border: 1px solid #e0e0e0; min-height: 38px; flex: 0 0 auto; min-width: 140px; max-width: 220px;">
+                            @if($feature->icon)
+                            <i class="mdi {{ $feature->icon }} me-2"
+                                style="font-size: 1.2rem; color: #2e8b57; width: 20px; text-align: center;"></i>
                     @else
-                    <div class="row">
-                        <div class="col-12">
-                            <p class="text-muted">No features available for this vehicle.</p>
+                            <i class="mdi mdi-check-circle me-2"
+                                style="font-size: 1.2rem; color: #2e8b57; width: 20px; text-align: center;"></i>
+                            @endif
+                            <span style="font-size: 13px; font-weight: 500; color: #333; line-height: 1.3;">{{
+                                $feature->name }}</span>
                         </div>
+                        @empty
+                        <div class="text-muted" style="font-size: 14px;">No features listed.</div>
+                        @endforelse
                     </div>
-                    @endif
                 </div>
             </section>
             <hr>
-            <section class="feature">
-                <h4 class="section-title mb-4">Rental Terms & Conditions</h4>
-                <div class="section-content">
-                    <div class="accordion" id="accordionTerms">
-                        <div class="card">
-                            <div class="card-header" id="heading1">
-                                <h2 class="mb-0">
-                                    <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapse1" aria-expanded="true" aria-controls="collapse1">
-                                        <i class="fa fa-info-circle mr-2"></i>
-                                        Driver Requirements
-                                    </button>
-                                </h2>
+
+            @if($car->video_link)
+            <section class="video-section">
+                <h4 class="section-title">Video</h4>
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-md-12">
+                            <div class="video-container"
+                                style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%; background: #000; border-radius: 8px; overflow: hidden;">
+                                @php
+                                $videoUrl = $car->video_link;
+                                $embedUrl = '';
+
+                                // YouTube
+                                if (strpos($videoUrl, 'youtube.com') !== false || strpos($videoUrl, 'youtu.be') !==
+                                false) {
+                                if (strpos($videoUrl, 'youtu.be') !== false) {
+                                $videoId = substr($videoUrl, strrpos($videoUrl, '/') + 1);
+                                } else {
+                                parse_str(parse_url($videoUrl, PHP_URL_QUERY), $query);
+                                $videoId = $query['v'] ?? '';
+                                }
+                                $embedUrl = 'https://www.youtube.com/embed/' . $videoId . '?rel=0&modestbranding=1';
+                                }
+                                // Vimeo
+                                elseif (strpos($videoUrl, 'vimeo.com') !== false) {
+                                $videoId = substr($videoUrl, strrpos($videoUrl, '/') + 1);
+                                $embedUrl = 'https://player.vimeo.com/video/' . $videoId .
+                                '?title=0&byline=0&portrait=0';
+                                }
+                                // Direct video file or other platforms
+                                else {
+                                $embedUrl = $videoUrl;
+                                }
+                                @endphp
+
+                                @if($embedUrl)
+                                <iframe src="{{ $embedUrl }}"
+                                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
+                                    frameborder="0" allowfullscreen
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
+                                </iframe>
+                                @else
+                                <div
+                                    style="display: flex; align-items: center; justify-content: center; height: 100%; color: white; text-align: center;">
+                                    <div>
+                                        <i class="fas fa-play-circle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                        <p>Video preview not available</p>
+                                        <a href="{{ $videoUrl }}" target="_blank" class="btn btn-primary">Watch
+                                            Video</a>
                             </div>
-                            <div id="collapse1" class="collapse show" aria-labelledby="heading1" data-parent="#accordionTerms">
-                                <div class="card-body">
-                                    <ul>
-                                        <li>Valid driving license (minimum 2 years)</li>
-                                        <li>International driving permit required for non-Tanzanian citizens</li>
-                                        <li>Minimum age: 25 years</li>
-                                        <li>Credit card for security deposit</li>
-                                    </ul>
                                 </div>
-                            </div>
-                        </div>
-                        
-                        <div class="card">
-                            <div class="card-header" id="heading2">
-                                <h2 class="mb-0">
-                                    <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapse2" aria-expanded="false" aria-controls="collapse2">
-                                        <i class="fa fa-calendar mr-2"></i>
-                                        Rental Duration & Pricing
-                                    </button>
-                                </h2>
-                            </div>
-                            <div id="collapse2" class="collapse" aria-labelledby="heading2" data-parent="#accordionTerms">
-                                <div class="card-body">
-                                    <ul>
-                                        <li>Minimum rental period: 1 day</li>
-                                        <li>Daily rate: $120 per day</li>
-                                        <li>Weekly rate: $750 (7 days)</li>
-                                        <li>Monthly rate: $2,800 (30 days)</li>
-                                        <li>Additional driver: $10 per day</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="card">
-                            <div class="card-header" id="heading3">
-                                <h2 class="mb-0">
-                                    <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapse3" aria-expanded="false" aria-controls="collapse3">
-                                        <i class="fa fa-shield-alt mr-2"></i>
-                                        Insurance & Coverage
-                                    </button>
-                                </h2>
-                            </div>
-                            <div id="collapse3" class="collapse" aria-labelledby="heading3" data-parent="#accordionTerms">
-                                <div class="card-body">
-                                    <ul>
-                                        <li>Comprehensive insurance included</li>
-                                        <li>Third-party liability coverage</li>
-                                        <li>Collision damage waiver available</li>
-                                        <li>Personal accident insurance</li>
-                                        <li>24/7 roadside assistance</li>
-                                    </ul>
-                                </div>
+                                @endif
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
+            @endif
+            <hr>
 
-            <div class="post-comment parent-form" id="gmz-comment-section">
-                <div class="comment-form-wrapper">
-                    <form action="https://www.zanzibarbookings.com/add-comment" class="comment-form form-sm gmz-form-action form-add-post-comment" method="post" data-reload-time="1000">
-                        <h3 class="comment-title mb-4">Leave a Review</h3>
+            <section class="description">
+                <h4 class="section-title">Rental Policies</h4>
+                <div class="section-content">
+                    <p>
+                        {!! $car->policies ?? '<strong>Driver Requirements:</strong> Valid driving license (minimum 2 years experience), International driving permit required for non-Tanzanian citizens, Minimum age 25 years, Credit card for security deposit.<br><br><strong>Rental Terms:</strong> Minimum rental period 1 day, Comprehensive insurance included, 24/7 roadside assistance, Full tank fuel policy.<br><br><strong>Cancellation:</strong> Free cancellation up to 24 hours before pickup.' !!}
+                    </p>
+                </div>
+            </section>
+            <hr>
+
+            <section class="map">
+                <h4 class="section-title mb-4">Pickup Location On Map</h4>
+                <div id="address-map-container" style="width: 100%; height: 400px">
+                    @if($car->lat && $car->long)
+                    <iframe width="100%" height="100%" frameborder="0" style="border:0; border-radius: 8px;"
+                        src="https://www.google.com/maps?q={{ $car->lat }},{{ $car->long }}&output=embed"
+                        allowfullscreen aria-hidden="false" tabindex="0" loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    @else
+                    <iframe width="100%" height="100%" frameborder="0" style="border:0; border-radius: 8px;"
+                        src="https://www.google.com/maps?q={{ $car->location }}&output=embed" allowfullscreen
+                        aria-hidden="false" tabindex="0" loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    @endif
+                            </div>
+            </section>
+            <hr>
+
+            <div class="reviews-section mt-4" id="review-section">
+                <div class="d-flex justify-content-between align-items-center my-3">
+                    <h4 class="comment-count">Reviews for this Vehicle</h4>
+
+                    <div class="d-flex justify-content-center">
+                        <a href="#leaveReviewModal" class="btn btn-primary btn-lg fw-semibold gmz-box-popup"
+                            data-effect="mfp-zoom-in">
+                            <i class="fa fa-pen"></i> Leave a Review
+                        </a>
+                        </div>
+                    <div class="white-popup mfp-with-anim mfp-hide gmz-popup-form" id="leaveReviewModal">
+                        <div class="popup-inner">
+                            <h4 class="popup-title" id="leaveReviewModalLabel">Leave a Review</h4>
+                            <div class="popup-content">
+                                <div class="comment-form-wrapper">
+                                    <form action="{{ route('deals.reviews.store', $car->id) }}" class="comment-form form-sm" method="post">
+                                        @csrf
+
+                                        <div class="row g-3">
+                                            <div class="col-md-12">
                         <div class="form-group">
-                            <div class="form-control-wrap">
-                                <input type="text" name="comment_name" class="form-control" placeholder="Your Name *" required>
+                                                    <label for="review-title" class="form-label fw-semibold">Review Title *</label>
+                                                    <input id="review-title" type="text" name="review_title"
+                                                        class="form-control" placeholder="Enter your review title" required />
                             </div>
                         </div>
-                        <div class="form-group">
-                            <div class="form-control-wrap">
-                                <input type="email" name="comment_email" class="form-control" placeholder="Your Email *" required>
+
+                                            <div class="col-md-12 mb-2">
+                                                <label for="comment_rating mb-2"
+                                                    class="form-label fw-semibold me-3 mb-0 d-flex align-items-center justify-content-between">
+                                                    <span>
+                                                        Your Rating *
+                                                    </span>
+                                                    <span id="star-display" class="ms-3"
+                                                        style="font-size: 1.3rem; color: #ffc107;"></span>
+
+                                                </label>
+                                                <select id="rating" name="rating" class="form-select form-control" required>
+                                                    <option value="">Select rating</option>
+                                                    <option value="1">1 Star</option>
+                                                    <option value="2">2 Stars</option>
+                                                    <option value="3">3 Stars</option>
+                                                    <option value="4">4 Stars</option>
+                                                    <option value="5">5 Stars</option>
+                                                </select>
                             </div>
-                        </div>
+
+                                            <div class="col-12">
                         <div class="form-group">
-                            <div class="form-control-wrap">
-                                <textarea name="comment_content" class="form-control" rows="5" placeholder="Your Review *" required></textarea>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <button type="submit" class="btn btn-primary">Submit Review</button>
-                        </div>
-                    </form>
+                                                    <label for="review-content" class="form-label fw-semibold">Your Review *</label>
+                                                    <textarea id="review-content" name="review_content"
+                                                        placeholder="Share your experience with this vehicle..."
+                                                        class="form-control" required rows="5"></textarea>
                 </div>
             </div>
         </div>
 
+                                        <div class="d-grid mt-4">
+                                            <button type="submit"
+                                                class="btn btn-primary btn-lg text-uppercase fw-semibold">
+                                                Submit Review
+                                            </button>
+                    </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                            </div>
+                            
+                <!-- Reviews List -->
+                <div class="reviews-list" id="reviews-list">
+                    @if(isset($paginatedReviews) && $paginatedReviews->count() > 0)
+                        @foreach($paginatedReviews as $review)
+                            <div class="review-item d-flex mb-4 p-3"
+                                style="background: #f8f9fa; border-radius: 12px; border: 1px solid #e9ecef;">
+                                <div class="review-avatar" style="flex-shrink: 0; margin-right: 2rem;">
+                                    <img src="https://ui-avatars.com/api/?name={{ urlencode($review->reviewer_name) }}&background=1C8D83&color=fff&size=60"
+                                        alt="{{ $review->reviewer_name }}"
+                                        style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; display: block;">
+                                </div>
+                                <div class="review-content flex-grow-1">
+                                    <div class="review-header d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h5 class="reviewer-name mb-1"
+                                                style="font-size: 16px; font-weight: 600; color: #333;">{{ $review->reviewer_name }}</h5>
+                                            <div class="review-rating mb-1" style="font-size: 0.85rem;">
+                                                {!! $review->star_rating !!}
+                                    </div>
+                                        </div>
+                                        <small class="text-muted">{{ $review->formatted_date }}</small>
+                                    </div>
+                                    <h6 class="review-title mb-2" style="font-size: 14px; font-weight: 500; color: #555;">
+                                        {{ $review->review_title }}</h6>
+                                    <p class="review-text mb-0" style="font-size: 14px; color: #666; line-height: 1.5;">
+                                        {{ $review->review_content }}
+                                    </p>
+                                </div>
+                                        </div>
+                        @endforeach
+                    @else
+                        <div class="text-center py-4">
+                            <i class="mdi mdi-star-outline fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No reviews yet. Be the first to leave a review!</p>
+                                    </div>
+                    @endif
+                                    </div>
+                                </div>
+
+            {{-- Pagination for reviews --}}
+            @if(isset($paginatedReviews) && $paginatedReviews->hasPages())
+                <div class="d-flex justify-content-center my-4">
+                    {{ $paginatedReviews->links() }}
+                </div>
+            @endif
+                                        </div>
+
+        {{-- ################ BOOKING SIDEBAR ################ --}}
         <div class="col-lg-4">
             <div class="siderbar-single">
-
-                {{-- Car Booking Form --}}
-                <div class="card mb-4 car-booking-card rounded" style="box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
-                    <div class="card-header" style="background: #2e8b57; color: white; padding: 15px;">
-                        <h5 class="mb-0" style="font-weight: 600;">
-                            <i class="fas fa-car me-2"></i>Book This Vehicle
-                        </h5>
-                    </div>
-                    
-                    {{-- Pricing Display --}}
-                    <div class="pricing-section" style="background: #f8f9fa; padding: 20px; border-bottom: 1px solid #e9ecef;">
-                        <div class="row text-center">
-                            <div class="col-6">
-                                <div class="pricing-item">
-                                    <h4 class="price-amount mb-1" style="color: #2e8b57; font-weight: 700; font-size: 1.6rem;">${{ number_format($car->base_price, 0) }}</h4>
-                                    <p class="price-label mb-0" style="color: #666; font-size: 13px; font-weight: 500;">Daily Rate</p>
-                                    <small class="text-muted" style="font-size: 11px;">Per Day</small>
+                <h4 class="post-title my-2 bold">
+                    Book This Vehicle
+                </h4>
+                
+                {{-- Vehicle booking card --}}
+                <div class="card mb-4 vehicle-card rounded"
+                    style=" overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                    <div class="row g-0 align-items-center">
+                        <div class="col-4 d-flex align-items-center justify-content-center"
+                            style="background: #f8f9fa;">
+                            <div class="rounded"
+                                style="width: 80px; height: 80px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                                <img src="{{ $car->cover_photo ? asset('storage/' . $car->cover_photo) : 'https://images.unsplash.com/photo-1549317336-206569e8475c?w=80&h=80&fit=crop&crop=center' }}"
+                                    alt="{{ $car->title }}" class="rounded"
+                                    style="width: 100%; height: 100%; object-fit: cover;">
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="pricing-item">
-                                    <h4 class="price-amount mb-1" style="color: #2e8b57; font-weight: 700; font-size: 1.6rem;">${{ number_format($car->base_price * 7 * 0.9, 0) }}</h4>
-                                    <p class="price-label mb-0" style="color: #666; font-size: 13px; font-weight: 500;">Weekly Rate</p>
-                                    <small class="text-muted" style="font-size: 11px;">7 Days (10% off)</small>
+                        <div class="col-8 px-3">
+                            <div class="card-body p-3">
+                                <h5 class="card-title mb-1" style="font-size: 1.1rem; font-weight: 600;">{{ $car->title }}</h5>
+                                <div class="mb-2" style="font-size: 13px; color: #666;">
+                                    <i class="fa fa-car"></i> {{ $car->category ? $car->category->category : 'Vehicle' }} &nbsp; | &nbsp;
+                                    <i class="fa fa-map-marker"></i> {{ $car->location }}
+                                </div>
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <span class="fw-bold" style="font-size: 1.1rem; color: #ff5722;">${{ number_format($car->base_price, 0) }}</span>
+                                        <span style="font-size: 13px; color: #888;">/ day</span>
+                                    </div>
+                                    {{-- <a href="{{ route('confirm-booking', ['deal_id' => $car->id]) }}"
+                                        class="btn btn-primary btn-sm" style="font-size: 13px;">Book Now</a> --}}
+                                    <a href="#" class="btn btn-primary btn-sm" style="font-size: 13px;">Book Now</a>
                                 </div>
                             </div>
                         </div>
-                        <div class="text-center mt-2">
-                            <small class="text-muted" style="font-size: 12px;">
-                                <i class="fas fa-info-circle me-1"></i>
-                                Includes insurance, GPS & 24/7 support
-                            </small>
-                        </div>
-                    </div>
-                    
-                    <div class="card-body p-4">
-                        <form class="car-booking-form" id="car-booking-form">
-                            <div class="gmz-loader">
-                                <div class="loader-inner">
-                                    <div class="spinner-grow text-info align-self-center loader-lg"></div>
-                                </div>
-                            </div>
-                            
-                            {{-- Form Section Title --}}
-                            <div class="form-section-title mb-4">
-                                <h6 class="mb-0" style="color: #333; font-weight: 600; font-size: 16px;">
-                                    <i class="fas fa-calendar-alt me-2" style="color: #2e8b57;"></i>Rental Details
-                                </h6>
-                                <hr style="margin: 8px 0 0 0; border-color: #e9ecef;">
-                            </div>
-                            
-                            <div class="form">
-                                <div class="row">
-                                    <div class="col-6">
-                                        <div class="field-wrapper input">
-                                            <label for="pickup_date">PICKUP DATE</label>
-                                            <i class="fal fa-calendar-alt"></i>
-                                            <input id="pickup_date" name="pickup_date" type="date" class="form-control gmz-validation" data-validation="required" min="">
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="field-wrapper input">
-                                            <label for="return_date">RETURN DATE</label>
-                                            <i class="fal fa-calendar-alt"></i>
-                                            <input id="return_date" name="return_date" type="date" class="form-control gmz-validation" data-validation="required" min="">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-6">
-                                        <div class="field-wrapper input">
-                                            <label for="pickup_location">PICKUP LOCATION</label>
-                                            <i class="fal fa-map-marker-alt"></i>
-                                            <select id="pickup_location" name="pickup_location" class="form-control gmz-validation" data-validation="required">
-                                                <option value="">Select pickup location</option>
-                                                <option value="stone_town">Stone Town</option>
-                                                <option value="airport">Zanzibar Airport</option>
-                                                <option value="nungwi">Nungwi</option>
-                                                <option value="paje">Paje</option>
-                                                <option value="jambiani">Jambiani</option>
-                                                <option value="other">Other Location</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="field-wrapper input">
-                                            <label for="return_location">RETURN LOCATION</label>
-                                            <i class="fal fa-map-marker-alt"></i>
-                                            <select id="return_location" name="return_location" class="form-control gmz-validation" data-validation="required">
-                                                <option value="">Select return location</option>
-                                                <option value="stone_town">Stone Town</option>
-                                                <option value="airport">Zanzibar Airport</option>
-                                                <option value="nungwi">Nungwi</option>
-                                                <option value="paje">Paje</option>
-                                                <option value="jambiani">Jambiani</option>
-                                                <option value="other">Other Location</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-6">
-                                        <div class="field-wrapper input">
-                                            <label for="pickup_time">PICKUP TIME</label>
-                                            <i class="fal fa-clock"></i>
-                                            <select id="pickup_time" name="pickup_time" class="form-control gmz-validation" data-validation="required">
-                                                <option value="">Select time</option>
-                                                <option value="08:00">8:00 AM</option>
-                                                <option value="09:00">9:00 AM</option>
-                                                <option value="10:00">10:00 AM</option>
-                                                <option value="11:00">11:00 AM</option>
-                                                <option value="12:00">12:00 PM</option>
-                                                <option value="13:00">1:00 PM</option>
-                                                <option value="14:00">2:00 PM</option>
-                                                <option value="15:00">3:00 PM</option>
-                                                <option value="16:00">4:00 PM</option>
-                                                <option value="17:00">5:00 PM</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="field-wrapper input">
-                                            <label for="return_time">RETURN TIME</label>
-                                            <i class="fal fa-clock"></i>
-                                            <select id="return_time" name="return_time" class="form-control gmz-validation" data-validation="required">
-                                                <option value="">Select time</option>
-                                                <option value="08:00">8:00 AM</option>
-                                                <option value="09:00">9:00 AM</option>
-                                                <option value="10:00">10:00 AM</option>
-                                                <option value="11:00">11:00 AM</option>
-                                                <option value="12:00">12:00 PM</option>
-                                                <option value="13:00">1:00 PM</option>
-                                                <option value="14:00">2:00 PM</option>
-                                                <option value="15:00">3:00 PM</option>
-                                                <option value="16:00">4:00 PM</option>
-                                                <option value="17:00">5:00 PM</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-12">
-                                        <div class="field-wrapper input">
-                                            <label for="need_driver">NEED DRIVER?</label>
-                                            <i class="fal fa-user"></i>
-                                            <select id="need_driver" name="need_driver" class="form-control gmz-validation" data-validation="required">
-                                                <option value="">Select option</option>
-                                                <option value="yes">Yes</option>
-                                                <option value="no">No</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{-- Price Calculation Section --}}
-                                <div class="price-section-title mb-3 mt-4">
-                                    <h6 class="mb-0" style="color: #333; font-weight: 600; font-size: 16px;">
-                                        <i class="fas fa-calculator me-2" style="color: #2e8b57;"></i>Price Calculation
-                                    </h6>
-                                    <hr style="margin: 8px 0 0 0; border-color: #e9ecef;">
-                                </div>
-                                
-                                <div class="price-calculation my-3 p-3" style="background: #e8f5e8; border-radius: 8px; border-left: 4px solid #28a745;">
-                                    <div class="row">
-                                        <div class="col-6">
-                                            <div class="calculation-item">
-                                                <span class="label">Daily Rate:</span>
-                                                <span class="value" id="daily-rate-display">$120</span>
-                                            </div>
-                                            <div class="calculation-item">
-                                                <span class="label">Rental Days:</span>
-                                                <span class="value" id="rental-days-count">0</span>
-                                            </div>
-                                        </div>
-                                        <div class="col-6">
-                                            <div class="calculation-item">
-                                                <span class="label">Additional Driver:</span>
-                                                <span class="value" id="additional-driver-cost">$0</span>
-                                            </div>
-                                            <div class="calculation-item">
-                                                <span class="label">Subtotal:</span>
-                                                <span class="value" id="subtotal-price">$0</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <hr style="margin: 10px 0;">
-                                    <div class="total-price text-center">
-                                        <h5 class="mb-0">
-                                            <span class="label">Total Price: </span>
-                                            <span class="value text-success" id="total-price" style="font-size: 1.5rem; font-weight: 700;">$0</span>
-                                        </h5>
-                                        <small class="text-muted">(Daily Rate × Days) + Additional Driver Fee</small>
-                                    </div>
-                                </div>
-
-                                <div class="gmz-message"></div>
-
-                                <!-- Submit Button -->
-                                <div class="d-flex justify-content-center">
-                                    <a href="{{ route('confirm-booking', ['deal_id' => $car->deal_id]) }}" class="btn btn-success w-100" style="
-                                        text-align: center;
-                                        display: flex;
-                                        align-items: center;
-                                        justify-content: center;
-                                        padding: 12px 24px;
-                                        font-size: 16px;
-                                        font-weight: 600;
-                                        background: #2e8b57;
-                                        border: none;
-                                        border-radius: 8px;
-                                        transition: all 0.3s ease;
-                                        box-shadow: 0 2px 4px rgba(46, 139, 87, 0.2);
-                                        text-decoration: none;
-                                    ">
-                                        <i class="fas fa-car me-2"></i>
-                                        Book This Vehicle
-                                    </a>
-                                </div>
-                            </div>
-                        </form>
                     </div>
                 </div>
 
                 {{-- Contact Information --}}
-                <div class="card mb-4">
-                    <div class="card-header" style="background: #f8f9fa; border-bottom: 1px solid #e9ecef;">
-                        <h6 class="mb-0" style="color: #333; font-weight: 600;">
-                            <i class="fas fa-phone me-2" style="color: #2e8b57;"></i>Need Help?
-                        </h6>
+                <div class="card mb-4 contact-card rounded"
+                    style="overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                    <div class="card-header" style="background: #f8f9fa; padding: 15px;">
+                        <h5 class="mb-0" style="font-size: 1.2rem; font-weight: 600; color: #333;">
+                            <i class="fas fa-phone me-2"></i>Need Help?
+                        </h5>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-3">
+                        <p class="mb-3" style="color: #666; font-size: 14px;">
+                            Contact us for more information about this vehicle.
+                        </p>
                         <div class="contact-info">
-                            <div class="contact-item mb-3">
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-phone text-success me-3" style="width: 20px;"></i>
-                                    <div>
-                                        <strong>Phone:</strong><br>
-                                        <a href="tel:+255777123456">+255 777 123 456</a>
-                                    </div>
-                                </div>
+                            <div class="contact-item d-flex align-items-center mb-2">
+                                <i class="fas fa-phone me-2" style="color: #2e8b57; width: 20px;"></i>
+                                <span style="font-size: 14px; color: #333;">+255 777 123 456</span>
                             </div>
-                            <div class="contact-item mb-3">
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-envelope text-success me-3" style="width: 20px;"></i>
-                                    <div>
-                                        <strong>Email:</strong><br>
-                                        <a href="mailto:cars@zanzibarbookings.com">cars@zanzibarbookings.com</a>
-                                    </div>
-                                </div>
+                            <div class="contact-item d-flex align-items-center mb-2">
+                                <i class="fas fa-envelope me-2" style="color: #2e8b57; width: 20px;"></i>
+                                <span style="font-size: 14px; color: #333;">cars@zanzibarbookings.com</span>
                             </div>
-                            <div class="contact-item">
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-clock text-success me-3" style="width: 20px;"></i>
-                                    <div>
-                                        <strong>Available:</strong><br>
-                                        24/7 Support
-                                    </div>
-                                </div>
+                            <div class="contact-item d-flex align-items-center">
+                                <i class="fas fa-clock me-2" style="color: #2e8b57; width: 20px;"></i>
+                                <span style="font-size: 14px; color: #333;">24/7 Support</span>
                             </div>
                         </div>
                     </div>
@@ -629,335 +472,176 @@ use Illuminate\Support\Str;
     </div>
 </div>
 
+@if(isset($nearbyCars) && $nearbyCars->isNotEmpty())
+<section class="list-hotel list-hotel--grid py-40 bg-gray-100 mb-0 nearby">
+    <div class="container">
+        <h4 class="section-title mb-20">Nearby Cars</h4>
+        <div class="row">
+            @foreach($nearbyCars as $nearbyCar)
+            <div class="col-lg-4 col-md-4 col-sm-12">
+                <div class="tour-item tour-item--grid" data-plugin="matchHeight">
+                    <div class="tour-item__thumbnail position-relative">
+                        @if($nearbyCar->is_featured)
+                        <span class="tour-item__label position-absolute"
+                            style="top: 12px; left: 12px; z-index: 2; background: #ff5722; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 14px;">Featured</span>
+                        @endif
+                        <a href="{{route('view-car', ['id' => $hashids->encode($nearbyCar->id)])}}"
+                            style="display:block;">
+                            <img src="{{ $nearbyCar->cover_photo ? asset('storage/' . $nearbyCar->cover_photo) : 'https://images.unsplash.com/photo-1549317336-206569e8475c?w=360&h=240&fit=crop&crop=center' }}"
+                                alt="{{ $nearbyCar->title }}" loading="eager" width="360" height="240"
+                                style="width:100%;height:220px;object-fit:cover;border-radius:12px;" />
+                        </a>
+
+                        <div class="add-wishlist-wrapper" style="position:absolute;top:12px;right:12px;z-index:2;">
+                            <a href="#gmz-login-popup" class="add-wishlist gmz-box-popup" data-effect="mfp-zoom-in">
+                                <i class="fal fa-heart"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="tour-item__details" style="padding-top:18px;">
+                        <div class="star-rating mb-2">
+                            <div class="star-rating">
+                                <i class="fa fa-star text-warning"></i>
+                                <i class="fa fa-star text-warning"></i>
+                                <i class="fa fa-star text-warning"></i>
+                                <i class="fa fa-star text-warning"></i>
+                                <i class="fa fa-star text-warning"></i>
+                            </div>
+                        </div>
+                        <h3 class="car-item__title" style="font-size:1.25rem;font-weight:600;">
+                            <a href="{{route('view-car', ['id' => $hashids->encode($nearbyCar->id)])}}"
+                                style="color:#222;text-decoration:none;">{{ $nearbyCar->title }}</a>
+                        </h3>
+                        <div class="tour-item__meta" style="margin:18px 0 12px 0;">
+                            <div class="i-meta d-flex align-items-center" style="font-size:15px;color:#888;">
+                                <i class="fas fa-map-marker-alt me-2"></i>{{ $nearbyCar->location }}
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center" style="margin-top:18px;">
+                            <div class="tour-item__price">
+                                <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600;">USD
+                                    {{ number_format($nearbyCar->base_price, 2) }}</span>
+                                <span class="_unit" style="color:#2e8b57;font-size:1rem;">/Day</span>
+                            </div>
+                            <a class="btn btn-primary btn-sm tour-item__view-detail"
+                                href="{{route('view-car', ['id' => $hashids->encode($nearbyCar->id)])}}"
+                                style="font-size:1rem;padding:8px 22px;border-radius:7px;">
+                                View Detail
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+</section>
+@endif
+
 <style>
-    /* Car Booking Form Styles */
-    .car-booking-card {
-        border: none;
-        overflow: hidden;
+    /* Fix modal z-index to appear above header */
+    .white-popup.gmz-popup-form {
+        z-index: 2147483647 !important;
     }
 
-    .car-booking-card .card-header {
-        border-bottom: none;
+    .mfp-bg {
+        z-index: 2147483646 !important;
     }
 
-    .car-booking-card .btn-success:hover {
-        background: #228b22;
-        border-color: #228b22;
-        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.15);
+    .mfp-wrap {
+        z-index: 2147483646 !important;
     }
 
-    .car-booking-form .field-wrapper {
+    .mfp-container {
+        z-index: 2147483646 !important;
+    }
+
+    /* Ensure modal content is properly positioned */
+    .mfp-content {
+        z-index: 2147483647 !important;
+    }
+
+    /* Fix for Magnific Popup modal positioning */
+    .mfp-ready .mfp-bg {
+        opacity: 0.8;
+    }
+
+    .mfp-ready .mfp-wrap {
+        opacity: 1;
+    }
+
+    /* Ensure modal is centered and visible */
+    .white-popup {
         position: relative;
+        background: white;
+        padding: 0;
+        width: auto;
+        max-width: 500px;
+        margin: 0 auto;
+        border-radius: 8px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .popup-inner {
+        padding: 15px;
+    }
+
+    .popup-title {
         margin-bottom: 15px;
-    }
-
-    .car-booking-form .field-wrapper input,
-    .car-booking-form .field-wrapper select,
-    .car-booking-form .field-wrapper textarea {
-        padding: 8px 12px 8px 35px;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        font-size: 14px;
-        transition: all 0.3s ease;
-        width: 100%;
-    }
-
-    .car-booking-form .field-wrapper input:focus,
-    .car-booking-form .field-wrapper select:focus,
-    .car-booking-form .field-wrapper textarea:focus {
-        border-color: #2e8b57;
-        box-shadow: 0 0 0 0.2rem rgba(46, 139, 87, 0.25);
-        outline: none;
-    }
-
-    .car-booking-form label {
-        font-size: 11px;
+        font-size: 20px;
         font-weight: 600;
         color: #333;
-        margin-bottom: 5px;
-        display: block;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .car-booking-form .field-wrapper i {
-        position: absolute;
-        left: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #666;
-        font-size: 12px;
-    }
-
-    .car-booking-form .gmz-loader {
-        display: none;
         text-align: center;
-        padding: 20px;
-    }
-
-    .car-booking-form .gmz-message {
-        margin-top: 15px;
-        padding: 10px;
-        border-radius: 4px;
-        display: none;
-    }
-
-    .car-booking-form .gmz-message.success {
-        background: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
-    }
-
-    .car-booking-form .gmz-message.error {
-        background: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
-    }
-
-    .calculation-item {
-        margin-bottom: 8px;
-        font-size: 13px;
-    }
-
-    .calculation-item .label {
-        color: #666;
-        font-weight: 500;
-    }
-
-    .calculation-item .value {
-        color: #333;
-        font-weight: 600;
-        float: right;
-    }
-
-    .contact-info .contact-item {
-        border-bottom: 1px solid #f0f0f0;
-        padding-bottom: 15px;
-    }
-
-    .contact-info .contact-item:last-child {
-        border-bottom: none;
-        padding-bottom: 0;
-    }
-
-    .contact-info a {
-        color: #2e8b57;
-        text-decoration: none;
-    }
-
-    .contact-info a:hover {
-        text-decoration: underline;
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-        .car-booking-form .field-wrapper {
-            margin-bottom: 12px;
-        }
-        
-        .car-booking-form .field-wrapper input,
-        .car-booking-form .field-wrapper select {
-            padding: 10px 12px 10px 35px;
-            font-size: 16px;
-        }
-        
-        .pricing-section {
-            padding: 15px !important;
-        }
-        
-        .price-calculation {
-            padding: 15px !important;
-        }
+        border-bottom: 2px solid #f0f0f0;
+        padding-bottom: 10px;
     }
 </style>
 
 <script>
-    // Set minimum date to today
     document.addEventListener('DOMContentLoaded', function() {
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('pickup_date').min = today;
-        document.getElementById('return_date').min = today;
-        
-        // Set default pickup date to today
-        document.getElementById('pickup_date').value = today;
-        
-        // Calculate initial price
-        calculateCarPrice();
-    });
-
-    // Price calculation function
-    function calculateCarPrice() {
-        const pickupDate = document.getElementById('pickup_date').value;
-        const returnDate = document.getElementById('return_date').value;
-        const additionalDrivers = parseInt(document.getElementById('additional_driver').value) || 0;
-        
-        if (!pickupDate || !returnDate) {
-            resetCarPriceDisplay();
-            return;
-        }
-        
-        const pickup = new Date(pickupDate);
-        const returnDateObj = new Date(returnDate);
-        
-        if (returnDateObj <= pickup) {
-            resetCarPriceDisplay();
-            return;
-        }
-        
-        const timeDiff = returnDateObj.getTime() - pickup.getTime();
-        const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-        
-        const dailyRate = {{ $car->base_price }};
-        const additionalDriverRate = 10;
-        
-        const basePrice = daysDiff * dailyRate;
-        const additionalDriverCost = additionalDrivers * additionalDriverRate * daysDiff;
-        const totalPrice = basePrice + additionalDriverCost;
-        
-        // Update display
-        document.getElementById('rental-days-count').textContent = daysDiff;
-        document.getElementById('additional-driver-cost').textContent = `$${additionalDriverCost}`;
-        document.getElementById('subtotal-price').textContent = `$${basePrice}`;
-        document.getElementById('total-price').textContent = `$${totalPrice}`;
-        
-        // Update daily rate display based on days
-        if (daysDiff >= 7) {
-            document.getElementById('daily-rate-display').textContent = '${{ number_format($car->base_price * 0.9, 0) }} (Weekly)';
-        } else {
-            document.getElementById('daily-rate-display').textContent = '${{ number_format($car->base_price, 0) }}';
-        }
-    }
-
-    function resetCarPriceDisplay() {
-        document.getElementById('rental-days-count').textContent = '0';
-        document.getElementById('additional-driver-cost').textContent = '$0';
-        document.getElementById('subtotal-price').textContent = '$0';
-        document.getElementById('total-price').textContent = '$0';
-        document.getElementById('daily-rate-display').textContent = '${{ number_format($car->base_price, 0) }}';
-    }
-
-    // Event listeners for price calculation
-    document.getElementById('pickup_date').addEventListener('change', function() {
-        const pickupDate = this.value;
-        const returnDateInput = document.getElementById('return_date');
-        
-        if (pickupDate) {
-            returnDateInput.min = pickupDate;
-            if (returnDateInput.value && returnDateInput.value <= pickupDate) {
-                returnDateInput.value = '';
-            }
-        }
-        calculateCarPrice();
-    });
-
-    document.getElementById('return_date').addEventListener('change', calculateCarPrice);
-    document.getElementById('additional_driver').addEventListener('change', calculateCarPrice);
-    
-    // Form submission
-    document.getElementById('car-booking-form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        // Get form data
-        const formData = new FormData(this);
-        const bookingData = {
-            pickup_date: formData.get('pickup_date'),
-            return_date: formData.get('return_date'),
-            pickup_location: formData.get('pickup_location'),
-            return_location: formData.get('return_location'),
-            pickup_time: formData.get('pickup_time'),
-            return_time: formData.get('return_time'),
-            drivers: formData.get('drivers'),
-            additional_driver: formData.get('additional_driver')
-        };
-        
-        // Show loading
-        const loader = document.querySelector('.gmz-loader');
-        loader.style.display = 'block';
-        
-        // Simulate booking process (replace with actual API call)
-        setTimeout(() => {
-            loader.style.display = 'none';
-            alert('Car rental booking confirmed! You will receive a confirmation email shortly with pickup details.');
-            
-            // Reset form
-            document.getElementById('car-booking-form').reset();
-            resetCarPriceDisplay();
-            
-            // Reset dates
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('pickup_date').value = today;
-        }, 2000);
-    });
-    
-    // Handle image loading to prevent distortion
-    document.addEventListener('DOMContentLoaded', function() {
-        const images = document.querySelectorAll('.gallery img');
-        
-        images.forEach(img => {
-            // Set initial dimensions to prevent layout shift
-            img.style.width = '100%';
-            img.style.height = '400px';
-            img.style.objectFit = 'cover';
-            img.style.display = 'block';
-            img.style.backgroundColor = '#f5f5f5';
-            
-            // Add loaded class when image loads
-            img.addEventListener('load', function() {
-                this.classList.add('loaded');
-                this.style.opacity = '1';
-            });
-            
-            // Handle error case
-            img.addEventListener('error', function() {
-                this.style.opacity = '1';
-                this.style.backgroundColor = '#f0f0f0';
-            });
+    // Fix modal z-index issues
+    function fixModalZIndex() {
+        // Ensure modals are above header
+        const modals = document.querySelectorAll('.white-popup.gmz-popup-form');
+        modals.forEach(modal => {
+            modal.style.zIndex = '2147483647';
         });
+        
+        // Fix Magnific Popup z-index
+        if (typeof $.magnificPopup !== 'undefined') {
+            $.magnificPopup.instance = null;
+        }
+    }
+    
+    // Call fix on load
+    fixModalZIndex();
+    
+    // Re-apply fix when modals are opened
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('gmz-box-popup')) {
+            setTimeout(fixModalZIndex, 100);
+        }
+    });
+});
+
+// Simple star rating display
+    document.addEventListener('DOMContentLoaded', function() {
+    const select = document.getElementById('rating');
+    const starDisplay = document.getElementById('star-display');
+    if (select && starDisplay) {
+        select.addEventListener('change', function () {
+            let val = parseInt(this.value);
+            if (!val) {
+                starDisplay.innerHTML = '';
+                return;
+            }
+            let stars = '';
+            for (let i = 0; i < val; i++) {
+                stars += '★';
+            }
+            starDisplay.textContent = stars;
+        });
+    }
     });
 </script>
-
-<!-- Nearby Cars Section -->
-<section class="container mt-5">
-    <div class="row">
-        <div class="col-12">
-            <h3 class="section-title mb-4">Cars Near By</h3>
-            <div class="row">
-                @forelse($nearbyCars as $nearbyCar)
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="card h-100 shadow-sm">
-                        <div class="position-relative">
-                            <img src="{{ $nearbyCar->cover_photo ? asset('storage/' . $nearbyCar->cover_photo) : 'https://images.unsplash.com/photo-1549317336-206569e8475c?w=400&h=250&fit=crop&crop=center' }}" 
-                                 class="card-img-top" 
-                                 alt="{{ $nearbyCar->title }}"
-                                 style="height: 200px; object-fit: cover;">
-                            @if($nearbyCar->is_featured)
-                            <span class="badge bg-success position-absolute" style="top: 10px; left: 10px;">Featured</span>
-                            @endif
-                        </div>
-                        <div class="card-body">
-                            <h5 class="card-title">{{ $nearbyCar->title }}</h5>
-                            <p class="card-text text-muted">
-                                <i class="fas fa-map-marker-alt me-1"></i>{{ $nearbyCar->location }}
-                            </p>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <span class="text-success fw-bold fs-5">USD {{ number_format($nearbyCar->base_price, 2) }}</span>
-                                    <small class="text-muted">/day</small>
-                                </div>
-                                <a href="{{ route('view-car', ['id' => $hashids->encode($nearbyCar->id)]) }}" class="btn btn-primary btn-sm">View Details</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                @empty
-                <div class="col-12">
-                    <div class="text-center py-4">
-                        <p class="text-muted">No nearby cars found</p>
-                    </div>
-                </div>
-                @endforelse
-            </div>
-        </div>
-    </div>
-</section>
 @endsection

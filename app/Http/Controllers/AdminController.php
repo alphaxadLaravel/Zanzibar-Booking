@@ -68,7 +68,7 @@ class AdminController extends Controller
             'description' => 'required|string',
             'category_id' => 'required|exists:categories,id',
             'status' => 'required|in:draft,published',
-            'cover_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120' // Increased size limit
+            'cover_photo' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120' // Image required
         ]);
 
         try {
@@ -150,6 +150,7 @@ class AdminController extends Controller
             'description' => 'required|string',
             'category_id' => 'required|exists:categories,id',
             'status' => 'required|in:draft,published',
+            // Image optional on update
             'cover_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120'
         ]);
 
@@ -160,14 +161,12 @@ class AdminController extends Controller
             $data = $request->only(['title', 'preview_text', 'description', 'category_id']);
             $data['status'] = $request->status === 'published' ? 1 : 0;
 
-            // Handle cover photo upload
-            $coverPhotoPath = $blog->cover_photo; // Keep existing if no new upload
+            // Handle cover photo upload (optional on update)
             if ($request->hasFile('cover_photo')) {
-                // Delete old cover photo if exists
+                // Delete old cover if exists
                 if ($blog->cover_photo && Storage::disk('public')->exists($blog->cover_photo)) {
                     Storage::disk('public')->delete($blog->cover_photo);
                 }
-                
                 $coverPhoto = $request->file('cover_photo');
                 $filename = time() . '_' . $coverPhoto->getClientOriginalName();
                 $coverPhotoPath = $coverPhoto->storeAs('blog/covers', $filename, 'public');
@@ -186,7 +185,7 @@ class AdminController extends Controller
             DB::rollBack();
             
             // Clean up uploaded file if blog update failed
-            if ($request->hasFile('cover_photo') && isset($coverPhotoPath) && Storage::disk('public')->exists($coverPhotoPath)) {
+            if (isset($coverPhotoPath) && Storage::disk('public')->exists($coverPhotoPath)) {
                 Storage::disk('public')->delete($coverPhotoPath);
             }
             
@@ -205,8 +204,33 @@ class AdminController extends Controller
 
     public function deleteBlog($id)
     {
-        // Add blog deletion logic here
-        return redirect()->route('admin.blog')->with('success', 'Blog post deleted successfully!');
+        try {
+            DB::beginTransaction();
+
+            $blog = Blog::find($id);
+
+            if (!$blog) {
+                return redirect()->route('admin.blog')->with('error', 'Blog post not found');
+            }
+
+            // Delete cover photo from storage if it exists
+            if ($blog->cover_photo && Storage::disk('public')->exists($blog->cover_photo)) {
+                Storage::disk('public')->delete($blog->cover_photo);
+            }
+
+            $blog->delete();
+
+            DB::commit();
+
+            return redirect()->route('admin.blog')->with('success', 'Blog post deleted successfully!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Blog deletion failed:', [
+                'error' => $e->getMessage(),
+                'blog_id' => $id,
+            ]);
+            return redirect()->route('admin.blog')->with('error', 'Failed to delete blog post.');
+        }
     }
 
     // Bookings Management

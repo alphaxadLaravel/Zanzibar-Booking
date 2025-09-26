@@ -71,14 +71,13 @@
                         @endif
                     </div>
                     <div class="d-flex align-items-start" style="flex: 0 0 auto; gap: 0.5rem;">
-                        <a href="{{ route('admin.manage-deal.edit', [$hashids->encode($tour->id), 'tour']) }}"
-                            class="btn btn-outline-primary btn-sm">
-                            <i class="ti ti-edit"></i> Edit Tour
-                        </a>
-                        <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal"
-                            data-bs-target="#deleteTourModal">
+                        <button type="button" class="btn btn-outline-danger btn-sm"
+                            onclick="deleteTour('{{ $hashids->encode($tour->id) }}')">
                             <i class="ti ti-trash"></i> Delete Tour
                         </button>
+                        <a href="{{ route('view-tour', $hashids->encode($tour->id)) }}" target="_blank" class="btn btn-outline-info btn-sm">
+                            <i class="ti ti-eye"></i> Preview Tour
+                        </a>
                     </div>
                 </div>
             </div>
@@ -292,30 +291,45 @@
     </div>
 </div>
 
-<div class="modal fade" id="deleteTourModal" tabindex="-1" aria-labelledby="deleteTourModalLabel" aria-hidden="true">
+<!-- Delete Tour Modal -->
+<div class="modal fade" id="deleteTourModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteTourModalLabel">Delete Tour</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="ti ti-alert-triangle me-2"></i>Confirm Tour Deletion
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to delete this tour?</p>
-                <div class="alert alert-danger">
-                    <strong>{{ $tour->title }}</strong>
+                <div class="text-center mb-3">
+                    <i class="ti ti-tour" style="font-size: 3rem; color: #dc3545;"></i>
                 </div>
-                <p class="text-muted">This will permanently delete:</p>
-                <ul class="text-muted">
-                    <li>Tour details and pricing</li>
-                    <li>All itinerary items</li>
-                    <li>Tour photos</li>
-                    <li>All associated data</li>
-                </ul>
-                <p class="text-danger"><strong>This action cannot be undone.</strong></p>
+                <p class="text-center mb-3">Are you sure you want to delete this tour?</p>
+                <div class="alert alert-danger" role="alert">
+                    <i class="ti ti-alert-circle me-2"></i>
+                    <strong>Critical Warning:</strong> This action will permanently delete:
+                    <ul class="mb-0 mt-2">
+                        <li>Tour information and details</li>
+                        <li>All itinerary items and schedules</li>
+                        <li>Tour photos and media files</li>
+                        <li>Associated bookings and reservations</li>
+                        <li>Reviews and ratings</li>
+                    </ul>
+                    <strong class="text-danger">This action cannot be undone!</strong>
+                </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn btn-danger">Delete Tour</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="ti ti-x me-1"></i>Cancel
+                </button>
+                <form id="deleteTourForm" method="POST" style="display: inline;">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger">
+                        <i class="ti ti-trash me-1"></i>Delete Tour
+                    </button>
+                </form>
             </div>
         </div>
     </div>
@@ -470,6 +484,23 @@
     document.getElementById('editItineraryModal').addEventListener('hidden.bs.modal', function () {
         document.querySelector('#editItineraryForm').reset();
         editDescriptionQuill.setContents([]);
+    });
+
+    // Delete tour function
+    function deleteTour(tourId) {
+        // Set the form action URL - use the deleteTour route for all types
+        const deleteForm = document.getElementById('deleteTourForm');
+        deleteForm.action = `/admin/tours/${tourId}`;
+        
+        // Show the delete modal
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteTourModal'));
+        deleteModal.show();
+    }
+
+    // Handle form submission for deleting tour
+    document.getElementById('deleteTourForm').addEventListener('submit', function(e) {
+        // Let the form submit naturally - don't prevent default
+        // The server will handle the deletion and redirect
     });
 </script>
 @endpush

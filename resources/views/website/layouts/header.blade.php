@@ -37,7 +37,10 @@
                         <a wire:navigate href="{{route('apartments')}}">Apartments</a>
                     </li>
                     <li class="menu-item menu-item-5">
-                        <a wire:navigate href="{{ route('tours') }}">Tours</a>
+                        <a wire:navigate href="{{ route('activities') }}">Activities</a>
+                    </li>
+                    <li class="menu-item menu-item-5">
+                        <a wire:navigate href="{{ route('packages') }}">Packages</a>
                     </li>
                     <li class="menu-item menu-item-5">
                         <a wire:navigate href="{{ route('cars') }}">Cars</a>

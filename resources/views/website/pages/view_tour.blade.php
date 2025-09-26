@@ -37,19 +37,38 @@ use Illuminate\Support\Str;
     <div class="gmz-carousel-with-lightbox" data-count="{{ $tour->photos->count() }}">
         @forelse($tour->photos as $photo)
         <a href="{{ asset('storage/' . $photo->photo) }}">
-            <img src="{{ asset('storage/' . $photo->photo) }}" alt="{{ $tour->title }}"
-                style="width: 100%; height: 400px; object-fit: cover; display: block;" loading="lazy" />
+            <img 
+                src="{{ asset('storage/' . $photo->photo) }}" 
+                alt="{{ $tour->title }}"
+                class="gallery-img"
+                style="width: 100%; height: 400px; object-fit: cover; display: block; opacity: 0; transition: opacity 0.5s;" 
+                loading="lazy" 
+            />
         </a>
         @empty
         <a
             href="{{ $tour->cover_photo ? asset('storage/' . $tour->cover_photo) : 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&h=600&fit=crop&crop=center' }}">
-            <img src="{{ $tour->cover_photo ? asset('storage/' . $tour->cover_photo) : 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&h=600&fit=crop&crop=center' }}"
-                alt="{{ $tour->title }}" style="width: 100%; height: 400px; object-fit: cover; display: block;"
-                loading="lazy" />
+            <img 
+                src="{{ $tour->cover_photo ? asset('storage/' . $tour->cover_photo) : 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&h=600&fit=crop&crop=center' }}"
+                alt="{{ $tour->title }}" 
+                class="gallery-img"
+                style="width: 100%; height: 400px; object-fit: cover; display: block; opacity: 0; transition: opacity 0.5s;" 
+                loading="lazy" 
+            />
         </a>
         @endforelse
     </div>
 </section>
+<script>
+    // Prevent burst/flash on page opening, fade in after page load
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            document.querySelectorAll('.gallery-img').forEach(function(img) {
+                img.style.opacity = '1';
+            });
+        }, 100); // slight delay to ensure page is ready
+    });
+</script>
 
 <div class="breadcrumb">
     <div class="container">

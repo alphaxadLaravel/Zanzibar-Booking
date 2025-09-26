@@ -88,7 +88,7 @@ class DealsController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('admin.pages.hotels.manage_hotel', compact('hotel', 'hotelId', 'rooms', 'nearbyDeals', 'hashids'));
+        return view('admin.pages.manage_hotel', compact('hotel', 'hotelId', 'rooms', 'nearbyDeals', 'hashids'));
     }
 
     // manageDeal
@@ -702,6 +702,7 @@ class DealsController extends Controller
 
     public function deleteHotel($id)
     {
+
         $hashids = new Hashids('MchungajiZanzibarBookings', 10);
         $decodedHotelId = $hashids->decode($id)[0];
 
@@ -757,7 +758,7 @@ class DealsController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.hotels')->with('success', 'Hotel and all associated data deleted successfully!');
+            return redirect()->route('admin.deal', 'hotel')->with('success', 'Hotel and all associated data deleted successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Failed to delete hotel: ' . $e->getMessage());
@@ -799,7 +800,7 @@ class DealsController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.apartments')->with('success', 'Apartment and all associated data deleted successfully!');
+            return redirect()->route('admin.deal', 'apartment')->with('success', 'Apartment and all associated data deleted successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Failed to delete apartment: ' . $e->getMessage());
@@ -1047,18 +1048,7 @@ class DealsController extends Controller
     }
 
     // Cars Management
-    public function cars()
-    {
-        $hashids = new Hashids('MchungajiZanzibarBookings', 10);
-
-        $cars = Deal::with(['car', 'category', 'photos'])
-            ->where('type', 'car')
-            ->whereHas('car') // Only get deals that have car data
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        return view('admin.pages.cars.index', compact('cars', 'hashids'));
-    }
+   
 
     public function createCar()
     {
@@ -1086,8 +1076,12 @@ class DealsController extends Controller
 
     public function deleteCar($id)
     {
+
+        $hashids = new Hashids('MchungajiZanzibarBookings', 10);
+        $decodedCarId = $hashids->decode($id)[0];
+
         try {
-            $deal = Deal::where('type', 'car')->findOrFail($id);
+            $deal = Deal::where('type', 'car')->findOrFail($decodedCarId);
 
             // Delete associated car data
             if ($deal->car) {
@@ -1110,9 +1104,9 @@ class DealsController extends Controller
             // Delete the deal
             $deal->delete();
 
-            return redirect()->route('admin.cars')->with('success', 'Car deleted successfully!');
+            return redirect()->route('admin.deal', 'car')->with('success', 'Car deleted successfully!');
         } catch (\Exception $e) {
-            return redirect()->route('admin.cars')->with('error', 'Failed to delete car: ' . $e->getMessage());
+            return redirect()->route('admin.deal', 'car')->with('error', 'Failed to delete car: ' . $e->getMessage());
         }
     }
 
@@ -1220,8 +1214,9 @@ class DealsController extends Controller
             $tour->delete();
 
             DB::commit();
+            $type = $tour->type;
 
-            return redirect()->route('admin.tours')->with('success', 'Tour deleted successfully!');
+            return redirect()->route('admin.deal', $type)->with('success', 'Tour deleted successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Failed to delete tour: ' . $e->getMessage());
@@ -1366,7 +1361,7 @@ class DealsController extends Controller
     {
         $request->validate([
             'nearby_deal_id' => 'required|exists:deals,id',
-            'deal_type' => 'required|in:tour,hotel,apartment'
+            'deal_type' => 'required|in:package,activity,hotel,apartment'
         ]);
 
         try {
@@ -1393,7 +1388,14 @@ class DealsController extends Controller
 
             DB::commit();
 
-            return redirect()->back()->with('success', "Successfully added nearby {$dealType}!");
+            $typeLabels = [
+                'package' => 'package',
+                'activity' => 'activity', 
+                'hotel' => 'hotel',
+                'apartment' => 'apartment'
+            ];
+            
+            return redirect()->back()->with('success', "Successfully added nearby {$typeLabels[$dealType]}!");
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Failed to add nearby deal: ' . $e->getMessage());

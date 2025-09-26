@@ -4,6 +4,8 @@
 
 @php
 use Illuminate\Support\Facades\Storage;
+use Hashids\Hashids;
+$hashids = new Hashids('MchungajiZanzibarBookings', 10);
 @endphp
 
 @section('content')
@@ -20,6 +22,8 @@ use Illuminate\Support\Facades\Storage;
             </nav>
         </div>
     </div>
+
+    @include('admin.layouts.alerts')
 
     <!-- Page Content -->
     <div class="row">
@@ -92,8 +96,8 @@ use Illuminate\Support\Facades\Storage;
                                                 onclick="deleteBlog({{ $blog->id }})" title="Delete">
                                             <i class="ti ti-trash"></i>
                                         </button>
-                                        <a href="#" 
-                                            class="btn btn-sm btn-outline-secondary" title="Preview">
+                                        <a href="{{ route('view-blog', ['id' => $hashids->encode($blog->id)]) }}" 
+                                            target="_blank" class="btn btn-sm btn-outline-secondary" title="Preview">
                                              <i class="ti ti-arrow-up-right"></i>
                                          </a>
                                     </td>

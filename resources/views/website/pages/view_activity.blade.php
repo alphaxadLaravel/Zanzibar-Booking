@@ -5,41 +5,41 @@ use Illuminate\Support\Str;
 @endphp
 
 @section('title')
-{{ $apartment->seo_title ?: $apartment->title }} - Zanzibar Bookings
+{{ $activity->seo_title ?: $activity->title }} - Zanzibar Bookings
 @endsection
 
 @section('meta')
-<meta name="description" content="{{ $apartment->seo_description ?: Str::limit(strip_tags($apartment->description), 160) }}">
-@if($apartment->seo_keywords)
-<meta name="keywords" content="{{ $apartment->seo_keywords }}">
+<meta name="description" content="{{ $activity->seo_description ?: Str::limit(strip_tags($activity->description), 160) }}">
+@if($activity->seo_keywords)
+<meta name="keywords" content="{{ $activity->seo_keywords }}">
 @endif
 
 <meta property="og:type" content="website">
 <meta property="og:url" content="{{ request()->url() }}">
-<meta property="og:title" content="{{ $apartment->seo_title ?: $apartment->title }}">
+<meta property="og:title" content="{{ $activity->seo_title ?: $activity->title }}">
 <meta property="og:description"
-    content="{{ $apartment->seo_description ?: Str::limit(strip_tags($apartment->description), 160) }}">
+    content="{{ $activity->seo_description ?: Str::limit(strip_tags($activity->description), 160) }}">
 <meta property="og:image"
-    content="{{ $apartment->seo_image ? asset('storage/' . $apartment->seo_image) : ($apartment->cover_photo ? asset('storage/' . $apartment->cover_photo) : asset('logo.png')) }}">
+    content="{{ $activity->seo_image ? asset('storage/' . $activity->seo_image) : ($activity->cover_photo ? asset('storage/' . $activity->cover_photo) : asset('logo.png')) }}">
 
 <!-- Twitter -->
 <meta property="twitter:card" content="summary_large_image">
 <meta property="twitter:url" content="{{ request()->url() }}">
-<meta property="twitter:title" content="{{ $apartment->seo_title ?: $apartment->title }}">
+<meta property="twitter:title" content="{{ $activity->seo_title ?: $activity->title }}">
 <meta property="twitter:description"
-    content="{{ $apartment->seo_description ?: Str::limit(strip_tags($apartment->description), 160) }}">
+    content="{{ $activity->seo_description ?: Str::limit(strip_tags($activity->description), 160) }}">
 <meta property="twitter:image"
-    content="{{ $apartment->seo_image ? asset('storage/' . $apartment->seo_image) : ($apartment->cover_photo ? asset('storage/' . $apartment->cover_photo) : asset('logo.png')) }}">
+    content="{{ $activity->seo_image ? asset('storage/' . $activity->seo_image) : ($activity->cover_photo ? asset('storage/' . $activity->cover_photo) : asset('logo.png')) }}">
 @endsection
 
 @section('pages')
 <section class="gallery">
-    <div class="gmz-carousel-with-lightbox" data-count="{{ $apartment->photos->count() }}">
-        @forelse($apartment->photos as $photo)
+    <div class="gmz-carousel-with-lightbox" data-count="{{ $activity->photos->count() }}">
+        @forelse($activity->photos as $photo)
         <a href="{{ asset('storage/' . $photo->photo) }}">
             <img 
                 src="{{ asset('storage/' . $photo->photo) }}" 
-                alt="{{ $apartment->title }}"
+                alt="{{ $activity->title }}"
                 class="gallery-img"
                 style="width: 100%; height: 400px; object-fit: cover; display: block; opacity: 0; transition: opacity 0.5s;" 
                 loading="lazy" 
@@ -47,10 +47,10 @@ use Illuminate\Support\Str;
         </a>
         @empty
         <a
-            href="{{ $apartment->cover_photo ? asset('storage/' . $apartment->cover_photo) : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop&crop=center' }}">
+            href="{{ $activity->cover_photo ? asset('storage/' . $activity->cover_photo) : 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&h=600&fit=crop&crop=center' }}">
             <img 
-                src="{{ $apartment->cover_photo ? asset('storage/' . $apartment->cover_photo) : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop&crop=center' }}"
-                alt="{{ $apartment->title }}" 
+                src="{{ $activity->cover_photo ? asset('storage/' . $activity->cover_photo) : 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&h=600&fit=crop&crop=center' }}"
+                alt="{{ $activity->title }}" 
                 class="gallery-img"
                 style="width: 100%; height: 400px; object-fit: cover; display: block; opacity: 0; transition: opacity 0.5s;" 
                 loading="lazy" 
@@ -74,8 +74,8 @@ use Illuminate\Support\Str;
     <div class="container">
         <ul>
             <li><a href="{{ route('index') }}">Home</a></li>
-            <li><a href="{{ route('apartments') }}">Apartments</a></li>
-            <li><span>{{ $apartment->title }}</span></li>
+            <li><a href="{{ route('tours') }}">Tours</a></li>
+            <li><span>{{ $activity->title }}</span></li>
         </ul>
     </div>
 </div>
@@ -95,12 +95,12 @@ use Illuminate\Support\Str;
             </div>
             <div class="d-flex align-items-center" style="gap: 16px;">
                 <h2 class="post-title bold">
-                    {{ $apartment->title }}
+                    {{ $activity->title }}
                 </h2>
             </div>
-            @if ($apartment->location)
+            @if ($activity->location)
             <p class="location">
-                <i class="fal fa-map-marker-alt"></i> {{ $apartment->location }}
+                <i class="fal fa-map-marker-alt"></i> {{ $activity->location }}
             </p>
             @endif
 
@@ -112,12 +112,12 @@ use Illuminate\Support\Str;
                             <span
                                 class="d-flex align-items-center justify-content-center rounded bg-light flex-shrink-0"
                                 style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 18px;">
-                                <i class="mdi mdi-home-city" style="color: #218080; font-size: 1.2rem;"></i>
+                                <i class="mdi mdi-compass" style="color: #218080; font-size: 1.2rem;"></i>
                             </span>
                             <div class="flex-grow-1" style="min-width:0;">
                                 <div class="fw-bold text-dark"
                                     style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                    {{ $apartment->category ? $apartment->category->category : 'Apartment' }}
+                                    {{ $activity->category ? $activity->category->category : 'Tour' }}
                                 </div>
                                 <div class="text-muted small" style="white-space:nowrap;">Type</div>
                             </div>
@@ -134,7 +134,7 @@ use Illuminate\Support\Str;
                             <div class="flex-grow-1" style="min-width:0;">
                                 <div class="fw-bold text-dark"
                                     style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                    USD {{ number_format($apartment->base_price, 2) }}/night
+                                    USD {{ number_format($activity->base_price, 2) }}/person
                                 </div>
                                 <div class="text-muted small" style="white-space:nowrap;">Price</div>
                             </div>
@@ -151,7 +151,7 @@ use Illuminate\Support\Str;
                             <div class="flex-grow-1" style="min-width:0;">
                                 <div class="fw-bold text-dark"
                                     style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                    {{ $apartment->ratings ? number_format($apartment->ratings, 1) : '5.0' }}/5
+                                    {{ $activity->ratings ? number_format($activity->ratings, 1) : '5.0' }}/5
                                 </div>
                                 <div class="text-muted small" style="white-space:nowrap;">Rating</div>
                             </div>
@@ -161,40 +161,144 @@ use Illuminate\Support\Str;
             </div>
             <hr>
             <section class="description">
-                <h4 class="section-title">Detail</h4>
+                <h4 class="section-title">Activity Overview</h4>
                 <div class="section-content">
                     <p>
-                        {!! $apartment->description !!}
+                        {!! $activity->description !!}
                     </p>
                 </div>
             </section>
             <hr>
+            <style>
+                .timeline::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 22px;
+                    /* centers line with badge */
+                    width: 2px;
+                    height: 100%;
+                    background: #dee2e6;
+                    /* Bootstrap gray */
+                    z-index: 0;
+                }
+
+                .timeline-marker {
+                    position: relative;
+                    z-index: 1;
+                }
+            </style>
+
+            <section class="itinerary my-4">
+                <h4 class="fw-bold mb-4">Itinerary</h4>
+
+                <div class="timeline position-relative">
+                    @foreach($activity->itineraries as $index => $itinerary)
+                    <div class="timeline-item d-flex mb-5">
+                        <!-- Circle with number -->
+                        <div class="timeline-marker d-flex flex-column align-items-center">
+                            <span
+                                class="badge rounded-circle bg-dark text-white fs-6 d-flex align-items-center justify-content-center"
+                                style="width:45px; height:45px;">
+                                {{ $index + 1 }}
+                            </span>
+                            @if(!$loop->last)
+                            <div class="timeline-line flex-grow-1 bg-dark" style="width:2px;"></div>
+                            @endif
+                        </div>
+
+                        <!-- Content -->
+                        <div class="ms-4">
+                            <h6 class="fw-bold mb-2">{{ $itinerary->title ?? 'Day ' . ($index + 1) }}</h6>
+                            <p class="mb-3">{!! $itinerary->description !!}</p>
+
+                            <div class="d-flex flex-wrap gap-3 small text-muted align-items-center">
+                                @if(!empty($itinerary->location))
+                                <div>
+                                    <i class="bi bi-geo-alt me-1"></i>{{ $itinerary->location }}
+                                </div>
+                                @endif
+
+                                @if(!empty($itinerary->location) && !empty($itinerary->time))
+                                <span class="mx-1">•</span>
+                                @endif
+
+                                @if(!empty($itinerary->time))
+                                <div>
+                                    <i class="bi bi-clock me-1"></i>{{ $itinerary->time }}
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </section>
+
+
+
+
+            <hr>
             <section class="feature">
-                <h4 class="section-title">Facilities</h4>
+                <h4 class="section-title">Tour Includes</h4>
                 <div class="section-content">
                     <div class="d-flex flex-wrap" style="gap: 10px;">
-                        @forelse($apartment->features as $feature)
+                        @forelse($activity->tourIncludes->where('type', 'include') as $activityInclude)
                         <div class="facility-card d-flex align-items-center px-3 py-2 mb-2"
                             style="background: #fff; border-radius: 6px; border: 1px solid #e0e0e0; min-height: 38px; flex: 0 0 auto; min-width: 140px; max-width: 220px;">
-                            @if($feature->icon)
-                            <i class="mdi {{ $feature->icon }} me-2"
+                            @if($activityInclude->feature->icon)
+                            <i class="mdi {{ $activityInclude->feature->icon }} me-2"
                                 style="font-size: 1.2rem; color: #2e8b57; width: 20px; text-align: center;"></i>
                             @else
                             <i class="mdi mdi-check-circle me-2"
                                 style="font-size: 1.2rem; color: #2e8b57; width: 20px; text-align: center;"></i>
                             @endif
                             <span style="font-size: 13px; font-weight: 500; color: #333; line-height: 1.3;">{{
-                                $feature->name }}</span>
+                                $activityInclude->feature->name }}</span>
                         </div>
                         @empty
-                        <div class="text-muted" style="font-size: 14px;">No facilities listed.</div>
+                        <div class="text-muted" style="font-size: 14px;">No includes listed.</div>
+                        @endforelse
+                    </div>
+                </div>
+            </section>
+            <hr>
+            <section class="feature">
+                <h4 class="section-title">Tour Excludes</h4>
+                <div class="section-content">
+                    <div class="d-flex flex-wrap" style="gap: 10px;">
+                        @forelse($activity->tourIncludes->where('type', 'exclude') as $activityInclude)
+                        <div class="facility-card d-flex align-items-center px-3 py-2 mb-2"
+                            style="background: #fff; border-radius: 6px; border: 1px solid #e0e0e0; min-height: 38px; flex: 0 0 auto; min-width: 140px; max-width: 220px;">
+                            @if($activityInclude->feature->icon)
+                            <i class="mdi {{ $activityInclude->feature->icon }} me-2"
+                                style="font-size: 1.2rem; color: #dc3545; width: 20px; text-align: center;"></i>
+                            @else
+                            <i class="mdi mdi-close-circle me-2"
+                                style="font-size: 1.2rem; color: #dc3545; width: 20px; text-align: center;"></i>
+                            @endif
+                            <span style="font-size: 13px; font-weight: 500; color: #333; line-height: 1.3;">{{
+                                $activityInclude->feature->name }}</span>
+                        </div>
+                        @empty
+                        <div class="text-muted" style="font-size: 14px;">No excludes listed.</div>
                         @endforelse
                     </div>
                 </div>
             </section>
             <hr>
 
-            @if($apartment->video_link)
+            <section class="description">
+                <h4 class="section-title">Our Policies</h4>
+                <div class="section-content">
+                    <p>
+                        {!! $activity->policies !!}
+                    </p>
+                </div>
+            </section>
+            <hr>
+
+            @if($activity->video_link)
             <section class="video-section">
                 <h4 class="section-title">Video</h4>
                 <div class="container">
@@ -203,7 +307,7 @@ use Illuminate\Support\Str;
                             <div class="video-container"
                                 style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%; background: #000; border-radius: 8px; overflow: hidden;">
                                 @php
-                                $videoUrl = $apartment->video_link;
+                                $videoUrl = $activity->video_link;
                                 $embedUrl = '';
 
                                 // YouTube
@@ -254,78 +358,17 @@ use Illuminate\Support\Str;
             @endif
             <hr>
 
-            @if($apartment->nearbyLocations && $apartment->nearbyLocations->count() > 0)
-            <section class="nearby-locations">
-                <h4 class="section-title mb-3">Nearby Locations</h4>
-                <div class="section-content">
-                    <div class="d-flex flex-wrap" style="gap: 10px;">
-                        @foreach($apartment->nearbyLocations as $location)
-                        <div class="facility-card d-flex align-items-center px-3 py-2 mb-2"
-                            style="background: #fff; border-radius: 6px; border: 1px solid #e0e0e0; min-height: 38px; flex: 0 0 auto; min-width: 180px; max-width: 320px; width: calc(100%/6 - 10px);">
-                            <span class="me-2" style="width: 22px; text-align: center;">
-                                @php
-                                $iconMap = [
-                                'Airport' => 'mdi-airplane',
-                                'Ferry Port' => 'mdi-ferry',
-                                'Beach' => 'mdi-beach',
-                                'School' => 'mdi-school',
-                                'Hospital' => 'mdi-hospital',
-                                'Shopping Center' => 'mdi-shopping',
-                                'Restaurant' => 'mdi-food',
-                                'Bank' => 'mdi-bank',
-                                'ATM' => 'mdi-credit-card',
-                                'Gas Station' => 'mdi-gas-station',
-                                'Bus Station' => 'mdi-bus',
-                                'Train Station' => 'mdi-train',
-                                'Tourist Attraction' => 'mdi-camera',
-                                'Market' => 'mdi-store',
-                                'Pharmacy' => 'mdi-pill',
-                                'Police Station' => 'mdi-shield',
-                                'Post Office' => 'mdi-mail',
-                                'Gym' => 'mdi-dumbbell',
-                                'Park' => 'mdi-tree',
-                                'Mosque' => 'mdi-mosque',
-                                'Church' => 'mdi-church',
-                                ];
-                                $icon = $iconMap[$location->category] ?? 'mdi-map-marker';
-                                @endphp
-                                <i class="mdi {{ $icon }}" style="font-size: 1.2rem; color: #2e8b57;"></i>
-                            </span>
-                            <span style="font-size: 13px; font-weight: 500; color: #333; line-height: 1.3; flex:1;">
-                                {{ $location->title }}
-                            </span>
-                            <span class="ms-2 text-nowrap" style="font-size: 13px; color: #2e8b57; font-weight: 600;">
-                                {{ $location->formatted_distance }}
-                            </span>
-                        </div>
-                        @endforeach
-                    </div>
-                </div>
-            </section>
-            <hr>
-            @endif
-
-            <section class="description">
-                <h4 class="section-title">Our Policies</h4>
-                <div class="section-content">
-                    <p>
-                        {!! $apartment->policies ?? '<strong>Check-in/Check-out:</strong> Check-in: 2:00 PM, Check-out: 11:00 AM<br><br><strong>Cancellation Policy:</strong> Free cancellation up to 48 hours before arrival. Late cancellations may incur charges.<br><br><strong>House Rules:</strong> No smoking inside the apartment, No pets allowed, Quiet hours from 10 PM to 7 AM, Maximum occupancy as specified.' !!}
-                    </p>
-                </div>
-            </section>
-            <hr>
-
             <section class="map">
-                <h4 class="section-title mb-4">Apartment Location On Map</h4>
+                <h4 class="section-title mb-4">Tour Location On Map</h4>
                 <div id="address-map-container" style="width: 100%; height: 400px">
-                    @if($apartment->lat && $apartment->long)
+                    @if($activity->lat && $activity->long)
                     <iframe width="100%" height="100%" frameborder="0" style="border:0; border-radius: 8px;"
-                        src="https://www.google.com/maps?q={{ $apartment->lat }},{{ $apartment->long }}&output=embed"
+                        src="https://www.google.com/maps?q={{ $activity->lat }},{{ $activity->long }}&output=embed"
                         allowfullscreen aria-hidden="false" tabindex="0" loading="lazy"
                         referrerpolicy="no-referrer-when-downgrade"></iframe>
                     @else
                     <iframe width="100%" height="100%" frameborder="0" style="border:0; border-radius: 8px;"
-                        src="https://www.google.com/maps?q={{ $apartment->location }}&output=embed" allowfullscreen
+                        src="https://www.google.com/maps?q={{ $activity->location }}&output=embed" allowfullscreen
                         aria-hidden="false" tabindex="0" loading="lazy"
                         referrerpolicy="no-referrer-when-downgrade"></iframe>
                     @endif
@@ -335,7 +378,7 @@ use Illuminate\Support\Str;
 
             <div class="reviews-section mt-4" id="review-section">
                 <div class="d-flex justify-content-between align-items-center my-3">
-                    <h4 class="comment-count">Reviews for this Apartment</h4>
+                    <h4 class="comment-count">Reviews for this Tour</h4>
 
                     <div class="d-flex justify-content-center">
                         <a href="#leaveReviewModal" class="btn btn-primary btn-lg fw-semibold gmz-box-popup"
@@ -348,15 +391,18 @@ use Illuminate\Support\Str;
                             <h4 class="popup-title" id="leaveReviewModalLabel">Leave a Review</h4>
                             <div class="popup-content">
                                 <div class="comment-form-wrapper">
-                                    <form action="{{ route('deals.reviews.store', $apartment->id) }}" class="comment-form form-sm" method="post">
+                                    <form action="{{ route('deals.reviews.store', $activity->id) }}"
+                                        class="comment-form form-sm" method="post">
                                         @csrf
 
                                         <div class="row g-3">
                                             <div class="col-md-12">
                                                 <div class="form-group">
-                                                    <label for="review-title" class="form-label fw-semibold">Review Title *</label>
+                                                    <label for="review-title" class="form-label fw-semibold">Review
+                                                        Title *</label>
                                                     <input id="review-title" type="text" name="review_title"
-                                                        class="form-control" placeholder="Enter your review title" required />
+                                                        class="form-control" placeholder="Enter your review title"
+                                                        required />
                                                 </div>
                                             </div>
 
@@ -370,7 +416,8 @@ use Illuminate\Support\Str;
                                                         style="font-size: 1.3rem; color: #ffc107;"></span>
 
                                                 </label>
-                                                <select id="rating" name="rating" class="form-select form-control" required>
+                                                <select id="rating" name="rating" class="form-select form-control"
+                                                    required>
                                                     <option value="">Select rating</option>
                                                     <option value="1">1 Star</option>
                                                     <option value="2">2 Stars</option>
@@ -382,20 +429,21 @@ use Illuminate\Support\Str;
 
                                             <div class="col-12">
                                                 <div class="form-group">
-                                                    <label for="review-content" class="form-label fw-semibold">Your Review *</label>
+                                                    <label for="review-content" class="form-label fw-semibold">Your
+                                                        Review *</label>
                                                     <textarea id="review-content" name="review_content"
-                                                        placeholder="Share your experience with this apartment..."
+                                                        placeholder="Share your experience with this tour..."
                                                         class="form-control" required rows="5"></textarea>
                                                 </div>
                                             </div>
-                        </div>
+                                        </div>
 
                                         <div class="d-grid mt-4">
                                             <button type="submit"
                                                 class="btn btn-primary btn-lg text-uppercase fw-semibold">
                                                 Submit Review
                                             </button>
-                                    </div>
+                                        </div>
                                     </form>
                                 </div>
                             </div>
@@ -407,205 +455,149 @@ use Illuminate\Support\Str;
                 <!-- Reviews List -->
                 <div class="reviews-list" id="reviews-list">
                     @if(isset($paginatedReviews) && $paginatedReviews->count() > 0)
-                        @foreach($paginatedReviews as $review)
+                    @foreach($paginatedReviews as $review)
                     <div class="review-item d-flex mb-4 p-3"
                         style="background: #f8f9fa; border-radius: 12px; border: 1px solid #e9ecef;">
-                                <div class="review-avatar" style="flex-shrink: 0; margin-right: 2rem;">
-                                    <img src="https://ui-avatars.com/api/?name={{ urlencode($review->reviewer_name) }}&background=1C8D83&color=fff&size=60"
-                                        alt="{{ $review->reviewer_name }}"
+                        <div class="review-avatar" style="flex-shrink: 0; margin-right: 2rem;">
+                            <img src="https://ui-avatars.com/api/?name={{ urlencode($review->reviewer_name) }}&background=1C8D83&color=fff&size=60"
+                                alt="{{ $review->reviewer_name }}"
                                 style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; display: block;">
                         </div>
                         <div class="review-content flex-grow-1">
                             <div class="review-header d-flex justify-content-between align-items-start mb-2">
                                 <div>
                                     <h5 class="reviewer-name mb-1"
-                                                style="font-size: 16px; font-weight: 600; color: #333;">{{ $review->reviewer_name }}</h5>
-                                            <div class="review-rating mb-1" style="font-size: 0.85rem;">
-                                                {!! $review->star_rating !!}
-                                            </div>
-                                        </div>
-                                        <small class="text-muted">{{ $review->formatted_date }}</small>
+                                        style="font-size: 16px; font-weight: 600; color: #333;">{{
+                                        $review->reviewer_name }}</h5>
+                                    <div class="review-rating mb-1" style="font-size: 0.85rem;">
+                                        {!! $review->star_rating !!}
                                     </div>
-                                    <h6 class="review-title mb-2" style="font-size: 14px; font-weight: 500; color: #555;">
-                                        {{ $review->review_title }}</h6>
-                                    <p class="review-text mb-0" style="font-size: 14px; color: #666; line-height: 1.5;">
-                                        {{ $review->review_content }}
-                                    </p>
                                 </div>
+                                <small class="text-muted">{{ $review->formatted_date }}</small>
                             </div>
-                        @endforeach
-                    @else
-                        <div class="text-center py-4">
-                            <i class="mdi mdi-star-outline fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">No reviews yet. Be the first to leave a review!</p>
+                            <h6 class="review-title mb-2" style="font-size: 14px; font-weight: 500; color: #555;">
+                                {{ $review->review_title }}</h6>
+                            <p class="review-text mb-0" style="font-size: 14px; color: #666; line-height: 1.5;">
+                                {{ $review->review_content }}
+                            </p>
                         </div>
+                    </div>
+                    @endforeach
+                    @else
+                    <div class="text-center py-4">
+                        <i class="mdi mdi-star-outline fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No reviews yet. Be the first to leave a review!</p>
+                    </div>
                     @endif
                 </div>
             </div>
 
             {{-- Pagination for reviews --}}
             @if(isset($paginatedReviews) && $paginatedReviews->hasPages())
-                <div class="d-flex justify-content-center my-4">
-                    {{ $paginatedReviews->links() }}
-                </div>
+            <div class="d-flex justify-content-center my-4">
+                {{ $paginatedReviews->links() }}
+            </div>
             @endif
         </div>
 
         {{-- ################ BOOKING SECTION ################ --}}
         <div class="col-lg-4">
             <div class="siderbar-single">
-                <h4 class="post-title my-2 bold">
-                    Book This Apartment
+                <h4 class="post-title my-3 fw-bold ">
+                    Reserve Your Spot
                 </h4>
-                
-                {{-- apartment booking card --}}
-                <div class="card mb-4 apartment-card rounded"
-                    style=" overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
-                    <div class="row g-0 align-items-center">
-                        <div class="col-4 d-flex align-items-center justify-content-center"
-                            style="background: #f8f9fa;">
-                            <div class="rounded"
-                                style="width: 80px; height: 80px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-                                <img src="{{ $apartment->cover_photo ? asset('storage/' . $apartment->cover_photo) : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=80&h=80&fit=crop&crop=center' }}"
-                                    alt="{{ $apartment->title }}" class="rounded"
-                                    style="width: 100%; height: 100%; object-fit: cover;">
-                            </div>
-                        </div>
-                        <div class="col-8 px-3">
-                            <div class="card-body p-3">
-                                <h5 class="card-title mb-1" style="font-size: 1.1rem; font-weight: 600;">{{ $apartment->title }}</h5>
-                                <div class="mb-2" style="font-size: 13px; color: #666;">
-                                    <i class="fa fa-home"></i> {{ $apartment->category ? $apartment->category->category : 'Apartment' }} &nbsp; | &nbsp;
-                                    <i class="fa fa-map-marker"></i> {{ $apartment->location }}
-                                </div>
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <div>
-                                        <span class="fw-bold" style="font-size: 1.1rem; color: #ff5722;">${{ number_format($apartment->base_price, 0) }}</span>
-                                        <span style="font-size: 13px; color: #888;">/ night</span>
-                                    </div>
-                                    {{-- <a href="{{ route('confirm-booking', ['deal_id' => $apartment->id]) }}"
-                                        class="btn btn-primary btn-sm" style="font-size: 13px;">Book Now</a> --}}
-                                    <a href="#" class="btn btn-primary btn-sm" style="font-size: 13px;">Book Now</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Contact Information --}}
-                <div class="card mb-4 contact-card rounded"
-                    style="overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
-                    <div class="card-header" style="background: #f8f9fa; padding: 15px;">
-                        <h5 class="mb-0" style="font-size: 1.2rem; font-weight: 600; color: #333;">
-                            <i class="fas fa-phone me-2"></i>Need Help?
+            
+                {{-- booking card --}}
+                <div class="card booking-card border rounded">
+                    <!-- Header -->
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0 fw-bold">
+                            <i class="fas fa-calendar-check me-2"></i>Reservation Details
                         </h5>
                     </div>
-                    <div class="card-body p-3">
-                        <p class="mb-3" style="color: #666; font-size: 14px;">
-                            Contact us for more information about this apartment.
-                        </p>
-                        <div class="contact-info">
-                            <div class="contact-item d-flex align-items-center mb-2">
-                                <i class="fas fa-phone me-2" style="color: #2e8b57; width: 20px;"></i>
-                                <span style="font-size: 14px; color: #333;">+255 123 456 789</span>
+            
+                    <!-- Body -->
+                    <div class="card-body p-4">
+                        <!-- Price + button -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="fw-bold text-dark" style="font-size: 2rem;">
+                                USD {{ number_format($activity->base_price, 2) }}
+                                <small class="text-muted" style="font-size: 1rem;">/person</small>
                             </div>
-                            <div class="contact-item d-flex align-items-center mb-2">
-                                <i class="fas fa-envelope me-2" style="color: #2e8b57; width: 20px;"></i>
-                                <span style="font-size: 14px; color: #333;">info@zanzibarbookings.com</span>
-                            </div>
-                            <div class="contact-item d-flex align-items-center">
-                                <i class="fas fa-clock me-2" style="color: #2e8b57; width: 20px;"></i>
-                                <span style="font-size: 14px; color: #333;">24/7 Support</span>
-                            </div>
+                        </div>
+            
+                        <!-- Button -->
+                        <div class="d-grid">
+                            {{-- <a href="{{ route('confirm-booking', ['deal_id' => $activity->id]) }}"
+                               class="btn btn-primary btn-lg w-100 text-center fw-bold d-flex align-items-center justify-content-between">
+                                <span class="d-flex align-items-center">
+                                    <i class="fas fa-calendar-check me-2"></i>
+                                    Reserve Now
+                                </span>
+                                <i class="fas fa-arrow-right ms-2"></i>
+                            </a> --}}
+                            <a href="#" class="btn btn-primary btn-lg w-100 text-center fw-bold d-flex align-items-center justify-content-between">
+                                <span class="d-flex align-items-center">
+                                    <i class="fas fa-calendar-check me-2"></i>
+                                    Reserve Now
+                                </span>
+                                <i class="fas fa-arrow-right ms-2"></i>
+                            </a>
                         </div>
                     </div>
                 </div>
             </div>
+            
+            {{-- Contact Information --}}
+            <div class="card mb-4 contact-card rounded"
+                style="overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                <div class="card-header" style="background: #f8f9fa; padding: 15px;">
+                    <h5 class="mb-0" style="font-size: 1.2rem; font-weight: 600; color: #333;">
+                        <i class="fas fa-phone me-2"></i>Need Help?
+                    </h5>
+                </div>
+                <div class="card-body p-3">
+                    <p class="mb-3" style="color: #666; font-size: 14px;">
+                        Contact us for more information about this activity.
+                    </p>
+                    <div class="contact-info">
+                        <div class="contact-item d-flex align-items-center mb-2">
+                            <i class="fas fa-phone me-2" style="color: #2e8b57; width: 20px;"></i>
+                            <span style="font-size: 14px; color: #333;">+255 123 456 789</span>
+                        </div>
+                        <div class="contact-item d-flex align-items-center mb-2">
+                            <i class="fas fa-envelope me-2" style="color: #2e8b57; width: 20px;"></i>
+                            <span style="font-size: 14px; color: #333;">info@zanzibarbookings.com</span>
+                        </div>
+                        <div class="contact-item d-flex align-items-center">
+                            <i class="fas fa-clock me-2" style="color: #2e8b57; width: 20px;"></i>
+                            <span style="font-size: 14px; color: #333;">24/7 Support</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
         </div>
     </div>
 </div>
 
-@if(isset($nearbyHotels) && $nearbyHotels->isNotEmpty())
-<section class="list-hotel list-hotel--grid py-40 bg-gray-100 mb-0 nearby">
+@if(isset($nearbyTours) && $nearbyTours->isNotEmpty())
+<section class="list-tour list-tour--grid py-40 bg-gray-100 mb-0 nearby">
     <div class="container">
-        <h4 class="section-title mb-20">Nearby Hotels & Apartments</h4>
+        <h4 class="section-title mb-20">Nearby Tours</h4>
         <div class="row">
-            @foreach($nearbyHotels as $nearbyHotel)
+            @foreach($nearbyTours as $nearbyTour)
             <div class="col-lg-4 col-md-4 col-sm-12">
                 <div class="tour-item tour-item--grid" data-plugin="matchHeight">
                     <div class="tour-item__thumbnail position-relative">
-                        @if($nearbyHotel->is_featured)
+                        @if($nearbyTour->is_featured)
                         <span class="tour-item__label position-absolute"
                             style="top: 12px; left: 12px; z-index: 2; background: #ff5722; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 14px;">Featured</span>
                         @endif
-                        <a href="{{ $nearbyHotel->type === 'apartment' ? route('view-apartment', ['id' => $hashids->encode($nearbyHotel->id)]) : route('view-hotel', ['id' => $hashids->encode($nearbyHotel->id)]) }}" style="display:block;">
-                            <img src="{{ $nearbyHotel->cover_photo ? asset('storage/' . $nearbyHotel->cover_photo) : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=360&h=240&fit=crop&crop=center' }}"
-                                alt="{{ $nearbyHotel->title }}" loading="eager" width="360" height="240"
-                                style="width:100%;height:220px;object-fit:cover;border-radius:12px;" />
-                        </a>
-
-                        <div class="add-wishlist-wrapper" style="position:absolute;top:12px;right:12px;z-index:2;">
-                            <a href="#gmz-login-popup" class="add-wishlist gmz-box-popup" data-effect="mfp-zoom-in">
-                                <i class="fal fa-heart"></i>
-                            </a>
-                        </div>
-                    </div>
-                    <div class="tour-item__details" style="padding-top:18px;">
-                        <div class="star-rating mb-2">
-                            <div class="star-rating">
-                                <i class="fa fa-star text-warning"></i>
-                                <i class="fa fa-star text-warning"></i>
-                                <i class="fa fa-star text-warning"></i>
-                                <i class="fa fa-star text-warning"></i>
-                                <i class="fa fa-star text-warning"></i>
-                            </div>
-                        </div>
-                        <h3 class="car-item__title" style="font-size:1.25rem;font-weight:600;">
-                            <a href="{{ $nearbyHotel->type === 'apartment' ? route('view-apartment', ['id' => $hashids->encode($nearbyHotel->id)]) : route('view-hotel', ['id' => $hashids->encode($nearbyHotel->id)]) }}"
-                                style="color:#222;text-decoration:none;">{{ $nearbyHotel->title }}</a>
-                        </h3>
-                        <div class="tour-item__meta" style="margin:18px 0 12px 0;">
-                            <div class="i-meta d-flex align-items-center" style="font-size:15px;color:#888;">
-                                <i class="fas fa-map-marker-alt me-2"></i>{{ $nearbyHotel->location }}
-                            </div>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center" style="margin-top:18px;">
-                            <div class="tour-item__price">
-                                <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600;">USD
-                                    {{ number_format($nearbyHotel->base_price, 2) }}</span>
-                                <span class="_unit" style="color:#2e8b57;font-size:1rem;">/Night</span>
-                            </div>
-                            <a class="btn btn-primary btn-sm tour-item__view-detail"
-                                href="{{ $nearbyHotel->type === 'apartment' ? route('view-apartment', ['id' => $hashids->encode($nearbyHotel->id)]) : route('view-hotel', ['id' => $hashids->encode($nearbyHotel->id)]) }}"
-                                style="font-size:1rem;padding:8px 22px;border-radius:7px;">
-                                View Detail
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            @endforeach
-        </div>
-    </div>
-</section>
-@endif
-
-@if(isset($nearbyTours) && $nearbyTours->isNotEmpty())
-<section class="list-tour list-tour--grid py-40 bg-white mb-0 nearby-activities">
-    <div class="container">
-        <h4 class="section-title mb-20">Nearby Activities</h4>
-        <div class="row">
-            @foreach($nearbyTours as $tour)
-            <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
-                <div class="tour-item tour-item--grid" data-plugin="matchHeight">
-                    <div class="tour-item__thumbnail position-relative">
-                        @if($tour->is_featured)
-                        <span class="tour-item__label position-absolute"
-                            style="top: 12px; left: 12px; z-index: 2; background: #ff5722; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 14px;">Featured</span>
-                        @endif
-                        <a href="{{route('view-tour', ['id' => $hashids->encode($tour->id)])}}" style="display:block;">
-                            <img src="{{ $tour->cover_photo ? asset('storage/' . $tour->cover_photo) : 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=360&h=240&fit=crop&crop=center' }}"
-                                alt="{{ $tour->title }}" loading="eager" width="360" height="240"
+                        <a href="{{route('view-tour', ['id' => $hashids->encode($nearbyTour->id)])}}"
+                            style="display:block;">
+                            <img src="{{ $nearbyTour->cover_photo ? asset('storage/' . $nearbyTour->cover_photo) : 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=360&h=240&fit=crop&crop=center' }}"
+                                alt="{{ $nearbyTour->title }}" loading="eager" width="360" height="240"
                                 style="width:100%;height:220px;object-fit:cover;border-radius:12px;" />
                         </a>
 
@@ -626,27 +618,22 @@ use Illuminate\Support\Str;
                             </div>
                         </div>
                         <h3 class="tour-item__title" style="font-size:1.25rem;font-weight:600;">
-                            <a href="{{route('view-tour', ['id' => $hashids->encode($tour->id)])}}"
-                                style="color:#222;text-decoration:none;">{{ $tour->title }}</a>
+                            <a href="{{route('view-tour', ['id' => $hashids->encode($nearbyTour->id)])}}"
+                                style="color:#222;text-decoration:none;">{{ $nearbyTour->title }}</a>
                         </h3>
                         <div class="tour-item__meta" style="margin:18px 0 12px 0;">
                             <div class="i-meta d-flex align-items-center" style="font-size:15px;color:#888;">
-                                <i class="fas fa-map-marker-alt me-2"></i>{{ $tour->location }}
+                                <i class="fas fa-map-marker-alt me-2"></i>{{ $nearbyTour->location }}
                             </div>
                         </div>
-                        @if($tour->tours)
-                        <div class="tour-duration mb-2" style="font-size:14px;color:#666;">
-                            <i class="fas fa-clock me-2"></i>{{ $tour->tours->duration ?? 'Full Day' }}
-                        </div>
-                        @endif
                         <div class="d-flex justify-content-between align-items-center" style="margin-top:18px;">
                             <div class="tour-item__price">
                                 <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600;">USD
-                                    {{ number_format($tour->base_price, 2) }}</span>
+                                    {{ number_format($nearbyTour->base_price, 2) }}</span>
                                 <span class="_unit" style="color:#2e8b57;font-size:1rem;">/person</span>
                             </div>
                             <a class="btn btn-primary btn-sm tour-item__view-detail"
-                                href="{{route('view-tour', ['id' => $hashids->encode($tour->id)])}}"
+                                href="{{route('view-tour', ['id' => $hashids->encode($nearbyTour->id)])}}"
                                 style="font-size:1rem;padding:8px 22px;border-radius:7px;">
                                 View Detail
                             </a>

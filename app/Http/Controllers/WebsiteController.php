@@ -26,8 +26,8 @@ class WebsiteController extends Controller
     //index
     public function index()
     {
-        // Fetch categories for property types (hotels, apartments, tours, resorts)
-        $propertyCategories = Category::whereIn('type', ['hotel', 'apartment', 'tour', 'resort'])
+        // Fetch categories for property types (hotels, apartments, packages, activities, resorts)
+        $propertyCategories = Category::whereIn('type', ['hotel', 'apartment', 'package', 'activity', 'resort'])
             ->limit(6)
             ->get();
 
@@ -37,13 +37,13 @@ class WebsiteController extends Controller
             ->limit(6)
             ->get();
 
-        // Fetch tour categories
-        $tourCategories = Category::where('type', 'tour')
+        // Fetch package and activity categories
+        $tourCategories = Category::whereIn('type', ['package', 'activity'])
             ->limit(6)
             ->get();
 
-        // Fetch all tours
-        $featuredTours = Deal::where('type', 'tour')
+        // Fetch all packages and activities
+        $featuredTours = Deal::whereIn('type', ['package', 'activity'])
             ->with(['category', 'photos', 'tours'])
             ->limit(6)
             ->get();
@@ -95,10 +95,15 @@ class WebsiteController extends Controller
     }
 
     // viewBlog
-    public function viewBlog(Request $request)
+    public function viewBlog($id)
     {
-        // Get blog ID from request parameter
-        $blogId = $request->get('id', 1); // Default to 1 if no ID provided
+        // Get blog hashid from route parameter and decode
+        $hashids = $this->getHashids();
+        $decodedIds = $hashids->decode($id);
+        if (empty($decodedIds)) {
+            abort(404, 'Blog post not found');
+        }
+        $blogId = $decodedIds[0];
         
         // Fetch specific blog post
         $blog = Blog::where('status', 1)
@@ -136,6 +141,16 @@ class WebsiteController extends Controller
     public function tours()
     {
         return view('website.pages.tours');
+    }
+
+    public function activities()
+    {
+        return view('website.pages.activities');
+    }
+
+    public function packages()
+    {
+        return view('website.pages.packages');
     }
 
     
@@ -225,7 +240,7 @@ class WebsiteController extends Controller
         foreach ($nearbyDeals as $near) {
             if ($near->type === 'hotel' || $near->type === 'apartment') {
                 $nearbyHotels->push($near->nearDeal);
-            } elseif ($near->type === 'tour') {
+            } elseif ($near->type === 'package' || $near->type === 'activity') {
                 $nearbyTours->push($near->nearDeal);
             }
         }
@@ -460,7 +475,7 @@ class WebsiteController extends Controller
         foreach ($nearbyDeals as $near) {
             if ($near->type === 'hotel' || $near->type === 'apartment') {
                 $nearbyHotels->push($near->nearDeal);
-            } elseif ($near->type === 'tour') {
+            } elseif ($near->type === 'package' || $near->type === 'activity') {
                 $nearbyTours->push($near->nearDeal);
             } elseif ($near->type === 'car') {
                 $nearbyCars->push($near->nearDeal);
@@ -582,7 +597,7 @@ class WebsiteController extends Controller
         }
         $tourId = $decodedIds[0];
 
-        $tour = Deal::where('type', 'tour')
+        $tour = Deal::whereIn('type', ['package', 'activity'])
             ->where('id', $tourId)
             ->with(['category', 'photos', 'tours', 'features', 'tourIncludes.feature'])
             ->firstOrFail();
@@ -605,14 +620,14 @@ class WebsiteController extends Controller
         foreach ($nearbyDeals as $near) {
             if ($near->type === 'hotel' || $near->type === 'apartment') {
                 $nearbyHotels->push($near->nearDeal);
-            } elseif ($near->type === 'tour') {
+            } elseif ($near->type === 'package' || $near->type === 'activity') {
                 $nearbyTours->push($near->nearDeal);
             }
         }
 
-        // If no nearby deals, get random tours
+        // If no nearby deals, get random packages and activities
         if ($nearbyTours->isEmpty()) {
-            $nearbyTours = Deal::where('type', 'tour')
+            $nearbyTours = Deal::whereIn('type', ['package', 'activity'])
                 ->where('id', '!=', $tour->id)
                 ->with(['category', 'photos'])
                 ->limit(3)
@@ -624,6 +639,46 @@ class WebsiteController extends Controller
         $nearbyTours = $nearbyTours->take(6);
 
         return view('website.pages.view_tour', compact('tour', 'nearbyHotels', 'nearbyTours', 'paginatedReviews', 'hashids'));
+    }
+
+    // viewActivity
+    public function viewActivity($id)
+    {
+        $hashids = $this->getHashids();
+        
+        // Decode the hashed ID
+        $decodedIds = $hashids->decode($id);
+        if (empty($decodedIds)) {
+            abort(404, 'Activity not found');
+        }
+        $activityId = $decodedIds[0];
+
+        $activity = Deal::where('type', 'activity')
+            ->where('id', $activityId)
+            ->with(['category', 'photos', 'tours', 'features', 'tourIncludes.feature'])
+            ->firstOrFail();
+
+        return view('website.pages.view_activity', compact('activity', 'hashids'));
+    }
+
+    // viewPackage
+    public function viewPackage($id)
+    {
+        $hashids = $this->getHashids();
+        
+        // Decode the hashed ID
+        $decodedIds = $hashids->decode($id);
+        if (empty($decodedIds)) {
+            abort(404, 'Package not found');
+        }
+        $packageId = $decodedIds[0];
+
+        $package = Deal::where('type', 'package')
+            ->where('id', $packageId)
+            ->with(['category', 'photos', 'tours', 'features', 'tourIncludes.feature'])
+            ->firstOrFail();
+
+        return view('website.pages.view_package', compact('package', 'hashids'));
     }
 
     /**
@@ -660,7 +715,7 @@ class WebsiteController extends Controller
             ->paginate(12);
 
         // Get categories for filter dropdown
-        $categories = Category::whereIn('type', ['hotel', 'apartment', 'tour', 'car'])
+        $categories = Category::whereIn('type', ['hotel', 'apartment', 'package', 'activity', 'car'])
             ->get();
 
         // Get locations for filter dropdown
