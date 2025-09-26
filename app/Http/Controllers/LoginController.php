@@ -169,7 +169,9 @@ class LoginController extends Controller
             ], 422);
         }
 
-        $user = Auth::user();
+        // $user = Auth::user();
+        // find user
+        $user = User::find(Auth::user()->id);
         
         // Check current password
         if (!Hash::check($request->current_password, $user->password)) {
@@ -180,9 +182,8 @@ class LoginController extends Controller
         }
 
         // Update password
-        $user->update([
-            'password' => Hash::make($request->password)
-        ]);
+        $user->password = Hash::make($request->password);
+        $user->save();
 
         return response()->json([
             'success' => true,
