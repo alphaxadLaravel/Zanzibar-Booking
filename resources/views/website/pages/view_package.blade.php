@@ -9,7 +9,8 @@ use Illuminate\Support\Str;
 @endsection
 
 @section('meta')
-<meta name="description" content="{{ $package->seo_description ?: Str::limit(strip_tags($package->description), 160) }}">
+<meta name="description"
+    content="{{ $package->seo_description ?: Str::limit(strip_tags($package->description), 160) }}">
 @if($package->seo_keywords)
 <meta name="keywords" content="{{ $package->seo_keywords }}">
 @endif
@@ -37,24 +38,17 @@ use Illuminate\Support\Str;
     <div class="gmz-carousel-with-lightbox" data-count="{{ $package->photos->count() }}">
         @forelse($package->photos as $photo)
         <a href="{{ asset('storage/' . $photo->photo) }}">
-            <img 
-                src="{{ asset('storage/' . $photo->photo) }}" 
-                alt="{{ $package->title }}"
-                class="gallery-img"
-                style="width: 100%; height: 400px; object-fit: cover; display: block; opacity: 0; transition: opacity 0.5s;" 
-                loading="lazy" 
-            />
+            <img src="{{ asset('storage/' . $photo->photo) }}" alt="{{ $package->title }}" class="gallery-img"
+                style="width: 100%; height: 400px; object-fit: cover; display: block; opacity: 0; transition: opacity 0.5s;"
+                loading="lazy" />
         </a>
         @empty
         <a
             href="{{ $package->cover_photo ? asset('storage/' . $package->cover_photo) : 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&h=600&fit=crop&crop=center' }}">
-            <img 
-                src="{{ $package->cover_photo ? asset('storage/' . $package->cover_photo) : 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&h=600&fit=crop&crop=center' }}"
-                alt="{{ $package->title }}" 
-                class="gallery-img"
-                style="width: 100%; height: 400px; object-fit: cover; display: block; opacity: 0; transition: opacity 0.5s;" 
-                loading="lazy" 
-            />
+            <img src="{{ $package->cover_photo ? asset('storage/' . $package->cover_photo) : 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&h=600&fit=crop&crop=center' }}"
+                alt="{{ $package->title }}" class="gallery-img"
+                style="width: 100%; height: 400px; object-fit: cover; display: block; opacity: 0; transition: opacity 0.5s;"
+                loading="lazy" />
         </a>
         @endforelse
     </div>
@@ -84,296 +78,304 @@ use Illuminate\Support\Str;
     <div class="row">
         {{-- ############## MAIN ############################# --}}
         <div class="col-lg-8 pb-5">
-            <div class="hotel-star">
-                <div class="star-rating">
-                    <i class="fa fa-star text-warning"></i>
-                    <i class="fa fa-star text-warning"></i>
-                    <i class="fa fa-star text-warning"></i>
-                    <i class="fa fa-star text-warning"></i>
-                    <i class="fa fa-star text-warning"></i>
-                </div>
-            </div>
-            <div class="d-flex align-items-center" style="gap: 16px;">
-                <h2 class="post-title bold">
-                    {{ $package->title }}
-                </h2>
-            </div>
-            @if ($package->location)
-            <p class="location">
-                <i class="fal fa-map-marker-alt"></i> {{ $package->location }}
-            </p>
-            @endif
-
-            <div class="meta">
-                <ul class="meta row  gy-2 mb-4" style="list-style: none; padding: 0; margin: 0;">
-                    <li class="col-6 col-md-4 d-flex align-items-stretch mb-3 mb-md-0">
-                        <div class="d-flex flex-nowrap align-items-center w-100 border rounded bg-white pl-3 py-2 h-100"
-                            style="min-height:70px; border-color: #218080;">
-                            <span
-                                class="d-flex align-items-center justify-content-center rounded bg-light flex-shrink-0"
-                                style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 18px;">
-                                <i class="mdi mdi-compass" style="color: #218080; font-size: 1.2rem;"></i>
-                            </span>
-                            <div class="flex-grow-1" style="min-width:0;">
-                                <div class="fw-bold text-dark"
-                                    style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                    {{ $package->category ? $package->category->category : 'Tour' }}
-                                </div>
-                                <div class="text-muted small" style="white-space:nowrap;">Type</div>
-                            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="hotel-star">
+                        <div class="star-rating">
+                            <i class="fa fa-star text-warning"></i>
+                            <i class="fa fa-star text-warning"></i>
+                            <i class="fa fa-star text-warning"></i>
+                            <i class="fa fa-star text-warning"></i>
+                            <i class="fa fa-star text-warning"></i>
                         </div>
-                    </li>
-                    <li class="col-6 col-md-4 d-flex align-items-stretch mb-3 mb-md-0">
-                        <div class="d-flex flex-nowrap align-items-center w-100 border rounded bg-white px-3 py-2 h-100"
-                            style="min-height:70px; border-color: #218080;">
-                            <span
-                                class="d-flex align-items-center justify-content-center rounded bg-light flex-shrink-0"
-                                style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 18px;">
-                                <i class="mdi mdi-currency-usd" style="color: #218080; font-size: 1.2rem;"></i>
-                            </span>
-                            <div class="flex-grow-1" style="min-width:0;">
-                                <div class="fw-bold text-dark"
-                                    style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                    USD {{ number_format($package->base_price, 2) }}/person
-                                </div>
-                                <div class="text-muted small" style="white-space:nowrap;">Price</div>
-                            </div>
-                        </div>
-                    </li>
-                    <li class="col-6 col-md-4 d-flex align-items-stretch mb-3 mb-md-0">
-                        <div class="d-flex flex-nowrap align-items-center w-100 border rounded bg-white px-3 py-2 h-100"
-                            style="min-height:70px; border-color: #218080;">
-                            <span
-                                class="d-flex align-items-center justify-content-center rounded bg-light flex-shrink-0"
-                                style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 18px;">
-                                <i class="mdi mdi-star" style="color: #218080; font-size: 1.2rem;"></i>
-                            </span>
-                            <div class="flex-grow-1" style="min-width:0;">
-                                <div class="fw-bold text-dark"
-                                    style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                    {{ $package->ratings ? number_format($package->ratings, 1) : '5.0' }}/5
-                                </div>
-                                <div class="text-muted small" style="white-space:nowrap;">Rating</div>
-                            </div>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-            <hr>
-            <section class="description">
-                <h4 class="section-title">Activity Overview</h4>
-                <div class="section-content">
-                    <p>
-                        {!! $package->description !!}
+                    </div>
+                    <div class="d-flex align-items-center" style="gap: 16px;">
+                        <h2 class="post-title bold">
+                            {{ $package->title }}
+                        </h2>
+                    </div>
+                    @if ($package->location)
+                    <p class="location">
+                        <i class="fal fa-map-marker-alt"></i> {{ $package->location }}
                     </p>
-                </div>
-            </section>
-            <hr>
-            <style>
-                .timeline::before {
-                    content: '';
-                    position: absolute;
-                    top: 0;
-                    left: 22px;
-                    /* centers line with badge */
-                    width: 2px;
-                    height: 100%;
-                    background: #dee2e6;
-                    /* Bootstrap gray */
-                    z-index: 0;
-                }
+                    @endif
 
-                .timeline-marker {
-                    position: relative;
-                    z-index: 1;
-                }
-            </style>
-
-            <section class="itinerary my-4">
-                <h4 class="fw-bold mb-4">Itinerary</h4>
-
-                <div class="timeline position-relative">
-                    @foreach($package->itineraries as $index => $itinerary)
-                    <div class="timeline-item d-flex mb-5">
-                        <!-- Circle with number -->
-                        <div class="timeline-marker d-flex flex-column align-items-center">
-                            <span
-                                class="badge rounded-circle bg-dark text-white fs-6 d-flex align-items-center justify-content-center"
-                                style="width:45px; height:45px;">
-                                {{ $index + 1 }}
-                            </span>
-                            @if(!$loop->last)
-                            <div class="timeline-line flex-grow-1 bg-dark" style="width:2px;"></div>
-                            @endif
-                        </div>
-
-                        <!-- Content -->
-                        <div class="ms-4">
-                            <h6 class="fw-bold mb-2">{{ $itinerary->title ?? 'Day ' . ($index + 1) }}</h6>
-                            <p class="mb-3">{!! $itinerary->description !!}</p>
-
-                            <div class="d-flex flex-wrap gap-3 small text-muted align-items-center">
-                                @if(!empty($itinerary->location))
-                                <div>
-                                    <i class="bi bi-geo-alt me-1"></i>{{ $itinerary->location }}
-                                </div>
-                                @endif
-
-                                @if(!empty($itinerary->location) && !empty($itinerary->time))
-                                <span class="mx-1">•</span>
-                                @endif
-
-                                @if(!empty($itinerary->time))
-                                <div>
-                                    <i class="bi bi-clock me-1"></i>{{ $itinerary->time }}
-                                </div>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
-            </section>
-
-
-
-
-            <hr>
-            <section class="feature">
-                <h4 class="section-title">Tour Includes</h4>
-                <div class="section-content">
-                    <div class="d-flex flex-wrap" style="gap: 10px;">
-                        @forelse($package->tourIncludes->where('type', 'include') as $packageInclude)
-                        <div class="facility-card d-flex align-items-center px-3 py-2 mb-2"
-                            style="background: #fff; border-radius: 6px; border: 1px solid #e0e0e0; min-height: 38px; flex: 0 0 auto; min-width: 140px; max-width: 220px;">
-                            @if($packageInclude->feature->icon)
-                            <i class="mdi {{ $packageInclude->feature->icon }} me-2"
-                                style="font-size: 1.2rem; color: #2e8b57; width: 20px; text-align: center;"></i>
-                            @else
-                            <i class="mdi mdi-check-circle me-2"
-                                style="font-size: 1.2rem; color: #2e8b57; width: 20px; text-align: center;"></i>
-                            @endif
-                            <span style="font-size: 13px; font-weight: 500; color: #333; line-height: 1.3;">{{
-                                $packageInclude->feature->name }}</span>
-                        </div>
-                        @empty
-                        <div class="text-muted" style="font-size: 14px;">No includes listed.</div>
-                        @endforelse
-                    </div>
-                </div>
-            </section>
-            <hr>
-            <section class="feature">
-                <h4 class="section-title">Tour Excludes</h4>
-                <div class="section-content">
-                    <div class="d-flex flex-wrap" style="gap: 10px;">
-                        @forelse($package->tourIncludes->where('type', 'exclude') as $packageInclude)
-                        <div class="facility-card d-flex align-items-center px-3 py-2 mb-2"
-                            style="background: #fff; border-radius: 6px; border: 1px solid #e0e0e0; min-height: 38px; flex: 0 0 auto; min-width: 140px; max-width: 220px;">
-                            @if($packageInclude->feature->icon)
-                            <i class="mdi {{ $packageInclude->feature->icon }} me-2"
-                                style="font-size: 1.2rem; color: #dc3545; width: 20px; text-align: center;"></i>
-                            @else
-                            <i class="mdi mdi-close-circle me-2"
-                                style="font-size: 1.2rem; color: #dc3545; width: 20px; text-align: center;"></i>
-                            @endif
-                            <span style="font-size: 13px; font-weight: 500; color: #333; line-height: 1.3;">{{
-                                $packageInclude->feature->name }}</span>
-                        </div>
-                        @empty
-                        <div class="text-muted" style="font-size: 14px;">No excludes listed.</div>
-                        @endforelse
-                    </div>
-                </div>
-            </section>
-            <hr>
-
-            <section class="description">
-                <h4 class="section-title">Our Policies</h4>
-                <div class="section-content">
-                    <p>
-                        {!! $package->policies !!}
-                    </p>
-                </div>
-            </section>
-            <hr>
-
-            @if($package->video_link)
-            <section class="video-section">
-                <h4 class="section-title">Video</h4>
-                <div class="container">
-                    <div class="row justify-content-center">
-                        <div class="col-md-12">
-                            <div class="video-container"
-                                style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%; background: #000; border-radius: 8px; overflow: hidden;">
-                                @php
-                                $videoUrl = $package->video_link;
-                                $embedUrl = '';
-
-                                // YouTube
-                                if (strpos($videoUrl, 'youtube.com') !== false || strpos($videoUrl, 'youtu.be') !==
-                                false) {
-                                if (strpos($videoUrl, 'youtu.be') !== false) {
-                                $videoId = substr($videoUrl, strrpos($videoUrl, '/') + 1);
-                                } else {
-                                parse_str(parse_url($videoUrl, PHP_URL_QUERY), $query);
-                                $videoId = $query['v'] ?? '';
-                                }
-                                $embedUrl = 'https://www.youtube.com/embed/' . $videoId . '?rel=0&modestbranding=1';
-                                }
-                                // Vimeo
-                                elseif (strpos($videoUrl, 'vimeo.com') !== false) {
-                                $videoId = substr($videoUrl, strrpos($videoUrl, '/') + 1);
-                                $embedUrl = 'https://player.vimeo.com/video/' . $videoId .
-                                '?title=0&byline=0&portrait=0';
-                                }
-                                // Direct video file or other platforms
-                                else {
-                                $embedUrl = $videoUrl;
-                                }
-                                @endphp
-
-                                @if($embedUrl)
-                                <iframe src="{{ $embedUrl }}"
-                                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
-                                    frameborder="0" allowfullscreen
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
-                                </iframe>
-                                @else
-                                <div
-                                    style="display: flex; align-items: center; justify-content: center; height: 100%; color: white; text-align: center;">
-                                    <div>
-                                        <i class="fas fa-play-circle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                                        <p>Video preview not available</p>
-                                        <a href="{{ $videoUrl }}" target="_blank" class="btn btn-primary">Watch
-                                            Video</a>
+                    <div class="meta">
+                        <ul class="meta row  gy-2 mb-4" style="list-style: none; padding: 0; margin: 0;">
+                            <li class="col-6 col-md-4 d-flex align-items-stretch mb-3 mb-md-0">
+                                <div class="d-flex flex-nowrap align-items-center w-100 border rounded bg-white pl-3 py-2 h-100"
+                                    style="min-height:70px; border-color: #218080;">
+                                    <span
+                                        class="d-flex align-items-center justify-content-center rounded bg-light flex-shrink-0"
+                                        style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 18px;">
+                                        <i class="mdi mdi-compass" style="color: #218080; font-size: 1.2rem;"></i>
+                                    </span>
+                                    <div class="flex-grow-1" style="min-width:0;">
+                                        <div class="fw-bold text-dark"
+                                            style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                            {{ $package->category ? $package->category->category : 'Tour' }}
+                                        </div>
+                                        <div class="text-muted small" style="white-space:nowrap;">Type</div>
                                     </div>
                                 </div>
-                                @endif
+                            </li>
+                            <li class="col-6 col-md-4 d-flex align-items-stretch mb-3 mb-md-0">
+                                <div class="d-flex flex-nowrap align-items-center w-100 border rounded bg-white px-3 py-2 h-100"
+                                    style="min-height:70px; border-color: #218080;">
+                                    <span
+                                        class="d-flex align-items-center justify-content-center rounded bg-light flex-shrink-0"
+                                        style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 18px;">
+                                        <i class="mdi mdi-currency-usd" style="color: #218080; font-size: 1.2rem;"></i>
+                                    </span>
+                                    <div class="flex-grow-1" style="min-width:0;">
+                                        <div class="fw-bold text-dark"
+                                            style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                            USD {{ number_format($package->base_price, 2) }}/person
+                                        </div>
+                                        <div class="text-muted small" style="white-space:nowrap;">Price</div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="col-6 col-md-4 d-flex align-items-stretch mb-3 mb-md-0">
+                                <div class="d-flex flex-nowrap align-items-center w-100 border rounded bg-white px-3 py-2 h-100"
+                                    style="min-height:70px; border-color: #218080;">
+                                    <span
+                                        class="d-flex align-items-center justify-content-center rounded bg-light flex-shrink-0"
+                                        style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 18px;">
+                                        <i class="mdi mdi-star" style="color: #218080; font-size: 1.2rem;"></i>
+                                    </span>
+                                    <div class="flex-grow-1" style="min-width:0;">
+                                        <div class="fw-bold text-dark"
+                                            style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                            {{ $package->ratings ? number_format($package->ratings, 1) : '5.0' }}/5
+                                        </div>
+                                        <div class="text-muted small" style="white-space:nowrap;">Rating</div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <hr>
+                    <section class="description">
+                        <h4 class="section-title">Activity Overview</h4>
+                        <div class="section-content">
+                            <p>
+                                {!! $package->description !!}
+                            </p>
+                        </div>
+                    </section>
+                    <hr>
+                    <style>
+                        .timeline::before {
+                            content: '';
+                            position: absolute;
+                            top: 0;
+                            left: 22px;
+                            /* centers line with badge */
+                            width: 2px;
+                            height: 100%;
+                            background: #dee2e6;
+                            /* Bootstrap gray */
+                            z-index: 0;
+                        }
+
+                        .timeline-marker {
+                            position: relative;
+                            z-index: 1;
+                        }
+                    </style>
+
+                    <section class="itinerary my-4">
+                        <h4 class="fw-bold mb-4">Itinerary</h4>
+
+                        <div class="timeline position-relative">
+                            @foreach($package->itineraries as $index => $itinerary)
+                            <div class="timeline-item d-flex mb-5">
+                                <!-- Circle with number -->
+                                <div class="timeline-marker d-flex flex-column align-items-center">
+                                    <span
+                                        class="badge rounded-circle bg-dark text-white fs-6 d-flex align-items-center justify-content-center"
+                                        style="width:45px; height:45px;">
+                                        {{ $index + 1 }}
+                                    </span>
+                                    @if(!$loop->last)
+                                    <div class="timeline-line flex-grow-1 bg-dark" style="width:2px;"></div>
+                                    @endif
+                                </div>
+
+                                <!-- Content -->
+                                <div class="ms-4">
+                                    <h6 class="fw-bold mb-2">{{ $itinerary->title ?? 'Day ' . ($index + 1) }}</h6>
+                                    <p class="mb-3">{!! $itinerary->description !!}</p>
+
+                                    <div class="d-flex flex-wrap gap-3 small text-muted align-items-center">
+                                        @if(!empty($itinerary->location))
+                                        <div>
+                                            <i class="bi bi-geo-alt me-1"></i>{{ $itinerary->location }}
+                                        </div>
+                                        @endif
+
+                                        @if(!empty($itinerary->location) && !empty($itinerary->time))
+                                        <span class="mx-1">•</span>
+                                        @endif
+
+                                        @if(!empty($itinerary->time))
+                                        <div>
+                                            <i class="bi bi-clock me-1"></i>{{ $itinerary->time }}
+                                        </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </section>
+
+
+
+
+                    <hr>
+                    <section class="feature">
+                        <h4 class="section-title">Tour Includes</h4>
+                        <div class="section-content">
+                            <div class="d-flex flex-wrap" style="gap: 10px;">
+                                @forelse($package->tourIncludes->where('type', 'include') as $packageInclude)
+                                <div class="facility-card d-flex align-items-center px-3 py-2 mb-2"
+                                    style="background: #fff; border-radius: 6px; border: 1px solid #e0e0e0; min-height: 38px; flex: 0 0 auto; min-width: 140px; max-width: 220px;">
+                                    @if($packageInclude->feature->icon)
+                                    <i class="mdi {{ $packageInclude->feature->icon }} me-2"
+                                        style="font-size: 1.2rem; color: #2e8b57; width: 20px; text-align: center;"></i>
+                                    @else
+                                    <i class="mdi mdi-check-circle me-2"
+                                        style="font-size: 1.2rem; color: #2e8b57; width: 20px; text-align: center;"></i>
+                                    @endif
+                                    <span style="font-size: 13px; font-weight: 500; color: #333; line-height: 1.3;">{{
+                                        $packageInclude->feature->name }}</span>
+                                </div>
+                                @empty
+                                <div class="text-muted" style="font-size: 14px;">No includes listed.</div>
+                                @endforelse
                             </div>
                         </div>
-                    </div>
-                </div>
-            </section>
-            @endif
-            <hr>
+                    </section>
+                    <hr>
+                    <section class="feature">
+                        <h4 class="section-title">Tour Excludes</h4>
+                        <div class="section-content">
+                            <div class="d-flex flex-wrap" style="gap: 10px;">
+                                @forelse($package->tourIncludes->where('type', 'exclude') as $packageInclude)
+                                <div class="facility-card d-flex align-items-center px-3 py-2 mb-2"
+                                    style="background: #fff; border-radius: 6px; border: 1px solid #e0e0e0; min-height: 38px; flex: 0 0 auto; min-width: 140px; max-width: 220px;">
+                                    @if($packageInclude->feature->icon)
+                                    <i class="mdi {{ $packageInclude->feature->icon }} me-2"
+                                        style="font-size: 1.2rem; color: #dc3545; width: 20px; text-align: center;"></i>
+                                    @else
+                                    <i class="mdi mdi-close-circle me-2"
+                                        style="font-size: 1.2rem; color: #dc3545; width: 20px; text-align: center;"></i>
+                                    @endif
+                                    <span style="font-size: 13px; font-weight: 500; color: #333; line-height: 1.3;">{{
+                                        $packageInclude->feature->name }}</span>
+                                </div>
+                                @empty
+                                <div class="text-muted" style="font-size: 14px;">No excludes listed.</div>
+                                @endforelse
+                            </div>
+                        </div>
+                    </section>
+                    <hr>
 
-            <section class="map">
-                <h4 class="section-title mb-4">Tour Location On Map</h4>
-                <div id="address-map-container" style="width: 100%; height: 400px">
-                    @if($package->lat && $package->long)
-                    <iframe width="100%" height="100%" frameborder="0" style="border:0; border-radius: 8px;"
-                        src="https://www.google.com/maps?q={{ $package->lat }},{{ $package->long }}&output=embed"
-                        allowfullscreen aria-hidden="false" tabindex="0" loading="lazy"
-                        referrerpolicy="no-referrer-when-downgrade"></iframe>
-                    @else
-                    <iframe width="100%" height="100%" frameborder="0" style="border:0; border-radius: 8px;"
-                        src="https://www.google.com/maps?q={{ $package->location }}&output=embed" allowfullscreen
-                        aria-hidden="false" tabindex="0" loading="lazy"
-                        referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    <section class="description">
+                        <h4 class="section-title">Our Policies</h4>
+                        <div class="section-content">
+                            <p>
+                                {!! $package->policies !!}
+                            </p>
+                        </div>
+                    </section>
+                    <hr>
+
+                    @if($package->video_link)
+                    <section class="video-section">
+                        <h4 class="section-title">Video</h4>
+                        <div class="container">
+                            <div class="row justify-content-center">
+                                <div class="col-md-12">
+                                    <div class="video-container"
+                                        style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%; background: #000; border-radius: 8px; overflow: hidden;">
+                                        @php
+                                        $videoUrl = $package->video_link;
+                                        $embedUrl = '';
+
+                                        // YouTube
+                                        if (strpos($videoUrl, 'youtube.com') !== false || strpos($videoUrl, 'youtu.be')
+                                        !==
+                                        false) {
+                                        if (strpos($videoUrl, 'youtu.be') !== false) {
+                                        $videoId = substr($videoUrl, strrpos($videoUrl, '/') + 1);
+                                        } else {
+                                        parse_str(parse_url($videoUrl, PHP_URL_QUERY), $query);
+                                        $videoId = $query['v'] ?? '';
+                                        }
+                                        $embedUrl = 'https://www.youtube.com/embed/' . $videoId .
+                                        '?rel=0&modestbranding=1';
+                                        }
+                                        // Vimeo
+                                        elseif (strpos($videoUrl, 'vimeo.com') !== false) {
+                                        $videoId = substr($videoUrl, strrpos($videoUrl, '/') + 1);
+                                        $embedUrl = 'https://player.vimeo.com/video/' . $videoId .
+                                        '?title=0&byline=0&portrait=0';
+                                        }
+                                        // Direct video file or other platforms
+                                        else {
+                                        $embedUrl = $videoUrl;
+                                        }
+                                        @endphp
+
+                                        @if($embedUrl)
+                                        <iframe src="{{ $embedUrl }}"
+                                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
+                                            frameborder="0" allowfullscreen
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
+                                        </iframe>
+                                        @else
+                                        <div
+                                            style="display: flex; align-items: center; justify-content: center; height: 100%; color: white; text-align: center;">
+                                            <div>
+                                                <i class="fas fa-play-circle"
+                                                    style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                                <p>Video preview not available</p>
+                                                <a href="{{ $videoUrl }}" target="_blank" class="btn btn-primary">Watch
+                                                    Video</a>
+                                            </div>
+                                        </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
                     @endif
+                    <hr>
+
+                    <section class="map">
+                        <h4 class="section-title mb-4">Tour Location On Map</h4>
+                        <div id="address-map-container" style="width: 100%; height: 400px">
+                            @if($package->lat && $package->long)
+                            <iframe width="100%" height="100%" frameborder="0" style="border:0; border-radius: 8px;"
+                                src="https://www.google.com/maps?q={{ $package->lat }},{{ $package->long }}&output=embed"
+                                allowfullscreen aria-hidden="false" tabindex="0" loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade"></iframe>
+                            @else
+                            <iframe width="100%" height="100%" frameborder="0" style="border:0; border-radius: 8px;"
+                                src="https://www.google.com/maps?q={{ $package->location }}&output=embed"
+                                allowfullscreen aria-hidden="false" tabindex="0" loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade"></iframe>
+                            @endif
+                        </div>
+                    </section>
+
                 </div>
-            </section>
+            </div>
             <hr>
 
             <div class="reviews-section mt-4" id="review-section">
@@ -506,7 +508,7 @@ use Illuminate\Support\Str;
                 <h4 class="post-title my-3 fw-bold ">
                     Reserve Your Spot
                 </h4>
-            
+
                 {{-- booking card --}}
                 <div class="card booking-card border rounded">
                     <!-- Header -->
@@ -515,7 +517,7 @@ use Illuminate\Support\Str;
                             <i class="fas fa-calendar-check me-2"></i>Reservation Details
                         </h5>
                     </div>
-            
+
                     <!-- Body -->
                     <div class="card-body p-4">
                         <!-- Price + button -->
@@ -525,18 +527,19 @@ use Illuminate\Support\Str;
                                 <small class="text-muted" style="font-size: 1rem;">/person</small>
                             </div>
                         </div>
-            
+
                         <!-- Button -->
                         <div class="d-grid">
                             {{-- <a href="{{ route('confirm-booking', ['deal_id' => $package->id]) }}"
-                               class="btn btn-primary btn-lg w-100 text-center fw-bold d-flex align-items-center justify-content-between">
+                                class="btn btn-primary btn-lg w-100 text-center fw-bold d-flex align-items-center justify-content-between">
                                 <span class="d-flex align-items-center">
                                     <i class="fas fa-calendar-check me-2"></i>
                                     Reserve Now
                                 </span>
                                 <i class="fas fa-arrow-right ms-2"></i>
                             </a> --}}
-                            <a href="#" class="btn btn-primary btn-lg w-100 text-center fw-bold d-flex align-items-center justify-content-between">
+                            <a href="#"
+                                class="btn btn-primary btn-lg w-100 text-center fw-bold d-flex align-items-center justify-content-between">
                                 <span class="d-flex align-items-center">
                                     <i class="fas fa-calendar-check me-2"></i>
                                     Reserve Now
@@ -547,7 +550,7 @@ use Illuminate\Support\Str;
                     </div>
                 </div>
             </div>
-            
+
             {{-- Contact Information --}}
             <div class="card my-4 contact-card rounded"
                 style="overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
@@ -576,7 +579,7 @@ use Illuminate\Support\Str;
                     </div>
                 </div>
             </div>
-            
+
         </div>
     </div>
 </div>

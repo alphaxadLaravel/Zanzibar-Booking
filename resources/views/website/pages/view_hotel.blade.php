@@ -77,253 +77,263 @@ use Illuminate\Support\Str;
     <div class="row">
         {{-- ############## MAIN ############################# --}}
         <div class="col-lg-8 pb-5">
-            <div class="hotel-star">
-                <div class="star-rating">
-                    <i class="fa fa-star text-warning"></i>
-                    <i class="fa fa-star text-warning"></i>
-                    <i class="fa fa-star text-warning"></i>
-                    <i class="fa fa-star text-warning"></i>
-                    <i class="fa fa-star text-warning"></i>
-                </div>
-            </div>
-            <div class="d-flex align-items-center" style="gap: 16px;">
-                <h2 class="post-title bold">
-                    {{ $hotel->title }}
-                </h2>
-            </div>
-            @if ($hotel->location)
-            <p class="location">
-                <i class="fal fa-map-marker-alt"></i> {{ $hotel->location }}
-            </p>
-            @endif
-
-
-            <div class="meta">
-                <ul class="meta row  gy-2 mb-4" style="list-style: none; padding: 0; margin: 0;">
-                    <li class="col-6 col-md-4 d-flex align-items-stretch mb-3 mb-md-0">
-                        <div class="d-flex flex-nowrap align-items-center w-100 border rounded bg-white pl-3 py-2 h-100"
-                            style="min-height:70px; border-color: #218080;">
-                            <span
-                                class="d-flex align-items-center justify-content-center rounded bg-light flex-shrink-0"
-                                style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 18px;">
-                                <i class="mdi mdi-home-city" style="color: #218080; font-size: 1.2rem;"></i>
-                            </span>
-                            <div class="flex-grow-1" style="min-width:0;">
-                                <div class="fw-bold text-dark"
-                                    style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                    {{ $hotel->category ? $hotel->category->category : 'Hotel' }}
-                                </div>
-                                <div class="text-muted small" style="white-space:nowrap;">Type</div>
-                            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="hotel-star">
+                        <div class="star-rating">
+                            <i class="fa fa-star text-warning"></i>
+                            <i class="fa fa-star text-warning"></i>
+                            <i class="fa fa-star text-warning"></i>
+                            <i class="fa fa-star text-warning"></i>
+                            <i class="fa fa-star text-warning"></i>
                         </div>
-                    </li>
-                    <li class="col-6 col-md-4 d-flex align-items-stretch mb-3 mb-md-0">
-                        <div class="d-flex flex-nowrap align-items-center w-100 border rounded bg-white px-3 py-2 h-100"
-                            style="min-height:70px; border-color: #218080;">
-                            <span
-                                class="d-flex align-items-center justify-content-center rounded bg-light flex-shrink-0"
-                                style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 18px;">
-                                <i class="mdi mdi-currency-usd" style="color: #218080; font-size: 1.2rem;"></i>
-                            </span>
-                            <div class="flex-grow-1" style="min-width:0;">
-                                <div class="fw-bold text-dark"
-                                    style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                    USD {{ number_format($hotel->base_price, 2) }}/night
-                                </div>
-                                <div class="text-muted small" style="white-space:nowrap;">Price</div>
-                            </div>
-                        </div>
-                    </li>
-                    <li class="col-6 col-md-4 d-flex align-items-stretch mb-3 mb-md-0">
-                        <div class="d-flex flex-nowrap align-items-center w-100 border rounded bg-white px-3 py-2 h-100"
-                            style="min-height:70px; border-color: #218080;">
-                            <span
-                                class="d-flex align-items-center justify-content-center rounded bg-light flex-shrink-0"
-                                style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 18px;">
-                                <i class="mdi mdi-star" style="color: #218080; font-size: 1.2rem;"></i>
-                            </span>
-                            <div class="flex-grow-1" style="min-width:0;">
-                                <div class="fw-bold text-dark"
-                                    style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                    {{ $hotel->ratings ? number_format($hotel->ratings, 1) : '5.0' }}/5
-                                </div>
-                                <div class="text-muted small" style="white-space:nowrap;">Rating</div>
-                            </div>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-            <hr>
-            <section class="description">
-                <h4 class="section-title">Detail</h4>
-                <div class="section-content">
-                    <p>
-                        {!! $hotel->description !!}
-                    </p>
-                </div>
-            </section>
-            <hr>
-            <section class="feature">
-                <h4 class="section-title">Facilities</h4>
-                <div class="section-content">
-                    <div class="d-flex flex-wrap" style="gap: 10px;">
-                        @forelse($hotel->features as $feature)
-                        <div class="facility-card d-flex align-items-center px-3 py-2 mb-2"
-                            style="background: #fff; border-radius: 6px; border: 1px solid #e0e0e0; min-height: 38px; flex: 0 0 auto; min-width: 140px; max-width: 220px;">
-                            @if($feature->icon)
-                            <i class="mdi {{ $feature->icon }} me-2"
-                                style="font-size: 1.2rem; color: #2e8b57; width: 20px; text-align: center;"></i>
-                            @else
-                            <i class="mdi mdi-check-circle me-2"
-                                style="font-size: 1.2rem; color: #2e8b57; width: 20px; text-align: center;"></i>
-                            @endif
-                            <span style="font-size: 13px; font-weight: 500; color: #333; line-height: 1.3;">{{
-                                $feature->name }}</span>
-                        </div>
-                        @empty
-                        <div class="text-muted" style="font-size: 14px;">No facilities listed.</div>
-                        @endforelse
                     </div>
-                </div>
-            </section>
-            <hr>
+                    <div class="d-flex align-items-center" style="gap: 16px;">
+                        <h2 class="post-title bold">
+                            {{ $hotel->title }}
+                        </h2>
+                    </div>
+                    @if ($hotel->location)
+                    <p class="location">
+                        <i class="fal fa-map-marker-alt"></i> {{ $hotel->location }}
+                    </p>
+                    @endif
 
-            @if($hotel->video_link)
-            <section class="video-section">
-                <h4 class="section-title">Video</h4>
-                <div class="container">
-                    <div class="row justify-content-center">
-                        <div class="col-md-12">
-                            <div class="video-container"
-                                style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%; background: #000; border-radius: 8px; overflow: hidden;">
-                                @php
-                                $videoUrl = $hotel->video_link;
-                                $embedUrl = '';
 
-                                // YouTube
-                                if (strpos($videoUrl, 'youtube.com') !== false || strpos($videoUrl, 'youtu.be') !==
-                                false) {
-                                if (strpos($videoUrl, 'youtu.be') !== false) {
-                                $videoId = substr($videoUrl, strrpos($videoUrl, '/') + 1);
-                                } else {
-                                parse_str(parse_url($videoUrl, PHP_URL_QUERY), $query);
-                                $videoId = $query['v'] ?? '';
-                                }
-                                $embedUrl = 'https://www.youtube.com/embed/' . $videoId . '?rel=0&modestbranding=1';
-                                }
-                                // Vimeo
-                                elseif (strpos($videoUrl, 'vimeo.com') !== false) {
-                                $videoId = substr($videoUrl, strrpos($videoUrl, '/') + 1);
-                                $embedUrl = 'https://player.vimeo.com/video/' . $videoId .
-                                '?title=0&byline=0&portrait=0';
-                                }
-                                // Direct video file or other platforms
-                                else {
-                                $embedUrl = $videoUrl;
-                                }
-                                @endphp
-
-                                @if($embedUrl)
-                                <iframe src="{{ $embedUrl }}"
-                                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
-                                    frameborder="0" allowfullscreen
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
-                                </iframe>
-                                @else
-                                <div
-                                    style="display: flex; align-items: center; justify-content: center; height: 100%; color: white; text-align: center;">
-                                    <div>
-                                        <i class="fas fa-play-circle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                                        <p>Video preview not available</p>
-                                        <a href="{{ $videoUrl }}" target="_blank" class="btn btn-primary">Watch
-                                            Video</a>
+                    <div class="meta">
+                        <ul class="meta row  gy-2 mb-4" style="list-style: none; padding: 0; margin: 0;">
+                            <li class="col-6 col-md-4 d-flex align-items-stretch mb-3 mb-md-0">
+                                <div class="d-flex flex-nowrap align-items-center w-100 border rounded bg-white pl-3 py-2 h-100"
+                                    style="min-height:70px; border-color: #218080;">
+                                    <span
+                                        class="d-flex align-items-center justify-content-center rounded bg-light flex-shrink-0"
+                                        style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 18px;">
+                                        <i class="mdi mdi-home-city" style="color: #218080; font-size: 1.2rem;"></i>
+                                    </span>
+                                    <div class="flex-grow-1" style="min-width:0;">
+                                        <div class="fw-bold text-dark"
+                                            style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                            {{ $hotel->category ? $hotel->category->category : 'Hotel' }}
+                                        </div>
+                                        <div class="text-muted small" style="white-space:nowrap;">Type</div>
                                     </div>
                                 </div>
-                                @endif
+                            </li>
+                            <li class="col-6 col-md-4 d-flex align-items-stretch mb-3 mb-md-0">
+                                <div class="d-flex flex-nowrap align-items-center w-100 border rounded bg-white px-3 py-2 h-100"
+                                    style="min-height:70px; border-color: #218080;">
+                                    <span
+                                        class="d-flex align-items-center justify-content-center rounded bg-light flex-shrink-0"
+                                        style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 18px;">
+                                        <i class="mdi mdi-currency-usd" style="color: #218080; font-size: 1.2rem;"></i>
+                                    </span>
+                                    <div class="flex-grow-1" style="min-width:0;">
+                                        <div class="fw-bold text-dark"
+                                            style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                            USD {{ number_format($hotel->base_price, 2) }}/night
+                                        </div>
+                                        <div class="text-muted small" style="white-space:nowrap;">Price</div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="col-6 col-md-4 d-flex align-items-stretch mb-3 mb-md-0">
+                                <div class="d-flex flex-nowrap align-items-center w-100 border rounded bg-white px-3 py-2 h-100"
+                                    style="min-height:70px; border-color: #218080;">
+                                    <span
+                                        class="d-flex align-items-center justify-content-center rounded bg-light flex-shrink-0"
+                                        style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 18px;">
+                                        <i class="mdi mdi-star" style="color: #218080; font-size: 1.2rem;"></i>
+                                    </span>
+                                    <div class="flex-grow-1" style="min-width:0;">
+                                        <div class="fw-bold text-dark"
+                                            style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                            {{ $hotel->ratings ? number_format($hotel->ratings, 1) : '5.0' }}/5
+                                        </div>
+                                        <div class="text-muted small" style="white-space:nowrap;">Rating</div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <hr>
+                    <section class="description">
+                        <h4 class="section-title">Detail</h4>
+                        <div class="section-content">
+                            <p>
+                                {!! $hotel->description !!}
+                            </p>
+                        </div>
+                    </section>
+                    <hr>
+                    <section class="feature">
+                        <h4 class="section-title">Facilities</h4>
+                        <div class="section-content">
+                            <div class="d-flex flex-wrap" style="gap: 10px;">
+                                @forelse($hotel->features as $feature)
+                                <div class="facility-card d-flex align-items-center px-3 py-2 mb-2"
+                                    style="background: #fff; border-radius: 6px; border: 1px solid #e0e0e0; min-height: 38px; flex: 0 0 auto; min-width: 140px; max-width: 220px;">
+                                    @if($feature->icon)
+                                    <i class="mdi {{ $feature->icon }} me-2"
+                                        style="font-size: 1.2rem; color: #2e8b57; width: 20px; text-align: center;"></i>
+                                    @else
+                                    <i class="mdi mdi-check-circle me-2"
+                                        style="font-size: 1.2rem; color: #2e8b57; width: 20px; text-align: center;"></i>
+                                    @endif
+                                    <span style="font-size: 13px; font-weight: 500; color: #333; line-height: 1.3;">{{
+                                        $feature->name }}</span>
+                                </div>
+                                @empty
+                                <div class="text-muted" style="font-size: 14px;">No facilities listed.</div>
+                                @endforelse
                             </div>
                         </div>
-                    </div>
-                </div>
-            </section>
-            @endif
-            <hr>
-            @if($hotel->nearbyLocations && $hotel->nearbyLocations->count() > 0)
-            <section class="nearby-locations">
-                <h4 class="section-title mb-3">Nearby Locations</h4>
-                <div class="section-content">
-                    <div class="d-flex flex-wrap" style="gap: 10px;">
-                        @foreach($hotel->nearbyLocations as $location)
-                        <div class="facility-card d-flex align-items-center px-3 py-2 mb-2"
-                            style="background: #fff; border-radius: 6px; border: 1px solid #e0e0e0; min-height: 38px; flex: 0 0 auto; min-width: 180px; max-width: 320px; width: calc(100%/6 - 10px);">
-                            <span class="me-2" style="width: 22px; text-align: center;">
-                                @php
-                                $iconMap = [
-                                'Airport' => 'mdi-airplane',
-                                'Ferry Port' => 'mdi-ferry',
-                                'Beach' => 'mdi-beach',
-                                'School' => 'mdi-school',
-                                'Hospital' => 'mdi-hospital',
-                                'Shopping Center' => 'mdi-shopping',
-                                'Restaurant' => 'mdi-food',
-                                'Bank' => 'mdi-bank',
-                                'ATM' => 'mdi-credit-card',
-                                'Gas Station' => 'mdi-gas-station',
-                                'Bus Station' => 'mdi-bus',
-                                'Train Station' => 'mdi-train',
-                                'Tourist Attraction' => 'mdi-camera',
-                                'Market' => 'mdi-store',
-                                'Pharmacy' => 'mdi-pill',
-                                'Police Station' => 'mdi-shield',
-                                'Post Office' => 'mdi-mail',
-                                'Gym' => 'mdi-dumbbell',
-                                'Park' => 'mdi-tree',
-                                'Mosque' => 'mdi-mosque',
-                                'Church' => 'mdi-church',
-                                ];
-                                $icon = $iconMap[$location->category] ?? 'mdi-map-marker';
-                                @endphp
-                                <i class="mdi {{ $icon }}" style="font-size: 1.2rem; color: #2e8b57;"></i>
-                            </span>
-                            <span style="font-size: 13px; font-weight: 500; color: #333; line-height: 1.3; flex:1;">
-                                {{ $location->title }}
-                            </span>
-                            <span class="ms-2 text-nowrap" style="font-size: 13px; color: #2e8b57; font-weight: 600;">
-                                {{ $location->formatted_distance }}
-                            </span>
+                    </section>
+                    <hr>
+
+                    @if($hotel->video_link)
+                    <section class="video-section">
+                        <h4 class="section-title">Video</h4>
+                        <div class="container">
+                            <div class="row justify-content-center">
+                                <div class="col-md-12">
+                                    <div class="video-container"
+                                        style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%; background: #000; border-radius: 8px; overflow: hidden;">
+                                        @php
+                                        $videoUrl = $hotel->video_link;
+                                        $embedUrl = '';
+
+                                        // YouTube
+                                        if (strpos($videoUrl, 'youtube.com') !== false || strpos($videoUrl, 'youtu.be')
+                                        !==
+                                        false) {
+                                        if (strpos($videoUrl, 'youtu.be') !== false) {
+                                        $videoId = substr($videoUrl, strrpos($videoUrl, '/') + 1);
+                                        } else {
+                                        parse_str(parse_url($videoUrl, PHP_URL_QUERY), $query);
+                                        $videoId = $query['v'] ?? '';
+                                        }
+                                        $embedUrl = 'https://www.youtube.com/embed/' . $videoId .
+                                        '?rel=0&modestbranding=1';
+                                        }
+                                        // Vimeo
+                                        elseif (strpos($videoUrl, 'vimeo.com') !== false) {
+                                        $videoId = substr($videoUrl, strrpos($videoUrl, '/') + 1);
+                                        $embedUrl = 'https://player.vimeo.com/video/' . $videoId .
+                                        '?title=0&byline=0&portrait=0';
+                                        }
+                                        // Direct video file or other platforms
+                                        else {
+                                        $embedUrl = $videoUrl;
+                                        }
+                                        @endphp
+
+                                        @if($embedUrl)
+                                        <iframe src="{{ $embedUrl }}"
+                                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
+                                            frameborder="0" allowfullscreen
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
+                                        </iframe>
+                                        @else
+                                        <div
+                                            style="display: flex; align-items: center; justify-content: center; height: 100%; color: white; text-align: center;">
+                                            <div>
+                                                <i class="fas fa-play-circle"
+                                                    style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                                <p>Video preview not available</p>
+                                                <a href="{{ $videoUrl }}" target="_blank" class="btn btn-primary">Watch
+                                                    Video</a>
+                                            </div>
+                                        </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        @endforeach
-                    </div>
-                </div>
-            </section>
-            <hr>
-            @endif
-
-            <section class="description">
-                <h4 class="section-title">Our Policies</h4>
-                <div class="section-content">
-                    <p>
-                        {!! $hotel->policies !!}
-                    </p>
-                </div>
-            </section>
-            <hr>
-
-            <section class="map">
-                <h4 class="section-title mb-4">Hotel Location On Map</h4>
-                <div id="address-map-container" style="width: 100%; height: 400px">
-                    @if($hotel->lat && $hotel->long)
-                    <iframe width="100%" height="100%" frameborder="0" style="border:0; border-radius: 8px;"
-                        src="https://www.google.com/maps?q={{ $hotel->lat }},{{ $hotel->long }}&output=embed"
-                        allowfullscreen aria-hidden="false" tabindex="0" loading="lazy"
-                        referrerpolicy="no-referrer-when-downgrade"></iframe>
-                    @else
-                    <iframe width="100%" height="100%" frameborder="0" style="border:0; border-radius: 8px;"
-                        src="https://www.google.com/maps?q={{ $hotel->location }}&output=embed" allowfullscreen
-                        aria-hidden="false" tabindex="0" loading="lazy"
-                        referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    </section>
                     @endif
+                    <hr>
+                    @if($hotel->nearbyLocations && $hotel->nearbyLocations->count() > 0)
+                    <section class="nearby-locations">
+                        <h4 class="section-title mb-3">Nearby Locations</h4>
+                        <div class="section-content">
+                            <div class="d-flex flex-wrap" style="gap: 10px;">
+                                @foreach($hotel->nearbyLocations as $location)
+                                <div class="facility-card d-flex align-items-center px-3 py-2 mb-2"
+                                    style="background: #fff; border-radius: 6px; border: 1px solid #e0e0e0; min-height: 38px; flex: 0 0 auto; min-width: 180px; max-width: 320px; width: calc(100%/6 - 10px);">
+                                    <span class="me-2" style="width: 22px; text-align: center;">
+                                        @php
+                                        $iconMap = [
+                                        'Airport' => 'mdi-airplane',
+                                        'Ferry Port' => 'mdi-ferry',
+                                        'Beach' => 'mdi-beach',
+                                        'School' => 'mdi-school',
+                                        'Hospital' => 'mdi-hospital',
+                                        'Shopping Center' => 'mdi-shopping',
+                                        'Restaurant' => 'mdi-food',
+                                        'Bank' => 'mdi-bank',
+                                        'ATM' => 'mdi-credit-card',
+                                        'Gas Station' => 'mdi-gas-station',
+                                        'Bus Station' => 'mdi-bus',
+                                        'Train Station' => 'mdi-train',
+                                        'Tourist Attraction' => 'mdi-camera',
+                                        'Market' => 'mdi-store',
+                                        'Pharmacy' => 'mdi-pill',
+                                        'Police Station' => 'mdi-shield',
+                                        'Post Office' => 'mdi-mail',
+                                        'Gym' => 'mdi-dumbbell',
+                                        'Park' => 'mdi-tree',
+                                        'Mosque' => 'mdi-mosque',
+                                        'Church' => 'mdi-church',
+                                        ];
+                                        $icon = $iconMap[$location->category] ?? 'mdi-map-marker';
+                                        @endphp
+                                        <i class="mdi {{ $icon }}" style="font-size: 1.2rem; color: #2e8b57;"></i>
+                                    </span>
+                                    <span
+                                        style="font-size: 13px; font-weight: 500; color: #333; line-height: 1.3; flex:1;">
+                                        {{ $location->title }}
+                                    </span>
+                                    <span class="ms-2 text-nowrap"
+                                        style="font-size: 13px; color: #2e8b57; font-weight: 600;">
+                                        {{ $location->formatted_distance }}
+                                    </span>
+                                </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </section>
+                    <hr>
+                    @endif
+
+                    <section class="description">
+                        <h4 class="section-title">Our Policies</h4>
+                        <div class="section-content">
+                            <p>
+                                {!! $hotel->policies !!}
+                            </p>
+                        </div>
+                    </section>
+                    <hr>
+
+                    <section class="map">
+                        <h4 class="section-title mb-4">Hotel Location On Map</h4>
+                        <div id="address-map-container" style="width: 100%; height: 400px">
+                            @if($hotel->lat && $hotel->long)
+                            <iframe width="100%" height="100%" frameborder="0" style="border:0; border-radius: 8px;"
+                                src="https://www.google.com/maps?q={{ $hotel->lat }},{{ $hotel->long }}&output=embed"
+                                allowfullscreen aria-hidden="false" tabindex="0" loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade"></iframe>
+                            @else
+                            <iframe width="100%" height="100%" frameborder="0" style="border:0; border-radius: 8px;"
+                                src="https://www.google.com/maps?q={{ $hotel->location }}&output=embed" allowfullscreen
+                                aria-hidden="false" tabindex="0" loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade"></iframe>
+                            @endif
+                        </div>
+                    </section>
+
                 </div>
-            </section>
+            </div>
             <hr>
 
 
@@ -488,9 +498,9 @@ use Illuminate\Support\Str;
                                             number_format($room->price ?? $hotel->base_price, 0) }}</span>
                                         <span style="font-size: 13px; color: #888;">/ night</span>
                                     </div>
-                                    <button class="btn btn-outline-primary btn-sm" style="font-size: 13px;"
+                                    <button class="btn btn-primary" style="font-size: 13px;"
                                         onclick="event.stopPropagation(); openRoomDetailsModal({{ $room->id }})">
-                                        <i class="fas fa-eye me-1"></i>View Details
+                                        <i class="mdi mdi-calendar-check me-1"></i> BOOK ROOM
                                     </button>
                                 </div>
                             </div>
@@ -511,33 +521,7 @@ use Illuminate\Support\Str;
             </div>
 
             {{-- Contact Information --}}
-            <div class="card my-4 contact-card rounded"
-                style="overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
-                <div class="card-header" style="background: #f8f9fa; padding: 15px;">
-                    <h5 class="mb-0" style="font-size: 1.2rem; font-weight: 600; color: #333;">
-                        <i class="fas fa-phone me-2"></i>Need Help?
-                    </h5>
-                </div>
-                <div class="card-body p-3">
-                    <p class="mb-3" style="color: #666; font-size: 14px;">
-                        Contact us for more information about this hotel.
-                    </p>
-                    <div class="contact-info">
-                        <div class="contact-item d-flex align-items-center mb-2">
-                            <i class="fas fa-phone me-2" style="color: #2e8b57; width: 20px;"></i>
-                            <span style="font-size: 14px; color: #333;">+255 123 456 789</span>
-                        </div>
-                        <div class="contact-item d-flex align-items-center mb-2">
-                            <i class="fas fa-envelope me-2" style="color: #2e8b57; width: 20px;"></i>
-                            <span style="font-size: 14px; color: #333;">info@zanzibarbookings.com</span>
-                        </div>
-                        <div class="contact-item d-flex align-items-center">
-                            <i class="fas fa-clock me-2" style="color: #2e8b57; width: 20px;"></i>
-                            <span style="font-size: 14px; color: #333;">24/7 Support</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+           @include('website.components.contact_card')
         </div>
     </div>
 </div>
@@ -700,6 +684,270 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
 });
+</script>
+
+<!-- Room Details Modals -->
+@foreach($rooms as $room)
+<div class="modal fade" id="roomDetailsModal{{ $room->id }}" tabindex="-1"
+    aria-labelledby="roomDetailsModalLabel{{ $room->id }}" aria-hidden="true" data-bs-backdrop="static"
+    data-bs-keyboard="false">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header d-flex align-items-center justify-content-between" style="gap: 1rem;">
+                <div class="d-flex align-items-center" style="gap: 1.25rem;">
+                    <h5 class="modal-title mb-0" id="roomDetailsModalLabel{{ $room->id }}"
+                        style="font-size: 1.25rem; font-weight: 600;">
+                        {{ $room->title ?? 'Room Details' }}
+                    </h5>
+                    <div class="price-display d-flex align-items-end" style="gap: 0.3rem;">
+                        <span class="price-amount" style="font-size: 1.5rem; font-weight: 700; color: #ff5722;">
+                            ${{ number_format($room->price ?? $hotel->base_price, 0) }}
+                        </span>
+                        <span class="price-unit" style="color: #888; font-size: 0.9rem;">/ night</span>
+                    </div>
+                </div>
+                <button type="button" class="btn-close d-flex align-items-center justify-content-center"
+                    data-bs-dismiss="modal" aria-label="Close" style="background:none; border:none; box-shadow:none;">
+                    <i class="mdi mdi-close" style="font-size: 1.5rem;"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Room Image Gallery -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="room-image-gallery position-relative">
+                            @if($room->photos && $room->photos->count() > 0)
+                            <div id="roomImageCarousel{{ $room->id }}" class="carousel carousel-fade"
+                                data-bs-ride="carousel">
+                                <div class="carousel-inner rounded" style="border-radius: 12px; overflow: hidden;">
+                                    @foreach($room->photos as $index => $photo)
+                                    <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
+                                        <img src="{{ asset('storage/' . $photo->photo) }}" class="d-block w-100"
+                                            alt="Room Photo" style="height: 250px; object-fit: cover;">
+                                    </div>
+                                    @endforeach
+                                </div>
+
+                                @if($room->photos->count() > 1)
+                                <!-- Custom Navigation Buttons -->
+                                <button class="carousel-control-prev" type="button"
+                                    data-bs-target="#roomImageCarousel{{ $room->id }}" data-bs-slide="prev"
+                                    style="width: 40px; height: 40px; top: 50%; left: 10px; transform: translateY(-50%); background: rgba(0,0,0,0.5); border-radius: 50%; border: none;">
+                                    <span class="carousel-control-prev-icon" style="width: 20px; height: 20px;"></span>
+                                </button>
+                                <button class="carousel-control-next" type="button"
+                                    data-bs-target="#roomImageCarousel{{ $room->id }}" data-bs-slide="next"
+                                    style="width: 40px; height: 40px; top: 50%; right: 10px; transform: translateY(-50%); background: rgba(0,0,0,0.5); border-radius: 50%; border: none;">
+                                    <span class="carousel-control-next-icon" style="width: 20px; height: 20px;"></span>
+                                </button>
+
+                                <!-- Dotted Indicators -->
+                                <div class="carousel-indicators" style="bottom: 10px; margin-bottom: 0;">
+                                    @foreach($room->photos as $index => $photo)
+                                    <button type="button" data-bs-target="#roomImageCarousel{{ $room->id }}"
+                                        data-bs-slide-to="{{ $index }}" class="{{ $index === 0 ? 'active' : '' }}"
+                                        style="width: 8px; height: 8px; border-radius: 50%; border: none; background: rgba(255,255,255,0.5); margin: 0 3px;"
+                                        aria-current="{{ $index === 0 ? 'true' : 'false' }}"
+                                        aria-label="Slide {{ $index + 1 }}"></button>
+                                    @endforeach
+                                </div>
+                                @endif
+                            </div>
+                            @else
+                            <img src="{{ $room->cover_photo ? asset('storage/' . $room->cover_photo) : ($hotel->cover_photo ? asset('storage/' . $hotel->cover_photo) : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=250&fit=crop&crop=center') }}"
+                                class="d-block w-100 rounded" alt="Room Photo"
+                                style="height: 250px; object-fit: cover;">
+                            @endif
+                        </div>
+
+                        <div class="room-info mb-3">
+                            <div class="d-flex flex-wrap my-3" style="gap: 12px;">
+                                <div class="flex-fill" style="min-width: 160px;">
+                                    <div class="d-flex align-items-center border rounded bg-white px-3 py-2 h-100"
+                                        style="min-height:70px; border-color: #218080;">
+                                        <span
+                                            class="d-flex align-items-center justify-content-center rounded bg-light flex-shrink-0"
+                                            style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 16px;">
+                                            <i class="mdi mdi-account" style="color: #218080; font-size: 1.2rem;"></i>
+                                        </span>
+                                        <div class="flex-grow-1" style="min-width:0;">
+                                            <div class="fw-bolder text-dark"
+                                                style="font-size: 1.2rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                                {{ $room->people ?? '2' }}
+                                            </div>
+                                            <div class="text-muted small" style="white-space:nowrap;">Guests</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex-fill" style="min-width: 160px;">
+                                    <div class="d-flex align-items-center border rounded bg-white px-3 py-2 h-100"
+                                        style="min-height:70px; border-color: #218080;">
+                                        <span
+                                            class="d-flex align-items-center justify-content-center rounded bg-light flex-shrink-0"
+                                            style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 16px;">
+                                            <i class="mdi mdi-bed" style="color: #218080; font-size: 1.2rem;"></i>
+                                        </span>
+                                        <div class="flex-grow-1" style="min-width:0;">
+                                            <div class="fw-bolder text-dark"
+                                                style="font-size: 1.2rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                                {{ $room->beds ?? '1' }} {{ ($room->beds ?? 1) == 1 ? 'Bed' : 'Beds'
+                                                }}
+                                            </div>
+                                            <div class="text-muted small" style="white-space:nowrap;">Beds</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if($room->description)
+                        <div class="room-description mb-3">
+                            <p style="color: #666; line-height: 1.6; font-size: 0.95rem;">{!! $room->description !!}
+                            </p>
+                        </div>
+                        @endif
+                    </div>
+                    <div class="col-md-6">
+                        <div class="booking-form-section">
+                            <h5
+                                style="color: #333; font-weight: 600; margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">
+                                Book This Room</h5>
+                            <form action="#" method="POST">
+                                @csrf
+                                <input type="hidden" name="deal_id" value="{{ $hotel->id }}">
+                                <input type="hidden" name="room_id" value="{{ $room->id }}">
+                                <input type="hidden" name="type" value="hotel">
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="check_in{{ $room->id }}" class="form-label">Check-in Date</label>
+                                        <input type="date" class="form-control" id="check_in{{ $room->id }}"
+                                            name="check_in" required min="{{ date('Y-m-d') }}"
+                                            onchange="calculatePrice{{ $room->id }}()">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="check_out{{ $room->id }}" class="form-label">Check-out Date</label>
+                                        <input type="date" class="form-control" id="check_out{{ $room->id }}"
+                                            name="check_out" required min="{{ date('Y-m-d', strtotime('+1 day')) }}"
+                                            onchange="calculatePrice{{ $room->id }}()">
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="number_rooms{{ $room->id }}" class="form-label">Number of
+                                            Rooms</label>
+                                        <select class="form-control" id="number_rooms{{ $room->id }}"
+                                            name="number_rooms" required onchange="calculatePrice{{ $room->id }}()">
+                                            @for($i = 1; $i <= ($room->number_of_rooms ?? 1); $i++)
+                                                <option value="{{ $i }}">{{ $i }} Room{{ $i > 1 ? 's' : '' }}</option>
+                                                @endfor
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="adult{{ $room->id }}" class="form-label">Adults</label>
+                                        <select class="form-control" id="adult{{ $room->id }}" name="adult" required>
+                                            @for($i = 1; $i <= min($room->people ?? 2, 8); $i++)
+                                                <option value="{{ $i }}" {{ $i===2 ? 'selected' : '' }}>{{ $i }} Adult{{
+                                                    $i > 1 ? 's' : '' }}</option>
+                                                @endfor
+                                        </select>
+                                    </div>
+                                    <div class="col-md-12 not-even:mb-3">
+                                        <label for="children{{ $room->id }}" class="form-label">Children</label>
+                                        <select class="form-control" id="children{{ $room->id }}" name="children">
+                                            <option value="0">No Children</option>
+                                            @for($i = 1; $i <= 4; $i++) <option value="{{ $i }}">{{ $i }} Child{{ $i > 1
+                                                ? 'ren' : '' }}</option>
+                                                @endfor
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="booking-summary mt-4 p-3"
+                                    style="background: #f8f9fa; border-radius: 8px; border-left: 4px solid #ff5722;">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 style="color: #333; font-weight: 600; margin-bottom: 5px;">Total Price
+                                            </h6>
+                                            <p class="mb-1" style="font-size: 0.9rem; color: #666;">
+                                                <span id="nights{{ $room->id }}">1</span> night(s) ×
+                                                <span id="rooms{{ $room->id }}">1</span> room(s) ×
+                                                ${{ number_format($room->price ?? $hotel->base_price, 2) }}/night
+                                            </p>
+                                        </div>
+                                        <div class="text-end">
+                                            <p class="mb-0"
+                                                style="font-size: 1.5rem; font-weight: 700; color: #ff5722;">
+                                                $<span id="total_price{{ $room->id }}">{{ number_format($room->price ??
+                                                    $hotel->base_price, 2) }}</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer mt-4 p-0">
+                                    @if($room->availability)
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fas fa-calendar-check me-2"></i>
+                                        Proceed to Book
+                                    </button>
+                                    @else
+                                    <button type="button" class="btn btn-secondary w-100" disabled>
+                                        <i class="fas fa-times me-2"></i>
+                                        Not Available
+                                    </button>
+                                    @endif
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+
+        </div>
+    </div>
+</div>
+@endforeach
+
+<script>
+    function openRoomDetailsModal(roomId) {
+    const modal = new bootstrap.Modal(document.getElementById('roomDetailsModal' + roomId));
+    modal.show();
+}
+
+@foreach($rooms as $room)
+function calculatePrice{{ $room->id }}() {
+    const checkIn = document.getElementById('check_in{{ $room->id }}').value;
+    const checkOut = document.getElementById('check_out{{ $room->id }}').value;
+    const numberRooms = parseInt(document.getElementById('number_rooms{{ $room->id }}').value);
+    const pricePerNight = {{ $room->price ?? $hotel->base_price }};
+    
+    let nights = 1;
+    if (checkIn && checkOut) {
+        const checkInDate = new Date(checkIn);
+        const checkOutDate = new Date(checkOut);
+        if (checkOutDate > checkInDate) {
+            nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+        }
+    }
+    
+    const totalPrice = pricePerNight * numberRooms * nights;
+    
+    document.getElementById('nights{{ $room->id }}').textContent = nights;
+    document.getElementById('rooms{{ $room->id }}').textContent = numberRooms;
+    document.getElementById('total_price{{ $room->id }}').textContent = totalPrice.toFixed(2);
+    
+    // Update check-out minimum date
+    if (checkIn) {
+        const checkInDate = new Date(checkIn);
+        checkInDate.setDate(checkInDate.getDate() + 1);
+        document.getElementById('check_out{{ $room->id }}').min = checkInDate.toISOString().split('T')[0];
+    }
+}
+@endforeach
 </script>
 
 @endsection

@@ -344,108 +344,186 @@
         </div>
     </section>
     
+    @push('scripts')
     <script>
         let map = null;
         let markers = [];
+        let infoWindows = [];
+        let currentDeals = [];
         
         // Initialize map when Livewire loads
         document.addEventListener('livewire:load', function () {
             initMap();
         });
         
-        // Update markers when Livewire updates (filters change)
+        // Update markers when Livewire updates (pagination changes)
         document.addEventListener('livewire:update', function () {
             updateMapMarkers();
         });
 
         function initMap() {
+            console.log('initMap called');
             // Check if map container exists
             const mapElement = document.getElementById("interactive-map");
-            if (!mapElement || map) return;
+            console.log('Map element:', mapElement);
+            if (!mapElement || map) {
+                console.log('Map element not found or map already exists');
+                return;
+            }
             
             // Zanzibar coordinates
             const zanzibar = { lat: -6.1659, lng: 39.2026 };
             
-            // Create the map
-            map = new google.maps.Map(mapElement, {
-                zoom: 8,
-                center: zanzibar,
-                mapTypeId: google.maps.MapTypeId.ROADMAP,
-                styles: [
-                    {
-                        featureType: "poi",
-                        elementType: "labels",
-                        stylers: [{ visibility: "off" }]
-                    }
-                ]
-            });
-            
-            // Add initial markers
-            updateMapMarkers();
+            try {
+                // Create the map
+                map = new google.maps.Map(mapElement, {
+                    zoom: 8,
+                    center: zanzibar,
+                    mapTypeId: google.maps.MapTypeId.ROADMAP,
+                    styles: [
+                        {
+                            featureType: "poi",
+                            elementType: "labels",
+                            stylers: [{ visibility: "off" }]
+                        }
+                    ]
+                });
+                
+                console.log('Map created successfully');
+                
+                // Add initial markers
+                updateMapMarkers();
+            } catch (error) {
+                console.error('Error creating map:', error);
+            }
         }
         
         function updateMapMarkers() {
             if (!map) return;
             
-            // Clear existing markers
+            // Clear existing markers and info windows
             markers.forEach(marker => marker.setMap(null));
+            infoWindows.forEach(infoWindow => infoWindow.close());
             markers = [];
+            infoWindows = [];
             
-            // Get current deals data from Livewire
-            const deals = @json($deals);
+            // Get current deals data from Livewire (only current page items)
+            const deals = @json($deals->items());
+            currentDeals = deals;
             
-            // Add markers for each deal
-            deals.forEach(deal => {
-                if (deal.lat && deal.long) {
-                    const marker = new google.maps.Marker({
-                        position: { lat: parseFloat(deal.lat), lng: parseFloat(deal.long) },
-                        map: map,
-                        title: deal.title,
-                        icon: {
-                            url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
-                            scaledSize: new google.maps.Size(25, 25)
-                        }
-                    });
-                    
-                    markers.push(marker);
-        
-                    // Add info window
-                    const infoWindow = new google.maps.InfoWindow({
-                        content: `
-                            <div style="padding-left: 10px; padding-right: 10px; max-width: 250px;">
-                                ${deal.cover_photo ? `<img src="storage/${deal.cover_photo}" alt="${deal.title}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;">` : ''}
-                                <h6 style="margin: 0 0 5px 0; font-weight: 600;">${deal.title}</h6>
-                                <p style="margin: 0 0 5px 0; color: #666; font-size: 14px;">
-                                    <i class="fas fa-map-marker-alt"></i> ${deal.location}
-                                </p>
-                                <p style="margin: 0 0 5px 0; color: #2e8b57; font-weight: 600;">
-                                    USD ${parseFloat(deal.base_price).toFixed(2)}
-                                    ${deal.type === 'hotel' || deal.type === 'apartment' ? 'per night' : 
-                                      deal.type === 'tour' ? 'per person' : 
-                                      deal.type === 'car' ? 'per day' : ''}
-                                </p>
-                                ${deal.category ? `<span style="background: #2e8b57; color: white; padding: 2px 8px; border-radius: 3px; font-size: 12px;">${deal.category.category}</span>` : ''}
-                            </div>
-                        `
-                    });
-        
-                    marker.addListener('click', () => {
-                        infoWindow.open(map, marker);
-                    });
-        
-                    // Add click listener to deal cards to center map on marker
-                    const dealCard = document.querySelector(`[data-id="${deal.id}"]`);
-                    if (dealCard) {
-                        dealCard.addEventListener('click', () => {
-                            map.setCenter(marker.getPosition());
-                            map.setZoom(12);
-                            infoWindow.open(map, marker);
-                        });
+            // Filter deals that have coordinates
+            const dealsWithCoordinates = deals.filter(deal => 
+                deal.lat && deal.long && 
+                parseFloat(deal.lat) !== 0 && 
+                parseFloat(deal.long) !== 0
+            );
+            
+            console.log(`Found ${dealsWithCoordinates.length} deals with coordinates out of ${deals.length} total deals`);
+            
+            if (dealsWithCoordinates.length === 0) {
+                // Show message when no deals have coordinates
+                const mapElement = document.getElementById("interactive-map");
+                if (mapElement) {
+                    mapElement.innerHTML = `
+                        <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #f8f9fa; border-radius: 12px; flex-direction: column;">
+                            <i class="fas fa-map-marked-alt fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Location Data</h5>
+                            <p class="text-muted text-center">None of the current results have location coordinates.</p>
+                        </div>
+                    `;
+                }
+                return;
+            }
+            
+            // Add markers for each deal with coordinates
+            dealsWithCoordinates.forEach(deal => {
+                const marker = new google.maps.Marker({
+                    position: { lat: parseFloat(deal.lat), lng: parseFloat(deal.long) },
+                    map: map,
+                    title: deal.title,
+                    icon: {
+                        url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+                        scaledSize: new google.maps.Size(30, 30)
                     }
+                });
+                
+                markers.push(marker);
+    
+                // Add info window
+                const infoWindow = new google.maps.InfoWindow({
+                    content: `
+                        <div style="padding: 8px; max-width: 220px;">
+                            <div style="display: flex; align-items: flex-start; gap: 8px;">
+                                <a href="${deal.view_route}" style="text-decoration: none;">
+                                    <img src="${deal.cover_photo ? 'storage/' + deal.cover_photo : (deal.photos && deal.photos.length > 0 ? 'storage/' + deal.photos[0].photo : deal.default_image)}" 
+                                         alt="${deal.title}" 
+                                         style="width: 35px; height: 35px; object-fit: cover; border-radius: 4px; flex-shrink: 0; cursor: pointer;">
+                                </a>
+                                <div style="flex: 1;">
+                                    <a href="${deal.view_route}" style="text-decoration: none; color: inherit;">
+                                        <h6 style="margin: 0 0 4px 0; font-weight: 600; color: #333; font-size: 13px; cursor: pointer;">${deal.title}</h6>
+                                    </a>
+                                    <p style="margin: 0 0 4px 0; color: #666; font-size: 11px;">
+                                        <i class="fas fa-map-marker-alt"></i> ${deal.location}
+                                    </p>
+                                    <p style="margin: 0 0 6px 0; color: #2e8b57; font-weight: 600; font-size: 12px;">
+                                        USD ${parseFloat(deal.base_price).toFixed(2)}
+                                        ${deal.type === 'hotel' || deal.type === 'apartment' ? 'per night' : 
+                                          deal.type === 'tour' ? 'per person' : 
+                                          deal.type === 'car' ? 'per day' : ''}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    `
+                });
+                
+                infoWindows.push(infoWindow);
+    
+                // Add click listener to marker
+                marker.addListener('click', () => {
+                    // Close all other info windows
+                    infoWindows.forEach(iw => iw.close());
+                    infoWindow.open(map, marker);
+                });
+                
+                // Add click listener to marker to navigate to deal
+                marker.addListener('dblclick', () => {
+                    window.location.href = deal.view_route;
+                });
+            });
+            
+            // Add click listeners to deal cards to center map on marker
+            dealsWithCoordinates.forEach(deal => {
+                const dealCard = document.querySelector(`[data-id="${deal.id}"]`);
+                if (dealCard) {
+                    // Remove existing listeners to prevent duplicates
+                    dealCard.removeEventListener('click', handleCardClick);
+                    dealCard.addEventListener('click', handleCardClick);
                 }
             });
+            
+            function handleCardClick(event) {
+                const dealId = event.currentTarget.getAttribute('data-id');
+                const deal = dealsWithCoordinates.find(d => d.id == dealId);
+                if (deal) {
+                    const marker = markers.find(m => m.getTitle() === deal.title);
+                    if (marker) {
+                        map.setCenter(marker.getPosition());
+                        map.setZoom(14);
+                        // Close all info windows first
+                        infoWindows.forEach(iw => iw.close());
+                        // Find and open the corresponding info window
+                        const infoWindow = infoWindows[markers.indexOf(marker)];
+                        if (infoWindow) {
+                            infoWindow.open(map, marker);
+                        }
+                    }
+                }
+            }
         }
     </script>
+    @endpush
 
     <script async defer
         src="https://maps.googleapis.com/maps/api/js?key={{ env('GOOGLE_MAPS_API_KEY', 'AIzaSyBvOkBwJcJjJjJjJjJjJjJjJjJjJjJjJjJj') }}&callback=initMap">

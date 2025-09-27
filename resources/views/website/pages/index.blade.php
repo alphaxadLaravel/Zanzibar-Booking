@@ -66,7 +66,7 @@
                                 style="height: 45px;">
                                 <option value="">All Categories</option>
                                 @foreach($propertyCategories as $category)
-                                <option value="{{ $category->type }}">{{ $category->category }}</option>
+                                <option value="{{ $category->id }}">{{ $category->category }}</option>
                                 @endforeach
                             </select>
                         </div>
