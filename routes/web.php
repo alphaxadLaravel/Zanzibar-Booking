@@ -64,6 +64,12 @@ Route::post('/booking/{id}/cancel', [BookingController::class, 'cancelBooking'])
 // Payment routes
 Route::get('/payment/{bookingId}', [PaymentController::class, 'processPayment'])->name('payment.process');
 
+// Cart routes
+Route::get('/cart', [WebsiteController::class, 'cart'])->name('cart');
+Route::post('/cart/add', [WebsiteController::class, 'addToCart'])->name('cart.add');
+Route::post('/cart/remove', [WebsiteController::class, 'removeFromCart'])->name('cart.remove');
+Route::post('/cart/clear', [WebsiteController::class, 'clearCart'])->name('cart.clear');
+
 // Pesapal callback routes (excluded from CSRF protection)
 Route::match(['get', 'post'], '/payment/success', [PaymentController::class, 'paymentSuccess'])->name('payment.success')->withoutMiddleware(['csrf']);
 Route::match(['get', 'post'], '/payment/callback', [PaymentController::class, 'paymentSuccess'])->name('payment.callback')->withoutMiddleware(['csrf']); // Alternative callback URL

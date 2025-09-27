@@ -1,5 +1,5 @@
 {{-- Deal Description Component --}}
-@props(['deal', 'title' => 'Detail'])
+@props(['deal', 'title' => 'Overview'])
 
 <section class="description">
     <h4 class="section-title">{{ $title }}</h4>

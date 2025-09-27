@@ -820,4 +820,177 @@ class WebsiteController extends Controller
         }
     }
 
+    /**
+     * Display cart page
+     */
+    public function cart()
+    {
+        $cart = session('cart', collect());
+        $cartItems = collect();
+        $totalAmount = 0;
+
+        foreach ($cart as $item) {
+            $deal = Deal::with(['category', 'photos'])->find($item['deal_id']);
+            if ($deal) {
+                $item['deal'] = $deal;
+                $item['subtotal'] = $item['quantity'] * $deal->base_price;
+                $totalAmount += $item['subtotal'];
+                $cartItems->push($item);
+            }
+        }
+
+        $hashids = $this->getHashids();
+
+        return view('website.pages.cart', compact('cartItems', 'totalAmount', 'hashids'));
+    }
+
+    /**
+     * Add item to cart
+     */
+    public function addToCart(Request $request)
+    {
+        $request->validate([
+            'deal_id' => 'required|exists:deals,id',
+            'quantity' => 'required|integer|min:1',
+            'check_in' => 'nullable|date',
+            'check_out' => 'nullable|date|after:check_in',
+            'adults' => 'nullable|integer|min:1',
+            'children' => 'nullable|integer|min:0',
+            'pickup_location' => 'nullable|string',
+            'pickup_time' => 'nullable|string',
+            'return_location' => 'nullable|string',
+            'return_time' => 'nullable|string',
+        ]);
+
+        $deal = Deal::findOrFail($request->deal_id);
+        $cart = session('cart', collect());
+        
+        // Create cart item key based on deal and booking details
+        $itemKey = $this->generateCartItemKey($request->all());
+        
+        // Check if item already exists in cart
+        $existingItem = $cart->firstWhere('key', $itemKey);
+        
+        if ($existingItem) {
+            // Update quantity if item exists
+            $existingItem['quantity'] += $request->quantity;
+            $cart = $cart->map(function ($item) use ($itemKey, $existingItem) {
+                return $item['key'] === $itemKey ? $existingItem : $item;
+            });
+        } else {
+            // Add new item to cart
+            $cartItem = [
+                'key' => $itemKey,
+                'deal_id' => $deal->id,
+                'quantity' => $request->quantity,
+                'check_in' => $request->check_in,
+                'check_out' => $request->check_out,
+                'adults' => $request->adults ?? 1,
+                'children' => $request->children ?? 0,
+                'pickup_location' => $request->pickup_location,
+                'pickup_time' => $request->pickup_time,
+                'return_location' => $request->return_location,
+                'return_time' => $request->return_time,
+                'added_at' => now()->toISOString(),
+            ];
+            
+            $cart->push($cartItem);
+        }
+
+        session(['cart' => $cart]);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Item added to cart successfully',
+                'cart_count' => $cart->count(),
+                'cart_total' => $this->calculateCartTotal($cart)
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Item added to cart successfully');
+    }
+
+    /**
+     * Remove item from cart
+     */
+    public function removeFromCart(Request $request)
+    {
+        $request->validate([
+            'item_key' => 'required|string'
+        ]);
+
+        $cart = session('cart', collect());
+        $cart = $cart->reject(function ($item) use ($request) {
+            return $item['key'] === $request->item_key;
+        });
+
+        session(['cart' => $cart]);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Item removed from cart successfully',
+                'cart_count' => $cart->count(),
+                'cart_total' => $this->calculateCartTotal($cart)
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Item removed from cart successfully');
+    }
+
+    /**
+     * Clear entire cart
+     */
+    public function clearCart(Request $request)
+    {
+        session(['cart' => collect()]);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Cart cleared successfully',
+                'cart_count' => 0,
+                'cart_total' => 0
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Cart cleared successfully');
+    }
+
+    /**
+     * Generate unique cart item key
+     */
+    private function generateCartItemKey($data)
+    {
+        $keyData = [
+            'deal_id' => $data['deal_id'],
+            'check_in' => $data['check_in'] ?? null,
+            'check_out' => $data['check_out'] ?? null,
+            'adults' => $data['adults'] ?? 1,
+            'children' => $data['children'] ?? 0,
+            'pickup_location' => $data['pickup_location'] ?? null,
+            'pickup_time' => $data['pickup_time'] ?? null,
+            'return_location' => $data['return_location'] ?? null,
+            'return_time' => $data['return_time'] ?? null,
+        ];
+
+        return md5(serialize($keyData));
+    }
+
+    /**
+     * Calculate cart total
+     */
+    private function calculateCartTotal($cart)
+    {
+        $total = 0;
+        foreach ($cart as $item) {
+            $deal = Deal::find($item['deal_id']);
+            if ($deal) {
+                $total += $item['quantity'] * $deal->base_price;
+            }
+        }
+        return $total;
+    }
+
 }

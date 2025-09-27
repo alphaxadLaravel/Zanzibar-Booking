@@ -38,9 +38,10 @@
 
                     @include('website.components.deal_meta_info', ['deal' => $hotel, 'type' => 'hotel'])
                     <hr>
-                    @include('website.components.deal_description', ['deal' => $hotel, 'title' => 'Detail'])
+                    @include('website.components.deal_description', ['deal' => $hotel, 'title' => 'Hotel Overview'])
                     <hr>
-                    @include('website.components.deal_features', ['deal' => $hotel, 'type' => 'include', 'title' => 'Facilities'])
+                    @include('website.components.deal_features', ['deal' => $hotel, 'type' => 'include', 'title' =>
+                    'Features & Facilities'])
                     <hr>
 
                     @include('website.components.deal_video', ['deal' => $hotel])
@@ -108,7 +109,8 @@
             <hr>
 
 
-            @include('website.components.deal_reviews', ['deal' => $hotel, 'paginatedReviews' => $paginatedReviews ?? collect(), 'reviewTitle' => 'Reviews for this Hotel'])
+            @include('website.components.deal_reviews', ['deal' => $hotel, 'paginatedReviews' => $paginatedReviews ??
+            collect(), 'reviewTitle' => 'Reviews for this Hotel'])
         </div>
 
 
@@ -152,6 +154,7 @@
                                         onclick="event.stopPropagation(); openRoomDetailsModal({{ $room->id }})">
                                         <i class="mdi mdi-calendar-check me-1"></i> BOOK ROOM
                                     </button>
+
                                 </div>
                             </div>
                         </div>
@@ -171,7 +174,7 @@
             </div>
 
             {{-- Contact Information --}}
-           @include('website.components.contact_card')
+            @include('website.components.contact_card')
         </div>
     </div>
 </div>
@@ -205,7 +208,8 @@
                     </div>
                     <div class="tour-item__details" style="padding-top:18px;">
                         <div class="star-rating mb-2">
-                            @include('website.components.star_rating', ['rating' => $hotel->star_rating ?? 5, 'size' => 'small'])
+                            @include('website.components.star_rating', ['rating' => $hotel->star_rating ?? 5, 'size' =>
+                            'small'])
                         </div>
                         <h3 class="car-item__title" style="font-size:1.25rem;font-weight:600;">
                             <a href="{{route('view-hotel', ['id' => $hashids->encode($nearbyHotel->id)])}}"
@@ -265,7 +269,8 @@
                     </div>
                     <div class="tour-item__details" style="padding-top:18px;">
                         <div class="star-rating mb-2">
-                            @include('website.components.star_rating', ['rating' => $hotel->star_rating ?? 5, 'size' => 'small'])
+                            @include('website.components.star_rating', ['rating' => $hotel->star_rating ?? 5, 'size' =>
+                            'small'])
                         </div>
                         <h3 class="tour-item__title" style="font-size:1.25rem;font-weight:600;">
                             <a href="{{route('view-tour', ['id' => $hashids->encode($tour->id)])}}"
@@ -529,6 +534,10 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <button type="submit" class="btn btn-primary w-100">
                                         <i class="fas fa-calendar-check me-2"></i>
                                         Proceed to Book
+                                    </button>
+                                    {{-- add to cart button --}}
+                                    <button class="btn btn-outline-secondary w-100" style="font-size: 13px;">
+                                        <i class="mdi mdi-cart-plus me-1"></i> ADD TO CART
                                     </button>
                                     @else
                                     <button type="button" class="btn btn-secondary w-100" disabled>

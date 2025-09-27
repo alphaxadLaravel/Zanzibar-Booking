@@ -24,16 +24,19 @@
                             <div class="col-md-6 my-2">
                                 <label class="form-label">Full Name *</label>
                                 <input type="text" class="form-control" name="fullname" required
+                                    placeholder="Enter your full name"
                                     value="{{ Auth::check() ? Auth::user()->firstname . ' ' . Auth::user()->lastname : '' }}">
                             </div>
                             <div class="col-md-6 my-2">
                                 <label class="form-label">Email *</label>
                                 <input type="email" class="form-control" name="email" required
+                                    placeholder="Enter your email address"
                                     value="{{ Auth::check() ? Auth::user()->email : '' }}">
                             </div>
                             <div class="col-md-6 my-2">
                                 <label class="form-label">Phone *</label>
                                 <input type="tel" class="form-control" name="phone" required
+                                    placeholder="Enter your phone number"
                                     value="{{ Auth::check() ? Auth::user()->phone : '' }}">
                             </div>
                             <div class="col-md-6">
@@ -83,11 +86,11 @@
                                     ];
                                     $selectedCountry = Auth::check() ? Auth::user()->country : '';
                                     @endphp
-                                    <option value="" disabled {{ $selectedCountry ? '' : 'selected' }}>Select your
-                                        country</option>
+                                    <option value="" disabled {{ $selectedCountry ? '' : 'selected' }}>Select your country</option>
                                     @foreach($countries as $country)
-                                    <option value="{{ $country }}" {{ $selectedCountry==$country ? 'selected' : '' }}>{{
-                                        $country }}</option>
+                                    <option value="{{ $country }}" {{ $selectedCountry==$country ? 'selected' : '' }}>
+                                        {{ $country }}
+                                    </option>
                                     @endforeach
                                 </select>
                             </div>

@@ -150,14 +150,7 @@ use Illuminate\Support\Str;
                         </ul>
                     </div>
                     <hr>
-                    <section class="description">
-                        <h4 class="section-title">partment Overview</h4>
-                        <div class="section-content">
-                            <p>
-                                {!! $apartment->description !!}
-                            </p>
-                        </div>
-                    </section>
+                    @include('website.components.deal_description', ['deal' => $apartment, 'title' => 'Apartment Overview'])
                     <hr>
                     <section class="feature">
                         <h4 class="section-title">Features & Facilities</h4>
@@ -541,6 +534,9 @@ use Illuminate\Support\Str;
                             <div class="d-grid mt-4">
                                 <button type="submit" class="btn btn-primary btn-lg text-uppercase fw-semibold w-100">
                                     Book Now
+                                </button>
+                                <button class="btn btn-outline-secondary btn-lg text-uppercase fw-semibold w-100 my-3" style="font-size: 13px;">
+                                    <i class="mdi mdi-cart-plus me-1"></i> ADD TO CART
                                 </button>
                             </div>
                         </form>

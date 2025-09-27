@@ -1,19 +1,22 @@
 <header class="modern-navbar">
     <div class="navbar-container">
-        <!-- Logo Section -->
-        <div class="navbar-brand">
-            <a href="{{ route('index') }}" class="brand-link">
-                <img src="{{asset('logo.png')}}" alt="Zanzibar Bookings" class="brand-logo" />
-            </a>
-        </div>
+        <!-- Logo and Mobile Menu Section -->
+        <div class="navbar-left">
+            <!-- Logo Section -->
+            <div class="navbar-brand">
+                <a href="{{ route('index') }}" class="brand-link">
+                    <img src="{{asset('logo.png')}}" alt="Zanzibar Bookings" class="brand-logo" />
+                </a>
+            </div>
 
-        <!-- Mobile Menu Toggle -->
-        <div class="mobile-menu-toggle">
-            <button class="hamburger-btn" type="button" aria-label="Toggle navigation menu">
-                <span class="hamburger-line"></span>
-                <span class="hamburger-line"></span>
-                <span class="hamburger-line"></span>
-            </button>
+            <!-- Mobile Menu Toggle -->
+            <div class="mobile-menu-toggle">
+                <button class="hamburger-btn" type="button" aria-label="Toggle navigation menu">
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                </button>
+            </div>
         </div>
 
         <!-- Navigation Menu -->
@@ -60,12 +63,20 @@
 
         <!-- User Actions -->
         <div class="navbar-actions">
+            <!-- Cart Icon -->
+            <div class="cart-icon-container">
+                <a href="{{ route('cart') }}" class="cart-link" title="View Cart">
+                    <i class="mdi mdi-cart-outline cart-icon"></i>
+                    <span class="cart-count" id="cart-count">{{ session('cart', collect())->count() }}</span>
+                </a>
+            </div>
+            
             @auth
                 <!-- Authenticated User Actions -->
                 <div class="d-flex gap-3 align-items-center">
                     <a href="become-a-partner.html" class="btn btn-outline-primary mx-2">
                         <i class="mdi mdi-handshake"></i>
-                        <span class="btn-text">Become A Partner</span>
+                        <span class="btn-text">Become Partner</span>
                     </a>
                     <div class="dropdown">
                         <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
