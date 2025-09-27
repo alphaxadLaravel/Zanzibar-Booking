@@ -282,13 +282,7 @@
                     </div>
                     <div class="tour-item__details" style="padding-top:18px;">
                         <div class="star-rating mb-2">
-                            <div class="star-rating">
-                                <i class="fa fa-star text-warning"></i>
-                                <i class="fa fa-star text-warning"></i>
-                                <i class="fa fa-star text-warning"></i>
-                                <i class="fa fa-star text-warning"></i>
-                                <i class="fa fa-star text-warning"></i>
-                            </div>
+                            @include('website.components.star_rating', ['rating' => $deal->star_rating ?? 5, 'size' => 'small'])
                         </div>
                         <h3 class="car-item__title" style="font-size:1.25rem;font-weight:600;">
                             <a href="{{ $deal->type === 'apartment' ? route('view-apartment', ['id' => $hashids->encode($deal->id)]) : route('view-hotel', ['id' => $hashids->encode($deal->id)]) }}" style="color:#222;text-decoration:none;">{{ $deal->title
@@ -398,6 +392,9 @@
                         </div>
                     </div>
                     <div class="tour-item__details" style="padding-top:18px;">
+                        <div class="star-rating mb-2">
+                            @include('website.components.star_rating', ['rating' => $tour->star_rating ?? 5, 'size' => 'small'])
+                        </div>
                         <h3 class="tour-item__title" style="font-size:1.25rem;font-weight:600;">
                             <a href="{{route('view-tour', ['id' => $hashids->encode($tour->id)])}}" style="color:#222;text-decoration:none;">{{ $tour->title
                                 }}</a>
@@ -493,13 +490,7 @@
                     </div>
                     <div class="tour-item__details" style="padding-top:18px;">
                         <div class="star-rating mb-2">
-                            <div class="star-rating">
-                                <i class="fa fa-star text-warning"></i>
-                                <i class="fa fa-star text-warning"></i>
-                                <i class="fa fa-star text-warning"></i>
-                                <i class="fa fa-star text-warning"></i>
-                                <i class="fa fa-star text-warning"></i>
-                            </div>
+                            @include('website.components.star_rating', ['rating' => $car->star_rating ?? 5, 'size' => 'small'])
                         </div>
                         <h3 class="car-item__title" style="font-size:1.25rem;font-weight:600;">
                             <a href="{{route('view-car', ['id' => $hashids->encode($car->id)])}}" style="color:#222;text-decoration:none;">{{ $car->title

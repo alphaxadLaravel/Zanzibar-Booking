@@ -73,7 +73,7 @@
                                 </p>
                             </div>
                             <div class="mt-auto d-flex flex-wrap justify-content-end align-items-end gap-2">
-                                <a href="{{route('view-blog', ['id' => $blog->id])}}" class="btn btn-primary btn-sm ms-2">
+                                <a href="{{route('view-blog', ['id' => $blog->id])}}" class="btn btn-primary ms-2">
                                     Read More
                                 </a>
                             </div>

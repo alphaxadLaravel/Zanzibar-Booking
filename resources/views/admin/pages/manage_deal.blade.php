@@ -72,6 +72,21 @@
                     @enderror
                 </div>
 
+                <div class="col-md-4">
+                    <label class="form-label">Star Rating <span class="text-danger">*</span></label>
+                    <select class="form-select" name="star_rating" required>
+                        <option value="">Select Star Rating</option>
+                        <option value="1" {{ (old('star_rating', $deal->star_rating ?? '') == '1') ? 'selected' : '' }}>1 Star</option>
+                        <option value="2" {{ (old('star_rating', $deal->star_rating ?? '') == '2') ? 'selected' : '' }}>2 Stars</option>
+                        <option value="3" {{ (old('star_rating', $deal->star_rating ?? '') == '3') ? 'selected' : '' }}>3 Stars</option>
+                        <option value="4" {{ (old('star_rating', $deal->star_rating ?? '') == '4') ? 'selected' : '' }}>4 Stars</option>
+                        <option value="5" {{ (old('star_rating', $deal->star_rating ?? '') == '5') ? 'selected' : '' }}>5 Stars</option>
+                    </select>
+                    @error('star_rating')
+                    <div class="text-danger">{{ $message }}</div>
+                    @enderror
+                </div>
+
                 <div class="col-md-12">
                     <label class="form-label">Description</label>
                     <div>

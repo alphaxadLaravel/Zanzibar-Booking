@@ -19,6 +19,7 @@ class Deal extends Model
         'map_location',
         'base_price',
         'ratings',
+        'star_rating',
         'is_featured',
         'category_id',
         'description',
@@ -38,6 +39,7 @@ class Deal extends Model
         'long' => 'decimal:7',
         'base_price' => 'decimal:2',
         'ratings' => 'float',
+        'star_rating' => 'integer',
         'is_featured' => 'boolean',
         'status' => 'boolean'
     ];

@@ -280,13 +280,7 @@
                                     </div>
                                     <div class="hotel-item__details" style="padding-top:18px;">
                                         <div class="star-rating mb-2">
-                                            <div class="star-rating">
-                                                <i class="fa fa-star text-warning"></i>
-                                                <i class="fa fa-star text-warning"></i>
-                                                <i class="fa fa-star text-warning"></i>
-                                                <i class="fa fa-star text-warning"></i>
-                                                <i class="fa fa-star text-warning"></i>
-                                            </div>
+                                            @include('website.components.star_rating', ['rating' => $deal->star_rating ?? 5, 'size' => 'small'])
                                         </div>
                                         <h3 class="hotel-item__title" style="font-size:1.25rem;font-weight:600;">
                                             <a href="{{ $deal->view_route }}"

@@ -81,13 +81,7 @@ use Illuminate\Support\Str;
             <div class="card">
                 <div class="card-body">
                     <div class="hotel-star">
-                        <div class="star-rating">
-                            <i class="fa fa-star text-warning"></i>
-                            <i class="fa fa-star text-warning"></i>
-                            <i class="fa fa-star text-warning"></i>
-                            <i class="fa fa-star text-warning"></i>
-                            <i class="fa fa-star text-warning"></i>
-                        </div>
+                        @include('website.components.star_rating', ['rating' => $package->star_rating ?? 5])
                     </div>
                     <div class="d-flex align-items-center" style="gap: 16px;">
                         <h2 class="post-title bold">
@@ -635,13 +629,7 @@ use Illuminate\Support\Str;
                     </div>
                     <div class="tour-item__details" style="padding-top:18px;">
                         <div class="star-rating mb-2">
-                            <div class="star-rating">
-                                <i class="fa fa-star text-warning"></i>
-                                <i class="fa fa-star text-warning"></i>
-                                <i class="fa fa-star text-warning"></i>
-                                <i class="fa fa-star text-warning"></i>
-                                <i class="fa fa-star text-warning"></i>
-                            </div>
+                            @include('website.components.star_rating', ['rating' => $package->star_rating ?? 5, 'size' => 'small'])
                         </div>
                         <h3 class="tour-item__title" style="font-size:1.25rem;font-weight:600;">
                             <a href="{{route('view-tour', ['id' => $hashids->encode($nearbyTour->id)])}}"
