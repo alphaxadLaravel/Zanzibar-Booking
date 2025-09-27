@@ -1,67 +1,9 @@
 @extends('website.layouts.app')
 
-@php
-use Illuminate\Support\Str;
-@endphp
-
-@section('title')
-{{ $hotel->seo_title ?: $hotel->title }} - Zanzibar Bookings
-@endsection
-
-@section('meta')
-<meta name="description" content="{{ $hotel->seo_description ?: Str::limit(strip_tags($hotel->description), 160) }}">
-@if($hotel->seo_keywords)
-<meta name="keywords" content="{{ $hotel->seo_keywords }}">
-@endif
-
-<meta property="og:type" content="website">
-<meta property="og:url" content="{{ request()->url() }}">
-<meta property="og:title" content="{{ $hotel->seo_title ?: $hotel->title }}">
-<meta property="og:description"
-    content="{{ $hotel->seo_description ?: Str::limit(strip_tags($hotel->description), 160) }}">
-<meta property="og:image"
-    content="{{ $hotel->seo_image ? asset('storage/' . $hotel->seo_image) : ($hotel->cover_photo ? asset('storage/' . $hotel->cover_photo) : asset('logo.png')) }}">
-
-<!-- Twitter -->
-<meta property="twitter:card" content="summary_large_image">
-<meta property="twitter:url" content="{{ request()->url() }}">
-<meta property="twitter:title" content="{{ $hotel->seo_title ?: $hotel->title }}">
-<meta property="twitter:description"
-    content="{{ $hotel->seo_description ?: Str::limit(strip_tags($hotel->description), 160) }}">
-<meta property="twitter:image"
-    content="{{ $hotel->seo_image ? asset('storage/' . $hotel->seo_image) : ($hotel->cover_photo ? asset('storage/' . $hotel->cover_photo) : asset('logo.png')) }}">
-@endsection
+@include('website.components.deal_seo', ['deal' => $hotel])
 
 @section('pages')
-<section class="gallery">
-    <div class="gmz-carousel-with-lightbox" data-count="{{ $hotel->photos->count() }}">
-        @forelse($hotel->photos as $photo)
-        <a href="{{ asset('storage/' . $photo->photo) }}">
-            <img src="{{ asset('storage/' . $photo->photo) }}" alt="{{ $hotel->title }}" class="gallery-img"
-                style="width: 100%; height: 400px; object-fit: cover; display: block; opacity: 0; transition: opacity 0.5s;"
-                loading="lazy" />
-        </a>
-        @empty
-        <a
-            href="{{ $hotel->cover_photo ? asset('storage/' . $hotel->cover_photo) : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop&crop=center' }}">
-            <img src="{{ $hotel->cover_photo ? asset('storage/' . $hotel->cover_photo) : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop&crop=center' }}"
-                alt="{{ $hotel->title }}" class="gallery-img"
-                style="width: 100%; height: 400px; object-fit: cover; display: block; opacity: 0; transition: opacity 0.5s;"
-                loading="lazy" />
-        </a>
-        @endforelse
-    </div>
-</section>
-<script>
-    // Prevent burst/flash on like opening, fade in after page load
-    document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(function() {
-            document.querySelectorAll('.gallery-img').forEach(function(img) {
-                img.style.opacity = '1';
-            });
-        }, 100); // slight delay to ensure page is ready
-    });
-</script>
+@include('website.components.deal_gallery', ['deal' => $hotel])
 
 
 <div class="breadcrumb">
@@ -94,157 +36,14 @@ use Illuminate\Support\Str;
                     @endif
 
 
-                    <div class="meta">
-                        <ul class="meta row  gy-2 mb-4" style="list-style: none; padding: 0; margin: 0;">
-                            <li class="col-6 col-md-4 d-flex align-items-stretch mb-3 mb-md-0">
-                                <div class="d-flex flex-nowrap align-items-center w-100 border rounded bg-white pl-3 py-2 h-100"
-                                    style="min-height:70px; border-color: #218080;">
-                                    <span
-                                        class="d-flex align-items-center justify-content-center rounded bg-light flex-shrink-0"
-                                        style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 18px;">
-                                        <i class="mdi mdi-home-city" style="color: #218080; font-size: 1.2rem;"></i>
-                                    </span>
-                                    <div class="flex-grow-1" style="min-width:0;">
-                                        <div class="fw-bold text-dark"
-                                            style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                            {{ $hotel->category ? $hotel->category->category : 'Hotel' }}
-                                        </div>
-                                        <div class="text-muted small" style="white-space:nowrap;">Type</div>
-                                    </div>
-                                </div>
-                            </li>
-                            <li class="col-6 col-md-4 d-flex align-items-stretch mb-3 mb-md-0">
-                                <div class="d-flex flex-nowrap align-items-center w-100 border rounded bg-white px-3 py-2 h-100"
-                                    style="min-height:70px; border-color: #218080;">
-                                    <span
-                                        class="d-flex align-items-center justify-content-center rounded bg-light flex-shrink-0"
-                                        style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 18px;">
-                                        <i class="mdi mdi-currency-usd" style="color: #218080; font-size: 1.2rem;"></i>
-                                    </span>
-                                    <div class="flex-grow-1" style="min-width:0;">
-                                        <div class="fw-bold text-dark"
-                                            style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                            USD {{ number_format($hotel->base_price, 2) }}/night
-                                        </div>
-                                        <div class="text-muted small" style="white-space:nowrap;">Price</div>
-                                    </div>
-                                </div>
-                            </li>
-                            <li class="col-6 col-md-4 d-flex align-items-stretch mb-3 mb-md-0">
-                                <div class="d-flex flex-nowrap align-items-center w-100 border rounded bg-white px-3 py-2 h-100"
-                                    style="min-height:70px; border-color: #218080;">
-                                    <span
-                                        class="d-flex align-items-center justify-content-center rounded bg-light flex-shrink-0"
-                                        style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 18px;">
-                                        <i class="mdi mdi-star" style="color: #218080; font-size: 1.2rem;"></i>
-                                    </span>
-                                    <div class="flex-grow-1" style="min-width:0;">
-                                        <div class="fw-bold text-dark"
-                                            style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                            {{ $hotel->ratings ? number_format($hotel->ratings, 1) : '5.0' }}/5
-                                        </div>
-                                        <div class="text-muted small" style="white-space:nowrap;">Rating</div>
-                                    </div>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
+                    @include('website.components.deal_meta_info', ['deal' => $hotel, 'type' => 'hotel'])
                     <hr>
-                    <section class="description">
-                        <h4 class="section-title">Detail</h4>
-                        <div class="section-content">
-                            <p>
-                                {!! $hotel->description !!}
-                            </p>
-                        </div>
-                    </section>
+                    @include('website.components.deal_description', ['deal' => $hotel, 'title' => 'Detail'])
                     <hr>
-                    <section class="feature">
-                        <h4 class="section-title">Facilities</h4>
-                        <div class="section-content">
-                            <div class="d-flex flex-wrap" style="gap: 10px;">
-                                @forelse($hotel->features as $feature)
-                                <div class="facility-card d-flex align-items-center px-3 py-2 mb-2"
-                                    style="background: #fff; border-radius: 6px; border: 1px solid #e0e0e0; min-height: 38px; flex: 0 0 auto; min-width: 140px; max-width: 220px;">
-                                    @if($feature->icon)
-                                    <i class="mdi {{ $feature->icon }} me-2"
-                                        style="font-size: 1.2rem; color: #2e8b57; width: 20px; text-align: center;"></i>
-                                    @else
-                                    <i class="mdi mdi-check-circle me-2"
-                                        style="font-size: 1.2rem; color: #2e8b57; width: 20px; text-align: center;"></i>
-                                    @endif
-                                    <span style="font-size: 13px; font-weight: 500; color: #333; line-height: 1.3;">{{
-                                        $feature->name }}</span>
-                                </div>
-                                @empty
-                                <div class="text-muted" style="font-size: 14px;">No facilities listed.</div>
-                                @endforelse
-                            </div>
-                        </div>
-                    </section>
+                    @include('website.components.deal_features', ['deal' => $hotel, 'type' => 'include', 'title' => 'Facilities'])
                     <hr>
 
-                    @if($hotel->video_link)
-                    <section class="video-section">
-                        <h4 class="section-title">Video</h4>
-                        <div class="container">
-                            <div class="row justify-content-center">
-                                <div class="col-md-12">
-                                    <div class="video-container"
-                                        style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%; background: #000; border-radius: 8px; overflow: hidden;">
-                                        @php
-                                        $videoUrl = $hotel->video_link;
-                                        $embedUrl = '';
-
-                                        // YouTube
-                                        if (strpos($videoUrl, 'youtube.com') !== false || strpos($videoUrl, 'youtu.be')
-                                        !==
-                                        false) {
-                                        if (strpos($videoUrl, 'youtu.be') !== false) {
-                                        $videoId = substr($videoUrl, strrpos($videoUrl, '/') + 1);
-                                        } else {
-                                        parse_str(parse_url($videoUrl, PHP_URL_QUERY), $query);
-                                        $videoId = $query['v'] ?? '';
-                                        }
-                                        $embedUrl = 'https://www.youtube.com/embed/' . $videoId .
-                                        '?rel=0&modestbranding=1';
-                                        }
-                                        // Vimeo
-                                        elseif (strpos($videoUrl, 'vimeo.com') !== false) {
-                                        $videoId = substr($videoUrl, strrpos($videoUrl, '/') + 1);
-                                        $embedUrl = 'https://player.vimeo.com/video/' . $videoId .
-                                        '?title=0&byline=0&portrait=0';
-                                        }
-                                        // Direct video file or other platforms
-                                        else {
-                                        $embedUrl = $videoUrl;
-                                        }
-                                        @endphp
-
-                                        @if($embedUrl)
-                                        <iframe src="{{ $embedUrl }}"
-                                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
-                                            frameborder="0" allowfullscreen
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
-                                        </iframe>
-                                        @else
-                                        <div
-                                            style="display: flex; align-items: center; justify-content: center; height: 100%; color: white; text-align: center;">
-                                            <div>
-                                                <i class="fas fa-play-circle"
-                                                    style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                                                <p>Video preview not available</p>
-                                                <a href="{{ $videoUrl }}" target="_blank" class="btn btn-primary">Watch
-                                                    Video</a>
-                                            </div>
-                                        </div>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                    @endif
+                    @include('website.components.deal_video', ['deal' => $hotel])
                     <hr>
                     @if($hotel->nearbyLocations && $hotel->nearbyLocations->count() > 0)
                     <section class="nearby-locations">
@@ -299,160 +98,17 @@ use Illuminate\Support\Str;
                     <hr>
                     @endif
 
-                    <section class="description">
-                        <h4 class="section-title">Our Policies</h4>
-                        <div class="section-content">
-                            <p>
-                                {!! $hotel->policies !!}
-                            </p>
-                        </div>
-                    </section>
+                    @include('website.components.deal_policies', ['deal' => $hotel])
                     <hr>
 
-                    <section class="map">
-                        <h4 class="section-title mb-4">Hotel Location On Map</h4>
-                        <div id="address-map-container" style="width: 100%; height: 400px">
-                            @if($hotel->lat && $hotel->long)
-                            <iframe width="100%" height="100%" frameborder="0" style="border:0; border-radius: 8px;"
-                                src="https://www.google.com/maps?q={{ $hotel->lat }},{{ $hotel->long }}&output=embed"
-                                allowfullscreen aria-hidden="false" tabindex="0" loading="lazy"
-                                referrerpolicy="no-referrer-when-downgrade"></iframe>
-                            @else
-                            <iframe width="100%" height="100%" frameborder="0" style="border:0; border-radius: 8px;"
-                                src="https://www.google.com/maps?q={{ $hotel->location }}&output=embed" allowfullscreen
-                                aria-hidden="false" tabindex="0" loading="lazy"
-                                referrerpolicy="no-referrer-when-downgrade"></iframe>
-                            @endif
-                        </div>
-                    </section>
+                    @include('website.components.deal_map', ['deal' => $hotel, 'title' => 'Hotel Location On Map'])
 
                 </div>
             </div>
             <hr>
 
 
-            <div class="reviews-section mt-4" id="review-section">
-                <div class="d-flex justify-content-between align-items-center my-3">
-                    <h4 class="comment-count">Reviews for this Hotel</h4>
-
-                    <div class="d-flex justify-content-center">
-                        <a href="#leaveReviewModal" class="btn btn-primary btn-lg fw-semibold gmz-box-popup"
-                            data-effect="mfp-zoom-in">
-                            <i class="fa fa-pen"></i> Leave a Review
-                        </a>
-                    </div>
-                    <div class="white-popup mfp-with-anim mfp-hide gmz-popup-form" id="leaveReviewModal">
-                        <div class="popup-inner">
-                            <h4 class="popup-title" id="leaveReviewModalLabel">Leave a Review</h4>
-                            <div class="popup-content">
-                                <div class="comment-form-wrapper">
-                                    <form action="{{ route('deals.reviews.store', $hotel->id) }}"
-                                        class="comment-form form-sm" method="post">
-                                        @csrf
-
-                                        <div class="row g-3">
-                                            <div class="col-md-12">
-                                                <div class="form-group">
-                                                    <label for="review-title" class="form-label fw-semibold">Review
-                                                        Title *</label>
-                                                    <input id="review-title" type="text" name="review_title"
-                                                        class="form-control" placeholder="Enter your review title"
-                                                        required />
-                                                </div>
-                                            </div>
-
-                                            <div class="col-md-12 mb-2">
-                                                <label for="comment_rating mb-2"
-                                                    class="form-label fw-semibold me-3 mb-0 d-flex align-items-center justify-content-between">
-                                                    <span>
-                                                        Your Rating *
-                                                    </span>
-                                                    <span id="star-display" class="ms-3"
-                                                        style="font-size: 1.3rem; color: #ffc107;"></span>
-
-                                                </label>
-                                                <select id="rating" name="rating" class="form-select form-control"
-                                                    required>
-                                                    <option value="">Select rating</option>
-                                                    <option value="1">1 Star</option>
-                                                    <option value="2">2 Stars</option>
-                                                    <option value="3">3 Stars</option>
-                                                    <option value="4">4 Stars</option>
-                                                    <option value="5">5 Stars</option>
-                                                </select>
-                                            </div>
-
-                                            <div class="col-12">
-                                                <div class="form-group">
-                                                    <label for="review-content" class="form-label fw-semibold">Your
-                                                        Review *</label>
-                                                    <textarea id="review-content" name="review_content"
-                                                        placeholder="Share your experience with this hotel..."
-                                                        class="form-control" required rows="5"></textarea>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="d-grid mt-4">
-                                            <button type="submit"
-                                                class="btn btn-primary btn-lg text-uppercase fw-semibold">
-                                                Submit Review
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-                <!-- Reviews List -->
-                <div class="reviews-list" id="reviews-list">
-                    @if($paginatedReviews->count() > 0)
-                    @foreach($paginatedReviews as $review)
-                    <div class="review-item d-flex mb-4 p-3"
-                        style="background: #f8f9fa; border-radius: 12px; border: 1px solid #e9ecef;">
-                        <div class="review-avatar" style="flex-shrink: 0; margin-right: 2rem;">
-                            <img src="https://ui-avatars.com/api/?name={{ urlencode($review->reviewer_name) }}&background=1C8D83&color=fff&size=60"
-                                alt="{{ $review->reviewer_name }}"
-                                style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; display: block;">
-                        </div>
-                        <div class="review-content flex-grow-1">
-                            <div class="review-header d-flex justify-content-between align-items-start mb-2">
-                                <div>
-                                    <h5 class="reviewer-name mb-1"
-                                        style="font-size: 16px; font-weight: 600; color: #333;">{{
-                                        $review->reviewer_name }}</h5>
-                                    <div class="review-rating mb-1" style="font-size: 0.85rem;">
-                                        {!! $review->star_rating !!}
-                                    </div>
-                                </div>
-                                <small class="text-muted">{{ $review->formatted_date }}</small>
-                            </div>
-                            <h6 class="review-title mb-2" style="font-size: 14px; font-weight: 500; color: #555;">
-                                {{ $review->review_title }}</h6>
-                            <p class="review-text mb-0" style="font-size: 14px; color: #666; line-height: 1.5;">
-                                {{ $review->review_content }}
-                            </p>
-                        </div>
-                    </div>
-                    @endforeach
-                    @else
-                    <div class="text-center py-4">
-                        <i class="mdi mdi-star-outline fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">No reviews yet. Be the first to leave a review!</p>
-                    </div>
-                    @endif
-                </div>
-            </div>
-
-            {{-- Pagination for reviews --}}
-            @if($paginatedReviews->hasPages())
-            <div class="d-flex justify-content-center my-4">
-                {{ $paginatedReviews->links() }}
-            </div>
-            @endif
+            @include('website.components.deal_reviews', ['deal' => $hotel, 'paginatedReviews' => $paginatedReviews ?? collect(), 'reviewTitle' => 'Reviews for this Hotel'])
         </div>
 
 
