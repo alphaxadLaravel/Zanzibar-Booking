@@ -7,23 +7,9 @@
 
 @section('pages')
 <!-- Breadcrumb Section -->
-<section class="breadcrumb-section bg-light py-4">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-md-6">
-                <h1 class="breadcrumb-title mb-0">Booking Cart</h1>
-            </div>
-            <div class="col-md-6">
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb justify-content-md-end mb-0">
-                        <li class="breadcrumb-item"><a href="{{ route('index') }}">Home</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Cart</li>
-                    </ol>
-                </nav>
-            </div>
-        </div>
-    </div>
-</section>
+<div class="container py-4">
+    <h4 class="mb-0 fw-bold">Booking Cart</h4>
+</div>
 
 <!-- Cart Section -->
 <section class="cart-section py-5">

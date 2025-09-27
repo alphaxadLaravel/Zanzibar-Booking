@@ -14,29 +14,17 @@ return new class extends Migration
         Schema::create('bookings', function (Blueprint $table) {
             $table->id();
             $table->string('booking_code')->unique();
-            $table->unsignedBigInteger('deal_id');
-            $table->decimal('total_price', 12, 2);
-            $table->unsignedBigInteger('room_id')->nullable();
-            $table->date('check_in')->nullable();
-            $table->date('check_out')->nullable();
-            $table->integer('number_rooms')->default(1);
-            $table->integer('adult')->default(1);
-            $table->integer('children')->default(0);
-            $table->string('pickup_location')->nullable();
-            $table->string('return_location')->nullable();
-            $table->time('pickup_time')->nullable();
-            $table->time('return_time')->nullable();
-            $table->boolean('need_driver')->default(0);
             $table->string('fullname');
             $table->string('email');
-            $table->string('phone');
             $table->string('country');
+            $table->string('phone');
             $table->unsignedBigInteger('user_id')->nullable();
+            $table->json('booking_items');
+            $table->decimal('total_amount', 12, 2);
+            $table->string('payment_method');
             $table->string('status')->default('pending');
             $table->timestamps();
 
-            $table->foreign('deal_id')->references('id')->on('deals')->onDelete('cascade');
-            $table->foreign('room_id')->references('id')->on('rooms')->onDelete('set null');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
         });
     }

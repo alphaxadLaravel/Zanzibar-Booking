@@ -22,6 +22,7 @@ return new class extends Migration
             $table->decimal('base_price', 12, 2);
             $table->float('ratings')->default(0);
             $table->boolean('is_featured')->default(0);
+            $table->integer('star_rating')->default(5);
             $table->unsignedBigInteger('category_id');
             $table->text('description')->nullable();
             $table->text('policies')->nullable();

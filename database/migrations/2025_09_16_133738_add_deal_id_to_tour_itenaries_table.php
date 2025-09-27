@@ -14,8 +14,7 @@ return new class extends Migration
         Schema::table('tour_itenaries', function (Blueprint $table) {
             $table->unsignedBigInteger('deal_id')->after('id');
             $table->foreign('deal_id')->references('id')->on('deals')->onDelete('cascade');
-            $table->integer('day_number')->default(1)->after('deal_id');
-            $table->string('time')->nullable()->after('day_number');
+            $table->string('time')->nullable()->after('deal_id');
             $table->string('location')->nullable()->after('time');
         });
     }
@@ -27,7 +26,7 @@ return new class extends Migration
     {
         Schema::table('tour_itenaries', function (Blueprint $table) {
             $table->dropForeign(['deal_id']);
-            $table->dropColumn(['deal_id', 'day_number', 'time', 'location']);
+            $table->dropColumn(['deal_id', 'time', 'location']);
         });
     }
 };

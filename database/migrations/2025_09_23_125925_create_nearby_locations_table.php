@@ -17,7 +17,6 @@ return new class extends Migration
             $table->string('title');
             $table->string('category'); // Airport, Beach, School, Hospital, etc.
             $table->decimal('distance_km', 8, 2); // Distance in kilometers
-            $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

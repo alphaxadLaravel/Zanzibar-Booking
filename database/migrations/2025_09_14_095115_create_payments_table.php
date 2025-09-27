@@ -14,13 +14,17 @@ return new class extends Migration
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('booking_id');
-            $table->decimal('amount', 12, 2);
-            $table->string('reference')->unique();
+            $table->string('reference_number')->unique();
+            $table->string('transaction_id')->nullable();
+            $table->string('tracking_id')->nullable();
             $table->string('payment_method');
             $table->string('status')->default('pending');
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->decimal('total_amount', 12, 2);
             $table->timestamps();
 
             $table->foreign('booking_id')->references('id')->on('bookings')->onDelete('cascade');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
         });
     }
 
