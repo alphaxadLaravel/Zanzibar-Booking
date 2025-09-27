@@ -422,71 +422,93 @@ use Illuminate\Support\Str;
                     Book This Vehicle
                 </h4>
 
-                {{-- Vehicle booking card --}}
-                <div class="card mb-4 vehicle-card rounded"
-                    style=" overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
-                    <div class="row g-0 align-items-center">
-                        <div class="col-4 d-flex align-items-center justify-content-center"
-                            style="background: #f8f9fa;">
-                            <div class="rounded"
-                                style="width: 80px; height: 80px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-                                <img src="{{ $car->cover_photo ? asset('storage/' . $car->cover_photo) : 'https://images.unsplash.com/photo-1549317336-206569e8475c?w=80&h=80&fit=crop&crop=center' }}"
-                                    alt="{{ $car->title }}" class="rounded"
-                                    style="width: 100%; height: 100%; object-fit: cover;">
-                            </div>
-                        </div>
-                        <div class="col-8 px-3">
-                            <div class="card-body p-3">
-                                <h5 class="card-title mb-1" style="font-size: 1.1rem; font-weight: 600;">{{ $car->title
-                                    }}</h5>
-                                <div class="mb-2" style="font-size: 13px; color: #666;">
-                                    <i class="fa fa-car"></i> {{ $car->category ? $car->category->category : 'Vehicle'
-                                    }} &nbsp; | &nbsp;
-                                    <i class="fa fa-map-marker"></i> {{ $car->location }}
-                                </div>
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <div>
-                                        <span class="fw-bold" style="font-size: 1.1rem; color: #ff5722;">${{
-                                            number_format($car->base_price, 0) }}</span>
-                                        <span style="font-size: 13px; color: #888;">/ day</span>
-                                    </div>
-                                    {{-- <a href="{{ route('confirm-booking', ['deal_id' => $car->id]) }}"
-                                        class="btn btn-primary btn-sm" style="font-size: 13px;">Book Now</a> --}}
-                                    <a href="#" class="btn btn-primary btn-sm" style="font-size: 13px;">Book Now</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Contact Information --}}
-                <div class="card my-4 contact-card rounded"
+                <div class="card mb-4 booking-card rounded"
                     style="overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
                     <div class="card-header" style="background: #f8f9fa; padding: 15px;">
                         <h5 class="mb-0" style="font-size: 1.2rem; font-weight: 600; color: #333;">
-                            <i class="fas fa-phone me-2"></i>Need Help?
+                            <i class="mdi mdi-currency-usd me-2"></i>
+                            From <span style="color: #218080;">${{ number_format($car->base_price, 2) }}</span> / day
                         </h5>
                     </div>
-                    <div class="card-body p-3">
-                        <p class="mb-3" style="color: #666; font-size: 14px;">
-                            Contact us for more information about this vehicle.
-                        </p>
-                        <div class="contact-info">
-                            <div class="contact-item d-flex align-items-center mb-2">
-                                <i class="fas fa-phone me-2" style="color: #2e8b57; width: 20px;"></i>
-                                <span style="font-size: 14px; color: #333;">+255 777 123 456</span>
+                    <div class="card-body p-4">
+                        <form action="#" method="POST" class="car-booking-form">
+                            @csrf
+                            <input type="hidden" name="deal_id" value="{{ $car->id }}">
+                            <input type="hidden" name="type" value="car">
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="pickup_date" class="form-label">Pickup Date</label>
+                                    <input type="date" class="form-control" id="pickup_date" name="pickup_date" required
+                                        min="{{ date('Y-m-d') }}" onchange="calculateCarPrice()">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="return_date" class="form-label">Return Date</label>
+                                    <input type="date" class="form-control" id="return_date" name="return_date" required
+                                        min="{{ date('Y-m-d', strtotime('+1 day')) }}" onchange="calculateCarPrice()">
+                                </div>
                             </div>
-                            <div class="contact-item d-flex align-items-center mb-2">
-                                <i class="fas fa-envelope me-2" style="color: #2e8b57; width: 20px;"></i>
-                                <span style="font-size: 14px; color: #333;">cars@zanzibarbookings.com</span>
+
+                            <div class="booking-summary mt-4 p-3"
+                                style="background: #f8f9fa; border-radius: 8px; border-left: 4px solid #ff5722;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 style="color: #333; font-weight: 600; margin-bottom: 5px;">Total Price</h6>
+                                        <p class="mb-1" style="font-size: 0.9rem; color: #666;">
+                                            <span id="car_days">1</span> day(s) × ${{ number_format($car->base_price, 2) }}/day
+                                        </p>
+                                    </div>
+                                    <div class="text-end">
+                                        <p class="mb-0" style="font-size: 1.5rem; font-weight: 700; color: #ff5722;">
+                                            $<span id="car_total_price">{{ number_format($car->base_price, 2) }}</span>
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="contact-item d-flex align-items-center">
-                                <i class="fas fa-clock me-2" style="color: #2e8b57; width: 20px;"></i>
-                                <span style="font-size: 14px; color: #333;">24/7 Support</span>
+
+                            <div class="d-grid mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg text-uppercase fw-semibold w-100">
+                                    Book Now
+                                </button>
                             </div>
-                        </div>
+                        </form>
                     </div>
                 </div>
+                <script>
+                    function calculateCarPrice() {
+                        const pickupDate = document.getElementById('pickup_date').value;
+                        const returnDate = document.getElementById('return_date').value;
+                        const pricePerDay = {{ $car->base_price }};
+                        
+                        let days = 1;
+                        if (pickupDate && returnDate) {
+                            const pickup = new Date(pickupDate);
+                            const returnD = new Date(returnDate);
+                            if (returnD > pickup) {
+                                days = Math.ceil((returnD - pickup) / (1000 * 60 * 60 * 24));
+                            }
+                        }
+                        
+                        const totalPrice = pricePerDay * days;
+                        
+                        document.getElementById('car_days').textContent = days;
+                        document.getElementById('car_total_price').textContent = totalPrice.toFixed(2);
+                        
+                        // Update return date minimum date
+                        if (pickupDate) {
+                            const pickup = new Date(pickupDate);
+                            pickup.setDate(pickup.getDate() + 1);
+                            document.getElementById('return_date').min = pickup.toISOString().split('T')[0];
+                        }
+                    }
+                    document.addEventListener('DOMContentLoaded', function() {
+                        document.getElementById('pickup_date').addEventListener('change', calculateCarPrice);
+                        document.getElementById('return_date').addEventListener('change', calculateCarPrice);
+                    });
+                </script>
+
+                {{-- Contact Information --}}
+                @include('website.components.contact_card')
             </div>
         </div>
     </div>

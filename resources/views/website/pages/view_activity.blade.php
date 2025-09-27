@@ -68,7 +68,7 @@ use Illuminate\Support\Str;
     <div class="container">
         <ul>
             <li><a href="{{ route('index') }}">Home</a></li>
-            <li><a href="{{ route('tours') }}">Tours</a></li>
+            <li><a href="#">Activities</a></li>
             <li><span>{{ $activity->title }}</span></li>
         </ul>
     </div>
@@ -165,6 +165,7 @@ use Illuminate\Support\Str;
                         </div>
                     </section>
                     <hr>
+                    @if ($activity->itineraries->count() > 0)
                     <style>
                         .timeline::before {
                             content: '';
@@ -232,6 +233,7 @@ use Illuminate\Support\Str;
                     </section>
 
                     <hr>
+                    @endif
                     <section class="feature">
                         <h4 class="section-title">Tour Includes</h4>
                         <div class="section-content">
@@ -502,79 +504,110 @@ use Illuminate\Support\Str;
         {{-- ################ BOOKING SECTION ################ --}}
         <div class="col-lg-4">
             <div class="siderbar-single">
-                <h4 class="post-title my-3 fw-bold ">
-                    Reserve Your Spot
+                <h4 class="post-title my-2 bold">
+                    Book This Activity
                 </h4>
 
-                {{-- booking card --}}
-                <div class="card booking-card border rounded">
-                    <!-- Header -->
-                    <div class="card-header bg-white py-3">
-                        <h5 class="mb-0 fw-bold">
-                            <i class="fas fa-calendar-check me-2"></i>Reservation Details
+                <div class="card mb-4 booking-card rounded"
+                    style="overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                    <div class="card-header" style="background: #f8f9fa; padding: 15px;">
+                        <h5 class="mb-0" style="font-size: 1.2rem; font-weight: 600; color: #333;">
+                            <i class="mdi mdi-currency-usd me-2"></i>
+                            Adult: <span style="color: #218080;">${{ number_format($activity->tours->adult_price ?? 0,
+                                2) }}</span>
+                            &nbsp;|&nbsp;
+                            Child: <span style="color: #218080;">${{ number_format($activity->tours->child_price ?? 0,
+                                2) }}</span>
                         </h5>
                     </div>
-
-                    <!-- Body -->
                     <div class="card-body p-4">
-                        <!-- Price + button -->
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div class="fw-bold text-dark" style="font-size: 2rem;">
-                                USD {{ number_format($activity->base_price, 2) }}
-                                <small class="text-muted" style="font-size: 1rem;">/person</small>
+                        <form action="#" method="POST" class="activity-booking-form">
+                            @csrf
+                            <input type="hidden" name="deal_id" value="{{ $activity->id }}">
+                            <input type="hidden" name="type" value="activity">
+
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label for="check_in" class="form-label">Activity Date</label>
+                                    <input type="date" class="form-control" id="check_in" name="check_in" required
+                                        min="{{ date('Y-m-d') }}">
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- Button -->
-                        <div class="d-grid">
-                            {{-- <a href="{{ route('confirm-booking', ['deal_id' => $activity->id]) }}"
-                                class="btn btn-primary btn-lg w-100 text-center fw-bold d-flex align-items-center justify-content-between">
-                                <span class="d-flex align-items-center">
-                                    <i class="fas fa-calendar-check me-2"></i>
-                                    Reserve Now
-                                </span>
-                                <i class="fas fa-arrow-right ms-2"></i>
-                            </a> --}}
-                            <a href="#"
-                                class="btn btn-primary btn-lg w-100 text-center fw-bold d-flex align-items-center justify-content-between">
-                                <span class="d-flex align-items-center">
-                                    <i class="fas fa-calendar-check me-2"></i>
-                                    Reserve Now
-                                </span>
-                                <i class="fas fa-arrow-right ms-2"></i>
-                            </a>
-                        </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="adults" class="form-label">Adults</label>
+                                    <select class="form-control" id="adults" name="adults" required
+                                        onchange="calculateActivityPrice()">
+                                        @for($i = 1; $i <= ($activity->tours->max_people ?? 8); $i++)
+                                            <option value="{{ $i }}" {{ $i===2 ? 'selected' : '' }}>{{ $i }} Adult{{ $i
+                                                > 1 ? 's' : '' }}</option>
+                                            @endfor
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="children" class="form-label">Children</label>
+                                    <select class="form-control" id="children" name="children"
+                                        onchange="calculateActivityPrice()">
+                                        <option value="0">No Children</option>
+                                        @for($i = 1; $i <= 4; $i++) <option value="{{ $i }}">{{ $i }} Child{{ $i > 1 ?
+                                            'ren' : '' }}</option>
+                                            @endfor
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="booking-summary mt-4 p-3"
+                                style="background: #f8f9fa; border-radius: 8px; border-left: 4px solid #ff5722;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 style="color: #333; font-weight: 600; margin-bottom: 5px;">Total Price</h6>
+                                        <p class="mb-1" style="font-size: 0.9rem; color: #666;">
+                                            <span id="activity_adults">2</span> adult(s) × ${{
+                                            number_format($activity->tours->adult_price ?? 0, 2) }}<br>
+                                            <span id="activity_children">0</span> child(ren) × ${{
+                                            number_format($activity->tours->child_price ?? 0, 2) }}
+                                        </p>
+                                    </div>
+                                    <div class="text-end">
+                                        <p class="mb-0" style="font-size: 1.5rem; font-weight: 700; color: #ff5722;">
+                                            $<span id="activity_total_price">{{
+                                                number_format(($activity->tours->adult_price ?? 0) * 2, 2) }}</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-grid mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg text-uppercase fw-semibold w-100">
+                                    Book Now
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
-            </div>
+                <script>
+                    function calculateActivityPrice() {
+                        const adultPrice = {{ $activity->tours->adult_price ?? 0 }};
+                        const childPrice = {{ $activity->tours->child_price ?? 0 }};
+                        const adults = parseInt(document.getElementById('adults').value) || 0;
+                        const children = parseInt(document.getElementById('children').value) || 0;
+                        const totalPrice = (adults * adultPrice) + (children * childPrice);
 
-            {{-- Contact Information --}}
-            <div class="card my-4 contact-card rounded"
-                style="overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
-                <div class="card-header" style="background: #f8f9fa; padding: 15px;">
-                    <h5 class="mb-0" style="font-size: 1.2rem; font-weight: 600; color: #333;">
-                        <i class="mdi mdi-phone me-2"></i> Need Help?
-                    </h5>
-                </div>
-                <div class="card-body p-3">
-                    <p class="mb-3" style="color: #666; font-size: 14px;">
-                        Contact us for more information about this activity.
-                    </p>
-                    <div class="contact-info">
-                        <div class="contact-item d-flex align-items-center mb-2">
-                            <i class="mdi mdi-phone me-2" style="color: #2e8b57; width: 20px;"></i>
-                            <span style="font-size: 14px; color: #333;">+255 123 456 789</span>
-                        </div>
-                        <div class="contact-item d-flex align-items-center mb-2">
-                            <i class="mdi mdi-email me-2" style="color: #2e8b57; width: 20px;"></i>
-                            <span style="font-size: 14px; color: #333;">info@zanzibarbookings.com</span>
-                        </div>
-                        <div class="contact-item d-flex align-items-center">
-                            <i class="mdi mdi-clock me-2" style="color: #2e8b57; width: 20px;"></i>
-                            <span style="font-size: 14px; color: #333;">24/7 Support</span>
-                        </div>
-                    </div>
-                </div>
+                        document.getElementById('activity_adults').textContent = adults;
+                        document.getElementById('activity_children').textContent = children;
+                        document.getElementById('activity_total_price').textContent = totalPrice.toFixed(2);
+                    }
+                    document.addEventListener('DOMContentLoaded', function() {
+                        document.getElementById('adults').addEventListener('change', calculateActivityPrice);
+                        document.getElementById('children').addEventListener('change', calculateActivityPrice);
+                        calculateActivityPrice();
+                    });
+                </script>
+
+                {{-- Contact Information --}}
+                @include('website.components.contact_card')
+
             </div>
 
         </div>
