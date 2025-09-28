@@ -455,54 +455,87 @@ document.addEventListener('DOMContentLoaded', function() {
                             <h5
                                 style="color: #333; font-weight: 600; margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">
                                 Book This Room</h5>
-                            <form action="#" method="POST">
+                            <form action="{{ route('book-room') }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="deal_id" value="{{ $hotel->id }}">
                                 <input type="hidden" name="room_id" value="{{ $room->id }}">
-                                <input type="hidden" name="type" value="hotel">
+                                <input type="hidden" name="price" value="">
+                                
 
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="check_in{{ $room->id }}" class="form-label">Check-in Date</label>
-                                        <input type="date" class="form-control" id="check_in{{ $room->id }}"
-                                            name="check_in" required min="{{ date('Y-m-d') }}"
-                                            onchange="calculatePrice{{ $room->id }}()">
+                                        <input 
+                                            type="date" 
+                                            class="form-control" 
+                                            id="check_in{{ $room->id }}"
+                                            name="check_in"
+                                            required 
+                                            min="{{ date('Y-m-d') }}"
+                                            onchange="calculatePrice{{ $room->id }}()"
+                                            value="{{ old('check_in') }}"
+                                        >
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="check_out{{ $room->id }}" class="form-label">Check-out Date</label>
-                                        <input type="date" class="form-control" id="check_out{{ $room->id }}"
-                                            name="check_out" required min="{{ date('Y-m-d', strtotime('+1 day')) }}"
-                                            onchange="calculatePrice{{ $room->id }}()">
+                                        <input 
+                                            type="date" 
+                                            class="form-control" 
+                                            id="check_out{{ $room->id }}"
+                                            name="check_out"
+                                            required 
+                                            min="{{ date('Y-m-d', strtotime('+1 day')) }}"
+                                            onchange="calculatePrice{{ $room->id }}()"
+                                            value="{{ old('check_out') }}"
+                                        >
                                     </div>
                                 </div>
 
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
-                                        <label for="number_rooms{{ $room->id }}" class="form-label">Number of
-                                            Rooms</label>
-                                        <select class="form-control" id="number_rooms{{ $room->id }}"
-                                            name="number_rooms" required onchange="calculatePrice{{ $room->id }}()">
+                                        <label for="number_rooms{{ $room->id }}" class="form-label">Number of Rooms</label>
+                                        <select 
+                                            class="form-control" 
+                                            id="number_rooms{{ $room->id }}"
+                                            name="number_of_rooms" 
+                                            required 
+                                            onchange="calculatePrice{{ $room->id }}()"
+                                        >
                                             @for($i = 1; $i <= ($room->number_of_rooms ?? 1); $i++)
-                                                <option value="{{ $i }}">{{ $i }} Room{{ $i > 1 ? 's' : '' }}</option>
-                                                @endfor
+                                                <option value="{{ $i }}" {{ old('number_of_rooms', 1) == $i ? 'selected' : '' }}>
+                                                    {{ $i }} Room{{ $i > 1 ? 's' : '' }}
+                                                </option>
+                                            @endfor
                                         </select>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="adult{{ $room->id }}" class="form-label">Adults</label>
-                                        <select class="form-control" id="adult{{ $room->id }}" name="adult" required>
+                                        <select 
+                                            class="form-control" 
+                                            id="adult{{ $room->id }}" 
+                                            name="adults" 
+                                            required
+                                        >
                                             @for($i = 1; $i <= min($room->people ?? 2, 8); $i++)
-                                                <option value="{{ $i }}" {{ $i===2 ? 'selected' : '' }}>{{ $i }} Adult{{
-                                                    $i > 1 ? 's' : '' }}</option>
-                                                @endfor
+                                                <option value="{{ $i }}" {{ old('adults', 2) == $i ? 'selected' : '' }}>
+                                                    {{ $i }} Adult{{ $i > 1 ? 's' : '' }}
+                                                </option>
+                                            @endfor
                                         </select>
                                     </div>
                                     <div class="col-md-12 not-even:mb-3">
                                         <label for="children{{ $room->id }}" class="form-label">Children</label>
-                                        <select class="form-control" id="children{{ $room->id }}" name="children">
-                                            <option value="0">No Children</option>
-                                            @for($i = 1; $i <= 4; $i++) <option value="{{ $i }}">{{ $i }} Child{{ $i > 1
-                                                ? 'ren' : '' }}</option>
-                                                @endfor
+                                        <select 
+                                            class="form-control" 
+                                            id="children{{ $room->id }}" 
+                                            name="children"
+                                        >
+                                            <option value="0" {{ old('children', 0) == 0 ? 'selected' : '' }}>No Children</option>
+                                            @for($i = 1; $i <= 4; $i++)
+                                                <option value="{{ $i }}" {{ old('children') == $i ? 'selected' : '' }}>
+                                                    {{ $i }} Child{{ $i > 1 ? 'ren' : '' }}
+                                                </option>
+                                            @endfor
                                         </select>
                                     </div>
                                 </div>
@@ -530,21 +563,14 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </div>
 
                                 <div class="modal-footer mt-4 p-0">
-                                    @if($room->availability)
-                                    <button type="submit" class="btn btn-primary w-100">
+                                    <button type="submit" class="btn btn-primary w-100" name="book_room" >
                                         <i class="fas fa-calendar-check me-2"></i>
-                                        Proceed to Book
+                                       PROCEED TO BOOK
                                     </button>
-                                    {{-- add to cart button --}}
-                                    <button class="btn btn-outline-secondary w-100" style="font-size: 13px;">
+
+                                    <button type="submit" class="btn btn-outline-secondary w-100" style="font-size: 13px;" name="add_cart" >
                                         <i class="mdi mdi-cart-plus me-1"></i> ADD TO CART
                                     </button>
-                                    @else
-                                    <button type="button" class="btn btn-secondary w-100" disabled>
-                                        <i class="fas fa-times me-2"></i>
-                                        Not Available
-                                    </button>
-                                    @endif
                                 </div>
                             </form>
                         </div>
@@ -563,6 +589,16 @@ document.addEventListener('DOMContentLoaded', function() {
     function openRoomDetailsModal(roomId) {
     const modal = new bootstrap.Modal(document.getElementById('roomDetailsModal' + roomId));
     modal.show();
+    
+    // Initialize the price input with the default room price
+    const form = document.querySelector('#roomDetailsModal' + roomId + ' form');
+    const priceInput = form.querySelector('input[name="price"]');
+    if (priceInput) {
+        // Get the room price from the displayed price in the modal
+        const displayedPrice = document.querySelector('#roomDetailsModal' + roomId + ' .price-amount').textContent;
+        const roomPrice = parseFloat(displayedPrice.replace('$', '').replace(',', ''));
+        priceInput.value = roomPrice.toFixed(2);
+    }
 }
 
 @foreach($rooms as $room)
@@ -586,6 +622,13 @@ function calculatePrice{{ $room->id }}() {
     document.getElementById('nights{{ $room->id }}').textContent = nights;
     document.getElementById('rooms{{ $room->id }}').textContent = numberRooms;
     document.getElementById('total_price{{ $room->id }}').textContent = totalPrice.toFixed(2);
+    
+    // Update the hidden price input field for this specific room
+    const form = document.querySelector('#roomDetailsModal{{ $room->id }} form');
+    const priceInput = form.querySelector('input[name="price"]');
+    if (priceInput) {
+        priceInput.value = totalPrice.toFixed(2);
+    }
     
     // Update check-out minimum date
     if (checkIn) {

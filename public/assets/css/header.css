@@ -15,6 +15,8 @@
     align-items: center;
     justify-content: space-between;
     height: 72px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* Brand/Logo */
@@ -27,6 +29,8 @@
     display: flex;
     align-items: center;
     gap: 16px;
+    flex-shrink: 0;
+    min-width: 0;
 }
 
 .brand-link {
@@ -81,6 +85,9 @@
 .navbar-menu {
     flex: 1;
     margin: 0 40px;
+    min-width: 0;
+    display: flex;
+    justify-content: center;
 }
 
 .nav-menu {
@@ -89,6 +96,8 @@
     margin: 0;
     padding: 0;
     gap: 32px;
+    align-items: center;
+    flex-wrap: nowrap;
 }
 
 .nav-menu li {
@@ -114,6 +123,8 @@
     display: flex;
     align-items: center;
     gap: 16px;
+    flex-shrink: 0;
+    min-width: 0;
 }
 
 /* Cart Icon */
@@ -186,6 +197,32 @@
     border: none;
     cursor: pointer;
     white-space: nowrap;
+    height: auto;
+    line-height: 1.4;
+}
+
+/* Large Screen Optimizations */
+@media (min-width: 992px) {
+    .navbar-container {
+        padding: 0 24px;
+    }
+    
+    .navbar-menu {
+        margin: 0 48px;
+    }
+    
+    .nav-menu {
+        gap: 40px;
+    }
+    
+    .navbar-actions {
+        gap: 20px;
+    }
+    
+    .btn {
+        padding: 12px 24px;
+        font-size: 15px;
+    }
 }
 
 /* Hide mobile menu header on desktop/laptop */

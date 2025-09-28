@@ -54,9 +54,6 @@
                     <li class="menu-item menu-item-5">
                         <a href="{{ route('blog') }}">Blog</a>
                     </li>
-                    <li class="menu-item menu-item-6">
-                        <a href="{{ route('contact-us') }}">Contacts</a>
-                    </li>
                 </ul>
             </ul>
         </nav>
@@ -67,7 +64,13 @@
             <div class="cart-icon-container">
                 <a href="{{ route('cart') }}" class="cart-link" title="View Cart">
                     <i class="mdi mdi-cart-outline cart-icon"></i>
-                    <span class="cart-count" id="cart-count">{{ session('cart', collect())->count() }}</span>
+                    <span class="cart-count" id="cart-count">
+                        @auth
+                            {{ \App\Models\BookingItem::where('user_id', Auth::id())->where('status', 'cart')->count() }}
+                        @else
+                            0
+                        @endauth
+                    </span>
                 </a>
             </div>
             

@@ -411,7 +411,7 @@
 
     <script>
 
-document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function() {
             const buttons = document.querySelectorAll('[data-loading-text]');
 
             buttons.forEach(function(button) {
@@ -455,7 +455,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 ">
                     <div style="display: flex; align-items: center; justify-content: space-between;">
                         <div style="display: flex; align-items: center;">
-                            <i class="${type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'}" 
+                            <i class="${type === 'success' ? 'mdi mdi-check-circle' : 'mdi mdi-close-circle'}" 
                                style="margin-right: 10px; font-size: 18px;"></i>
                             <span style="font-weight: 500;">${message}</span>
                         </div>

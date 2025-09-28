@@ -61,13 +61,22 @@ Route::post('/process-booking', [BookingController::class, 'processBooking'])->n
 Route::get('/booking/{id}', [BookingController::class, 'viewBooking'])->name('booking.view');
 Route::post('/booking/{id}/cancel', [BookingController::class, 'cancelBooking'])->name('booking.cancel');
 
+// book rooms
+Route::post('/book-room', [BookingController::class, 'bookRoom'])->name('book-room');
+Route::post('/complete-booking', [BookingController::class, 'completeBooking'])->name('complete-booking');
+Route::post('/book-all-cart', [BookingController::class, 'bookAllCart'])->name('book-all-cart');
+
+
+
+
+
 // Payment routes
 Route::get('/payment/{bookingId}', [PaymentController::class, 'processPayment'])->name('payment.process');
 
 // Cart routes
 Route::get('/cart', [WebsiteController::class, 'cart'])->name('cart');
 Route::post('/cart/add', [WebsiteController::class, 'addToCart'])->name('cart.add');
-Route::post('/cart/remove', [WebsiteController::class, 'removeFromCart'])->name('cart.remove');
+Route::post('/cart/remove', [BookingController::class, 'removeFromCart'])->name('cart.remove');
 Route::post('/cart/clear', [WebsiteController::class, 'clearCart'])->name('cart.clear');
 
 // Pesapal callback routes (excluded from CSRF protection)

@@ -10,6 +10,7 @@ use App\Models\Car;
 use App\Models\Blog;
 use App\Models\Near;
 use App\Models\DealReviews;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Hashids\Hashids;
 
@@ -825,19 +826,19 @@ class WebsiteController extends Controller
      */
     public function cart()
     {
-        $cart = session('cart', collect());
-        $cartItems = collect();
-        $totalAmount = 0;
-
-        foreach ($cart as $item) {
-            $deal = Deal::with(['category', 'photos'])->find($item['deal_id']);
-            if ($deal) {
-                $item['deal'] = $deal;
-                $item['subtotal'] = $item['quantity'] * $deal->base_price;
-                $totalAmount += $item['subtotal'];
-                $cartItems->push($item);
-            }
+        // Check if user is authenticated
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'You must be logged in to view your cart.');
         }
+
+        // Get cart items from database
+        $cartItems = \App\Models\BookingItem::where('user_id', Auth::id())
+            ->where('status', 'cart')
+            ->with(['deal.category', 'deal.photos', 'room'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $totalAmount = $cartItems->sum('total_price');
 
         $hashids = $this->getHashids();
 
@@ -849,6 +850,17 @@ class WebsiteController extends Controller
      */
     public function addToCart(Request $request)
     {
+        // Check if user is authenticated
+        if (!Auth::check()) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You must be logged in to add items to cart.'
+                ], 401);
+            }
+            return redirect()->route('login')->with('error', 'You must be logged in to add items to cart.');
+        }
+
         $request->validate([
             'deal_id' => 'required|exists:deals,id',
             'quantity' => 'required|integer|min:1',
@@ -881,16 +893,17 @@ class WebsiteController extends Controller
             // Add new item to cart
             $cartItem = [
                 'key' => $itemKey,
+                'user_id' => Auth::id(),
                 'deal_id' => $deal->id,
                 'quantity' => $request->quantity,
                 'check_in' => $request->check_in,
                 'check_out' => $request->check_out,
                 'adults' => $request->adults ?? 1,
                 'children' => $request->children ?? 0,
-                'pickup_location' => $request->pickup_location,
-                'pickup_time' => $request->pickup_time,
-                'return_location' => $request->return_location,
-                'return_time' => $request->return_time,
+                'pickup_location' => $request->pickup_location ?? null,
+                'pickup_time' => $request->pickup_time ?? null,
+                'return_location' => $request->return_location ?? null,
+                'return_time' => $request->return_time ?? null,
                 'added_at' => now()->toISOString(),
             ];
             
@@ -916,13 +929,24 @@ class WebsiteController extends Controller
      */
     public function removeFromCart(Request $request)
     {
+        // Check if user is authenticated
+        if (!Auth::check()) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You must be logged in to modify your cart.'
+                ], 401);
+            }
+            return redirect()->route('login')->with('error', 'You must be logged in to modify your cart.');
+        }
+
         $request->validate([
             'item_key' => 'required|string'
         ]);
 
         $cart = session('cart', collect());
         $cart = $cart->reject(function ($item) use ($request) {
-            return $item['key'] === $request->item_key;
+            return $item['key'] === $request->item_key && $item['user_id'] === Auth::id();
         });
 
         session(['cart' => $cart]);
@@ -944,7 +968,24 @@ class WebsiteController extends Controller
      */
     public function clearCart(Request $request)
     {
-        session(['cart' => collect()]);
+        // Check if user is authenticated
+        if (!Auth::check()) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You must be logged in to modify your cart.'
+                ], 401);
+            }
+            return redirect()->route('login')->with('error', 'You must be logged in to modify your cart.');
+        }
+
+        $cart = session('cart', collect());
+        // Only clear items belonging to the current user
+        $cart = $cart->reject(function ($item) {
+            return $item['user_id'] === Auth::id();
+        });
+
+        session(['cart' => $cart]);
 
         if ($request->ajax()) {
             return response()->json([
@@ -964,6 +1005,7 @@ class WebsiteController extends Controller
     private function generateCartItemKey($data)
     {
         $keyData = [
+            'user_id' => Auth::id(),
             'deal_id' => $data['deal_id'],
             'check_in' => $data['check_in'] ?? null,
             'check_out' => $data['check_out'] ?? null,

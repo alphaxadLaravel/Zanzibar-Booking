@@ -22,7 +22,7 @@ class LoginController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return redirect()->route('index')->with('error', 'Validation failed');
+            return redirect()->back()->with('error', 'Validation failed');
         }
 
         $credentials = $request->only('email', 'password');
@@ -30,10 +30,10 @@ class LoginController extends Controller
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
             
-            return redirect()->route('index')->with('success', 'Login successful');
+            return redirect()->back()->with('success', 'Login successful');
         }
 
-        return redirect()->route('index')->with('error', 'Invalid credentials');
+        return redirect()->back()->with('error', 'Invalid credentials');
     }
 
     /**
@@ -50,7 +50,7 @@ class LoginController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return redirect()->route('index')->with('error', 'Validation failed');
+            return redirect()->back()->with('error', 'Validation failed');
         }
 
         // Get default user role (assuming role_id 2 is for regular users)
@@ -71,7 +71,7 @@ class LoginController extends Controller
         // Auto-login after registration
         Auth::login($user);
 
-        return redirect()->route('index')->with('success', 'Registration successful');
+        return redirect()->back()->with('success', 'Registration successful');
     }
 
     /**
@@ -102,7 +102,7 @@ class LoginController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return redirect()->route('index')->with('error', 'Validation failed');
+            return redirect()->back()->with('error', 'Validation failed');
         }
 
         $status = Password::sendResetLink(
@@ -110,10 +110,10 @@ class LoginController extends Controller
         );
 
         if ($status === Password::RESET_LINK_SENT) {
-            return redirect()->route('index')->with('success', 'Password reset link sent to your email');
+            return redirect()->back()->with('success', 'Password reset link sent to your email');
         }
 
-        return redirect()->route('index')->with('error', 'Unable to send reset link');
+        return redirect()->back()->with('error', 'Unable to send reset link');
     }
 
     /**
@@ -127,7 +127,7 @@ class LoginController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return redirect()->route('index')->with('error', 'Validation failed');
+            return redirect()->back()->with('error', 'Validation failed');
         }
 
         // $user = Auth::user();
@@ -136,13 +136,13 @@ class LoginController extends Controller
         
         // Check current password
         if (!Hash::check($request->current_password, $user->password)) {
-            return redirect()->route('index')->with('error', 'Current password is incorrect');
+            return redirect()->back()->with('error', 'Current password is incorrect');
         }
 
         // Update password
         $user->password = Hash::make($request->password);
         $user->save();
 
-        return redirect()->route('index')->with('success', 'Password changed successfully');
+        return redirect()->back()->with('success', 'Password changed successfully');
     }
 }

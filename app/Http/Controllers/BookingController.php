@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use App\Models\BookingItem;
 use App\Models\Deal;
 use App\Models\Room;
 use App\Models\Tours;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -16,205 +18,257 @@ class BookingController extends Controller
     public function confirmBooking(Request $request)
     {
         return view('website.pages.confirm_booking');
-
     }
 
-    public function processBooking(Request $request)
+
+    // book room
+    public function bookRoom(Request $request)
     {
+        DB::beginTransaction();
         try {
-            Log::info('Processing booking request', $request->all());
+            // Check if user is authenticated
+            if (!Auth::check()) {
+                return back()->withErrors(['error' => 'You must be logged in to make a booking. Please login first.'])->withInput();
+            }
 
             // Validate the request
-            $validator = $this->validateBookingRequest($request);
-            if ($validator->fails()) {
-                return redirect()->back()
-                    ->withErrors($validator)
-                    ->withInput();
+            $validated = $request->validate([
+                'room_id' => 'required|exists:rooms,id',
+                'deal_id' => 'required|exists:deals,id',
+                'check_in' => 'required|date|after_or_equal:today',
+                'check_out' => 'required|date|after:check_in',
+                'number_of_rooms' => 'required|integer|min:1',
+                'price' => 'required|numeric|min:0',
+                'adults' => 'required|integer|min:1',
+                'children' => 'nullable|integer|min:0',
+            ]);
+
+
+            // Get the room and deal
+            $room = Room::findOrFail($validated['room_id']);
+            $deal = Deal::findOrFail($validated['deal_id']);
+
+            // Verify the room belongs to the deal
+            if ($room->deal_id !== $deal->id) {
+                DB::rollBack();
+                return back()->withErrors(['room_id' => 'The selected room does not belong to this hotel.'])->withInput();
             }
 
-            $deal = Deal::with(['tour', 'car'])->findOrFail($request->deal_id);
+            // Check room availability (basic check)
+            $checkIn = \Carbon\Carbon::parse($validated['check_in']);
+            $checkOut = \Carbon\Carbon::parse($validated['check_out']);
+            $nights = $checkIn->diffInDays($checkOut);
+
+            // Create booking item in database
+            $bookingItem = BookingItem::create([
+                'user_id' => Auth::id(),
+                'deal_id' => $deal->id,
+                'room_id' => $room->id,
+                'number_rooms' => $validated['number_of_rooms'],
+                'type' => 'hotel',
+                'check_in' => $validated['check_in'],
+                'check_out' => $validated['check_out'],
+                'total_price' => $validated['price'],
+                'adults' => $validated['adults'],
+                'children' => $validated['children'] ?? 0,
+                'status' => 'cart',
+            ]);
+
+            if ($request->has('book_room')) {
+                DB::commit();
+                return redirect()->route('confirm-booking')->with('success', 'Room booking details saved. Please complete your booking information.');
+                
+            } elseif ($request->has('add_cart')) {
+                // ADD TO CART button clicked - item is already saved with cart status
+                DB::commit();
+                return redirect()->back()->with('success', 'Room added to cart successfully!');
+            }
+
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Invalid action. Please try again.');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            return back()->withErrors($e->validator)->withInput();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Booking error: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'An error occurred while processing your booking. Please try again.'])->withInput();
+        }
+    }
+
+    /**
+     * Generate unique cart item key
+     */
+    private function generateCartItemKey($data)
+    {
+        $keyData = [
+            'user_id' => $data['user_id'] ?? null,
+            'deal_id' => $data['deal_id'],
+            'room_id' => $data['room_id'] ?? null,
+            'check_in' => $data['check_in'] ?? null,
+            'check_out' => $data['check_out'] ?? null,
+            'adults' => $data['adults'] ?? null,
+            'children' => $data['children'] ?? null,
+        ];
+        
+        return md5(serialize($keyData));
+    }
+
+    /**
+     * Book all items in cart at once
+     */
+    public function bookAllCart(Request $request)
+    {
+        try {
+            // Check if user is authenticated
+            if (!Auth::check()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You must be logged in to make bookings.'
+                ], 401);
+            }
+
+            $cartItemIds = $request->input('cart_item_ids', []);
             
-            // Create booking
-            $booking = $this->createBooking($request, $deal);
-            
-            Log::info('Booking created successfully', [
-                'booking_id' => $booking->id,
+            if (empty($cartItemIds)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No items found in cart.'
+                ], 400);
+            }
+
+            // Get cart items from database
+            $cartItems = BookingItem::where('user_id', Auth::id())
+                ->where('status', 'cart')
+                ->whereIn('id', $cartItemIds)
+                ->with(['deal', 'room'])
+                ->get();
+
+            if ($cartItems->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No valid items found to book.'
+                ], 400);
+            }
+
+            $bookedItems = [];
+            $totalAmount = 0;
+
+            DB::beginTransaction();
+
+            foreach ($cartItems as $cartItem) {
+                // Update status to pending
+                $cartItem->update(['status' => 'pending']);
+
+                $bookedItems[] = [
+                    'deal_id' => $cartItem->deal_id,
+                    'room_id' => $cartItem->room_id,
+                    'number_rooms' => $cartItem->number_rooms,
+                    'type' => $cartItem->type,
+                    'check_in' => $cartItem->check_in,
+                    'check_out' => $cartItem->check_out,
+                    'total_price' => $cartItem->total_price,
+                    'adults' => $cartItem->adults,
+                    'children' => $cartItem->children,
+                    'booking_item_id' => $cartItem->id,
+                ];
+
+                $totalAmount += $cartItem->total_price;
+            }
+
+            // Create the main booking record
+            $booking = Booking::create([
+                'booking_code' => Booking::generateBookingCode(),
+                'fullname' => Auth::user()->name ?? 'Guest',
+                'email' => Auth::user()->email ?? 'guest@example.com',
+                'phone' => Auth::user()->phone ?? 'N/A',
+                'country' => Auth::user()->country ?? 'N/A',
+                'user_id' => Auth::id(),
+                'booking_items' => $bookedItems,
+                'total_amount' => $totalAmount,
+                'payment_method' => 'pending',
+                'status' => 'pending',
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'All deals have been booked successfully!',
                 'booking_code' => $booking->booking_code,
-                'total_price' => $booking->total_price
+                'total_amount' => $totalAmount,
+                'items_count' => count($bookedItems)
             ]);
 
-            // Redirect to payment
-            return redirect()->route('payment.process', $booking->id);
-            
         } catch (\Exception $e) {
-            Log::error('Booking processing failed', [
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
-                'request_data' => $request->all()
-            ]);
-            
-            return redirect()->back()
-                ->with('error', 'Booking failed: ' . $e->getMessage())
-                ->withInput();
+            DB::rollBack();
+            Log::error('Book all cart error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while booking items. Please try again.'
+            ], 500);
         }
     }
 
-    private function validateBookingRequest(Request $request)
+    /**
+     * Get cart items for the authenticated user
+     */
+    public function getCartItems()
     {
-        $rules = [
-            'deal_id' => 'required|exists:deals,id',
-            'fullname' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'phone' => 'required|string|max:20',
-            'country' => 'required|string|max:100',
-            'adult' => 'required|integer|min:1',
-            'children' => 'integer|min:0',
-        ];
+        if (!Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You must be logged in to view cart.'
+            ], 401);
+        }
 
-        $deal = Deal::find($request->deal_id);
+        $cartItems = BookingItem::where('user_id', Auth::id())
+            ->where('status', 'cart')
+            ->with(['deal', 'room'])
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'cart_items' => $cartItems,
+            'total_amount' => $cartItems->sum('total_price'),
+            'items_count' => $cartItems->count()
+        ]);
+    }
+
+    /**
+     * Remove item from cart
+     */
+    public function removeFromCart(Request $request)
+    {
+        if (!Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You must be logged in to modify cart.'
+            ], 401);
+        }
+
+        $itemId = $request->input('item_id');
         
-        // Add validation rules based on deal type
-        if ($deal) {
-            switch ($deal->type) {
-                case 'hotel':
-                case 'apartment':
-                    $rules = array_merge($rules, [
-                        'room_id' => 'required|exists:rooms,id',
-                        'check_in' => 'required|date|after_or_equal:today',
-                        'check_out' => 'required|date|after:check_in',
-                        'number_rooms' => 'required|integer|min:1'
-                    ]);
-                    break;
-                    
-                case 'tour':
-                    $rules = array_merge($rules, [
-                        'pickup_location' => 'required|string|max:255',
-                        'pickup_time' => 'required|date_format:H:i'
-                    ]);
-                    break;
-                    
-                case 'car':
-                    $rules = array_merge($rules, [
-                        'pickup_location' => 'required|string|max:255',
-                        'return_location' => 'required|string|max:255',
-                        'pickup_time' => 'required|date_format:H:i',
-                        'return_time' => 'required|date_format:H:i|after:pickup_time',
-                        'need_driver' => 'boolean'
-                    ]);
-                    break;
-            }
+        $cartItem = BookingItem::where('id', $itemId)
+            ->where('user_id', Auth::id())
+            ->where('status', 'cart')
+            ->first();
+
+        if (!$cartItem) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Item not found in cart.'
+            ], 404);
         }
 
-        return Validator::make($request->all(), $rules);
+        $cartItem->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Item removed from cart successfully.'
+        ]);
     }
 
-    private function createBooking(Request $request, Deal $deal)
-    {
-        $bookingData = [
-            'deal_id' => $deal->id,
-            'fullname' => $request->fullname,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'country' => $request->country,
-            'adult' => $request->adult,
-            'children' => $request->children ?? 0,
-            'user_id' => Auth::id(),
-            'status' => 'pending',
-            'payment_status' => false
-        ];
-
-        // Add deal-specific data
-        switch ($deal->type) {
-            case 'hotel':
-            case 'apartment':
-                $bookingData = array_merge($bookingData, [
-                    'room_id' => $request->room_id,
-                    'check_in' => $request->check_in,
-                    'check_out' => $request->check_out,
-                    'number_rooms' => $request->number_rooms
-                ]);
-                break;
-                
-            case 'tour':
-                $bookingData = array_merge($bookingData, [
-                    'pickup_location' => $request->pickup_location,
-                    'pickup_time' => $request->pickup_time
-                ]);
-                break;
-                
-            case 'car':
-                $bookingData = array_merge($bookingData, [
-                    'pickup_location' => $request->pickup_location,
-                    'return_location' => $request->return_location,
-                    'pickup_time' => $request->pickup_time,
-                    'return_time' => $request->return_time,
-                    'need_driver' => $request->has('need_driver')
-                ]);
-                break;
-        }
-
-        // Calculate total price before creating booking
-        $tempBooking = new Booking($bookingData);
-        $tempBooking->deal = $deal;
-        if (isset($bookingData['room_id'])) {
-            $tempBooking->room = Room::find($bookingData['room_id']);
-        }
-        
-        $totalPrice = $tempBooking->calculateTotalPrice();
-        $bookingData['total_price'] = $totalPrice;
-        
-        $booking = Booking::create($bookingData);
-
-        return $booking;
-    }
-
-    public function viewBooking($bookingId)
-    {
-        try {
-            $booking = Booking::with(['deal', 'room', 'payments'])
-                ->findOrFail($bookingId);
-
-            return view('website.pages.booking_details', compact('booking'));
-            
-        } catch (\Exception $e) {
-            Log::error('Failed to view booking', [
-                'booking_id' => $bookingId,
-                'error' => $e->getMessage()
-            ]);
-            
-            return redirect()->route('index')->with('error', 'Booking not found.');
-        }
-    }
-
-    public function cancelBooking($bookingId)
-    {
-        try {
-            $booking = Booking::findOrFail($bookingId);
-            
-            // Only allow cancellation if booking is pending
-            if ($booking->status !== 'pending') {
-                return redirect()->back()->with('error', 'Cannot cancel this booking.');
-            }
-
-            $booking->status = 'cancelled';
-            $booking->save();
-
-            Log::info('Booking cancelled', [
-                'booking_id' => $booking->id,
-                'booking_code' => $booking->booking_code
-            ]);
-
-            return redirect()->back()->with('success', 'Booking cancelled successfully.');
-            
-        } catch (\Exception $e) {
-            Log::error('Failed to cancel booking', [
-                'booking_id' => $bookingId,
-                'error' => $e->getMessage()
-            ]);
-            
-            return redirect()->back()->with('error', 'Failed to cancel booking.');
-        }
-    }
+  
 }

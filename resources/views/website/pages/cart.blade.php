@@ -8,204 +8,240 @@
 @section('pages')
 <!-- Breadcrumb Section -->
 <div class="container py-4">
-    <h4 class="mb-0 fw-bold">Booking Cart</h4>
+    <h4 class="mb-0 fw-bold">Booking Cart ({{ $cartItems->count() }})</h4>
 </div>
-
 <!-- Cart Section -->
-<section class="cart-section py-5">
+<section class="cart-section py-2">
     <div class="container">
-        @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
-
-        @if(session('error'))
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                {{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
+       
 
         @if($cartItems->count() > 0)
-            <div class="row">
-                <!-- Cart Items -->
-                <div class="col-lg-8">
-                    <div class="cart-items">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h2 class="cart-section-title">Your Bookings ({{ $cartItems->count() }} items)</h2>
-                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearCart()">
-                                <i class="mdi mdi-trash-can-outline me-1"></i>Clear Cart
-                            </button>
-                        </div>
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="cart-items">
 
-                        @foreach($cartItems as $item)
-                            <div class="cart-item card mb-3" data-item-key="{{ $item['key'] }}">
-                                <div class="card-body">
-                                    <div class="row align-items-center">
-                                        <!-- Item Image -->
-                                        <div class="col-md-3">
-                                            <div class="cart-item-image">
-                                                @if($item['deal']->photos && $item['deal']->photos->count() > 0)
-                                                    <img src="{{ asset('storage/' . $item['deal']->photos->first()->photo) }}" 
-                                                         alt="{{ $item['deal']->title }}" 
-                                                         class="img-fluid rounded">
-                                                @else
-                                                    <div class="placeholder-image bg-light rounded d-flex align-items-center justify-content-center">
-                                                        <i class="mdi mdi-image-outline text-muted" style="font-size: 3rem;"></i>
-                                                    </div>
-                                                @endif
-                                            </div>
+
+                    @foreach($cartItems as $item)
+                    <div class="cart-item card mb-4 shadow-sm" data-item-id="{{ $item->id }}">
+                        <div class="card-body p-4">
+                            <div class="row align-items-center">
+
+                                <!-- Item Image -->
+                                <div class="col-md-3">
+                                    @php
+                                    $room = $item->room;
+                                    $imageSrc = null;
+
+                                    if ($room && $room->photos && $room->photos->count() > 0) {
+                                    $imageSrc = asset('storage/' . $room->photos->first()->photo);
+                                    } elseif ($room && $room->cover_photo) {
+                                    $imageSrc = asset('storage/' . $room->cover_photo);
+                                    } elseif ($item->deal->photos && $item->deal->photos->count() > 0) {
+                                    $imageSrc = asset('storage/' . $item->deal->photos->first()->photo);
+                                    } elseif ($item->deal->cover_photo) {
+                                    $imageSrc = asset('storage/' . $item->deal->cover_photo);
+                                    }
+                                    @endphp
+
+                                    @if($imageSrc)
+                                    <img src="{{ $imageSrc }}" alt="{{ $room ? $room->title : $item->deal->title }}"
+                                        class="img-fluid rounded"
+                                        style="height: 120px; object-fit: cover; width: 100%;">
+                                    @else
+                                    <div class="placeholder-image bg-light rounded d-flex align-items-center justify-content-center"
+                                        style="height: 120px;">
+                                        <i class="mdi mdi-image-outline text-muted" style="font-size: 2rem;"></i>
+                                    </div>
+                                    @endif
+                                </div>
+
+                                <!-- Item Details -->
+                                <div class="col-md-9">
+                                    <!-- Hotel Title and Buttons -->
+                                    <div class="mb-3 gap-2">
+                                        <div class="w-100">
+                                            <h5 class="fw-bold mb-0 text-truncate" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 100%;">
+                                                <a href="{{ route('view-hotel', ['id' => $hashids->encode($item->deal->id)]) }}"
+                                                    class="text-decoration-none text-dark">
+                                                    {{ $item->deal->title }}
+                                                </a>
+                                            </h5>
                                         </div>
-
-                                        <!-- Item Details -->
-                                        <div class="col-md-6">
-                                            <div class="cart-item-details">
-                                                <h5 class="cart-item-title mb-2">
-                                                    <a href="{{ route('view-hotel', ['id' => $hashids->encode($item['deal']->id)]) }}" 
-                                                       class="text-decoration-none">
-                                                        {{ $item['deal']->title }}
-                                                    </a>
-                                                </h5>
-                                                <p class="cart-item-type text-muted mb-2">
-                                                    <i class="mdi mdi-{{ $item['deal']->type === 'hotel' ? 'bed' : ($item['deal']->type === 'car' ? 'car' : 'map-marker') }} me-1"></i>
-                                                    {{ ucfirst($item['deal']->type) }}
-                                                    @if($item['deal']->category)
-                                                        - {{ $item['deal']->category->name }}
-                                                    @endif
-                                                </p>
-                                                <p class="cart-item-location text-muted mb-2">
-                                                    <i class="mdi mdi-map-marker me-1"></i>
-                                                    {{ $item['deal']->location }}
-                                                </p>
-
-                                                <!-- Booking Details -->
-                                                <div class="booking-details">
-                                                    @if($item['check_in'] && $item['check_out'])
-                                                        <div class="booking-detail-item">
-                                                            <strong>Check-in:</strong> {{ \Carbon\Carbon::parse($item['check_in'])->format('M d, Y') }}
-                                                        </div>
-                                                        <div class="booking-detail-item">
-                                                            <strong>Check-out:</strong> {{ \Carbon\Carbon::parse($item['check_out'])->format('M d, Y') }}
-                                                        </div>
-                                                    @endif
-                                                    
-                                                    @if($item['adults'] || $item['children'])
-                                                        <div class="booking-detail-item">
-                                                            <strong>Guests:</strong> 
-                                                            {{ $item['adults'] }} Adult{{ $item['adults'] > 1 ? 's' : '' }}
-                                                            @if($item['children'] > 0)
-                                                                , {{ $item['children'] }} Child{{ $item['children'] > 1 ? 'ren' : '' }}
-                                                            @endif
-                                                        </div>
-                                                    @endif
-
-                                                    @if($item['pickup_location'])
-                                                        <div class="booking-detail-item">
-                                                            <strong>Pickup:</strong> {{ $item['pickup_location'] }}
-                                                            @if($item['pickup_time'])
-                                                                at {{ $item['pickup_time'] }}
-                                                            @endif
-                                                        </div>
-                                                    @endif
-
-                                                    @if($item['return_location'])
-                                                        <div class="booking-detail-item">
-                                                            <strong>Return:</strong> {{ $item['return_location'] }}
-                                                            @if($item['return_time'])
-                                                                at {{ $item['return_time'] }}
-                                                            @endif
-                                                        </div>
-                                                    @endif
-                                                </div>
-                                            </div>
+                                        <div class="d-flex flex-row justify-content-end align-items-center ms-2 mt-2 mt-lg-0"
+                                             style="gap: 0.5rem;"
+                                             >
+                                            <button type="button" class="btn btn-outline-danger btn-sm mx-2 mx-lg-2"
+                                                onclick="removeFromCart({{ $item->id }})">
+                                                <i class="mdi mdi-close me-1"></i> REMOVE
+                                            </button>
+                                            <a href="{{ route('confirm-booking') }}"
+                                                class="btn btn-primary btn-sm">
+                                                <i class="mdi mdi-calendar-check me-1"></i> BOOK NOW
+                                            </a>
                                         </div>
+                                    </div>
+                                    <style>
+                                        @media (max-width: 991.98px) {
+                                            .cart-item .d-flex.flex-row.justify-content-end.align-items-center.ms-2.mt-2.mt-lg-0 {
+                                                flex-direction: row;
+                                                justify-content: flex-start !important;
+                                                margin-left: 0 !important;
+                                                margin-top: 0.75rem !important;
+                                            }
+                                            .cart-item h5.text-truncate {
+                                                max-width: 100% !important;
+                                                white-space: normal !important;
+                                                overflow: visible !important;
+                                                text-overflow: unset !important;
+                                            }
+                                        }
+                                        @media (min-width: 992px) {
+                                            .cart-item .mb-3.gap-2 {
+                                                display: flex;
+                                                flex-direction: row;
+                                                justify-content: space-between;
+                                                align-items: center;
+                                            }
+                                            .cart-item .d-flex.flex-row.justify-content-end.align-items-center.ms-2.mt-2.mt-lg-0 {
+                                                margin-top: 0 !important;
+                                            }
+                                            .cart-item h5.text-truncate {
+                                                max-width: 260px !important;
+                                                white-space: nowrap !important;
+                                                overflow: hidden !important;
+                                                text-overflow: ellipsis !important;
+                                            }
+                                        }
+                                    </style>
 
-                                        <!-- Item Actions & Price -->
-                                        <div class="col-md-3">
-                                            <div class="cart-item-actions text-end">
-                                                <div class="quantity-controls mb-3">
-                                                    <label class="form-label">Quantity:</label>
-                                                    <div class="input-group input-group-sm" style="width: 120px;">
-                                                        <button class="btn btn-outline-secondary" type="button" onclick="updateQuantity('{{ $item['key'] }}', -1)">-</button>
-                                                        <input type="number" class="form-control text-center" 
-                                                               value="{{ $item['quantity'] }}" 
-                                                               min="1" 
-                                                               id="qty-{{ $item['key'] }}"
-                                                               readonly>
-                                                        <button class="btn btn-outline-secondary" type="button" onclick="updateQuantity('{{ $item['key'] }}', 1)">+</button>
-                                                    </div>
-                                                </div>
-
-                                                <div class="cart-item-price mb-3">
-                                                    <div class="price-per-item">
-                                                        ${{ number_format($item['deal']->base_price, 2) }} each
-                                                    </div>
-                                                    <div class="price-subtotal">
-                                                        <strong>${{ number_format($item['subtotal'], 2) }}</strong>
-                                                    </div>
-                                                </div>
-
-                                                <button type="button" class="btn btn-outline-danger btn-sm" 
-                                                        onclick="removeFromCart('{{ $item['key'] }}')">
-                                                    <i class="mdi mdi-trash-can-outline me-1"></i>Remove
-                                                </button>
+                                    <!-- Booking Details -->
+                                    <div class="bg-light p-3 rounded">
+                                        <div class="row">
+                                            @if($room)
+                                            <div class="col-6 col-md-4 mb-2">
+                                                <small class="text-muted"><i class="mdi mdi-numeric me-1"></i>Number of
+                                                    Rooms</small><br>
+                                                <strong>{{ $item->number_rooms }} Room{{ $item->number_rooms > 1 ? 's' : ''
+                                                    }}</strong>
                                             </div>
+                                            <div class="col-6 col-md-4 mb-2">
+                                                <small class="text-muted"><i class="mdi mdi-bed me-1"></i>Room
+                                                    Name</small><br>
+                                                <strong>{{ $room->title }}</strong>
+                                            </div>
+                                            <div class="col-6 col-md-4 mb-2">
+                                                <small class="text-muted"><i class="mdi mdi-currency-usd me-1"></i>Total
+                                                    Price</small><br>
+                                                <strong class="text-success">${{ number_format($item->total_price, 2)
+                                                    }}</strong>
+                                            </div>
+                                            @endif
+
+                                            @if($item->check_in && $item->check_out)
+                                            <div class="col-6 col-md-4 mb-2">
+                                                <small class="text-muted">Check-in</small><br>
+                                                <strong>{{ \Carbon\Carbon::parse($item->check_in)->format('M d, Y')
+                                                    }}</strong>
+                                            </div>
+                                            <div class="col-6 col-md-4 mb-2">
+                                                <small class="text-muted">Check-out</small><br>
+                                                <strong>{{ \Carbon\Carbon::parse($item->check_out)->format('M d, Y')
+                                                    }}</strong>
+                                            </div>
+                                            @endif
+
+                                            @if($item->adults || $item->children)
+                                            <div class="col-6 col-md-4 mb-2">
+                                                <small class="text-muted">Guests</small><br>
+                                                <strong>
+                                                    {{ $item->adults }} Adult{{ $item->adults > 1 ? 's' : '' }}
+                                                    @if($item->children > 0)
+                                                    , {{ $item->children }} Child{{ $item->children > 1 ? 'ren' : ''
+                                                    }}
+                                                    @endif
+                                                </strong>
+                                            </div>
+                                            @endif
+
+                                            @if(!empty($item->pickup_location))
+                                            <div class="col-6 col-md-4 mb-2">
+                                                <small class="text-muted">Pickup</small><br>
+                                                <strong>{{ $item->pickup_location }}
+                                                    @if(!empty($item->pickup_time))
+                                                    at {{ $item->pickup_time }}
+                                                    @endif
+                                                </strong>
+                                            </div>
+                                            @endif
+
+                                            @if(!empty($item->return_location))
+                                            <div class="col-6 col-md-4 mb-2">
+                                                <small class="text-muted">Return</small><br>
+                                                <strong>{{ $item->return_location }}
+                                                    @if(!empty($item->return_time))
+                                                    at {{ $item->return_time }}
+                                                    @endif
+                                                </strong>
+                                            </div>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
+
                             </div>
-                        @endforeach
+
+
+                        </div>
                     </div>
+                    @endforeach
+
+
                 </div>
+            </div>
 
-                <!-- Cart Summary -->
-                <div class="col-lg-4">
-                    <div class="cart-summary">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="card-title mb-0">Order Summary</h5>
+            <!-- Cart Summary -->
+            <div class="col-lg-4">
+                <div class="cart-summary">
+                    <div class="card shadow-sm">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="mdi mdi-cart me-2"></i>Order Summary
+                            </h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="summary-item d-flex justify-content-between mb-3">
+                                <span class="text-muted">Items ({{ $cartItems->count() }}):</span>
+                                <span class="fw-bold">${{ number_format($totalAmount, 2) }}</span>
                             </div>
-                            <div class="card-body">
-                                <div class="summary-item d-flex justify-content-between mb-2">
-                                    <span>Items ({{ $cartItems->count() }}):</span>
-                                    <span>${{ number_format($totalAmount, 2) }}</span>
-                                </div>
-                                <div class="summary-item d-flex justify-content-between mb-2">
-                                    <span>Service Fee:</span>
-                                    <span>$0.00</span>
-                                </div>
-                                <hr>
-                                <div class="summary-total d-flex justify-content-between mb-4">
-                                    <strong>Total:</strong>
-                                    <strong>${{ number_format($totalAmount, 2) }}</strong>
-                                </div>
+                            <div class="summary-item d-flex justify-content-between mb-3">
+                                <span class="text-muted">Service Fee:</span>
+                                <span class="text-success">FREE</span>
+                            </div>
+                            <hr class="my-3">
+                            <div class="summary-total d-flex justify-content-between mb-4">
+                                <strong class="fs-5">Total:</strong>
+                                <strong class="fs-4 text-success">${{ number_format($totalAmount, 2) }}</strong>
+                            </div>
 
-                                <div class="d-grid gap-2">
-                                    <a href="{{ route('confirm-booking') }}" class="btn btn-primary btn-lg">
-                                        <i class="mdi mdi-credit-card me-2"></i>Proceed to Checkout
-                                    </a>
-                                    <a href="{{ route('index') }}" class="btn btn-outline-secondary">
-                                        <i class="mdi mdi-arrow-left me-2"></i>Continue Shopping
-                                    </a>
-                                </div>
+                            <div class="d-grid gap-3">
+                                <button type="button" class="btn btn-primary btn-lg w-100" onclick="bookAllDeals()">
+                                    <i class="mdi mdi-calendar-check me-2"></i>BOOK ALL NOW
+                                </button>
+                            </div>
 
-                                <div class="mt-4">
-                                    <h6 class="text-muted mb-3">Payment Methods</h6>
-                                    <div class="payment-methods">
-                                        <div class="payment-method d-flex align-items-center mb-2">
-                                            <i class="mdi mdi-credit-card text-primary me-2"></i>
-                                            <span>Credit/Debit Card</span>
-                                        </div>
-                                        <div class="payment-method d-flex align-items-center mb-2">
-                                            <i class="mdi mdi-bank text-success me-2"></i>
-                                            <span>Bank Transfer</span>
-                                        </div>
-                                        <div class="payment-method d-flex align-items-center">
-                                            <i class="mdi mdi-cash text-warning me-2"></i>
-                                            <span>Pay on Arrival</span>
-                                        </div>
+                            <div class="mt-4 pt-3 border-top">
+                                <h6 class="text-muted mb-3">
+                                    <i class="mdi mdi-shield-check me-1"></i>Payment Methods
+                                </h6>
+                                <div class="payment-methods">
+                                    <div class="payment-method d-flex align-items-center mb-2">
+                                        <i class="mdi mdi-credit-card text-primary me-2"></i>
+                                        <span>Pesapal Gateways</span>
+                                    </div>
+
+                                    <div class="payment-method d-flex align-items-center">
+                                        <i class="mdi mdi-cash text-warning me-2"></i>
+                                        <span>Pay Offline</span>
                                     </div>
                                 </div>
                             </div>
@@ -213,29 +249,30 @@
                     </div>
                 </div>
             </div>
+        </div>
         @else
-            <!-- Empty Cart -->
-            <div class="empty-cart text-center py-5">
-                <div class="empty-cart-icon mb-4">
-                    <i class="mdi mdi-cart-outline text-muted" style="font-size: 5rem;"></i>
-                </div>
-                <h3 class="empty-cart-title mb-3">Your cart is empty</h3>
-                <p class="empty-cart-text text-muted mb-4">
-                    Looks like you haven't added any bookings to your cart yet.<br>
-                    Start exploring our amazing deals and add them to your cart!
-                </p>
-                <div class="empty-cart-actions">
-                    <a href="{{ route('hotels') }}" class="btn btn-primary me-3">
-                        <i class="mdi mdi-bed me-2"></i>Browse Hotels
-                    </a>
-                    <a href="{{ route('activities') }}" class="btn btn-outline-primary me-3">
-                        <i class="mdi mdi-map-marker me-2"></i>Browse Activities
-                    </a>
-                    <a href="{{ route('cars') }}" class="btn btn-outline-primary">
-                        <i class="mdi mdi-car me-2"></i>Browse Cars
-                    </a>
-                </div>
+        <!-- Empty Cart -->
+        <div class="empty-cart text-center py-5">
+            <div class="empty-cart-icon mb-4">
+                <i class="mdi mdi-cart-outline text-muted" style="font-size: 5rem;"></i>
             </div>
+            <h3 class="empty-cart-title mb-3">Your cart is empty</h3>
+            <p class="empty-cart-text text-muted mb-4">
+                Looks like you haven't added any bookings to your cart yet.<br>
+                Start exploring our amazing deals and add them to your cart!
+            </p>
+            <div class="empty-cart-actions">
+                <a href="{{ route('hotels') }}" class="btn btn-primary me-3">
+                    <i class="mdi mdi-bed me-2"></i>Browse Hotels
+                </a>
+                <a href="{{ route('activities') }}" class="btn btn-outline-primary me-3">
+                    <i class="mdi mdi-map-marker me-2"></i>Browse Activities
+                </a>
+                <a href="{{ route('cars') }}" class="btn btn-outline-primary">
+                    <i class="mdi mdi-car me-2"></i>Browse Cars
+                </a>
+            </div>
+        </div>
         @endif
     </div>
 </section>
@@ -247,7 +284,7 @@
 
 @push('scripts')
 <script>
-// CSRF token setup
+    // CSRF token setup
 $.ajaxSetup({
     headers: {
         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -270,18 +307,18 @@ function updateCartCount() {
 }
 
 // Remove item from cart
-function removeFromCart(itemKey) {
+function removeFromCart(itemId) {
     if (confirm('Are you sure you want to remove this item from your cart?')) {
         $.ajax({
             url: '{{ route("cart.remove") }}',
             method: 'POST',
             data: {
-                item_key: itemKey
+                item_id: itemId
             },
             success: function(response) {
                 if (response.success) {
                     // Remove the item from DOM
-                    $(`.cart-item[data-item-key="${itemKey}"]`).fadeOut(300, function() {
+                    $(`.cart-item[data-item-id="${itemId}"]`).fadeOut(300, function() {
                         $(this).remove();
                         updateCartCount();
                         
@@ -295,81 +332,51 @@ function removeFromCart(itemKey) {
                     });
                     
                     // Show success message
-                    showAlert('Item removed from cart successfully', 'success');
+                    showToast('Item removed from cart successfully', 'success');
                 }
             },
             error: function(xhr) {
-                showAlert('Error removing item from cart', 'danger');
+                showToast('Error removing item from cart', 'error');
             }
         });
     }
 }
 
-// Update item quantity
-function updateQuantity(itemKey, change) {
-    var input = $(`#qty-${itemKey}`);
-    var currentQty = parseInt(input.val());
-    var newQty = currentQty + change;
-    
-    if (newQty < 1) {
-        removeFromCart(itemKey);
-        return;
-    }
-    
-    // Update the quantity in session via AJAX
-    $.ajax({
-        url: '{{ route("cart.add") }}',
-        method: 'POST',
-        data: {
-            deal_id: $('.cart-item[data-item-key="' + itemKey + '"]').data('deal-id'),
-            quantity: change,
-            _token: $('meta[name="csrf-token"]').attr('content')
-        },
-        success: function(response) {
-            if (response.success) {
-                input.val(newQty);
-                location.reload(); // Reload to update totals
-            }
-        },
-        error: function(xhr) {
-            showAlert('Error updating quantity', 'danger');
-        }
-    });
-}
 
-// Clear entire cart
-function clearCart() {
-    if (confirm('Are you sure you want to clear your entire cart? This action cannot be undone.')) {
+// Book all deals in cart at once
+function bookAllDeals() {
+    if (confirm('Are you sure you want to book all deals in your cart? This will create bookings for all items.')) {
+        // Get all cart item IDs
+        const cartItemIds = [];
+        $('.cart-item').each(function() {
+            const itemId = $(this).data('item-id');
+            cartItemIds.push(itemId);
+        });
+
+        // Submit booking for all items
         $.ajax({
-            url: '{{ route("cart.clear") }}',
+            url: '{{ route("book-all-cart") }}',
             method: 'POST',
+            data: {
+                cart_item_ids: cartItemIds,
+                _token: $('meta[name="csrf-token"]').attr('content')
+            },
             success: function(response) {
                 if (response.success) {
-                    location.reload();
+                    showToast('All deals have been booked successfully!', 'success');
+                    // Redirect to success page or reload
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    showToast(response.message || 'Error booking deals. Please try again.', 'error');
                 }
             },
             error: function(xhr) {
-                showAlert('Error clearing cart', 'danger');
+                showToast('Error booking deals. Please try again.', 'error');
             }
         });
     }
-}
-
-// Show alert message
-function showAlert(message, type) {
-    var alertHtml = `
-        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    `;
-    
-    $('.container').prepend(alertHtml);
-    
-    // Auto-dismiss after 5 seconds
-    setTimeout(function() {
-        $('.alert').fadeOut();
-    }, 5000);
 }
 </script>
 @endpush
