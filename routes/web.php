@@ -57,7 +57,8 @@ Route::post('/deals/{id}/reviews', [WebsiteController::class, 'storeReview'])->n
 
 // Booking routes
 Route::get('/confirm-booking', [BookingController::class, 'confirmBooking'])->name('confirm-booking');
-Route::post('/process-booking', [BookingController::class, 'processBooking'])->name('process.booking');
+Route::post('/process-booking', [BookingController::class, 'processBooking'])->name('process-booking');
+Route::get('/offline-payment/{bookingId}', [BookingController::class, 'offlinePayment'])->name('offline.payment');
 Route::get('/booking/{id}', [BookingController::class, 'viewBooking'])->name('booking.view');
 Route::post('/booking/{id}/cancel', [BookingController::class, 'cancelBooking'])->name('booking.cancel');
 

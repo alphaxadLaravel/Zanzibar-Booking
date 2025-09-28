@@ -19,7 +19,8 @@ class Booking extends Model
         'booking_items',
         'total_amount',
         'payment_method',
-        'status'
+        'status',
+        'additional_notes'
     ];
 
     protected $casts = [
@@ -54,7 +55,7 @@ class Booking extends Model
     public static function generateBookingCode()
     {
         do {
-            $code = 'BK' . strtoupper(Str::random(8));
+            $code = 'ZBOOK-' . str_pad(rand(1, 999999), 6, '0', STR_PAD_LEFT);
         } while (static::where('booking_code', $code)->exists());
 
         return $code;

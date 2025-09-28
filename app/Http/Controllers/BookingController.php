@@ -12,14 +12,210 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Hashids\Hashids;
 
 class BookingController extends Controller
 {
-    public function confirmBooking(Request $request)
+    /**
+     * Create Hashids instance
+     */
+    private function getHashids()
     {
-        return view('website.pages.confirm_booking');
+        return new Hashids('MchungajiZanzibarBookings', 10);
     }
 
+    public function confirmBooking(Request $request)
+    {
+        // Check if user is authenticated
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'You must be logged in to confirm booking.');
+        }
+
+        $cartItems = collect();
+        $totalAmount = 0;
+
+        // Check if cart_items parameter is provided
+        if ($request->has('cart_items') && !empty($request->get('cart_items'))) {
+            $hashids = $this->getHashids();
+            $hashedIds = explode(',', $request->get('cart_items'));
+            $cartItemIds = [];
+            
+            // Decode hashed IDs
+            foreach ($hashedIds as $hashedId) {
+                $decodedIds = $hashids->decode($hashedId);
+                if (!empty($decodedIds)) {
+                    $cartItemIds[] = $decodedIds[0];
+                }
+            }
+            
+            // Get cart items from database
+            $cartItems = BookingItem::where('user_id', Auth::id())
+                ->where('status', 'cart')
+                ->whereIn('id', $cartItemIds)
+                ->with(['deal.category', 'deal.photos', 'room'])
+                ->get();
+
+            $totalAmount = $cartItems->sum('total_price');
+        }
+
+        $hashids = $this->getHashids();
+        return view('website.pages.confirm_booking', compact('cartItems', 'totalAmount', 'hashids'));
+    }
+
+    /**
+     * Process the final booking
+     */
+    public function processBooking(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            // Check if user is authenticated
+            if (!Auth::check()) {
+                return redirect()->route('login')->with('error', 'You must be logged in to make a booking.');
+            }
+
+            // Validate the request
+            $validated = $request->validate([
+                'fullname' => 'required|string|max:255',
+                'email' => 'required|email|max:255',
+                'phone' => 'required|string|max:20',
+                'country' => 'required|string|max:100',
+                'payment_method' => 'required|in:pesapal,pay_offline',
+                'special_requests' => 'nullable|string|max:1000',
+                'selected_items' => 'required|string'
+            ]);
+
+            // Get selected cart item IDs (decode from hashids)
+            $hashids = $this->getHashids();
+            $hashedIds = explode(',', $validated['selected_items']);
+            $selectedItemIds = [];
+            
+            // Decode hashed IDs
+            foreach ($hashedIds as $hashedId) {
+                $decodedIds = $hashids->decode($hashedId);
+                if (!empty($decodedIds)) {
+                    $selectedItemIds[] = $decodedIds[0];
+                }
+            }
+            
+            if (empty($selectedItemIds)) {
+                return back()->withErrors(['selected_items' => 'Please select at least one item to book.'])->withInput();
+            }
+
+            // Get cart items from database
+            $cartItems = BookingItem::where('user_id', Auth::id())
+                ->where('status', 'cart')
+                ->whereIn('id', $selectedItemIds)
+                ->with(['deal', 'room'])
+                ->get();
+
+            if ($cartItems->isEmpty()) {
+                return back()->withErrors(['selected_items' => 'No valid items found to book.'])->withInput();
+            }
+
+            // Validate that all cart items belong to the current user
+            foreach ($cartItems as $item) {
+                if ($item->user_id !== Auth::id()) {
+                    return back()->withErrors(['selected_items' => 'Unauthorized access to booking items.'])->withInput();
+                }
+            }
+
+            $bookedItems = [];
+            $totalAmount = 0;
+
+            // Prepare booking items data
+            foreach ($cartItems as $cartItem) {
+                // Update status to pending
+                $cartItem->update(['status' => 'pending']);
+
+                $bookedItems[] = [
+                    'deal_id' => $cartItem->deal_id,
+                    'room_id' => $cartItem->room_id,
+                    'number_rooms' => $cartItem->number_rooms,
+                    'type' => $cartItem->type,
+                    'check_in' => $cartItem->check_in,
+                    'check_out' => $cartItem->check_out,
+                    'total_price' => $cartItem->total_price,
+                    'adults' => $cartItem->adults,
+                    'children' => $cartItem->children,
+                    'booking_item_id' => $cartItem->id,
+                ];
+
+                $totalAmount += $cartItem->total_price;
+            }
+
+            // Create the main booking record
+            $booking = Booking::create([
+                'booking_code' => Booking::generateBookingCode(),
+                'fullname' => $validated['fullname'],
+                'email' => $validated['email'],
+                'phone' => $validated['phone'],
+                'country' => $validated['country'],
+                'user_id' => Auth::id(),
+                'booking_items' => $bookedItems,
+                'total_amount' => $totalAmount,
+                'payment_method' => $validated['payment_method'],
+                'status' => 'pending',
+                'additional_notes' => $validated['special_requests'] ?? null,
+            ]);
+
+            // Log successful booking creation
+            Log::info('Booking created successfully', [
+                'booking_id' => $booking->id,
+                'booking_code' => $booking->booking_code,
+                'user_id' => Auth::id(),
+                'total_amount' => $totalAmount,
+                'items_count' => count($bookedItems)
+            ]);
+
+            DB::commit();
+
+            // Redirect based on payment method
+            if ($validated['payment_method'] === 'pesapal') {
+                return redirect()->route('payment.process', ['bookingId' => $hashids->encode($booking->id)])
+                    ->with('success', 'Booking created successfully! Please complete your payment.');
+            } else {
+                return redirect()->route('offline.payment', ['bookingId' => $hashids->encode($booking->id)])
+                    ->with('success', 'Booking created successfully! Please follow the payment instructions below.');
+            }
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            return back()->withErrors($e->validator)->withInput();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Booking processing error: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'An error occurred while processing your booking. Please try again.'])->withInput();
+        }
+    }
+
+    /**
+     * Show offline payment page
+     */
+    public function offlinePayment($bookingId)
+    {
+        // Check if user is authenticated
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'You must be logged in to view payment details.');
+        }
+
+        $hashids = $this->getHashids();
+        
+        // Decode the hashed booking ID
+        $decodedIds = $hashids->decode($bookingId);
+        if (empty($decodedIds)) {
+            abort(404, 'Booking not found');
+        }
+        $bookingId = $decodedIds[0];
+        
+        // Get the booking
+        $booking = Booking::where('id', $bookingId)
+            ->where('user_id', Auth::id())
+            ->with(['user'])
+            ->firstOrFail();
+
+        return view('website.pages.offline_payment', compact('booking'));
+    }
 
     // book room
     public function bookRoom(Request $request)
@@ -76,7 +272,8 @@ class BookingController extends Controller
 
             if ($request->has('book_room')) {
                 DB::commit();
-                return redirect()->route('confirm-booking')->with('success', 'Room booking details saved. Please complete your booking information.');
+                $hashids = $this->getHashids();
+                return redirect()->route('confirm-booking', ['cart_items' => $hashids->encode($bookingItem->id)])->with('success', 'Room booking details saved. Please complete your booking information.');
                 
             } elseif ($request->has('add_cart')) {
                 // ADD TO CART button clicked - item is already saved with cart status

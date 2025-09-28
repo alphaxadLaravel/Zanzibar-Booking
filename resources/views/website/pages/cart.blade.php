@@ -22,7 +22,7 @@
 
 
                     @foreach($cartItems as $item)
-                    <div class="cart-item card mb-4 shadow-sm" data-item-id="{{ $item->id }}">
+                    <div class="cart-item card mb-4 shadow-sm" data-item-id="{{ $item->id }}" data-hashed-id="{{ $hashids->encode($item->id) }}">
                         <div class="card-body p-4">
                             <div class="row align-items-center">
 
@@ -74,10 +74,10 @@
                                                 onclick="removeFromCart({{ $item->id }})">
                                                 <i class="mdi mdi-close me-1"></i> REMOVE
                                             </button>
-                                            <a href="{{ route('confirm-booking') }}"
-                                                class="btn btn-primary btn-sm">
+                                            <button type="button" class="btn btn-primary btn-sm"
+                                                onclick="bookSingleItem({{ $item->id }})">
                                                 <i class="mdi mdi-calendar-check me-1"></i> BOOK NOW
-                                            </a>
+                                            </button>
                                         </div>
                                     </div>
                                     <style>
@@ -343,39 +343,28 @@ function removeFromCart(itemId) {
 }
 
 
+// Book single item
+function bookSingleItem(itemId) {
+    // Get the hashed ID from the data attribute
+    const hashedId = $('.cart-item[data-item-id="' + itemId + '"]').data('hashed-id');
+    // Redirect to confirm booking page with single cart item
+    window.location.href = '{{ route("confirm-booking") }}?cart_items=' + hashedId;
+}
+
 // Book all deals in cart at once
 function bookAllDeals() {
-    if (confirm('Are you sure you want to book all deals in your cart? This will create bookings for all items.')) {
-        // Get all cart item IDs
-        const cartItemIds = [];
-        $('.cart-item').each(function() {
-            const itemId = $(this).data('item-id');
-            cartItemIds.push(itemId);
-        });
+    // Get all hashed cart item IDs
+    const cartItemHashedIds = [];
+    $('.cart-item').each(function() {
+        const hashedId = $(this).data('hashed-id');
+        if (hashedId) {
+            cartItemHashedIds.push(hashedId);
+        }
+    });
 
-        // Submit booking for all items
-        $.ajax({
-            url: '{{ route("book-all-cart") }}',
-            method: 'POST',
-            data: {
-                cart_item_ids: cartItemIds,
-                _token: $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(response) {
-                if (response.success) {
-                    showToast('All deals have been booked successfully!', 'success');
-                    // Redirect to success page or reload
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
-                } else {
-                    showToast(response.message || 'Error booking deals. Please try again.', 'error');
-                }
-            },
-            error: function(xhr) {
-                showToast('Error booking deals. Please try again.', 'error');
-            }
-        });
+    // Redirect to confirm booking page with cart items
+    if (cartItemHashedIds.length > 0) {
+        window.location.href = '{{ route("confirm-booking") }}?cart_items=' + cartItemHashedIds.join(',');
     }
 }
 </script>
