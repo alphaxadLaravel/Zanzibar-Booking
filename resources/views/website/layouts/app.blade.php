@@ -10,7 +10,9 @@
     </title>
     <link rel="shortcut icon" type="image/png" href="{{asset('logo.png')}}" />
     @yield('meta')
+    
     @livewireStyles()
+
     @include('website.layouts.styles')
 </head>
 
@@ -36,7 +38,7 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form id="loginForm" class="form">
+                    <form id="loginForm" action="{{ route('login') }}" method="POST" class="form">
                         @csrf
                         <div id="email-field" class="field-wrapper input mb-3">
                             <label for="remail">EMAIL</label>
@@ -59,6 +61,7 @@
                             </div>
                         </div>
                         <script>
+                            // Password visibility toggle functions
                             function togglePassword() {
                                 var input = document.getElementById('rpassword');
                                 var showEye = document.getElementById('show-eye');
@@ -136,13 +139,10 @@
 
                             // Modal switching functions
                             function switchToSignup() {
-                                // Close login modal
                                 var loginModal = bootstrap.Modal.getInstance(document.getElementById('exampleModal'));
                                 if (loginModal) {
                                     loginModal.hide();
                                 }
-                                
-                                // Open signup modal
                                 setTimeout(function() {
                                     var signupModal = new bootstrap.Modal(document.getElementById('Signup'));
                                     signupModal.show();
@@ -150,7 +150,6 @@
                             }
 
                             function switchToLogin() {
-                                // Close current modal
                                 var currentModal = document.querySelector('.modal.show');
                                 if (currentModal) {
                                     var modalInstance = bootstrap.Modal.getInstance(currentModal);
@@ -158,8 +157,6 @@
                                         modalInstance.hide();
                                     }
                                 }
-                                
-                                // Open login modal
                                 setTimeout(function() {
                                     var loginModal = new bootstrap.Modal(document.getElementById('exampleModal'));
                                     loginModal.show();
@@ -167,245 +164,14 @@
                             }
 
                             function switchToForgotPassword() {
-                                // Close login modal
                                 var loginModal = bootstrap.Modal.getInstance(document.getElementById('exampleModal'));
                                 if (loginModal) {
                                     loginModal.hide();
                                 }
-                                
-                                // Open forgot password modal
                                 setTimeout(function() {
                                     var forgotModal = new bootstrap.Modal(document.getElementById('ForgotPassword'));
                                     forgotModal.show();
                                 }, 300);
-                            }
-
-                            // Button loading state helper functions
-                            function setButtonLoading(buttonId, isLoading) {
-                                const button = document.getElementById(buttonId);
-                                const btnText = button.querySelector('.btn-text');
-                                const btnLoading = button.querySelector('.btn-loading');
-                                
-                                if (isLoading) {
-                                    button.disabled = true;
-                                    btnText.style.display = 'none';
-                                    btnLoading.style.display = 'inline';
-                                } else {
-                                    button.disabled = false;
-                                    btnText.style.display = 'inline';
-                                    btnLoading.style.display = 'none';
-                                }
-                            }
-
-                            // Form submission handlers
-                            document.addEventListener('DOMContentLoaded', function() {
-                                // Login form
-                                document.getElementById('loginForm').addEventListener('submit', function(e) {
-                                    e.preventDefault();
-                                    handleLogin();
-                                });
-
-                                // Signup form
-                                document.getElementById('signupForm').addEventListener('submit', function(e) {
-                                    e.preventDefault();
-                                    handleSignup();
-                                });
-
-                                // Forgot password form
-                                document.getElementById('forgotPasswordForm').addEventListener('submit', function(e) {
-                                    e.preventDefault();
-                                    handleForgotPassword();
-                                });
-
-                                // Change password form
-                                document.getElementById('changePasswordForm').addEventListener('submit', function(e) {
-                                    e.preventDefault();
-                                    handleChangePassword();
-                                });
-                            });
-
-                            function handleLogin() {
-                                const form = document.getElementById('loginForm');
-                                const formData = new FormData(form);
-                                
-                                // Set loading state
-                                setButtonLoading('loginSubmitBtn', true);
-                                
-                                fetch('{{ route("login") }}', {
-                                    method: 'POST',
-                                    body: formData,
-                                    headers: {
-                                        'X-Requested-With': 'XMLHttpRequest',
-                                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                                    }
-                                })
-                                .then(response => response.json())
-                                .then(data => {
-                                    if (data.success) {
-                                        showToast(data.message, 'success');
-                                        setTimeout(() => {
-                                            window.location.href = data.redirect;
-                                        }, 1000);
-                                    } else {
-                                        showToast(data.message, 'error');
-                                        setButtonLoading('loginSubmitBtn', false);
-                                    }
-                                })
-                                .catch(error => {
-                                    console.error('Error:', error);
-                                    showToast('An error occurred. Please try again.', 'error');
-                                    setButtonLoading('loginSubmitBtn', false);
-                                });
-                            }
-
-                            function handleSignup() {
-                                const form = document.getElementById('signupForm');
-                                const formData = new FormData(form);
-                                
-                                // Set loading state
-                                setButtonLoading('signupSubmitBtn', true);
-                                
-                                fetch('{{ route("register") }}', {
-                                    method: 'POST',
-                                    body: formData,
-                                    headers: {
-                                        'X-Requested-With': 'XMLHttpRequest',
-                                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                                    }
-                                })
-                                .then(response => response.json())
-                                .then(data => {
-                                    if (data.success) {
-                                        showToast(data.message, 'success');
-                                        setTimeout(() => {
-                                            window.location.href = data.redirect;
-                                        }, 1000);
-                                    } else {
-                                        showToast(data.message, 'error');
-                                        if (data.errors) {
-                                            Object.values(data.errors).forEach(error => {
-                                                showToast(error[0], 'error');
-                                            });
-                                        }
-                                        setButtonLoading('signupSubmitBtn', false);
-                                    }
-                                })
-                                .catch(error => {
-                                    console.error('Error:', error);
-                                    showToast('An error occurred. Please try again.', 'error');
-                                    setButtonLoading('signupSubmitBtn', false);
-                                });
-                            }
-
-                            function handleForgotPassword() {
-                                const form = document.getElementById('forgotPasswordForm');
-                                const formData = new FormData(form);
-                                
-                                // Set loading state
-                                setButtonLoading('forgotPasswordSubmitBtn', true);
-                                
-                                fetch('{{ route("forgot-password") }}', {
-                                    method: 'POST',
-                                    body: formData,
-                                    headers: {
-                                        'X-Requested-With': 'XMLHttpRequest',
-                                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                                    }
-                                })
-                                .then(response => response.json())
-                                .then(data => {
-                                    if (data.success) {
-                                        showToast(data.message, 'success');
-                                        setTimeout(() => {
-                                            switchToLogin();
-                                        }, 2000);
-                                    } else {
-                                        showToast(data.message, 'error');
-                                        if (data.errors) {
-                                            Object.values(data.errors).forEach(error => {
-                                                showToast(error[0], 'error');
-                                            });
-                                        }
-                                        setButtonLoading('forgotPasswordSubmitBtn', false);
-                                    }
-                                })
-                                .catch(error => {
-                                    console.error('Error:', error);
-                                    showToast('An error occurred. Please try again.', 'error');
-                                    setButtonLoading('forgotPasswordSubmitBtn', false);
-                                });
-                            }
-
-                            function handleChangePassword() {
-                                const form = document.getElementById('changePasswordForm');
-                                const formData = new FormData(form);
-                                
-                                // Set loading state
-                                setButtonLoading('changePasswordSubmitBtn', true);
-                                
-                                fetch('{{ route("change-password") }}', {
-                                    method: 'POST',
-                                    body: formData,
-                                    headers: {
-                                        'X-Requested-With': 'XMLHttpRequest',
-                                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                                    }
-                                })
-                                .then(response => response.json())
-                                .then(data => {
-                                    if (data.success) {
-                                        showToast(data.message, 'success');
-                                        setTimeout(() => {
-                                            // Close the modal
-                                            var changePasswordModal = bootstrap.Modal.getInstance(document.getElementById('ChangePassword'));
-                                            if (changePasswordModal) {
-                                                changePasswordModal.hide();
-                                            }
-                                            // Clear the form
-                                            form.reset();
-                                        }, 1500);
-                                    } else {
-                                        showToast(data.message, 'error');
-                                        if (data.errors) {
-                                            Object.values(data.errors).forEach(error => {
-                                                showToast(error[0], 'error');
-                                            });
-                                        }
-                                        setButtonLoading('changePasswordSubmitBtn', false);
-                                    }
-                                })
-                                .catch(error => {
-                                    console.error('Error:', error);
-                                    showToast('An error occurred. Please try again.', 'error');
-                                    setButtonLoading('changePasswordSubmitBtn', false);
-                                });
-                            }
-
-                            // Website-specific functions
-                            function handleWebsiteLogout() {
-                                if (confirm('Are you sure you want to logout?')) {
-                                    fetch('{{ route("logout") }}', {
-                                        method: 'POST',
-                                        headers: {
-                                            'X-Requested-With': 'XMLHttpRequest',
-                                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                                        }
-                                    })
-                                    .then(response => response.json())
-                                    .then(data => {
-                                        if (data.success) {
-                                            showToast(data.message, 'success');
-                                            setTimeout(() => {
-                                                window.location.href = data.redirect;
-                                            }, 1000);
-                                        }
-                                    })
-                                    .catch(error => {
-                                        console.error('Error:', error);
-                                        // Fallback to page reload
-                                        window.location.reload();
-                                    });
-                                }
                             }
 
                             function openChangePasswordModal() {
@@ -415,11 +181,8 @@
                         </script>
 
                         <div class="my-2">
-                            <button type="submit" class="btn btn-primary w-100" id="loginSubmitBtn" value="">
-                                <span class="btn-text">SIGN IN</span>
-                                <span class="btn-loading" style="display: none;">
-                                    <i class="fas fa-spinner fa-spin me-2"></i>SIGNING IN...
-                                </span>
+                            <button type="submit" class="btn btn-primary w-100" data-loading-text="SIGNING IN...">
+                                SIGN IN
                             </button>
                         </div>
 
@@ -444,7 +207,7 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form id="signupForm" class="form">
+                    <form id="signupForm" action="{{ route('register') }}" method="POST" class="form">
                         @csrf
                         <input type="hidden" name="isfr" value="1" />
                         <div class="row">
@@ -515,12 +278,9 @@
                         <div class="gmz-message"></div>
 
                         <div class="my-2">
-                            <button type="submit" class="btn btn-primary w-100" id="signupSubmitBtn" value="">
-                                <span class="btn-text">REGISTER</span>
-                                <span class="btn-loading" style="display: none;">
-                                    <i class="fas fa-spinner fa-spin me-2"></i>REGISTERING...
-                                </span>
-                                </button>
+                            <button type="submit" class="btn btn-primary w-100" data-loading-text="REGISTERING...">
+                                REGISTER
+                            </button>
                         </div>
 
                         <p class="signup-link">
@@ -544,7 +304,7 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form id="forgotPasswordForm" class="form">
+                    <form id="forgotPasswordForm" action="{{ route('forgot-password') }}" method="POST" class="form">
                         @csrf
                         <div class="mb-3">
                             <p class="text-muted">Enter your email address and we'll send you a link to reset your password.</p>
@@ -559,11 +319,8 @@
                         <div class="gmz-message"></div>
 
                         <div class="my-2">
-                            <button type="submit" class="btn btn-primary w-100" id="forgotPasswordSubmitBtn" value="">
-                                <span class="btn-text">SEND RESET LINK</span>
-                                <span class="btn-loading" style="display: none;">
-                                    <i class="fas fa-spinner fa-spin me-2"></i>SENDING...
-                                </span>
+                            <button type="submit" class="btn btn-primary w-100" data-loading-text="SENDING...">
+                                SEND RESET LINK
                             </button>
                         </div>
 
@@ -588,7 +345,7 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form id="changePasswordForm" class="form">
+                    <form id="changePasswordForm" action="{{ route('change-password') }}" method="POST" class="form">
                         @csrf
                         <div class="mb-3">
                             <p class="text-muted">Enter your current password and choose a new password.</p>
@@ -633,11 +390,8 @@
                         <div class="gmz-message"></div>
 
                         <div class="my-2">
-                            <button type="submit" class="btn btn-primary w-100" id="changePasswordSubmitBtn" value="">
-                                <span class="btn-text">CHANGE PASSWORD</span>
-                                <span class="btn-loading" style="display: none;">
-                                    <i class="fas fa-spinner fa-spin me-2"></i>CHANGING...
-                                </span>
+                            <button type="submit" class="btn btn-primary w-100" data-loading-text="CHANGING...">
+                                CHANGE PASSWORD
                             </button>
                         </div>
                     </form>
@@ -647,13 +401,36 @@
     </div>
 
     @livewireScripts()
+
     @include('website.layouts.js')
+
     @stack('scripts')
 
     <!-- Toast Notification System -->
     <div id="toast-container" style="position: fixed; top: 100px; right: 20px; z-index: 999999;"></div>
 
     <script>
+
+document.addEventListener("DOMContentLoaded", function() {
+            const buttons = document.querySelectorAll('[data-loading-text]');
+
+            buttons.forEach(function(button) {
+                const form = button.closest('form');
+
+                if (form) {
+                    form.addEventListener('submit', function(e) {
+                        if (form.checkValidity()) {
+                            button.disabled = true;
+                            button.innerHTML =
+                                `<img src="{{ asset('assets/images/fast.svg') }}" alt="Loading..." class="me-2"> ` +
+                                button.dataset.loadingText;
+                        }
+                    });
+                }
+            });
+        });
+
+        
         // Toast notification system
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
@@ -828,26 +605,6 @@
             transform: translateY(0);
         }
 
-        /* Button loading states */
-        .btn-loading {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .btn:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-        }
-
-        .fa-spinner {
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
     </style>
 </body>
 

@@ -24,7 +24,7 @@ Route::get('/login', [WebsiteController::class, 'index'])->name('login');
 // Authentication routes
 Route::post('/login', [LoginController::class, 'login'])->name('login');
 Route::post('/register', [LoginController::class, 'register'])->name('register');
-Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::post('/forgot-password', [LoginController::class, 'forgotPassword'])->name('forgot-password');
 Route::post('/change-password', [LoginController::class, 'changePassword'])->name('change-password');
 

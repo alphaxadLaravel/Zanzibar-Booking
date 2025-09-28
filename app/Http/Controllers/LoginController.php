@@ -13,9 +13,7 @@ use Illuminate\Support\Str;
 
 class LoginController extends Controller
 {
-    /**
-     * Handle user login
-     */
+    
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -24,11 +22,7 @@ class LoginController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
+            return redirect()->route('index')->with('error', 'Validation failed');
         }
 
         $credentials = $request->only('email', 'password');
@@ -36,17 +30,10 @@ class LoginController extends Controller
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
             
-            return response()->json([
-                'success' => true,
-                'message' => 'Login successful',
-                'redirect' => route('index')
-            ]);
+            return redirect()->route('index')->with('success', 'Login successful');
         }
 
-        return response()->json([
-            'success' => false,
-            'message' => 'Invalid credentials'
-        ], 401);
+        return redirect()->route('index')->with('error', 'Invalid credentials');
     }
 
     /**
@@ -63,11 +50,7 @@ class LoginController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
+            return redirect()->route('index')->with('error', 'Validation failed');
         }
 
         // Get default user role (assuming role_id 2 is for regular users)
@@ -88,11 +71,7 @@ class LoginController extends Controller
         // Auto-login after registration
         Auth::login($user);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Registration successful',
-            'redirect' => route('index')
-        ]);
+        return redirect()->route('index')->with('success', 'Registration successful');
     }
 
     /**
@@ -106,11 +85,7 @@ class LoginController extends Controller
 
         // Check if request is AJAX (for website modals)
         if ($request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Logged out successfully',
-                'redirect' => route('index')
-            ]);
+            return redirect()->route('index')->with('success', 'You have been logged out successfully.');
         }
 
         // For regular form submissions (admin logout)
@@ -127,11 +102,7 @@ class LoginController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
+            return redirect()->route('index')->with('error', 'Validation failed');
         }
 
         $status = Password::sendResetLink(
@@ -139,16 +110,10 @@ class LoginController extends Controller
         );
 
         if ($status === Password::RESET_LINK_SENT) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Password reset link sent to your email'
-            ]);
+            return redirect()->route('index')->with('success', 'Password reset link sent to your email');
         }
 
-        return response()->json([
-            'success' => false,
-            'message' => 'Unable to send reset link'
-        ], 500);
+        return redirect()->route('index')->with('error', 'Unable to send reset link');
     }
 
     /**
@@ -162,11 +127,7 @@ class LoginController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
+            return redirect()->route('index')->with('error', 'Validation failed');
         }
 
         // $user = Auth::user();
@@ -175,19 +136,13 @@ class LoginController extends Controller
         
         // Check current password
         if (!Hash::check($request->current_password, $user->password)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Current password is incorrect'
-            ], 400);
+            return redirect()->route('index')->with('error', 'Current password is incorrect');
         }
 
         // Update password
         $user->password = Hash::make($request->password);
         $user->save();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Password changed successfully'
-        ]);
+        return redirect()->route('index')->with('success', 'Password changed successfully');
     }
 }
