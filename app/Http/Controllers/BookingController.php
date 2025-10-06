@@ -131,7 +131,7 @@ class BookingController extends Controller
                 $bookedItems[] = [
                     'deal_id' => $cartItem->deal_id,
                     'room_id' => $cartItem->room_id,
-                    'number_rooms' => $cartItem->number_rooms,
+                    'number_rooms' => ($cartItem->type === 'hotel') ? $cartItem->number_rooms : null,
                     'type' => $cartItem->type,
                     'check_in' => $cartItem->check_in,
                     'check_out' => $cartItem->check_out,
@@ -465,6 +465,198 @@ class BookingController extends Controller
             'success' => true,
             'message' => 'Item removed from cart successfully.'
         ]);
+    }
+
+    /**
+     * Show the booking lookup form
+     */
+    public function bookingLookup()
+    {
+        return view('website.pages.booking-lookup');
+    }
+
+    /**
+     * Process the booking lookup request
+     */
+    public function processBookingLookup(Request $request)
+    {
+        $request->validate([
+            'booking_code' => 'required|string|max:20'
+        ]);
+
+        try {
+            // Find booking by code
+            $booking = Booking::where('booking_code', $request->booking_code)->first();
+
+            if (!$booking) {
+                return back()->withErrors(['booking_code' => 'No booking found with this code. Please check your booking code and try again.'])->withInput();
+            }
+
+            // Get booking items with deal details
+            $bookingItems = [];
+            if ($booking->booking_items) {
+                foreach ($booking->booking_items as $item) {
+                    $deal = null;
+                    $room = null;
+                    
+                    if (isset($item['deal_id'])) {
+                        $deal = Deal::find($item['deal_id']);
+                    }
+                    
+                    if (isset($item['room_id'])) {
+                        $room = Room::find($item['room_id']);
+                    }
+
+                    $bookingItems[] = [
+                        'deal' => $deal,
+                        'room' => $room,
+                        'item_data' => $item
+                    ];
+                }
+            }
+
+            return view('website.pages.booking-details', compact('booking', 'bookingItems'));
+
+        } catch (\Exception $e) {
+            Log::error('Booking lookup error: ' . $e->getMessage(), [
+                'booking_code' => $request->booking_code,
+                'user_ip' => $request->ip()
+            ]);
+
+            return back()->withErrors(['booking_code' => 'An error occurred while looking up your booking. Please try again later.'])->withInput();
+        }
+    }
+
+    /**
+     * Book package/activity/car
+     */
+    public function bookDeal(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            // Check if user is authenticated
+            if (!Auth::check()) {
+                return back()->withErrors(['error' => 'You must be logged in to make a booking. Please login first.'])->withInput();
+            }
+
+            // Validate the request based on deal type
+            $validated = $this->validateDealBooking($request);
+
+            // Get the deal
+            $deal = Deal::findOrFail($validated['deal_id']);
+
+            // Calculate total price based on deal type
+            $totalPrice = $this->calculateDealPrice($deal, $validated);
+
+            // Create booking item in database
+            $bookingItem = BookingItem::create([
+                'user_id' => Auth::id(),
+                'deal_id' => $deal->id,
+                'room_id' => $validated['room_id'] ?? null,
+                'number_rooms' => ($validated['type'] === 'hotel') ? ($validated['number_rooms'] ?? 1) : null,
+                'type' => $validated['type'],
+                'check_in' => $validated['check_in'] ?? $validated['pickup_date'] ?? null,
+                'check_out' => $validated['check_out'] ?? $validated['return_date'] ?? null,
+                'total_price' => $totalPrice,
+                'adults' => $validated['adults'] ?? 1,
+                'children' => $validated['children'] ?? 0,
+                'status' => 'cart',
+            ]);
+
+            if ($request->has('book_now')) {
+                DB::commit();
+                $hashids = $this->getHashids();
+                return redirect()->route('confirm-booking', ['cart_items' => $hashids->encode($bookingItem->id)])->with('success', 'Booking details saved. Please complete your booking information.');
+                
+            } elseif ($request->has('add_cart')) {
+                // ADD TO CART button clicked - item is already saved with cart status
+                DB::commit();
+                return redirect()->back()->with('success', 'Item added to cart successfully!');
+            }
+
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Invalid action. Please try again.');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            return back()->withErrors($e->validator)->withInput();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Deal booking error: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'An error occurred while processing your booking. Please try again.'])->withInput();
+        }
+    }
+
+    /**
+     * Validate deal booking request based on type
+     */
+    private function validateDealBooking(Request $request)
+    {
+        $type = $request->input('type');
+        
+        switch ($type) {
+            case 'package':
+            case 'activity':
+                return $request->validate([
+                    'deal_id' => 'required|exists:deals,id',
+                    'type' => 'required|in:package,activity',
+                    'check_in' => 'required|date|after_or_equal:today',
+                    'adults' => 'required|integer|min:1',
+                    'children' => 'nullable|integer|min:0',
+                ]);
+                
+            case 'apartment':
+                return $request->validate([
+                    'deal_id' => 'required|exists:deals,id',
+                    'type' => 'required|in:apartment',
+                    'check_in' => 'required|date|after_or_equal:today',
+                    'check_out' => 'required|date|after:check_in',
+                    'adults' => 'required|integer|min:1',
+                    'children' => 'nullable|integer|min:0',
+                ]);
+                
+            case 'car':
+                return $request->validate([
+                    'deal_id' => 'required|exists:deals,id',
+                    'type' => 'required|in:car',
+                    'pickup_date' => 'required|date|after_or_equal:today',
+                    'return_date' => 'required|date|after:pickup_date',
+                ]);
+                
+            default:
+                throw new \InvalidArgumentException('Invalid deal type');
+        }
+    }
+
+    /**
+     * Calculate deal price based on type and parameters
+     */
+    private function calculateDealPrice($deal, $validated)
+    {
+        switch ($validated['type']) {
+            case 'package':
+            case 'activity':
+                $adultPrice = $deal->tours->adult_price ?? 0;
+                $childPrice = $deal->tours->child_price ?? 0;
+                $adults = $validated['adults'] ?? 1;
+                $children = $validated['children'] ?? 0;
+                return ($adults * $adultPrice) + ($children * $childPrice);
+                
+            case 'apartment':
+                $checkInDate = \Carbon\Carbon::parse($validated['check_in']);
+                $checkOutDate = \Carbon\Carbon::parse($validated['check_out']);
+                $nights = $checkInDate->diffInDays($checkOutDate);
+                return $deal->base_price * max(1, $nights);
+                
+            case 'car':
+                $pickupDate = \Carbon\Carbon::parse($validated['pickup_date']);
+                $returnDate = \Carbon\Carbon::parse($validated['return_date']);
+                $days = $pickupDate->diffInDays($returnDate);
+                return $deal->base_price * max(1, $days);
+                
+            default:
+                return $deal->base_price;
+        }
     }
 
   

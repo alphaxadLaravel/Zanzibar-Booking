@@ -78,7 +78,7 @@
                         </h5>
                     </div>
                     <div class="card-body p-4">
-                        <form action="#" method="POST" class="car-booking-form">
+                        <form action="{{ route('book-deal') }}" method="POST" class="car-booking-form">
                             @csrf
                             <input type="hidden" name="deal_id" value="{{ $car->id }}">
                             <input type="hidden" name="type" value="car">
@@ -114,10 +114,10 @@
                             </div>
 
                             <div class="d-grid mt-4">
-                                <button type="submit" class="btn btn-primary btn-lg text-uppercase fw-semibold w-100 mb-3">
+                                <button type="submit" name="book_now" class="btn btn-primary btn-lg text-uppercase fw-semibold w-100 mb-3">
                                     Book Now
                                 </button>
-                                <button class="btn btn-outline-secondary btn-lg text-uppercase fw-semibold w-100 mb-3" style="font-size: 13px;">
+                                <button type="submit" name="add_cart" class="btn btn-outline-secondary btn-lg text-uppercase fw-semibold w-100 mb-3" style="font-size: 13px;">
                                     <i class="mdi mdi-cart-plus me-1"></i> ADD TO CART
                                 </button>
                             </div>

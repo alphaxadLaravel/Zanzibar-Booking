@@ -15,6 +15,9 @@
                             <li class="menu-item menu-item-3">
                                 <a href="blog.html">Blog</a>
                             </li>
+                            <li class="menu-item menu-item-4">
+                                <a href="{{ route('booking.lookup') }}">Look Up Booking</a>
+                            </li>
                             <li class="menu-item menu-item-6">
                                 <a href="meet_team.html">Meet the Team</a>
                             </li>

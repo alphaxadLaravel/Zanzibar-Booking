@@ -98,6 +98,9 @@
                             <li><a class="dropdown-item" href="{{ route('admin.my-bookings') }}">
                                 <i class="mdi mdi-calendar-check me-2"></i>My Bookings
                             </a></li>
+                            <li><a class="dropdown-item" href="{{ route('booking.lookup') }}">
+                                <i class="mdi mdi-magnify me-2"></i>Look Up Booking
+                            </a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item text-danger" href="{{ route('logout') }}">
                                 <i class="mdi mdi-logout me-2"></i>Logout

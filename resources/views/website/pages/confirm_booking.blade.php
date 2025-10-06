@@ -159,10 +159,64 @@
                             
                             <div style="flex: 1; min-width: 0;">
                                 <h6 class="mb-1 fw-bold text-truncate" style="font-size: 14px;">{{ $item->deal->title }}</h6>
-                                @if($room)
-                                <small class="text-muted">{{ $room->title }}</small>
-                                @endif
-                    </div>
+                                <div class="small text-muted">
+                                    @if($room)
+                                        <div>{{ $room->title }}</div>
+                                    @elseif($item->deal->location)
+                                        <div><i class="mdi mdi-map-marker me-1"></i>{{ $item->deal->location }}</div>
+                                    @endif
+                                    
+                                    @if($item->check_in)
+                                        <div>
+                                            @if($item->type === 'car')
+                                                <i class="mdi mdi-calendar-start me-1"></i>Pickup: {{ \Carbon\Carbon::parse($item->check_in)->format('M d, Y') }}
+                                            @elseif($item->type === 'package' || $item->type === 'activity')
+                                                <i class="mdi mdi-calendar-start me-1"></i>{{ ucfirst($item->type) }}: {{ \Carbon\Carbon::parse($item->check_in)->format('M d, Y') }}
+                                            @elseif($item->type === 'apartment')
+                                                <i class="mdi mdi-calendar-start me-1"></i>Check-in: {{ \Carbon\Carbon::parse($item->check_in)->format('M d, Y') }}
+                                            @else
+                                                <i class="mdi mdi-calendar-start me-1"></i>Check-in: {{ \Carbon\Carbon::parse($item->check_in)->format('M d, Y') }}
+                                            @endif
+                                        </div>
+                                    @endif
+                                    
+                                    @if($item->check_out)
+                                        <div>
+                                            @if($item->type === 'car')
+                                                <i class="mdi mdi-calendar-end me-1"></i>Return: {{ \Carbon\Carbon::parse($item->check_out)->format('M d, Y') }}
+                                            @elseif($item->type === 'apartment')
+                                                <i class="mdi mdi-calendar-end me-1"></i>Check-out: {{ \Carbon\Carbon::parse($item->check_out)->format('M d, Y') }}
+                                            @else
+                                                <i class="mdi mdi-calendar-end me-1"></i>Check-out: {{ \Carbon\Carbon::parse($item->check_out)->format('M d, Y') }}
+                                            @endif
+                                        </div>
+                                    @endif
+                                    
+                                    @if(($item->type === 'package' || $item->type === 'activity' || $item->type === 'apartment') && ($item->adults || $item->children))
+                                        <div>
+                                            <i class="mdi mdi-account-group me-1"></i>
+                                            {{ $item->adults }} Adult{{ $item->adults > 1 ? 's' : '' }}
+                                            @if($item->children > 0)
+                                                , {{ $item->children }} Child{{ $item->children > 1 ? 'ren' : '' }}
+                                            @endif
+                                        </div>
+                                    @endif
+                                    
+                                    @if(($item->type === 'car' || $item->type === 'apartment') && $item->check_in && $item->check_out)
+                                        <div>
+                                            @php
+                                                $days = \Carbon\Carbon::parse($item->check_in)->diffInDays(\Carbon\Carbon::parse($item->check_out));
+                                            @endphp
+                                            <i class="mdi mdi-clock me-1"></i>
+                                            @if($item->type === 'car')
+                                                {{ $days }} Day{{ $days > 1 ? 's' : '' }}
+                                            @else
+                                                {{ $days }} Night{{ $days > 1 ? 's' : '' }}
+                                            @endif
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
 
                             <div class="text-end">
                                 <div class="fw-bold text-success">${{ number_format($item->total_price, 2) }}</div>

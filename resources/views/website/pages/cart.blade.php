@@ -61,7 +61,7 @@
                                     <div class="mb-3 gap-2">
                                         <div class="w-100">
                                             <h5 class="fw-bold mb-0 text-truncate" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 100%;">
-                                                <a href="{{ route('view-hotel', ['id' => $hashids->encode($item->deal->id)]) }}"
+                                                <a href="@if($item->type === 'hotel'){{ route('view-hotel', ['id' => $hashids->encode($item->deal->id)]) }}@elseif($item->type === 'apartment'){{ route('view-apartment', ['id' => $hashids->encode($item->deal->id)]) }}@elseif($item->type === 'package'){{ route('view-package', ['id' => $hashids->encode($item->deal->id)]) }}@elseif($item->type === 'activity'){{ route('view-activity', ['id' => $hashids->encode($item->deal->id)]) }}@elseif($item->type === 'car'){{ route('view-car', ['id' => $hashids->encode($item->deal->id)]) }}@else{{ route('view-hotel', ['id' => $hashids->encode($item->deal->id)]) }}@endif"
                                                     class="text-decoration-none text-dark">
                                                     {{ $item->deal->title }}
                                                 </a>
@@ -117,6 +117,20 @@
                                     <!-- Booking Details -->
                                     <div class="bg-light p-3 rounded">
                                         <div class="row">
+                                            <!-- Deal Type and Location -->
+                                            <div class="col-6 col-md-4 mb-2">
+                                                <small class="text-muted"><i class="mdi mdi-tag me-1"></i>Type</small><br>
+                                                <strong>{{ ucfirst($item->type) }}</strong>
+                                            </div>
+                                            
+                                            @if($item->deal->location)
+                                            <div class="col-6 col-md-4 mb-2">
+                                                <small class="text-muted"><i class="mdi mdi-map-marker me-1"></i>Location</small><br>
+                                                <strong>{{ $item->deal->location }}</strong>
+                                            </div>
+                                            @endif
+
+                                            <!-- Room Details (for hotels) -->
                                             @if($room)
                                             <div class="col-6 col-md-4 mb-2">
                                                 <small class="text-muted"><i class="mdi mdi-numeric me-1"></i>Number of
@@ -129,30 +143,47 @@
                                                     Name</small><br>
                                                 <strong>{{ $room->title }}</strong>
                                             </div>
+                                            @endif
+
+                                            <!-- Dates (for all deal types) -->
+                                            @if($item->check_in)
                                             <div class="col-6 col-md-4 mb-2">
-                                                <small class="text-muted"><i class="mdi mdi-currency-usd me-1"></i>Total
-                                                    Price</small><br>
-                                                <strong class="text-success">${{ number_format($item->total_price, 2)
+                                                <small class="text-muted">
+                                                    @if($item->type === 'car')
+                                                        <i class="mdi mdi-calendar-start me-1"></i>Pickup Date
+                                                    @elseif($item->type === 'package' || $item->type === 'activity')
+                                                        <i class="mdi mdi-calendar-start me-1"></i>{{ ucfirst($item->type) }} Date
+                                                    @elseif($item->type === 'apartment')
+                                                        <i class="mdi mdi-calendar-start me-1"></i>Check-in
+                                                    @else
+                                                        <i class="mdi mdi-calendar-start me-1"></i>Check-in
+                                                    @endif
+                                                </small><br>
+                                                <strong>{{ \Carbon\Carbon::parse($item->check_in)->format('M d, Y')
                                                     }}</strong>
                                             </div>
                                             @endif
 
-                                            @if($item->check_in && $item->check_out)
+                                            @if($item->check_out)
                                             <div class="col-6 col-md-4 mb-2">
-                                                <small class="text-muted">Check-in</small><br>
-                                                <strong>{{ \Carbon\Carbon::parse($item->check_in)->format('M d, Y')
-                                                    }}</strong>
-                                            </div>
-                                            <div class="col-6 col-md-4 mb-2">
-                                                <small class="text-muted">Check-out</small><br>
+                                                <small class="text-muted">
+                                                    @if($item->type === 'car')
+                                                        <i class="mdi mdi-calendar-end me-1"></i>Return Date
+                                                    @elseif($item->type === 'apartment')
+                                                        <i class="mdi mdi-calendar-end me-1"></i>Check-out
+                                                    @else
+                                                        <i class="mdi mdi-calendar-end me-1"></i>Check-out
+                                                    @endif
+                                                </small><br>
                                                 <strong>{{ \Carbon\Carbon::parse($item->check_out)->format('M d, Y')
                                                     }}</strong>
                                             </div>
                                             @endif
 
-                                            @if($item->adults || $item->children)
+                                            <!-- Guests (for packages/activities/apartments) -->
+                                            @if(($item->type === 'package' || $item->type === 'activity' || $item->type === 'apartment') && ($item->adults || $item->children))
                                             <div class="col-6 col-md-4 mb-2">
-                                                <small class="text-muted">Guests</small><br>
+                                                <small class="text-muted"><i class="mdi mdi-account-group me-1"></i>Guests</small><br>
                                                 <strong>
                                                     {{ $item->adults }} Adult{{ $item->adults > 1 ? 's' : '' }}
                                                     @if($item->children > 0)
@@ -163,9 +194,42 @@
                                             </div>
                                             @endif
 
+                                            <!-- Duration (for cars and apartments) -->
+                                            @if(($item->type === 'car' || $item->type === 'apartment') && $item->check_in && $item->check_out)
+                                            <div class="col-6 col-md-4 mb-2">
+                                                <small class="text-muted"><i class="mdi mdi-clock me-1"></i>
+                                                    @if($item->type === 'car')
+                                                        Duration
+                                                    @else
+                                                        Nights
+                                                    @endif
+                                                </small><br>
+                                                <strong>
+                                                    @php
+                                                        $days = \Carbon\Carbon::parse($item->check_in)->diffInDays(\Carbon\Carbon::parse($item->check_out));
+                                                    @endphp
+                                                    {{ $days }} 
+                                                    @if($item->type === 'car')
+                                                        Day{{ $days > 1 ? 's' : '' }}
+                                                    @else
+                                                        Night{{ $days > 1 ? 's' : '' }}
+                                                    @endif
+                                                </strong>
+                                            </div>
+                                            @endif
+
+                                            <!-- Total Price -->
+                                            <div class="col-6 col-md-4 mb-2">
+                                                <small class="text-muted"><i class="mdi mdi-currency-usd me-1"></i>Total
+                                                    Price</small><br>
+                                                <strong class="text-success">${{ number_format($item->total_price, 2)
+                                                    }}</strong>
+                                            </div>
+
+                                            <!-- Pickup/Return locations (for cars) -->
                                             @if(!empty($item->pickup_location))
                                             <div class="col-6 col-md-4 mb-2">
-                                                <small class="text-muted">Pickup</small><br>
+                                                <small class="text-muted"><i class="mdi mdi-map-marker me-1"></i>Pickup</small><br>
                                                 <strong>{{ $item->pickup_location }}
                                                     @if(!empty($item->pickup_time))
                                                     at {{ $item->pickup_time }}
@@ -176,7 +240,7 @@
 
                                             @if(!empty($item->return_location))
                                             <div class="col-6 col-md-4 mb-2">
-                                                <small class="text-muted">Return</small><br>
+                                                <small class="text-muted"><i class="mdi mdi-map-marker me-1"></i>Return</small><br>
                                                 <strong>{{ $item->return_location }}
                                                     @if(!empty($item->return_time))
                                                     at {{ $item->return_time }}

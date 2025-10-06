@@ -42,9 +42,9 @@
 
                     @include('website.components.deal_itinerary', ['deal' => $package])
                     <hr>
-                    @include('website.components.deal_features', ['deal' => $package, 'type' => 'tour_include', 'title' => 'Tour Includes'])
+                    @include('website.components.deal_features', ['deal' => $package, 'type' => 'tour_include', 'title' => 'Package Includes'])
                     <hr>
-                    @include('website.components.deal_features', ['deal' => $package, 'type' => 'tour_exclude', 'title' => 'Tour Excludes'])
+                    @include('website.components.deal_features', ['deal' => $package, 'type' => 'tour_exclude', 'title' => 'Package Excludes'])
                     <hr>
 
                     @include('website.components.deal_policies', ['deal' => $package])
@@ -80,7 +80,7 @@
                         </h5>
                     </div>
                     <div class="card-body p-4">
-                        <form action="#" method="POST" class="package-booking-form">
+                        <form action="{{ route('book-deal') }}" method="POST" class="package-booking-form">
                             @csrf
                             <input type="hidden" name="deal_id" value="{{ $package->id }}">
                             <input type="hidden" name="type" value="package">
@@ -132,10 +132,10 @@
                             </div>
 
                             <div class="d-grid mt-4">
-                                <button type="submit" class="btn btn-primary btn-lg text-uppercase fw-semibold w-100">
+                                <button type="submit" name="book_now" class="btn btn-primary btn-lg text-uppercase fw-semibold w-100">
                                     Book Now
                                 </button>
-                                <button class="btn btn-outline-secondary btn-lg text-uppercase fw-semibold w-100 my-3" style="font-size: 13px;">
+                                <button type="submit" name="add_cart" class="btn btn-outline-secondary btn-lg text-uppercase fw-semibold w-100 my-3" style="font-size: 13px;">
                                     <i class="mdi mdi-cart-plus me-1"></i> ADD TO CART
                                 </button>
                             </div>
@@ -160,10 +160,11 @@
                         calculatePackagePrice();
                     });
                 </script>
-            </div>
 
-            {{-- Contact Information --}}
-            @include('website.components.contact_card')
+                {{-- Contact Information --}}
+                @include('website.components.contact_card')
+
+            </div>
 
         </div>
     </div>

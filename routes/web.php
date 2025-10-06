@@ -6,10 +6,14 @@ use App\Http\Controllers\CategoriesController;
 use App\Http\Controllers\DealsController;
 use App\Http\Controllers\FeatureController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\WebsiteController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
+
+// MAINTENANCE MODE - Maintenance page as the index route
+Route::get('/', [MaintenanceController::class, 'index'])->name('maintenance');
 
 Route::get('/linkstorages', function () {
     Artisan::call('config:clear');
@@ -18,7 +22,8 @@ Route::get('/linkstorages', function () {
     Artisan::call('view:clear');
 });
 
-Route::get('/', [WebsiteController::class, 'index'])->name('index');
+// Original index route moved to /home for when maintenance is disabled
+Route::get('/home', [WebsiteController::class, 'index'])->name('index');
 Route::get('/login', [WebsiteController::class, 'index'])->name('login');
 
 // Authentication routes
@@ -61,6 +66,13 @@ Route::post('/process-booking', [BookingController::class, 'processBooking'])->n
 Route::get('/offline-payment/{bookingId}', [BookingController::class, 'offlinePayment'])->name('offline.payment');
 Route::get('/booking/{id}', [BookingController::class, 'viewBooking'])->name('booking.view');
 Route::post('/booking/{id}/cancel', [BookingController::class, 'cancelBooking'])->name('booking.cancel');
+
+// Booking lookup routes
+Route::get('/booking-lookup', [BookingController::class, 'bookingLookup'])->name('booking.lookup');
+Route::post('/booking-lookup', [BookingController::class, 'processBookingLookup'])->name('booking.lookup');
+
+// Deal booking routes (packages, activities, cars)
+Route::post('/book-deal', [BookingController::class, 'bookDeal'])->name('book-deal');
 
 // book rooms
 Route::post('/book-room', [BookingController::class, 'bookRoom'])->name('book-room');
@@ -244,3 +256,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/hotels/{hotelId}/add-nearby', [DealsController::class, 'addNearbyDeals'])->name('admin.hotels.add-nearby');
     Route::delete('/admin/hotels/{hotelId}/remove-nearby/{nearId}', [DealsController::class, 'removeNearbyDeal'])->name('admin.hotels.remove-nearby');
 });
+
+// MAINTENANCE MODE INSTRUCTIONS:
+// To disable maintenance mode:
+// 1. Comment out or delete line 16: Route::get('/', [MaintenanceController::class, 'index'])->name('maintenance');
+// 2. Change line 26 from: Route::get('/home', [WebsiteController::class, 'index'])->name('index');
+//    To: Route::get('/', [WebsiteController::class, 'index'])->name('index');
+// 3. Clear your route cache: php artisan route:clear
