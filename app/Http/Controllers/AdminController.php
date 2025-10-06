@@ -13,9 +13,18 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Hashids\Hashids;
 
 class AdminController extends Controller
 {
+    /**
+     * Create Hashids instance
+     */
+    private function getHashids()
+    {
+        return new Hashids('MchungajiZanzibarBookings', 10);
+    }
+
     // Dashboard
     public function dashboard()
     {
@@ -236,18 +245,58 @@ class AdminController extends Controller
     // Bookings Management
     public function bookings()
     {
-        return view('admin.pages.bookings.index');
+        $bookings = Booking::with('user')
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
+        
+        $hashids = $this->getHashids();
+        
+        return view('admin.pages.bookings.index', compact('bookings', 'hashids'));
     }
 
     public function viewBooking($id)
     {
-        return view('admin.pages.bookings.view', compact('id'));
+        $hashids = $this->getHashids();
+        $decodedIds = $hashids->decode($id);
+        
+        if (empty($decodedIds)) {
+            return redirect()->route('admin.bookings')->with('error', 'Invalid booking ID.');
+        }
+        
+        $bookingId = $decodedIds[0];
+        $booking = Booking::with('user')->findOrFail($bookingId);
+        
+        // Get deal information for booking items
+        $bookingItems = $booking->getBookingItems();
+        $dealIds = collect($bookingItems)->pluck('deal_id')->filter()->unique();
+        $deals = Deal::with(['photos', 'category'])->whereIn('id', $dealIds)->get()->keyBy('id');
+        
+        return view('admin.pages.bookings.view', compact('booking', 'hashids', 'deals'));
     }
 
     public function updateBookingStatus(Request $request, $id)
     {
-        // Add booking status update logic here
-        return redirect()->route('admin.bookings')->with('success', 'Booking status updated successfully!');
+        $request->validate([
+            'status' => 'required|in:pending,confirmed,cancelled,completed,paid',
+            'notes' => 'nullable|string|max:500'
+        ]);
+
+        $hashids = $this->getHashids();
+        $decodedIds = $hashids->decode($id);
+        
+        if (empty($decodedIds)) {
+            return redirect()->route('admin.bookings')->with('error', 'Invalid booking ID.');
+        }
+        
+        $bookingId = $decodedIds[0];
+        $booking = Booking::findOrFail($bookingId);
+        
+        $booking->update([
+            'status' => $request->status,
+            'additional_notes' => $request->notes ?? $booking->additional_notes
+        ]);
+
+        return redirect()->route('admin.bookings.view', $id)->with('success', 'Booking status updated successfully!');
     }
 
     // Users Management
