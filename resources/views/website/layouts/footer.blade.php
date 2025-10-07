@@ -102,25 +102,41 @@
             </div>
             <ul class="social-footer mt-4">
                 <li>
-                    <a href="https://www.facebook.com/zanzibarbookingz?mibextid=JRoKGi" target="_blank"
-                        title="Facebook" class="mx-3">
+                    @if($systemSettings && $systemSettings->facebook_url)
+                    <a href="{{ $systemSettings->facebook_url }}" target="_blank" title="Facebook" class="mx-3">
                         <i class="fab fa-facebook-f" style="font-size: 25px"></i>
                     </a>
+                    @endif
 
-                    <a href="https://www.instagram.com/zanzibarbookings?igshid=OGQ5ZDc2ODk2ZA" target="_blank"
-                        title="Instagram" class="mx-3">
+                    @if($systemSettings && $systemSettings->instagram_url)
+                    <a href="{{ $systemSettings->instagram_url }}" target="_blank" title="Instagram" class="mx-3">
                         <i class="fab fa-instagram" style="font-size: 25px"></i>
                     </a>
+                    @endif
 
-                    <a href="https://youtube.com/@zanzibarbookings6294?si=A5XsIUKE2ar9Ikym" target="_blank"
-                        title="Youtube" class="mx-3">
+                    @if($systemSettings && $systemSettings->youtube_url)
+                    <a href="{{ $systemSettings->youtube_url }}" target="_blank" title="Youtube" class="mx-3">
                         <i class="fab fa-youtube" style="font-size: 25px"></i>
                     </a>
+                    @endif
 
-                    <a href="https://www.tripadvisor.com/Attraction_Review-g488129-d7391505-Reviews-Zanzibar_Bookings_Day_Tours-Stone_Town_Zanzibar_City_Zanzibar_Island_Zanzibar_Arc.html"
-                        target="_blank" title="Tripadvisor" class="mx-3">
+                    @if($systemSettings && $systemSettings->tripadvisor_url)
+                    <a href="{{ $systemSettings->tripadvisor_url }}" target="_blank" title="Tripadvisor" class="mx-3">
                         <i class="fab fa-tripadvisor" style="font-size: 25px"></i>
                     </a>
+                    @endif
+
+                    @if($systemSettings && $systemSettings->twitter_url)
+                    <a href="{{ $systemSettings->twitter_url }}" target="_blank" title="Twitter" class="mx-3">
+                        <i class="fab fa-twitter" style="font-size: 25px"></i>
+                    </a>
+                    @endif
+
+                    @if($systemSettings && $systemSettings->linkedin_url)
+                    <a href="{{ $systemSettings->linkedin_url }}" target="_blank" title="LinkedIn" class="mx-3">
+                        <i class="fab fa-linkedin" style="font-size: 25px"></i>
+                    </a>
+                    @endif
                 </li>
             </ul>
         </div>
@@ -161,7 +177,7 @@
                     <b>Zanzibar Bookings</b> on WhatsApp.
                 </p>
             </div>
-            <a href="https://wa.me/message/JMDWFIGBWX5TI1" target="_blank" class="whatsapp-btn">Chat Now</a>
+            <a href="{{ $systemSettings && $systemSettings->whatsapp_url ? $systemSettings->whatsapp_url : 'https://wa.me/message/JMDWFIGBWX5TI1' }}" target="_blank" class="whatsapp-btn">Chat Now</a>
         </div>
     </div>
 </div>

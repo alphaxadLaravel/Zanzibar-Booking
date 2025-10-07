@@ -130,6 +130,7 @@
                 </a>
                 <div class="collapse" id="sidebarSettings">
                     <ul class="sub-menu">
+                        <li class="side-nav-item"><a href="{{ route('admin.system.settings') }}" class="side-nav-link">System Settings</a></li>
                         <li class="side-nav-item"><a href="{{ route('admin.manage.content', 'about-us') }}" class="side-nav-link">About Us</a></li>
                         <li class="side-nav-item"><a href="{{ route('admin.manage.content', 'become-a-partner') }}" class="side-nav-link">Become a Partner</a></li>
                         <li class="side-nav-item"><a href="{{ route('admin.manage.content', 'our-commitment') }}" class="side-nav-link">Our Commitment</a></li>
@@ -137,6 +138,13 @@
                         <li class="side-nav-item"><a href="{{ route('admin.manage.content', 'privacy-policy') }}" class="side-nav-link">Privacy Policy</a></li>
                     </ul>
                 </div>
+            </li>
+
+            <li class="side-nav-item">
+                <a href="{{ route('admin.contact.messages') }}" class="side-nav-link">
+                    <span class="menu-icon"><i class="mdi mdi-email"></i></span>
+                    <span class="menu-text">Contact Messages</span>
+                </a>
             </li>
 
             <li class="side-nav-item">

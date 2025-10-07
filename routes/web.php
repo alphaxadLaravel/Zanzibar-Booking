@@ -38,6 +38,7 @@ Route::get('/search', [WebsiteController::class, 'search'])->name('search');
 
 // contact us
 Route::get('/contact-us', [WebsiteController::class, 'contactUs'])->name('contact-us');
+Route::post('/contact-us', [WebsiteController::class, 'submitContactForm'])->name('contact.submit');
 
 // Dynamic pages (About Us, Terms, Privacy, etc.)
 Route::get('/page/{slug}', [WebsiteController::class, 'showPage'])->name('page.show');
@@ -247,4 +248,14 @@ Route::middleware('auth')->group(function () {
     // settings management
     Route::get('/admin/manage/content/{page}', [AdminController::class, 'manageContent'])->name('admin.manage.content');
     Route::put('/admin/manage/content/{page}', [AdminController::class, 'updateContent'])->name('admin.manage.content.update');
+
+    // Contact messages management
+    Route::get('/admin/contact-messages', [AdminController::class, 'contactMessages'])->name('admin.contact.messages');
+    Route::get('/admin/contact-messages/{id}', [AdminController::class, 'viewContactMessage'])->name('admin.contact.message.view');
+    Route::post('/admin/contact-messages/{id}/status', [AdminController::class, 'updateMessageStatus'])->name('admin.contact.message.status');
+    Route::delete('/admin/contact-messages/{id}', [AdminController::class, 'deleteContactMessage'])->name('admin.contact.message.delete');
+
+    // System settings management
+    Route::get('/admin/system-settings', [AdminController::class, 'systemSettings'])->name('admin.system.settings');
+    Route::put('/admin/system-settings', [AdminController::class, 'updateSystemSettings'])->name('admin.system.settings.update');
 });

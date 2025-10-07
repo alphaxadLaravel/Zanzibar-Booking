@@ -11,6 +11,7 @@ use App\Models\Blog;
 use App\Models\Near;
 use App\Models\DealReviews;
 use App\Models\Pages;
+use App\Models\ContactMessage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Hashids\Hashids;
@@ -78,6 +79,32 @@ class WebsiteController extends Controller
     public function contactUs()
     {
         return view('website.pages.contact_us');
+    }
+
+    // submitContactForm
+    public function submitContactForm(Request $request)
+    {
+        $request->validate([
+            'full_name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'subject' => 'required|string|max:255',
+            'content' => 'required|string',
+        ]);
+
+        try {
+            ContactMessage::create([
+                'full_name' => $request->full_name,
+                'email' => $request->email,
+                'subject' => $request->subject,
+                'content' => $request->content,
+                'status' => 'new',
+            ]);
+
+            return redirect()->back()->with('success', 'Thank you for contacting us! We will get back to you soon.');
+        } catch (\Exception $e) {
+            Log::error('Contact form submission failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to send message. Please try again.');
+        }
     }
 
     // Convert slug to page name

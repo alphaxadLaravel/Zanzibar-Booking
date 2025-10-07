@@ -12,6 +12,8 @@ use App\Models\Car;
 use App\Models\Pages;
 use App\Models\User;
 use App\Models\Role;
+use App\Models\ContactMessage;
+use App\Models\System;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -511,5 +513,119 @@ class AdminController extends Controller
         $page->save();
 
         return redirect()->route('admin.manage.content', $slug)->with('success', 'Content updated successfully!');
+    }
+
+    // Contact Messages
+    public function contactMessages()
+    {
+        $messages = ContactMessage::orderBy('created_at', 'desc')->paginate(20);
+        $hashids = $this->getHashids();
+        return view('admin.pages.contact_messages', compact('messages', 'hashids'));
+    }
+
+    public function viewContactMessage($id)
+    {
+        $hashids = $this->getHashids();
+        
+        // Decode the hashed ID
+        $decodedIds = $hashids->decode($id);
+        if (empty($decodedIds)) {
+            abort(404, 'Message not found');
+        }
+        $messageId = $decodedIds[0];
+        
+        $message = ContactMessage::findOrFail($messageId);
+        
+        // Mark as read if it's new
+        if ($message->status === 'new') {
+            $message->status = 'read';
+            $message->save();
+        }
+
+        $hashedId = $id;
+        return view('admin.pages.view_contact_message', compact('message', 'hashedId'));
+    }
+
+    public function updateMessageStatus(Request $request, $id)
+    {
+        $hashids = $this->getHashids();
+        
+        // Decode the hashed ID
+        $decodedIds = $hashids->decode($id);
+        if (empty($decodedIds)) {
+            abort(404, 'Message not found');
+        }
+        $messageId = $decodedIds[0];
+        
+        $message = ContactMessage::findOrFail($messageId);
+        $message->status = $request->status;
+        $message->save();
+
+        return redirect()->back()->with('success', 'Message status updated successfully!');
+    }
+
+    public function deleteContactMessage($id)
+    {
+        $hashids = $this->getHashids();
+        
+        // Decode the hashed ID
+        $decodedIds = $hashids->decode($id);
+        if (empty($decodedIds)) {
+            abort(404, 'Message not found');
+        }
+        $messageId = $decodedIds[0];
+        
+        $message = ContactMessage::findOrFail($messageId);
+        $message->delete();
+
+        return redirect()->route('admin.contact.messages')->with('success', 'Message deleted successfully!');
+    }
+
+    // System Settings
+    public function systemSettings()
+    {
+        $settings = System::first();
+        
+        // If no settings exist, create default
+        if (!$settings) {
+            $settings = System::create([
+                'email' => 'info@zanzibarbookings.com',
+                'phone' => '+255 774 378835',
+                'address' => 'Zanzibar, Tanzania',
+            ]);
+        }
+
+        return view('admin.pages.system_settings', compact('settings'));
+    }
+
+    public function updateSystemSettings(Request $request)
+    {
+        $request->validate([
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:255',
+            'secondary_phone' => 'nullable|string|max:255',
+            'address' => 'nullable|string|max:500',
+            'about_text' => 'nullable|string',
+            'whatsapp_url' => 'nullable|url|max:500',
+            'facebook_url' => 'nullable|url|max:500',
+            'instagram_url' => 'nullable|url|max:500',
+            'twitter_url' => 'nullable|url|max:500',
+            'linkedin_url' => 'nullable|url|max:500',
+            'tripadvisor_url' => 'nullable|url|max:500',
+            'youtube_url' => 'nullable|url|max:500',
+            'video_url' => 'nullable|string|max:500',
+            'header_photo' => 'nullable|string|max:500',
+        ]);
+
+        $settings = System::first();
+        
+        if (!$settings) {
+            $settings = new System();
+        }
+
+        $settings->fill($request->all());
+        $settings->save();
+
+        return redirect()->back()->with('success', 'System settings updated successfully!');
     }
 }

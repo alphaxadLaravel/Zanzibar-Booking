@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             FeaturesSeeder::class,
             CategorySeeder::class,
             PageSeeder::class,
+            SystemSeeder::class,
         ]);
 
     }
