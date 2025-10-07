@@ -173,6 +173,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/users/{id}/edit', [AdminController::class, 'editUser'])->name('admin.users.edit');
     Route::put('/admin/users/{id}', [AdminController::class, 'updateUser'])->name('admin.users.update');
     Route::delete('/admin/users/{id}', [AdminController::class, 'deleteUser'])->name('admin.users.delete');
+    Route::put('/admin/users/{id}/toggle-status', [AdminController::class, 'toggleUserStatus'])->name('admin.users.toggle-status');
     Route::get('/admin/users/roles', [AdminController::class, 'userRoles'])->name('admin.users.roles');
 
     // Payments Management

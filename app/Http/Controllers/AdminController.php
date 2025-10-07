@@ -9,6 +9,8 @@ use App\Models\Deal;
 use App\Models\Booking;
 use App\Models\Tours;
 use App\Models\Car;
+use App\Models\User;
+use App\Models\Role;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -302,7 +304,18 @@ class AdminController extends Controller
     // Users Management
     public function users()
     {
-        return view('admin.pages.users.index');
+        // Get Super Admin role ID
+        
+        $users = User::with('role')
+            ->where('role_id', '!=', 1)
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
+
+            dd($users);
+        
+        $hashids = $this->getHashids();
+        
+        return view('admin.pages.users.index', compact('users', 'hashids'));
     }
 
     public function createUser()
@@ -318,19 +331,91 @@ class AdminController extends Controller
 
     public function editUser($id)
     {
-        return view('admin.pages.users.edit', compact('id'));
+        $hashids = $this->getHashids();
+        $decodedIds = $hashids->decode($id);
+        
+        if (empty($decodedIds)) {
+            return redirect()->route('admin.users')->with('error', 'Invalid user ID.');
+        }
+        
+        $userId = $decodedIds[0];
+        $user = User::with('role')->findOrFail($userId);
+        
+        // Get all roles except Super Admin
+        $roles = Role::where('name', '!=', 'Super Admin')->get();
+        
+        return view('admin.pages.users.edit', compact('user', 'roles', 'hashids'));
     }
 
     public function updateUser(Request $request, $id)
     {
-        // Add user update logic here
+        $request->validate([
+            'firstname' => 'required|string|max:255',
+            'lastname' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'phone' => 'nullable|string|max:20',
+            'status' => 'required|boolean',
+            'role_id' => 'required|exists:roles,id'
+        ]);
+
+        $hashids = $this->getHashids();
+        $decodedIds = $hashids->decode($id);
+        
+        if (empty($decodedIds)) {
+            return redirect()->route('admin.users')->with('error', 'Invalid user ID.');
+        }
+        
+        $userId = $decodedIds[0];
+        $user = User::findOrFail($userId);
+        
+        $user->update($request->only(['firstname', 'lastname', 'email', 'phone', 'status', 'role_id']));
+        
         return redirect()->route('admin.users')->with('success', 'User updated successfully!');
     }
 
     public function deleteUser($id)
     {
-        // Add user deletion logic here
+        $hashids = $this->getHashids();
+        $decodedIds = $hashids->decode($id);
+        
+        if (empty($decodedIds)) {
+            return redirect()->route('admin.users')->with('error', 'Invalid user ID.');
+        }
+        
+        $userId = $decodedIds[0];
+        $user = User::findOrFail($userId);
+        
+        // Don't allow deleting the current user
+        if ($user->id === Auth::id()) {
+            return redirect()->route('admin.users')->with('error', 'You cannot delete your own account.');
+        }
+        
+        $user->delete();
+        
         return redirect()->route('admin.users')->with('success', 'User deleted successfully!');
+    }
+
+    public function toggleUserStatus($id)
+    {
+        $hashids = $this->getHashids();
+        $decodedIds = $hashids->decode($id);
+        
+        if (empty($decodedIds)) {
+            return redirect()->route('admin.users')->with('error', 'Invalid user ID.');
+        }
+        
+        $userId = $decodedIds[0];
+        $user = User::findOrFail($userId);
+        
+        // Don't allow deactivating the current user
+        if ($user->id === Auth::id() && $user->status) {
+            return redirect()->route('admin.users')->with('error', 'You cannot deactivate your own account.');
+        }
+        
+        $user->update(['status' => !$user->status]);
+        
+        $status = $user->status ? 'activated' : 'deactivated';
+        return redirect()->route('admin.users')->with('success', "User {$status} successfully!");
     }
 
     public function userRoles()
