@@ -4,57 +4,57 @@
             <div class="row">
                 <div class="col-md-3">
                     <div class="widget widget-nav">
-                        <h4 class="widget__title"></h4>
+                        <h4 class="widget__title">Quick Links</h4>
                         <ul class="menu">
                             <li class="menu-item menu-item-1">
-                                <a href="contact-us.html">Contact Us</a>
+                                <a href="{{ route('contact-us') }}">Contact Us</a>
                             </li>
                             <li class="menu-item menu-item-2">
-                                <a href="become-a-partner.html">Become A Partner</a>
+                                <a href="{{ route('page.show', 'become-a-partner') }}">Become A Partner</a>
                             </li>
                             <li class="menu-item menu-item-3">
-                                <a href="blog.html">Blog</a>
+                                <a href="{{ route('blog') }}">Blog</a>
                             </li>
                             <li class="menu-item menu-item-4">
                                 <a href="{{ route('booking.lookup') }}">Look Up Booking</a>
                             </li>
-                            <li class="menu-item menu-item-6">
-                                <a href="meet_team.html">Meet the Team</a>
-                            </li>
                         </ul>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="widget widget-nav">
-                        <h4 class="widget__title"></h4>
+                        <h4 class="widget__title">Company</h4>
                         <ul class="menu">
-                            <li class="menu-item menu-item-1">
-                                <a href="#">Account</a>
-                            </li>
                             <li class="menu-item menu-item-2">
-                                <a href="page/about-us.html">About Us</a>
+                                <a href="{{ route('page.show', 'about-us') }}">About Us</a>
+                            </li>
+                            <li class="menu-item menu-item-6">
+                                <a href="{{ route('page.show', 'our-commitment') }}">Our Commitment</a>
                             </li>
                             <li class="menu-item menu-item-4">
-                                <a href="page/terms-conditions.html">Terms &amp; Conditions</a>
+                                <a href="{{ route('page.show', 'terms-conditions') }}">Terms &amp; Conditions</a>
                             </li>
                             <li class="menu-item menu-item-6">
-                                <a href="page/privacy-policy.html">Privacy Policy</a>
+                                <a href="{{ route('page.show', 'privacy-policy') }}">Privacy Policy</a>
                             </li>
                         </ul>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="widget widget-nav">
-                        <h4 class="widget__title"></h4>
+                        <h4 class="widget__title">Our Services</h4>
                         <ul class="menu">
-                            <li class="menu-item menu-item-5">
-                                <a href="page/connect.html">Connect with us </a>
+                            <li class="menu-item menu-item-1">
+                                <a href="{{ route('hotels') }}">Hotels</a>
                             </li>
-                            <li class="menu-item menu-item-6">
-                                <a href="page/our-commitments.html">Our Commitment</a>
+                            <li class="menu-item menu-item-2">
+                                <a href="{{ route('tours') }}">Tours & Packages</a>
                             </li>
-                            <li class="menu-item menu-item-7">
-                                <a href="become-travel-agent.html">Travel Partener</a>
+                            <li class="menu-item menu-item-3">
+                                <a href="{{ route('activities') }}">Activities</a>
+                            </li>
+                            <li class="menu-item menu-item-4">
+                                <a href="{{ route('cars') }}">Car Rentals</a>
                             </li>
                         </ul>
                     </div>
@@ -73,32 +73,32 @@
         <div class="container">
             <div class="row my-3 align-items-bottom">
                 <div class="col-md-3">
-                    <img src="images/atta.png" style="height: 50px" class="img-fluid" />
+                    <img src="{{asset('images/atta.png')}}" style="height: 50px" class="img-fluid" />
                     <h6 class="text-white mt-2">
                         <strong>Endorsed by ATTA</strong>
                     </h6>
                 </div>
                 <div class="col-md-3">
-                    <img src="images/geog.png" style="height: 50px" class="img-fluid" />
+                    <img src="{{asset('images/geog.png')}}" style="height: 50px" class="img-fluid" />
                     <h6 class="text-white mt-2">
                         <strong>Featured in National Geographic</strong>
                     </h6>
                 </div>
                 <div class="col-md-3">
-                    <img src="images/travel.png" style="height: 50px" class="img-fluid" />
+                    <img src="{{asset('images/travel.png')}}" style="height: 50px" class="img-fluid" />
                     <h6 class="text-white mt-2">
                         <strong>World Travel Awards Winner</strong>
                     </h6>
                 </div>
                 <div class="col-md-3">
-                    <img src="images/trip.png" style="height: 50px" class="img-fluid" />
+                    <img src="{{asset('images/trip.png')}}" style="height: 50px" class="img-fluid" />
                     <h6 class="text-white mt-2">
                         <strong>Rated Excellent by Tripadvisor</strong>
                     </h6>
                 </div>
             </div>
             <div class="copyright text-center">
-                ©2023 Zanzibar Bookings - All rights reserved.
+                © {{date('Y')}} Zanzibar Bookings - All rights reserved.
             </div>
             <ul class="social-footer mt-4">
                 <li>

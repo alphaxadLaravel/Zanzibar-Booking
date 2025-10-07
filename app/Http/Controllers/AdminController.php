@@ -9,6 +9,7 @@ use App\Models\Deal;
 use App\Models\Booking;
 use App\Models\Tours;
 use App\Models\Car;
+use App\Models\Pages;
 use App\Models\User;
 use App\Models\Role;
 use Illuminate\Support\Facades\Auth;
@@ -454,5 +455,61 @@ class AdminController extends Controller
     public function myBookings()
     {
         return view('admin.pages.my-bookings.index');
+    }
+
+    // Convert slug to page name
+    private function slugToPageName($slug)
+    {
+        $slugMap = [
+            'about-us' => 'About Us',
+            'become-a-partner' => 'Become a Partner',
+            'our-commitment' => 'Our Commitment',
+            'terms-conditions' => 'Terms & Conditions',
+            'privacy-policy' => 'Privacy Policy',
+        ];
+
+        return $slugMap[$slug] ?? null;
+    }
+
+    // manageContent
+    public function manageContent($slug)
+    {
+        $pageName = $this->slugToPageName($slug);
+        
+        if (!$pageName) {
+            abort(404, 'Page not found');
+        }
+
+        $page = Pages::where('page', $pageName)->first();
+        
+        if (!$page) {
+            abort(404, 'Page content not found');
+        }
+
+        return view('admin.pages.page_content', compact('page', 'slug'));
+    }
+
+    public function updateContent(Request $request, $slug)
+    {
+        $request->validate([
+            'content' => 'required|string',
+        ]);
+
+        $pageName = $this->slugToPageName($slug);
+        
+        if (!$pageName) {
+            abort(404, 'Page not found');
+        }
+
+        $page = Pages::where('page', $pageName)->first();
+        
+        if (!$page) {
+            abort(404, 'Page content not found');
+        }
+
+        $page->content = $request->content;
+        $page->save();
+
+        return redirect()->route('admin.manage.content', $slug)->with('success', 'Content updated successfully!');
     }
 }

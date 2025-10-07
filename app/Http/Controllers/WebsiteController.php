@@ -10,6 +10,7 @@ use App\Models\Car;
 use App\Models\Blog;
 use App\Models\Near;
 use App\Models\DealReviews;
+use App\Models\Pages;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Hashids\Hashids;
@@ -77,6 +78,38 @@ class WebsiteController extends Controller
     public function contactUs()
     {
         return view('website.pages.contact_us');
+    }
+
+    // Convert slug to page name
+    private function slugToPageName($slug)
+    {
+        $slugMap = [
+            'about-us' => 'About Us',
+            'become-a-partner' => 'Become a Partner',
+            'our-commitment' => 'Our Commitment',
+            'terms-conditions' => 'Terms & Conditions',
+            'privacy-policy' => 'Privacy Policy',
+        ];
+
+        return $slugMap[$slug] ?? null;
+    }
+
+    // Dynamic page display
+    public function showPage($slug)
+    {
+        $pageName = $this->slugToPageName($slug);
+        
+        if (!$pageName) {
+            abort(404, 'Page not found');
+        }
+
+        $page = Pages::where('page', $pageName)->first();
+        
+        if (!$page) {
+            abort(404, 'Page content not found');
+        }
+
+        return view('website.pages.page', compact('page', 'slug'));
     }
 
     // blog

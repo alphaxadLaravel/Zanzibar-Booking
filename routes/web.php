@@ -38,6 +38,10 @@ Route::get('/search', [WebsiteController::class, 'search'])->name('search');
 
 // contact us
 Route::get('/contact-us', [WebsiteController::class, 'contactUs'])->name('contact-us');
+
+// Dynamic pages (About Us, Terms, Privacy, etc.)
+Route::get('/page/{slug}', [WebsiteController::class, 'showPage'])->name('page.show');
+
 Route::get('/blog', [WebsiteController::class, 'blog'])->name('blog');
 Route::get('/view/blog/{id}', [WebsiteController::class, 'viewBlog'])->name('view-blog');
 
@@ -98,20 +102,6 @@ Route::match(['get', 'post'], '/payment/callback', [PaymentController::class, 'p
 Route::match(['get', 'post'], '/payment/confirmation', [PaymentController::class, 'paymentConfirmation'])->name('payment.confirmation')->withoutMiddleware(['csrf']);
 Route::match(['get', 'post'], '/payment/ipn', [PaymentController::class, 'paymentConfirmation'])->name('payment.ipn')->withoutMiddleware(['csrf']); // IPN callback
 
-// Test callback routes (remove in production)
-Route::get('/test/payment-callback', function () {
-    return response()->json([
-        'status' => 'success',
-        'message' => 'Payment callback endpoint is accessible',
-        'timestamp' => now(),
-        'urls' => [
-            'success' => route('payment.success'),
-            'confirmation' => route('payment.confirmation'),
-            'callback' => route('payment.callback'),
-            'ipn' => route('payment.ipn')
-        ]
-    ]);
-})->name('test.payment.callback');
 
 
 ##########################################################################################
@@ -252,11 +242,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/hotels/{hotelId}/get-deals-by-type/{type}', [DealsController::class, 'getDealsByType'])->name('admin.hotels.get-deals-by-type');
     Route::post('/admin/hotels/{hotelId}/add-nearby', [DealsController::class, 'addNearbyDeals'])->name('admin.hotels.add-nearby');
     Route::delete('/admin/hotels/{hotelId}/remove-nearby/{nearId}', [DealsController::class, 'removeNearbyDeal'])->name('admin.hotels.remove-nearby');
-});
 
-// MAINTENANCE MODE INSTRUCTIONS:
-// To disable maintenance mode:
-// 1. Comment out or delete line 16: Route::get('/', [MaintenanceController::class, 'index'])->name('maintenance');
-// 2. Change line 26 from: Route::get('/home', [WebsiteController::class, 'index'])->name('index');
-//    To: Route::get('/', [WebsiteController::class, 'index'])->name('index');
-// 3. Clear your route cache: php artisan route:clear
+
+    // settings management
+    Route::get('/admin/manage/content/{page}', [AdminController::class, 'manageContent'])->name('admin.manage.content');
+    Route::put('/admin/manage/content/{page}', [AdminController::class, 'updateContent'])->name('admin.manage.content.update');
+});

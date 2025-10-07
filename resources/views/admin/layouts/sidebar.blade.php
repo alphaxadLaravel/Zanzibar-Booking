@@ -121,7 +121,6 @@
 
             <li class="side-nav-title">Account</li>
 
-            <!-- Settings v -->
             <li class="side-nav-item">
                 <a data-bs-toggle="collapse" href="#sidebarSettings" aria-expanded="false"
                     aria-controls="sidebarSettings" class="side-nav-link">
@@ -131,15 +130,15 @@
                 </a>
                 <div class="collapse" id="sidebarSettings">
                     <ul class="sub-menu">
-                        <li class="side-nav-item"><a href="{{ route('admin.settings.general') }}"
-                                class="side-nav-link">General</a></li>
-                        <li class="side-nav-item"><a href="{{ route('admin.settings.security') }}"
-                                class="side-nav-link">Security</a></li>
+                        <li class="side-nav-item"><a href="{{ route('admin.manage.content', 'about-us') }}" class="side-nav-link">About Us</a></li>
+                        <li class="side-nav-item"><a href="{{ route('admin.manage.content', 'become-a-partner') }}" class="side-nav-link">Become a Partner</a></li>
+                        <li class="side-nav-item"><a href="{{ route('admin.manage.content', 'our-commitment') }}" class="side-nav-link">Our Commitment</a></li>
+                        <li class="side-nav-item"><a href="{{ route('admin.manage.content', 'terms-conditions') }}" class="side-nav-link">Terms & Conditions</a></li>
+                        <li class="side-nav-item"><a href="{{ route('admin.manage.content', 'privacy-policy') }}" class="side-nav-link">Privacy Policy</a></li>
                     </ul>
                 </div>
             </li>
 
-            <!-- My Bookings -->
             <li class="side-nav-item">
                 <a href="{{ route('admin.my-bookings') }}" class="side-nav-link">
                     <span class="menu-icon"><i class="mdi mdi-book-open-variant"></i></span>
@@ -147,7 +146,6 @@
                 </a>
             </li>
 
-            <!-- Profile v -->
             <li class="side-nav-item">
                 <a data-bs-toggle="collapse" href="#sidebarProfile" aria-expanded="false" aria-controls="sidebarProfile"
                     class="side-nav-link">
