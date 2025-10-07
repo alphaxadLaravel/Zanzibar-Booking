@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -13,9 +14,16 @@
       --shadow: 0 10px 30px rgba(2, 6, 23, 0.6);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-    html, body { height: 100%; }
+    html,
+    body {
+      height: 100%;
+    }
 
     body {
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
@@ -32,7 +40,7 @@
     .overlay {
       position: fixed;
       inset: 0;
-      background: linear-gradient(180deg, rgba(3,6,10,0.55), rgba(4,14,22,0.6));
+      background: linear-gradient(180deg, rgba(3, 6, 10, 0.55), rgba(4, 14, 22, 0.6));
       backdrop-filter: blur(3px);
       z-index: 0;
     }
@@ -51,17 +59,26 @@
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .title {
       font-weight: 800;
-      letter-spacing: 5px;
+      letter-spacing: 2px;
       margin-bottom: 12px;
       line-height: 1;
-      font-size: clamp(32px, 9vw, 78px);
+      font-size: clamp(32px, 9vw, 64px);
       text-transform: uppercase;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
     }
 
     .subtitle {
@@ -113,16 +130,39 @@
 
     /* Small devices optimization */
     @media (max-width: 480px) {
-      body { padding: 16px; }
-      main { padding: 28px 18px; }
-      .title { letter-spacing: 3px; font-size: clamp(28px, 10vw, 60px); }
-      .countdown { gap: 8px; }
-      .timecard { min-width: 64px; padding: 10px 6px; }
-      .timeval { font-size: clamp(18px, 6vw, 28px); }
-      .timelabel { font-size: 11px; }
+      body {
+        padding: 16px;
+      }
+
+      main {
+        padding: 28px 18px;
+      }
+
+      .title {
+        letter-spacing: 3px;
+        font-size: clamp(28px, 10vw, 60px);
+      }
+
+      .countdown {
+        gap: 8px;
+      }
+
+      .timecard {
+        min-width: 64px;
+        padding: 10px 6px;
+      }
+
+      .timeval {
+        font-size: clamp(18px, 6vw, 28px);
+      }
+
+      .timelabel {
+        font-size: 11px;
+      }
     }
   </style>
 </head>
+
 <body>
   <div class="overlay"></div>
 
@@ -212,4 +252,5 @@
     })();
   </script>
 </body>
+
 </html>
