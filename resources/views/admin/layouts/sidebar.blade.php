@@ -90,24 +90,11 @@
                 </a>
             </li>
 
-            <!-- USERS v -->
             <li class="side-nav-item">
-                <a data-bs-toggle="collapse" href="#sidebarUsers" aria-expanded="false" aria-controls="sidebarUsers"
-                    class="side-nav-link">
+                <a href="{{ route('admin.users') }}" class="side-nav-link">
                     <span class="menu-icon"><i class="mdi mdi-account-group"></i></span>
                     <span class="menu-text">Users</span>
-                    <span class="menu-arrow"></span>
                 </a>
-                <div class="collapse" id="sidebarUsers">
-                    <ul class="sub-menu">
-                        <li class="side-nav-item"><a href="{{ route('admin.users') }}" class="side-nav-link">All
-                                Users</a></li>
-                        <li class="side-nav-item"><a href="{{ route('admin.users.create') }}" class="side-nav-link">Add
-                                User</a></li>
-                        <li class="side-nav-item"><a href="{{ route('admin.users.roles') }}"
-                                class="side-nav-link">Roles</a></li>
-                    </ul>
-                </div>
             </li>
 
             <!-- PAYMENTS -->

@@ -167,17 +167,9 @@
                                                 <small class="text-muted">{{ $user->created_at->format('h:i A') }}</small>
                                             </td>
                                             <td>
-                                                <div class="btn-group" role="group">
-                                                    <a href="{{ route('admin.users.edit', $hashids->encode($user->id)) }}" class="btn btn-sm btn-outline-primary" title="Edit User">
-                                                        <i class="ti ti-edit"></i>
-                                                    </a>
-                                                    <button type="button" class="btn btn-sm btn-outline-warning" onclick="toggleUserStatus('{{ $hashids->encode($user->id) }}', {{ $user->status }})" title="Toggle Status">
-                                                        <i class="ti ti-toggle-{{ $user->status ? 'left' : 'right' }}"></i>
-                                                    </button>
-                                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteUser('{{ $hashids->encode($user->id) }}')" title="Delete User">
-                                                        <i class="ti ti-trash"></i>
-                                                    </button>
-                                                </div>
+                                                <a href="{{ route('admin.users.edit', $hashids->encode($user->id)) }}" class="btn btn-sm btn-outline-primary" title="Edit User">
+                                                    <i class="ti ti-pencil"></i>
+                                                </a>
                                             </td>
                                         </tr>
                                     @endforeach

@@ -304,29 +304,14 @@ class AdminController extends Controller
     // Users Management
     public function users()
     {
-        // Get Super Admin role ID
-        
         $users = User::with('role')
             ->where('role_id', '!=', 1)
             ->orderBy('created_at', 'desc')
             ->paginate(15);
-
-            dd($users);
         
         $hashids = $this->getHashids();
         
-        return view('admin.pages.users.index', compact('users', 'hashids'));
-    }
-
-    public function createUser()
-    {
-        return view('admin.pages.users.create');
-    }
-
-    public function storeUser(Request $request)
-    {
-        // Add user creation logic here
-        return redirect()->route('admin.users')->with('success', 'User created successfully!');
+        return view('admin.pages.users', compact('users', 'hashids'));
     }
 
     public function editUser($id)
@@ -395,33 +380,6 @@ class AdminController extends Controller
         return redirect()->route('admin.users')->with('success', 'User deleted successfully!');
     }
 
-    public function toggleUserStatus($id)
-    {
-        $hashids = $this->getHashids();
-        $decodedIds = $hashids->decode($id);
-        
-        if (empty($decodedIds)) {
-            return redirect()->route('admin.users')->with('error', 'Invalid user ID.');
-        }
-        
-        $userId = $decodedIds[0];
-        $user = User::findOrFail($userId);
-        
-        // Don't allow deactivating the current user
-        if ($user->id === Auth::id() && $user->status) {
-            return redirect()->route('admin.users')->with('error', 'You cannot deactivate your own account.');
-        }
-        
-        $user->update(['status' => !$user->status]);
-        
-        $status = $user->status ? 'activated' : 'deactivated';
-        return redirect()->route('admin.users')->with('success', "User {$status} successfully!");
-    }
-
-    public function userRoles()
-    {
-        return view('admin.pages.users.roles');
-    }
 
     // Payments Management
     public function payments()

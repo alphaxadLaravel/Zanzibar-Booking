@@ -37,10 +37,10 @@ Features | {{env('APP_NAME')}}
                                     <span class="fw-medium">{{ $feature->name }}</span>
                                 </td>
                                 <td class="px-3 py-2">
-                                    <span class="badge bg-info">{{ ucfirst($feature->type) }}</span>
+                                    {{ ucfirst($feature->type) }}
                                 </td>
                                 <td class="px-3 py-2 d-flex align-items-center gap-2">
-                                    <i class="{{ $feature->icon }} fs-2 text-dark"></i>
+                                    <i class="mdi {{ $feature->icon }} fs-2 text-dark"></i>
                                 </td>
                                 <td class="px-3 py-2">
                                     @if($feature->status)
