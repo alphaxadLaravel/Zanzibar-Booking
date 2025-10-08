@@ -16,7 +16,8 @@ class PaymentController extends Controller
         try {
             Log::info('Payment process started', ['booking_id' => $bookingId]);
             
-            $booking = Booking::with(['deal', 'room'])->findOrFail($bookingId);
+            // Load booking with relationships
+            $booking = Booking::with(['bookingItems.deal', 'bookingItems.room'])->findOrFail($bookingId);
             
             // Check if booking is already paid
             if ($booking->payment_status) {
@@ -24,20 +25,24 @@ class PaymentController extends Controller
                     ->with('info', 'This booking has already been paid.');
             }
 
+            // Get deal for description
+            $deal = $booking->deal;
+            
             Log::info('Booking found for payment', [
                 'booking_id' => $booking->id,
                 'booking_code' => $booking->booking_code,
-                'total_price' => $booking->total_price,
-                'deal_type' => $booking->deal->type
+                'total_amount' => $booking->total_amount,
+                'deal' => $deal ? $deal->title : 'N/A'
             ]);
 
             // Create payment record
             $payment = Payment::create([
                 'booking_id' => $booking->id,
-                'amount' => $booking->total_price,
-                'status' => 'pending',
+                'amount' => $booking->total_amount,
+                'status' => 'PENDING',
                 'payment_method' => 'PESAPAL',
-                'transactionid' => Pesapal::random_reference()
+                'transactionid' => Pesapal::random_reference(),
+                'user_id' => $booking->user_id
             ]);
 
             Log::info('Payment record created', [
@@ -270,21 +275,32 @@ class PaymentController extends Controller
     private function getPaymentDescription(Booking $booking)
     {
         $deal = $booking->deal;
+        
+        if (!$deal) {
+            return "Payment for Booking #{$booking->booking_code}";
+        }
+        
         $description = "Payment for {$deal->title}";
         
-        switch ($deal->type) {
-            case 'hotel':
-            case 'apartment':
-                if ($booking->room) {
-                    $description .= " - {$booking->room->title}";
-                }
-                break;
-            case 'tour':
-                $description .= " - Tour Package";
-                break;
-            case 'car':
-                $description .= " - Car Rental";
-                break;
+        if (isset($deal->type)) {
+            switch ($deal->type) {
+                case 'hotel':
+                case 'apartment':
+                    $description .= " - Accommodation";
+                    break;
+                case 'tour':
+                    $description .= " - Tour Package";
+                    break;
+                case 'activity':
+                    $description .= " - Activity";
+                    break;
+                case 'car':
+                    $description .= " - Car Rental";
+                    break;
+                case 'package':
+                    $description .= " - Package Deal";
+                    break;
+            }
         }
         
         return $description;

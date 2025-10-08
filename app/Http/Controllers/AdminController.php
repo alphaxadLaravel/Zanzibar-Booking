@@ -609,12 +609,10 @@ class AdminController extends Controller
             'whatsapp_url' => 'nullable|url|max:500',
             'facebook_url' => 'nullable|url|max:500',
             'instagram_url' => 'nullable|url|max:500',
-            'twitter_url' => 'nullable|url|max:500',
-            'linkedin_url' => 'nullable|url|max:500',
             'tripadvisor_url' => 'nullable|url|max:500',
             'youtube_url' => 'nullable|url|max:500',
-            'video_url' => 'nullable|string|max:500',
-            'header_photo' => 'nullable|string|max:500',
+            'header_photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'video_file' => 'nullable|mimes:mp4,mov,avi,wmv|max:51200',
         ]);
 
         $settings = System::first();
@@ -623,7 +621,34 @@ class AdminController extends Controller
             $settings = new System();
         }
 
-        $settings->fill($request->all());
+        // Handle header photo upload
+        if ($request->hasFile('header_photo')) {
+            // Delete old photo if exists
+            if ($settings->header_photo && Storage::disk('public')->exists($settings->header_photo)) {
+                Storage::disk('public')->delete($settings->header_photo);
+            }
+            
+            $headerPhoto = $request->file('header_photo');
+            $headerPhotoName = time() . '_header.' . $headerPhoto->getClientOriginalExtension();
+            $headerPhotoPath = $headerPhoto->storeAs('system', $headerPhotoName, 'public');
+            $settings->header_photo = $headerPhotoPath;
+        }
+
+        // Handle video file upload
+        if ($request->hasFile('video_file')) {
+            // Delete old video if exists
+            if ($settings->video_file && Storage::disk('public')->exists($settings->video_file)) {
+                Storage::disk('public')->delete($settings->video_file);
+            }
+            
+            $videoFile = $request->file('video_file');
+            $videoFileName = time() . '_video.' . $videoFile->getClientOriginalExtension();
+            $videoFilePath = $videoFile->storeAs('system', $videoFileName, 'public');
+            $settings->video_file = $videoFilePath;
+        }
+
+        // Update other fields
+        $settings->fill($request->except(['header_photo', 'video_file']));
         $settings->save();
 
         return redirect()->back()->with('success', 'System settings updated successfully!');

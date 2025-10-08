@@ -39,6 +39,60 @@ class Booking extends Model
         return $this->hasMany(Payment::class);
     }
 
+    public function bookingItems(): HasMany
+    {
+        return $this->hasMany(BookingItem::class);
+    }
+
+    // Helper method to get first booking item's deal
+    public function getDealAttribute()
+    {
+        $items = $this->booking_items;
+        if (is_array($items) && !empty($items)) {
+            $firstItem = $items[0];
+            if (isset($firstItem['deal_id'])) {
+                return Deal::find($firstItem['deal_id']);
+            }
+        }
+        
+        // Fallback to BookingItem relationship
+        $bookingItem = $this->bookingItems()->first();
+        return $bookingItem ? $bookingItem->deal : null;
+    }
+
+    // Helper method for total price (alias for total_amount)
+    public function getTotalPriceAttribute()
+    {
+        return $this->total_amount;
+    }
+
+    // Helper method to check if booking has payment
+    public function hasPayment()
+    {
+        return $this->payments()->exists();
+    }
+
+    // Helper method to get latest payment
+    public function latestPayment()
+    {
+        return $this->payments()->latest()->first();
+    }
+
+    // Add payment_status attribute
+    public function getPaymentStatusAttribute()
+    {
+        $payment = $this->latestPayment();
+        return $payment && $payment->status === 'COMPLETED';
+    }
+
+    public function setPaymentStatusAttribute($value)
+    {
+        // This is handled through payments table
+        if ($value) {
+            $this->status = 'confirmed';
+        }
+    }
+
     // Boot method to generate booking code
     protected static function boot()
     {

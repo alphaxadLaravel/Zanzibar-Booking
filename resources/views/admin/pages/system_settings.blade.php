@@ -29,7 +29,7 @@
     @endif
 
     <!-- Settings Form -->
-    <form action="{{ route('admin.system.settings.update') }}" method="POST">
+    <form action="{{ route('admin.system.settings.update') }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
         
@@ -108,22 +108,6 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="twitter_url" class="form-label">Twitter URL</label>
-                            <input type="url" class="form-control @error('twitter_url') is-invalid @enderror" id="twitter_url" name="twitter_url" value="{{ old('twitter_url', $settings->twitter_url) }}" placeholder="https://twitter.com/...">
-                            @error('twitter_url')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="linkedin_url" class="form-label">LinkedIn URL</label>
-                            <input type="url" class="form-control @error('linkedin_url') is-invalid @enderror" id="linkedin_url" name="linkedin_url" value="{{ old('linkedin_url', $settings->linkedin_url) }}" placeholder="https://linkedin.com/...">
-                            @error('linkedin_url')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="mb-3">
                             <label for="youtube_url" class="form-label">YouTube URL</label>
                             <input type="url" class="form-control @error('youtube_url') is-invalid @enderror" id="youtube_url" name="youtube_url" value="{{ old('youtube_url', $settings->youtube_url) }}" placeholder="https://youtube.com/...">
                             @error('youtube_url')
@@ -159,19 +143,32 @@
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="header_photo" class="form-label">Header Photo URL</label>
-                                <input type="text" class="form-control @error('header_photo') is-invalid @enderror" id="header_photo" name="header_photo" value="{{ old('header_photo', $settings->header_photo) }}" placeholder="/storage/images/header.jpg">
+                                <label for="header_photo" class="form-label">Header Photo</label>
+                                <input type="file" class="form-control @error('header_photo') is-invalid @enderror" id="header_photo" name="header_photo" accept="image/*">
                                 @error('header_photo')
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                                @if($settings->header_photo)
+                                <div class="mt-2">
+                                    <small class="text-muted">Current: {{ basename($settings->header_photo) }}</small>
+                                    <img src="{{ Storage::url($settings->header_photo) }}" alt="Header Photo" class="img-thumbnail mt-1" style="max-height: 100px;">
+                                </div>
+                                @endif
+                                <small class="text-muted">Max size: 5MB (JPEG, PNG, JPG, WEBP)</small>
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label for="video_url" class="form-label">Video URL</label>
-                                <input type="text" class="form-control @error('video_url') is-invalid @enderror" id="video_url" name="video_url" value="{{ old('video_url', $settings->video_url) }}" placeholder="/images/video.mp4">
-                                @error('video_url')
+                                <label for="video_file" class="form-label">Video File</label>
+                                <input type="file" class="form-control @error('video_file') is-invalid @enderror" id="video_file" name="video_file" accept="video/*">
+                                @error('video_file')
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                                @if($settings->video_file)
+                                <div class="mt-2">
+                                    <small class="text-muted">Current: {{ basename($settings->video_file) }}</small>
+                                </div>
+                                @endif
+                                <small class="text-muted">Max size: 50MB (MP4, MOV, AVI, WMV)</small>
                             </div>
                         </div>
 

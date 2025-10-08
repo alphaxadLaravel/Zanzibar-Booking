@@ -13,12 +13,10 @@ class System extends Model
         'address',
         'about_text',
         'header_photo',
-        'video_url',
+        'video_file',
         'facebook_url',
         'whatsapp_url',
         'instagram_url',
-        'twitter_url',
-        'linkedin_url',
         'tripadvisor_url',
         'youtube_url',
     ];

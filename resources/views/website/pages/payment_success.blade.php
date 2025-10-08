@@ -55,11 +55,17 @@
                     <div class="row">
                         <div class="col-md-6">
                             <h6 class="text-muted mb-2">Amount Paid</h6>
-                            <h5 class="text-success font-weight-bold">USD {{ number_format($payment->amount, 2) }}</h5>
+                            <h5 class="text-success font-weight-bold">{{ config('pesapal.currency', 'USD') }} {{ number_format($payment->amount, 2) }}</h5>
                         </div>
                         <div class="col-md-6">
                             <h6 class="text-muted mb-2">Payment Status</h6>
-                            <span class="badge badge-warning badge-lg">{{ $payment->status }}</span>
+                            @if($payment->status === 'COMPLETED')
+                                <span class="badge badge-success badge-lg">{{ $payment->status }}</span>
+                            @elseif($payment->status === 'FAILED' || $payment->status === 'CANCELLED')
+                                <span class="badge badge-danger badge-lg">{{ $payment->status }}</span>
+                            @else
+                                <span class="badge badge-warning badge-lg">{{ $payment->status }}</span>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -74,49 +80,42 @@
                     </h6>
                 </div>
                 <div class="card-body">
+                    @php
+                        $deal = $booking->deal;
+                        $bookingItems = $booking->getBookingItems();
+                        $firstItem = !empty($bookingItems) ? $bookingItems[0] : null;
+                    @endphp
+                    
+                    @if($deal)
                     <div class="row">
                         <div class="col-md-3">
-                            <img src="{{ $booking->deal->cover_photo ? asset('storage/' . $booking->deal->cover_photo) : asset('images/default-placeholder.jpg') }}" 
-                                 alt="{{ $booking->deal->title }}" class="img-fluid rounded" style="height: 120px; object-fit: cover;">
+                            <img src="{{ $deal->cover_photo ? asset('storage/' . $deal->cover_photo) : asset('images/default-placeholder.jpg') }}" 
+                                 alt="{{ $deal->title }}" class="img-fluid rounded" style="height: 120px; object-fit: cover;">
                         </div>
                         <div class="col-md-9">
-                            <h6 class="font-weight-bold">{{ $booking->deal->title }}</h6>
-                            <p class="text-muted mb-2">{{ $booking->deal->location }}</p>
+                            <h6 class="font-weight-bold">{{ $deal->title }}</h6>
+                            <p class="text-muted mb-2">{{ $deal->location ?? 'Zanzibar' }}</p>
                             <div class="row">
-                                <div class="col-md-6">
+                                <div class="col-md-12">
                                     <small class="text-muted">
-                                        <i class="fas fa-user mr-1"></i>
-                                        {{ $booking->adult }} {{ $booking->adult == 1 ? 'Adult' : 'Adults' }}
-                                        @if($booking->children > 0)
-                                            , {{ $booking->children }} {{ $booking->children == 1 ? 'Child' : 'Children' }}
-                                        @endif
+                                        <i class="fas fa-shopping-bag mr-1"></i>
+                                        {{ count($bookingItems) }} {{ count($bookingItems) == 1 ? 'Item' : 'Items' }} booked
                                     </small>
                                 </div>
-                                @if($booking->deal->type == 'hotel' || $booking->deal->type == 'apartment')
-                                <div class="col-md-6">
-                                    <small class="text-muted">
-                                        <i class="fas fa-calendar mr-1"></i>
-                                        {{ $booking->check_in->format('M d, Y') }} - {{ $booking->check_out->format('M d, Y') }}
-                                    </small>
-                                </div>
-                                @elseif($booking->deal->type == 'tour')
-                                <div class="col-md-6">
-                                    <small class="text-muted">
-                                        <i class="fas fa-map-marker-alt mr-1"></i>
-                                        Pickup: {{ $booking->pickup_location }}
-                                    </small>
-                                </div>
-                                @elseif($booking->deal->type == 'car')
-                                <div class="col-md-6">
-                                    <small class="text-muted">
-                                        <i class="fas fa-car mr-1"></i>
-                                        {{ $booking->pickup_location }} to {{ $booking->return_location }}
-                                    </small>
-                                </div>
-                                @endif
                             </div>
                         </div>
                     </div>
+                    @else
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h6 class="font-weight-bold">Booking #{{ $booking->booking_code }}</h6>
+                            <p class="text-muted mb-2">
+                                <i class="fas fa-shopping-bag mr-1"></i>
+                                {{ count($bookingItems) }} {{ count($bookingItems) == 1 ? 'Item' : 'Items' }}
+                            </p>
+                        </div>
+                    </div>
+                    @endif
                 </div>
             </div>
 

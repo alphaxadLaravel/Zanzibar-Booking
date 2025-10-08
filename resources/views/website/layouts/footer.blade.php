@@ -125,18 +125,6 @@
                         <i class="fab fa-tripadvisor" style="font-size: 25px"></i>
                     </a>
                     @endif
-
-                    @if($systemSettings && $systemSettings->twitter_url)
-                    <a href="{{ $systemSettings->twitter_url }}" target="_blank" title="Twitter" class="mx-3">
-                        <i class="fab fa-twitter" style="font-size: 25px"></i>
-                    </a>
-                    @endif
-
-                    @if($systemSettings && $systemSettings->linkedin_url)
-                    <a href="{{ $systemSettings->linkedin_url }}" target="_blank" title="LinkedIn" class="mx-3">
-                        <i class="fab fa-linkedin" style="font-size: 25px"></i>
-                    </a>
-                    @endif
                 </li>
             </ul>
         </div>

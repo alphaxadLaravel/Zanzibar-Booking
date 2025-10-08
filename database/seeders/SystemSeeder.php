@@ -22,12 +22,10 @@ class SystemSeeder extends Seeder
             'whatsapp_url' => 'https://wa.me/message/JMDWFIGBWX5TI1',
             'facebook_url' => 'https://www.facebook.com/zanzibarbookings',
             'instagram_url' => 'https://www.instagram.com/zanzibarbookings',
-            'twitter_url' => 'https://www.twitter.com/zanzibarbookings',
-            'linkedin_url' => 'https://www.linkedin.com/company/zanzibarbookings',
             'tripadvisor_url' => 'https://www.tripadvisor.com/zanzibarbookings',
             'youtube_url' => 'https://www.youtube.com/zanzibarbookings',
-            'video_url' => '/images/zanzibar.mp4',
-            'header_photo' => 'https://www.zanzibarbookings.com/storage/2025/02/19/zanzibarbookingscom1-1681820030-1920x768-large-1739955733-1920x768.jpg',
+            'video_file' => 'zanzibar.mp4',
+            'header_photo' => null,
         ]);
     }
 }
