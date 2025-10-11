@@ -117,6 +117,14 @@ class CategoriesController extends Controller
         try {
             $category = Category::findOrFail($id);
             
+            // Check if category has any linked deals
+            $dealsCount = $category->deals()->count();
+            
+            if ($dealsCount > 0) {
+                return redirect()->route('admin.categories')
+                    ->with('error', 'Cannot delete category. It has ' . $dealsCount . ' deal(s) linked to it. Please remove or reassign the deals first.');
+            }
+            
             // Delete associated image if exists
             if ($category->image && Storage::disk('public')->exists($category->image)) {
                 Storage::disk('public')->delete($category->image);

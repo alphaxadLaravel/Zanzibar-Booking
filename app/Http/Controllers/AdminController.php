@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\PartnerRegistration;
+use App\Mail\PartnerAccepted;
 use Illuminate\Http\Request;
 use App\Models\Blog;
 use App\Models\Category;
@@ -15,6 +17,7 @@ use App\Models\Role;
 use App\Models\ContactMessage;
 use App\Models\System;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -356,7 +359,32 @@ class AdminController extends Controller
         $userId = $decodedIds[0];
         $user = User::findOrFail($userId);
         
+        // Check if role is being changed to Partner
+        $oldRoleId = $user->role_id;
+        $oldStatus = $user->status;
+        
         $user->update($request->only(['firstname', 'lastname', 'email', 'phone', 'status', 'role_id']));
+        
+        // Send email if user is promoted to Partner role and status is active
+        $partnerRole = Role::where('name', 'Partner')->first();
+        if ($partnerRole && $request->role_id == $partnerRole->id && $request->status == 1) {
+            // If this is a new partner (role changed) or newly activated partner
+            if ($oldRoleId != $partnerRole->id || $oldStatus != 1) {
+                try {
+                    if ($oldRoleId != $partnerRole->id) {
+                        // Role just changed to Partner - send acceptance email
+                        Mail::to($user->email)->send(new PartnerAccepted($user));
+                        Log::info('Partner acceptance email sent', ['user_id' => $user->id]);
+                    } else {
+                        // Status activated - send registration confirmation
+                        Mail::to($user->email)->send(new PartnerRegistration($user));
+                        Log::info('Partner registration email sent', ['user_id' => $user->id]);
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Failed to send partner email', ['error' => $e->getMessage(), 'user_id' => $user->id]);
+                }
+            }
+        }
         
         return redirect()->route('admin.users')->with('success', 'User updated successfully!');
     }

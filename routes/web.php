@@ -33,6 +33,16 @@ Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::post('/forgot-password', [LoginController::class, 'forgotPassword'])->name('forgot-password');
 Route::post('/change-password', [LoginController::class, 'changePassword'])->name('change-password');
 
+// Email Verification Routes
+Route::get('/email/verify/{id}/{hash}', [LoginController::class, 'verifyEmail'])->name('verification.verify');
+Route::get('/email/verification-notice', function () {
+    return view('website.pages.verify-email');
+})->name('verification.notice');
+
+// Newsletter Routes
+Route::post('/newsletter/subscribe', [WebsiteController::class, 'subscribeNewsletter'])->name('newsletter.subscribe');
+Route::get('/newsletter/unsubscribe', [WebsiteController::class, 'unsubscribeNewsletter'])->name('newsletter.unsubscribe');
+
 // Search functionality
 Route::get('/search', [WebsiteController::class, 'search'])->name('search');
 

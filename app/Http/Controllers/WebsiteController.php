@@ -1095,4 +1095,55 @@ class WebsiteController extends Controller
         return $total;
     }
 
+    /**
+     * Subscribe to newsletter
+     */
+    public function subscribeNewsletter(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|max:255',
+        ]);
+
+        try {
+            \App\Models\Newsletter::updateOrCreate(
+                ['email' => $request->email],
+                ['subscribed' => true]
+            );
+
+            Log::info('Newsletter subscription', ['email' => $request->email]);
+            return redirect()->back()->with('success', 'Thank you for subscribing to our newsletter!');
+        } catch (\Exception $e) {
+            Log::error('Newsletter subscription failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to subscribe. Please try again.');
+        }
+    }
+
+    /**
+     * Unsubscribe from newsletter
+     */
+    public function unsubscribeNewsletter(Request $request)
+    {
+        if (!$request->has('email')) {
+            return redirect()->route('index')->with('error', 'Invalid unsubscribe link.');
+        }
+
+        try {
+            $email = base64_decode($request->email);
+            
+            $newsletter = \App\Models\Newsletter::where('email', $email)->first();
+            if ($newsletter) {
+                $newsletter->subscribed = false;
+                $newsletter->save();
+                
+                Log::info('Newsletter unsubscription', ['email' => $email]);
+                return redirect()->route('index')->with('success', 'You have been unsubscribed from our newsletter.');
+            }
+            
+            return redirect()->route('index')->with('info', 'Email not found in our newsletter list.');
+        } catch (\Exception $e) {
+            Log::error('Newsletter unsubscription failed: ' . $e->getMessage());
+            return redirect()->route('index')->with('error', 'Failed to unsubscribe. Please try again.');
+        }
+    }
+
 }

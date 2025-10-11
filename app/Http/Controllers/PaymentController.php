@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\PaymentSuccessUser;
+use App\Mail\PaymentSuccessAdmin;
 use App\Models\Booking;
 use App\Models\Payment;
 use Hashids\Hashids;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Knox\Pesapal\Facades\Pesapal;
 
 class PaymentController extends Controller
@@ -255,6 +258,20 @@ class PaymentController extends Controller
                         'booking_id' => $booking->id,
                         'booking_code' => $booking->booking_code
                     ]);
+
+                    // Send payment success emails
+                    try {
+                        // Email to customer
+                        Mail::to($booking->email)->send(new PaymentSuccessUser($booking, $payment));
+                        Log::info('Payment success email sent to customer', ['booking_id' => $booking->id]);
+                        
+                        // Email to admin
+                        $adminEmail = env('ADMIN_EMAIL', 'sales-reservations@zanzibarbookings.com');
+                        Mail::to($adminEmail)->send(new PaymentSuccessAdmin($booking, $payment));
+                        Log::info('Payment success email sent to admin', ['booking_id' => $booking->id]);
+                    } catch (\Exception $e) {
+                        Log::error('Failed to send payment success emails', ['error' => $e->getMessage(), 'booking_id' => $booking->id]);
+                    }
                 }
             }
 

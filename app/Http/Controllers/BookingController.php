@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\BookingConfirmation;
+use App\Mail\BookingNotificationAdmin;
 use App\Models\Booking;
 use App\Models\BookingItem;
 use App\Models\Deal;
@@ -11,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Hashids\Hashids;
 
@@ -167,6 +170,20 @@ class BookingController extends Controller
                 'total_amount' => $totalAmount,
                 'items_count' => count($bookedItems)
             ]);
+
+            // Send booking confirmation emails
+            try {
+                // Email to customer
+                Mail::to($booking->email)->send(new BookingConfirmation($booking));
+                Log::info('Booking confirmation email sent to customer', ['booking_id' => $booking->id]);
+                
+                // Email to admin
+                $adminEmail = env('ADMIN_EMAIL', 'sales-reservations@zanzibarbookings.com');
+                Mail::to($adminEmail)->send(new BookingNotificationAdmin($booking));
+                Log::info('Booking notification email sent to admin', ['booking_id' => $booking->id]);
+            } catch (\Exception $e) {
+                Log::error('Failed to send booking emails', ['error' => $e->getMessage(), 'booking_id' => $booking->id]);
+            }
 
             DB::commit();
 

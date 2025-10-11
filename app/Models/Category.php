@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Category extends Model
 {
@@ -27,5 +28,11 @@ class Category extends Model
     public function scopeByType($query, $type)
     {
         return $query->where('type', $type);
+    }
+
+    // Relationship with deals
+    public function deals(): HasMany
+    {
+        return $this->hasMany(Deal::class);
     }
 }

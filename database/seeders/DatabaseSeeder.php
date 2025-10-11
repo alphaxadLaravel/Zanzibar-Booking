@@ -3,14 +3,10 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
         // Seed roles first
@@ -18,7 +14,7 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             AdminSeeder::class,
             FeaturesSeeder::class,
-            CategorySeeder::class,
+            // CategorySeeder::class,
             PageSeeder::class,
             SystemSeeder::class,
         ]);
