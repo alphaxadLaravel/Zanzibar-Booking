@@ -28,6 +28,7 @@ class AdminSeeder extends Seeder
                     'password' => Hash::make('password'),
                     'status' => true,
                     'role_id' => $adminRole->id,
+                    'email_verified_at' => now(), // Admin email is verified by default
                 ]
             );
         }

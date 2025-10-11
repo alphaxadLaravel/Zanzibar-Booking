@@ -32,6 +32,11 @@ class EnsureEmailIsVerified
         if (Auth::check()) {
             $user = Auth::user();
             
+            // Admin and Super Admin users are always exempt from email verification
+            if ($user->role && in_array($user->role->name, ['Admin', 'Super Admin'])) {
+                return $next($request);
+            }
+            
             // Check if user's email is not verified
             if (!$user->email_verified_at) {
                 // Allow access to excluded routes
