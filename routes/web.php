@@ -70,7 +70,21 @@ Route::get('/view/package/{id}', [WebsiteController::class, 'viewPackage'])->nam
 
 Route::get('/cars', [WebsiteController::class, 'cars'])->name('cars');
 Route::get('/view/car/{id}', [WebsiteController::class, 'viewCar'])->name('view-car');
-Route::get('/flights', [WebsiteController::class, 'flights'])->name('flights');
+
+// Flight routes
+Route::get('/flights', [App\Http\Controllers\FlightController::class, 'index'])->name('flights.index');
+Route::get('/flights/{flightId}', [App\Http\Controllers\FlightController::class, 'show'])->name('flights.show');
+Route::get('/flights/{flightId}/book', [App\Http\Controllers\FlightController::class, 'bookingForm'])->name('flights.booking.form');
+Route::post('/flights/book', [App\Http\Controllers\FlightController::class, 'processBooking'])->name('flights.booking.process');
+Route::get('/flights/payment/{bookingReference}', [App\Http\Controllers\FlightController::class, 'payment'])->name('flights.payment');
+Route::get('/flights/payment/{bookingReference}/initialize', [App\Http\Controllers\FlightController::class, 'initializePayment'])->name('flights.payment.initialize');
+Route::get('/flights/payment/callback', [App\Http\Controllers\FlightController::class, 'paymentCallback'])->name('flights.payment.callback');
+Route::get('/flights/confirmation/{bookingReference}', [App\Http\Controllers\FlightController::class, 'confirmation'])->name('flights.confirmation');
+
+// User flight bookings (requires auth)
+Route::middleware('auth')->group(function () {
+    Route::get('/my-flights', [App\Http\Controllers\FlightController::class, 'myBookings'])->name('flights.my-bookings');
+});
 
 // Review routes
 Route::post('/deals/{id}/reviews', [WebsiteController::class, 'storeReview'])->name('deals.reviews.store');

@@ -21,55 +21,150 @@
             </div>
         </div>
 
-        <!-- Search and Filter Section -->
+        <!-- Search Form -->
         <div class="row mb-4">
             <div class="col-lg-12">
-                <div class="flight-search-card p-4 mb-4"
-                    style="background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label class="form-label fw-semibold">From</label>
-                                <input type="text" class="form-control" value="Zanzibar (ZNZ)" readonly
-                                    style="background: #f8f9fa;">
+                <form action="{{ route('flights.index') }}" method="GET" id="flight-search-form">
+                    <div class="flight-search-card p-4 mb-4"
+                        style="background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                        
+                        @if($error)
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>{{ $error }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        @endif
+
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label class="form-label fw-semibold">From</label>
+                                    <input type="text" class="form-control" name="origin" value="{{ request('origin', 'ZNZ') }}" readonly
+                                        style="background: #f8f9fa;">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label class="form-label fw-semibold">To <span class="text-danger">*</span></label>
+                                    <select class="form-control" name="destination" id="destination-input" required>
+                                        <option value="">Select Destination</option>
+                                        @foreach($destinations as $code => $name)
+                                        <option value="{{ $code }}" {{ request('destination') == $code ? 'selected' : '' }}>
+                                            {{ $name }} ({{ $code }})
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label class="form-label fw-semibold">Departure <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" name="departureDate" 
+                                        value="{{ request('departureDate', date('Y-m-d', strtotime('+1 day'))) }}" 
+                                        min="{{ date('Y-m-d') }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label class="form-label fw-semibold">Return (Optional)</label>
+                                    <input type="date" class="form-control" name="returnDate" 
+                                        value="{{ request('returnDate') }}" 
+                                        min="{{ request('departureDate', date('Y-m-d', strtotime('+1 day'))) }}">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label class="form-label fw-semibold">Passengers</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" name="adults" 
+                                            value="{{ request('adults', 1) }}" min="1" max="9" required>
+                                        <span class="input-group-text">Adults</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label class="form-label fw-semibold">To</label>
-                                <select class="form-control" id="destination-filter">
-                                    <option value="">All Destinations</option>
-                                    @foreach($destinations as $destination)
-                                    <option value="{{ $destination }}">{{ $destination }}</option>
-                                    @endforeach
-                                </select>
+                        
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label class="form-label fw-semibold">Children</label>
+                                    <input type="number" class="form-control" name="children" 
+                                        value="{{ request('children', 0) }}" min="0" max="9">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label class="form-label fw-semibold">Infants</label>
+                                    <input type="number" class="form-control" name="infants" 
+                                        value="{{ request('infants', 0) }}" min="0" max="9">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label class="form-label fw-semibold">Travel Class</label>
+                                    <select class="form-control" name="travelClass">
+                                        <option value="ECONOMY" {{ request('travelClass') == 'ECONOMY' ? 'selected' : '' }}>Economy</option>
+                                        <option value="PREMIUM_ECONOMY" {{ request('travelClass') == 'PREMIUM_ECONOMY' ? 'selected' : '' }}>Premium Economy</option>
+                                        <option value="BUSINESS" {{ request('travelClass') == 'BUSINESS' ? 'selected' : '' }}>Business</option>
+                                        <option value="FIRST" {{ request('travelClass') == 'FIRST' ? 'selected' : '' }}>First Class</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label class="form-label fw-semibold">Options</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="nonStop" value="true" 
+                                            id="nonStopCheck" {{ request('nonStop') ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="nonStopCheck">
+                                            Non-stop flights only
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label class="form-label fw-semibold">&nbsp;</label>
+                                    <button type="submit" class="btn btn-primary w-100" id="search-btn">
+                                        <i class="fas fa-search me-2"></i>Search Flights
+                                    </button>
+                                </div>
                             </div>
                         </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Filter Section (Only show if we have results) -->
+        @if(count($flights) > 0)
+        <div class="row mb-3">
+            <div class="col-lg-12">
+                <div class="d-flex justify-content-between align-items-center p-3" 
+                    style="background: white; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">
+                    <div class="row g-3 flex-grow-1">
                         <div class="col-md-3">
-                            <div class="form-group">
-                                <label class="form-label fw-semibold">Airline</label>
-                                <select class="form-control" id="airline-filter">
-                                    <option value="">All Airlines</option>
-                                    @foreach($airlines as $airline)
-                                    <option value="{{ $airline }}">{{ $airline }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+                            <label class="form-label fw-semibold">Filter by Airline</label>
+                            <select class="form-control" id="airline-filter">
+                                <option value="">All Airlines</option>
+                                @foreach($airlines as $code => $airline)
+                                <option value="{{ $airline }}">{{ $airline }}</option>
+                                @endforeach
+                            </select>
                         </div>
                         <div class="col-md-3">
-                            <div class="form-group">
-                                <label class="form-label fw-semibold">Sort By</label>
-                                <select class="form-control" id="sort-filter">
-                                    <option value="price">Price (Low to High)</option>
-                                    <option value="duration">Duration (Shortest)</option>
-                                    <option value="departure">Departure Time</option>
-                                </select>
-                            </div>
+                            <label class="form-label fw-semibold">Sort By</label>
+                            <select class="form-control" id="sort-filter">
+                                <option value="price">Price (Low to High)</option>
+                                <option value="duration">Duration (Shortest)</option>
+                                <option value="departure">Departure Time</option>
+                            </select>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        @endif
 
         <!-- Flight Results -->
         <div class="row">
@@ -202,10 +297,11 @@
                                                 <div class="per-person mb-3" style="font-size: 0.8rem; color: #888;">per
                                                     person</div>
                                                 @endif
-                                                <button class="btn btn-primary btn-sm w-100"
+                                                <a href="{{ route('flights.booking.form', $flight['id']) }}" 
+                                                    class="btn btn-primary btn-sm w-100"
                                                     style="border-radius: 8px;">
                                                     <i class="fas fa-ticket-alt me-2"></i>Book Flight
-                                                </button>
+                                                </a>
                                             </div>
                                         </div>
                                     </div>
@@ -329,13 +425,24 @@
                                                         request</span>
                                                     @endif
                                                 </div>
-                                                <button class="btn btn-primary btn-sm w-100"
+                                                <a href="{{ route('flights.booking.form', $flight['id']) }}" 
+                                                    class="btn btn-primary btn-sm w-100"
                                                     style="border-radius: 8px;">
                                                     <i class="fas fa-ticket-alt me-2"></i>Book Flight
-                                                </button>
+                                                </a>
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+                            @empty
+                            <div class="col-12">
+                                <div class="text-center py-5">
+                                    <div class="mb-3">
+                                        <i class="fas fa-plane" style="font-size: 3rem; color: #bdbdbd;"></i>
+                                    </div>
+                                    <h5 class="mb-2" style="color: #888;">No flights available</h5>
+                                    <p class="mb-0" style="color: #aaa;">No flights found. Please try different search criteria.</p>
                                 </div>
                             </div>
                             @endforelse
@@ -466,4 +573,5 @@
 });
 </script>
 
+@endsection
 @endsection

@@ -95,7 +95,9 @@ class DealsController extends Controller
     public function manageDeal($type)
     {
         // Filter categories by type and active
-        $categories = Category::active()->byType($type)->get();
+        // For package and activity types, fetch 'tour' categories since they share the same categories
+        $categoryType = ($type === 'package' || $type === 'activity') ? 'tour' : $type;
+        $categories = Category::active()->byType($categoryType)->get();
 
         // Filter features based on deal type
         $features = Features::active()->where('type', $type)->get();
@@ -365,7 +367,9 @@ class DealsController extends Controller
         }
 
         // Filter categories by type and active
-        $categories = Category::active()->byType($type)->get();
+        // For package and activity types, fetch 'tour' categories since they share the same categories
+        $categoryType = ($type === 'package' || $type === 'activity') ? 'tour' : $type;
+        $categories = Category::active()->byType($categoryType)->get();
 
         // Filter features based on deal type
         $features = Features::active()->where('type', $type)->get();
