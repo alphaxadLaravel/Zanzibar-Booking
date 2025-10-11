@@ -199,8 +199,8 @@
 
   <script>
     (function(){
-      const KEY = 'maintenanceTarget_v1';
-      const DURATION_MS = 4 * 24 * 60 * 60 * 1000; // 4 days
+      const KEY = 'maintenanceTarget_v3';
+      const DURATION_MS = 3 * 24 * 60 * 60 * 1000; // 3 days
 
       function now(){ return new Date().getTime(); }
 
