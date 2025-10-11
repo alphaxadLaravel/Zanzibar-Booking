@@ -15,6 +15,16 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'payment/*',
         ]);
+
+        // Register custom middleware aliases
+        $middleware->alias([
+            'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
+        ]);
+
+        // Apply email verification middleware to web routes
+        $middleware->web(append: [
+            \App\Http\Middleware\EnsureEmailIsVerified::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
