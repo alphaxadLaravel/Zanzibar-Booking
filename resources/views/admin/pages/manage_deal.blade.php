@@ -36,7 +36,7 @@
                 <div class="col-md-4">
                     <label class="form-label">Title <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" name="title" value="{{ old('title', $deal->title ?? '') }}"
-                        placeholder="Enter deal title">
+                        placeholder="Enter deal title" required>
                     @error('title')
                     <div class="text-danger">{{ $message }}</div>
                     @enderror
@@ -62,7 +62,7 @@
                     <div class="input-group mb-3">
                         <input type="number" class="form-control" name="base_price"
                             value="{{ old('base_price', $deal->base_price ?? '') }}" step="0.01"
-                            placeholder="Enter base price">
+                            placeholder="Enter base price" required>
                         <div class="input-group-append">
                             <span class="input-group-text">USD</span>
                         </div>

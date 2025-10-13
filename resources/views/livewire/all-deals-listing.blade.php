@@ -92,7 +92,7 @@
     <section class="hero-slider" style="min-height: 160px; position: relative;">
         <div class="container-fluid no-gutters p-0">
             <div class="single-hero-image" style="position: relative;">
-                <img src="https://www.zanzibarbookings.com/storage/2025/02/19/zanzibarbookingscom1-1681820030-1920x768-large-1739955733-1920x768.jpg"
+                <img src="{{ asset('images/banner.jpg') }}"
                     style="
             object-fit: cover;
             width: 100%;

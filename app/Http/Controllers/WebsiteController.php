@@ -41,7 +41,7 @@ class WebsiteController extends Controller
             ->get();
 
         // Fetch package and activity categories
-        $tourCategories = Category::whereIn('type', ['package', 'activity'])
+        $tourCategories = Category::where('type', 'tour')
             ->limit(6)
             ->get();
 

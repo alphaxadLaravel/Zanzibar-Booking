@@ -5,7 +5,7 @@
     <div class="container-fluid no-gutters p-0">
         <div class="single-hero-image" style="position: relative; height: 450px; overflow: hidden;">
             <video autoplay muted loop playsinline class="hero-bg-image"
-                poster="https://www.zanzibarbookings.com/storage/2025/02/19/zanzibarbookingscom1-1681820030-1920x768-large-1739955733-1920x768.jpg"
+                poster="{{ asset('images/banner.jpg') }}"
                 style="object-fit: cover; width: 100%; height: 450px; min-height: 450px; max-height: 450px; background-repeat: no-repeat; display: block;">
                 <source src="{{ asset('images/zanzibar.mp4') }}" type="video/mp4">
             </video>
@@ -226,7 +226,7 @@
 <section class="hotel-type">
     <div class="container py-40">
         <div class="d-flex justify-content-between align-items-center mb-20">
-            <h2 class="section-title mb-0">Property Types</h2>
+            <h2 class="section-title mb-0">Hotel Types</h2>
         </div>
         <div class="row">
             @forelse($propertyCategories as $category)
@@ -331,7 +331,7 @@
 <section class="tour-type">
     <div class="container py-40">
         <div class="d-flex justify-content-between align-items-center mb-20">
-            <h2 class="section-title mb-0">Activities Types</h2>
+            <h2 class="section-title mb-0">Package & Activity Types</h2>
         </div>
         <div class="row">
             @forelse($tourCategories as $category)
@@ -349,7 +349,6 @@
                         <h3 class="tour-type__name">
                             <a href="#" onclick="event.preventDefault(); searchByCategory('{{ $category->id }}');">{{ $category->category }}</a>
                         </h3>
-                        <div class="tour-type__description">Click here</div>
                     </div>
                 </div>
             </div>
