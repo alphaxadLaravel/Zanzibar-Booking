@@ -85,7 +85,7 @@ class AdminController extends Controller
             'description' => 'required|string',
             'category_id' => 'required|exists:categories,id',
             'status' => 'required|in:draft,published',
-            'cover_photo' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120' // Image required
+            'cover_photo' => 'required|image,webp|max:5120' // Image required
         ]);
 
         try {
@@ -168,7 +168,7 @@ class AdminController extends Controller
             'category_id' => 'required|exists:categories,id',
             'status' => 'required|in:draft,published',
             // Image optional on update
-            'cover_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120'
+            'cover_photo' => 'nullable|image,webp|max:5120'
         ]);
 
         try {

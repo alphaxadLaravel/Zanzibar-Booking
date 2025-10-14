@@ -22,7 +22,7 @@ class CategoriesController extends Controller
         $validator = Validator::make($request->all(), [
             'category' => 'required|string|max:255',
             'type' => 'required|in:tour,hotel,car,blog',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'image' => 'nullable|image,svg|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -72,7 +72,7 @@ class CategoriesController extends Controller
         $validator = Validator::make($request->all(), [
             'category' => 'required|string|max:255',
             'type' => 'required|in:tour,hotel,car,blog',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'image' => 'nullable|image,svg|max:2048',
         ]);
 
         if ($validator->fails()) {

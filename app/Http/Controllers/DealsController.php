@@ -128,13 +128,13 @@ class DealsController extends Controller
             'lat' => 'nullable|numeric',
             'long' => 'nullable|numeric',
             'map_location' => 'nullable|string',
-            'cover_photo' => 'required|image|mimes:jpeg,png,jpg,gif',
-            'other_images.*' => 'required|image|mimes:jpeg,png,jpg,gif',
+            'cover_photo' => 'required|image',
+            'other_images.*' => 'required|image',
             'status' => 'nullable|in:publish,draft',
             'seo_title' => 'nullable|string|max:60',
             'seo_description' => 'nullable|string|max:160',
             'seo_keywords' => 'nullable|string',
-            'seo_image' => 'nullable|image|mimes:jpeg,png,jpg,gif',
+            'seo_image' => 'nullable|image',
             'video_link' => 'nullable|url'
         ];
 
@@ -431,13 +431,13 @@ class DealsController extends Controller
             'lat' => 'nullable|numeric',
             'long' => 'nullable|numeric',
             'map_location' => 'nullable|string',
-            'cover_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif',
-            'other_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif',
+            'cover_photo' => 'nullable|image',
+            'other_images.*' => 'nullable|image',
             'status' => 'nullable|in:publish,draft',
             'seo_title' => 'nullable|string|max:60',
             'seo_description' => 'nullable|string|max:160',
             'seo_keywords' => 'nullable|string',
-            'seo_image' => 'nullable|image|mimes:jpeg,png,jpg,gif',
+            'seo_image' => 'nullable|image',
             'video_link' => 'nullable|url'
         ];
 
@@ -858,8 +858,8 @@ class DealsController extends Controller
             'people' => 'required|integer|min:1',
             'beds' => 'required|integer|min:1',
             'availability' => 'required|in:0,1',
-            'cover_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif',
-            'other_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif',
+            'cover_photo' => 'nullable|image',
+            'other_images.*' => 'nullable|image',
             'description' => 'nullable|string'
         ]);
 
@@ -938,8 +938,8 @@ class DealsController extends Controller
             'people' => 'required|integer|min:1',
             'beds' => 'required|integer|min:1',
             'availability' => 'required|in:0,1',
-            'cover_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif',
-            'other_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif',
+            'cover_photo' => 'nullable|image',
+            'other_images.*' => 'nullable|image',
             'description' => 'nullable|string'
         ]);
 
