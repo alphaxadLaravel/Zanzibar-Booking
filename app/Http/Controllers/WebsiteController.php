@@ -810,8 +810,11 @@ class WebsiteController extends Controller
     /**
      * Get the appropriate view route for a deal
      */
-    private function getViewRoute($deal, $hashids)
+    private function getViewRoute($deal, $hashids = null)
     {
+        if ($hashids === null) {
+            $hashids = $this->getHashids();
+        }
         $encodedId = $hashids->encode($deal->id);
         
         switch ($deal->type) {
@@ -823,6 +826,10 @@ class WebsiteController extends Controller
                 return route('view-tour', ['id' => $encodedId]);
             case 'car':
                 return route('view-car', ['id' => $encodedId]);
+            case 'activity':
+                return route('view-activity', ['id' => $encodedId]);
+            case 'package':
+                return route('view-package', ['id' => $encodedId]);
             default:
                 return '#';
         }
