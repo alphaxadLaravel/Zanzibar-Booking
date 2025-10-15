@@ -85,7 +85,7 @@ class AdminController extends Controller
             'description' => 'required|string',
             'category_id' => 'required|exists:categories,id',
             'status' => 'required|in:draft,published',
-            'cover_photo' => 'required|image,webp|max:5120' // Image required
+            'cover_photo' => 'required|image' // Image required
         ]);
 
         try {
@@ -168,7 +168,7 @@ class AdminController extends Controller
             'category_id' => 'required|exists:categories,id',
             'status' => 'required|in:draft,published',
             // Image optional on update
-            'cover_photo' => 'nullable|image,webp|max:5120'
+            'cover_photo' => 'nullable|image'
         ]);
 
         try {
@@ -639,8 +639,8 @@ class AdminController extends Controller
             'instagram_url' => 'nullable|url|max:500',
             'tripadvisor_url' => 'nullable|url|max:500',
             'youtube_url' => 'nullable|url|max:500',
-            'header_photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
-            'video_file' => 'nullable|mimes:mp4,mov,avi,wmv|max:51200',
+            'header_photo' => 'nullable|image',
+            'video_file' => 'nullable',
         ]);
 
         $settings = System::first();

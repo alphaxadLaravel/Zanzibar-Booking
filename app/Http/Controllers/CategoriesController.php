@@ -21,8 +21,8 @@ class CategoriesController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'category' => 'required|string|max:255',
-            'type' => 'required|in:tour,hotel,car,blog',
-            'image' => 'nullable|image,svg|max:2048',
+            'type' => 'required',
+            'image' => 'nullable|image',
         ]);
 
         if ($validator->fails()) {
@@ -71,8 +71,8 @@ class CategoriesController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'category' => 'required|string|max:255',
-            'type' => 'required|in:tour,hotel,car,blog',
-            'image' => 'nullable|image,svg|max:2048',
+            'type' => 'required',
+            'image' => 'nullable|image',
         ]);
 
         if ($validator->fails()) {
