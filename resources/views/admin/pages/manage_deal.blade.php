@@ -131,10 +131,10 @@
                 @endif
                 @if($type == 'package' || $type == 'activity')
                 <div class="col-md-4">
-                    <label class="form-label">Max People <span class="text-danger">*</span></label>
+                    <label class="form-label">Min People <span class="text-danger">*</span></label>
                     <input type="number" class="form-control" name="max_people"
                         value="{{ old('max_people', $typeSpecificData['tour']->max_people ?? '') }}" min="1"
-                        placeholder="e.g. 10" required>
+                        placeholder="e.g. 2" required>
                     @error('max_people')
                     <div class="text-danger">{{ $message }}</div>
                     @enderror

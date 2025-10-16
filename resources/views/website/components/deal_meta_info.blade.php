@@ -30,12 +30,18 @@
                 <span
                     class="d-flex align-items-center justify-content-center rounded bg-light flex-shrink-0"
                     style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 18px;">
-                    <i class="mdi mdi-currency-usd" style="color: #218080; font-size: 1.2rem;"></i>
+                    @if($type === 'package' || $type === 'activity')
+                        <i class="mdi mdi-account-group" style="color: #218080; font-size: 1.2rem;"></i>
+                    @else
+                        <i class="mdi mdi-currency-usd" style="color: #218080; font-size: 1.2rem;"></i>
+                    @endif
                 </span>
                 <div class="flex-grow-1" style="min-width:0;">
                     <div class="fw-bold text-dark"
                         style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                        @if($type === 'hotel')
+                        @if($type === 'package' || $type === 'activity')
+                            {{ $deal->tours ? $deal->tours->max_people : 'N/A' }} People
+                        @elseif($type === 'hotel')
                             USD {{ number_format($deal->base_price, 2) }}/night
                         @elseif($type === 'car')
                             USD {{ number_format($deal->base_price, 2) }}/day
@@ -43,7 +49,13 @@
                             USD {{ number_format($deal->base_price, 2) }}/person
                         @endif
                     </div>
-                    <div class="text-muted small" style="white-space:nowrap;">Price</div>
+                    <div class="text-muted small" style="white-space:nowrap;">
+                        @if($type === 'package' || $type === 'activity')
+                            Min People
+                        @else
+                            Price
+                        @endif
+                    </div>
                 </div>
             </div>
         </li>
