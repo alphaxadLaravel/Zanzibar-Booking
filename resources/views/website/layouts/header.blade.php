@@ -49,7 +49,7 @@
                         <a  href="{{ route('cars') }}">Cars</a>
                     </li>
                     <li class="menu-item menu-item-5">
-                        <a href="{{ route('flights.index') }}">Flights</a>
+                        <a href="#">Flights</a>
                     </li>
                     <li class="menu-item menu-item-5">
                         <a href="{{ route('blog') }}">Blog</a>
