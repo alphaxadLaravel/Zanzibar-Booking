@@ -282,8 +282,8 @@
                                         <a href="{{ $deal->view_route }}"
                                             style="display:block;">
                                             <img src="{{ $deal->image_url }}"
-                                                alt="{{ $deal->title }}" loading="eager" width="360" height="160"
-                                                style="width:100%;height:140px;object-fit:cover;border-radius:8px;" />
+                                                alt="{{ $deal->title }}" loading="eager" width="360" height="200"
+                                                style="width:100%;height:200px;object-fit:cover;border-radius:8px;" />
                                         </a>
                                         @if($deal->category)
                                         <a class="hotel-item__type" href="#"

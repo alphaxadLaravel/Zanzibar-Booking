@@ -29,25 +29,12 @@
                         <hr>
                         
                         <!-- Search and Filter Section -->
-                        <div class="row mb-3 d-flex justify-content-end">
-                            <div class="col-md-4">
-                                <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="ti ti-search"></i>
-                                    </span>
-                                    <input type="text" 
-                                           class="form-control" 
-                                           placeholder="Search {{ $dealTitle }} by title, location, or category..." 
-                                           wire:model.live="search">
-                                    @if($search)
-                                        <button class="btn btn-outline-secondary" 
-                                                type="button" 
-                                                wire:click="resetSearch"
-                                                title="Clear search">
-                                            <i class="ti ti-x"></i>
-                                        </button>
-                                    @endif
-                                </div>
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <input type="text" 
+                                       class="form-control"
+                                       placeholder="Search {{ $dealTitle }} by title, location, or category..." 
+                                       wire:model.live="search">
                             </div>
                         </div>
                         <div class="table-responsive">

@@ -153,79 +153,65 @@
 </div><!-- end row -->
 
 <!-- Recent Activity Cards -->
-<div class="row mt-3 g-3">
-    <div class="col-xl-6 col-lg-6">
-        <div class="card h-100">
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">Recent Users</h5>
+                <h5 class="card-title mb-0">Recent Deals Added</h5>
             </div>
             <div class="card-body p-0">
-                <div class="list-group list-group-flush">
-                    @forelse($recentUsers as $user)
-                        @php
-                            $initials = strtoupper(
-                                trim(mb_substr($user->firstname ?? '', 0, 1) . mb_substr($user->lastname ?? '', 0, 1))
-                                ?: mb_substr($user->email ?? 'NA', 0, 2)
-                            );
-                            $roleName = optional($user->role)->name ?? 'Customer';
-                            $roleKey = strtolower($roleName);
-                            $roleBadge = str_contains($roleKey, 'admin') ? 'warning' : (str_contains($roleKey, 'vip') ? 'primary' : 'secondary');
-                        @endphp
-                        <div class="list-group-item">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="avatar-xs">
-                                        <span class="avatar-title rounded-circle bg-primary text-white fs-12">{{ $initials }}</span>
-                                    </div>
-                                    <div>
-                                        <div class="fw-semibold">
-                                            {{ $user->full_name ?? trim(($user->firstname ?? '') . ' ' . ($user->lastname ?? '')) ?: $user->email }}
-                                        </div>
-                                        <small class="text-muted">{{ $user->email }}</small>
-                                    </div>
-                                </div>
-                                <span class="badge badge-soft-{{ $roleBadge }}">{{ Str::headline($roleName) }}</span>
-                            </div>
-                            <small class="text-muted d-block mt-2">{{ optional($user->created_at)->diffForHumans() }}</small>
-                        </div>
-                    @empty
-                        <div class="list-group-item text-center text-muted py-4">
-                            No recent users found.
-                        </div>
-                    @endforelse
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-6 col-lg-6">
-        <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">Recent Deals</h5>
-            </div>
-            <div class="card-body p-0">
-                <div class="list-group list-group-flush">
-                    @forelse($recentDeals as $deal)
-                        <div class="list-group-item">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <div class="fw-semibold text-truncate" title="{{ $deal->title }}">{{ $deal->title }}</div>
-                                    <small class="text-muted">
-                                        {{ Str::headline($deal->type ?? 'Deal') }}
-                                        @if($deal->location)
-                                            • {{ $deal->location }}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Cover</th>
+                                <th>Title</th>
+                                <th>Type</th>
+                                <th>Location</th>
+                                <th>Price</th>
+                                <th>Status</th>
+                                <th>Added</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($recentDeals as $index => $deal)
+                                <tr>
+                                    <td>{{ $index + 1 }}</td>
+                                    <td>
+                                        @if($deal->cover_photo)
+                                            <img src="{{ asset('storage/' . $deal->cover_photo) }}" alt="{{ $deal->title }}"
+                                                class="rounded" style="width: 50px; height: 50px; object-fit: cover;">
+                                        @else
+                                            <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                                                style="width: 50px; height: 50px;">
+                                                <i class="ti ti-photo text-muted"></i>
+                                            </div>
                                         @endif
-                                    </small>
-                                </div>
-                                <span class="badge badge-soft-primary">{{ optional($deal->category)->name ?? 'Uncategorised' }}</span>
-                            </div>
-                            <small class="text-muted d-block mt-2">{{ optional($deal->created_at)->diffForHumans() }}</small>
-                        </div>
-                    @empty
-                        <div class="list-group-item text-center text-muted py-4">
-                            No recent deals added.
-                        </div>
-                    @endforelse
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold text-truncate" title="{{ $deal->title }}">{{ $deal->title }}</div>
+                                        <small class="text-muted">{{ optional($deal->category)->category ?? 'N/A' }}</small>
+                                    </td>
+                                    <td>{{ Str::headline($deal->type ?? 'Deal') }}</td>
+                                    <td>{{ $deal->location ?? 'Not specified' }}</td>
+                                    <td>${{ number_format($deal->base_price, 2) }}</td>
+                                    <td>
+                                        @if($deal->status)
+                                            <span class="badge bg-success">Active</span>
+                                        @else
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        @endif
+                                    </td>
+                                    <td>{{ optional($deal->created_at)->diffForHumans() }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-4">No recent deals found.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

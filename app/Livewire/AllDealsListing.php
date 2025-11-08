@@ -6,7 +6,6 @@ use App\Models\Category;
 use App\Models\Deal;
 use Livewire\Component;
 use Hashids\Hashids;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class AllDealsListing extends Component
@@ -208,7 +207,7 @@ class AllDealsListing extends Component
             if ($primaryImagePath) {
                 $deal->image_url = Str::startsWith($primaryImagePath, ['http://', 'https://'])
                     ? $primaryImagePath
-                    : Storage::disk('public')->url($primaryImagePath);
+                    : asset('storage/' . ltrim($primaryImagePath, '/'));
             } else {
                 $deal->image_url = $deal->default_image;
             }
