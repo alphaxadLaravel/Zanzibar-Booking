@@ -61,10 +61,10 @@
         <!-- User Actions -->
         <div class="navbar-actions">
             @php
-                $authUser = Auth::user();
-                $sidebarRoleName = optional($authUser->role)->name;
+                $authUser = auth()->user();
+                $sidebarRoleName = $authUser?->role?->name;
                 $sidebarIsPartner = $sidebarRoleName === 'Partner';
-                $sidebarIsAdmin = in_array($sidebarRoleName, ['Super Admin', 'Admin']);
+                $sidebarIsAdmin = in_array($sidebarRoleName, ['Super Admin', 'Admin'], true);
             @endphp
             <!-- Cart Icon -->
             <div class="cart-icon-container">
