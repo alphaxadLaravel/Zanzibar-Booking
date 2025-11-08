@@ -195,9 +195,12 @@ Route::middleware('auth')->group(function () {
 
     // Users Management
     Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');
+    Route::get('/admin/users/{id}', [AdminController::class, 'showUser'])->name('admin.users.show');
     Route::get('/admin/users/{id}/edit', [AdminController::class, 'editUser'])->name('admin.users.edit');
     Route::put('/admin/users/{id}', [AdminController::class, 'updateUser'])->name('admin.users.update');
     Route::delete('/admin/users/{id}', [AdminController::class, 'deleteUser'])->name('admin.users.delete');
+    Route::put('/admin/users/{id}/partner/approve', [AdminController::class, 'approvePartnerRequest'])->name('admin.users.partner.approve');
+    Route::put('/admin/users/{id}/partner/reject', [AdminController::class, 'rejectPartnerRequest'])->name('admin.users.partner.reject');
 
     // Payments Management
     Route::get('/admin/payments', [AdminController::class, 'payments'])->name('admin.payments');

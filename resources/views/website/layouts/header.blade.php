@@ -62,7 +62,9 @@
         <div class="navbar-actions">
             @php
                 $authUser = Auth::user();
-                $sidebarIsPartner = $authUser && optional($authUser->role)->name === 'Partner';
+                $sidebarRoleName = optional($authUser->role)->name;
+                $sidebarIsPartner = $sidebarRoleName === 'Partner';
+                $sidebarIsAdmin = in_array($sidebarRoleName, ['Super Admin', 'Admin']);
             @endphp
             <!-- Cart Icon -->
             <div class="cart-icon-container">
@@ -81,7 +83,7 @@
             @auth
                 <!-- Authenticated User Actions -->
                 <div class="d-flex gap-3 align-items-center">
-                    @if(!$sidebarIsPartner)
+                    @if(!$sidebarIsPartner && !$sidebarIsAdmin)
                         <a href="#" class="btn btn-outline-primary mx-2" data-bs-toggle="modal" data-bs-target="#BecomePartner">
                             <i class="mdi mdi-handshake"></i>
                             <span class="btn-text">Become Partner</span>

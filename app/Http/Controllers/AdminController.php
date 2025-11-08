@@ -121,6 +121,18 @@ class AdminController extends Controller
         return redirect()->route('admin.users')->with('success', 'Partner approved successfully.');
     }
 
+    public function approvePartnerRequest($id)
+    {
+        $user = User::findOrFail($id);
+        return $this->approvePartner(new Request(), $user);
+    }
+
+    public function rejectPartnerRequest($id)
+    {
+        $user = User::findOrFail($id);
+        return $this->rejectPartner(new Request(), $user);
+    }
+
     public function rejectPartner(Request $request, User $user)
     {
         $currentRole = optional(Auth::user()->role)->name;
@@ -432,6 +444,21 @@ class AdminController extends Controller
         $roles = Role::where('name', '!=', 'Super Admin')->get();
         
         return view('admin.pages.users.edit', compact('user', 'roles', 'hashids'));
+    }
+
+    public function showUser($id)
+    {
+        $hashids = $this->getHashids();
+        $decodedIds = $hashids->decode($id);
+
+        if (empty($decodedIds)) {
+            return redirect()->route('admin.users')->with('error', 'Invalid user ID.');
+        }
+
+        $userId = $decodedIds[0];
+        $user = User::with('role')->findOrFail($userId);
+
+        return view('admin.pages.users.view', compact('user'));
     }
 
     public function updateUser(Request $request, $id)

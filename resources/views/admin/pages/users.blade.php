@@ -167,9 +167,21 @@
                                                 <small class="text-muted">{{ $user->created_at->format('h:i A') }}</small>
                                             </td>
                                             <td>
-                                                <a href="{{ route('admin.users.edit', $hashids->encode($user->id)) }}" class="btn btn-sm btn-outline-primary" title="Edit User">
-                                                    <i class="ti ti-pencil"></i>
+                                                <a href="{{ route('admin.users.show', $hashids->encode($user->id)) }}" class="btn btn-sm btn-outline-info" title="View User">
+                                                    <i class="ti ti-eye"></i>
                                                 </a>
+                                                @if(optional($user->role)->name === 'Partner' && (int) $user->status !== 1)
+                                                    <form action="{{ route('admin.users.partner.approve', $user->id) }}" method="POST" class="d-inline">
+                                                        @csrf
+                                                        @method('PUT')
+                                                        <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                                    </form>
+                                                    <form action="{{ route('admin.users.partner.reject', $user->id) }}" method="POST" class="d-inline">
+                                                        @csrf
+                                                        @method('PUT')
+                                                        <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                                                    </form>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach
