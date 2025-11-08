@@ -61,6 +61,11 @@ class PartnerController extends Controller
                 now()->addDays(7),
                 ['user' => $user->id]
             );
+            $rejectionUrl = URL::temporarySignedRoute(
+                'admin.partners.reject',
+                now()->addDays(7),
+                ['user' => $user->id]
+            );
 
             $adminEmails = User::whereHas('role', function ($query) {
                 $query->whereIn('name', ['Super Admin', 'Admin']);
@@ -82,7 +87,8 @@ class PartnerController extends Controller
                         $validated['business_name'] ?? null,
                         $validated['notes'] ?? null,
                         $previousRole,
-                        $approvalUrl
+                        $approvalUrl,
+                        $rejectionUrl
                     ));
             }
 

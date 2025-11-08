@@ -71,6 +71,10 @@
                        style="display: inline-block; padding: 12px 24px; background: #003580; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600;">
                         Approve Partner Request
                     </a>
+                    <a href="{{ $rejectUrl }}"
+                       style="display: inline-block; padding: 12px 24px; background: #dc3545; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; margin-left: 10px;">
+                        Reject Request
+                    </a>
                 </div>
             </td>
         </tr>

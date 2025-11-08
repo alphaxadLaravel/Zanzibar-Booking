@@ -19,6 +19,7 @@ use Hashids\Hashids;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class DealsController extends Controller
 {
@@ -29,6 +30,17 @@ class DealsController extends Controller
         return view('admin.pages.deals', compact('dealType'));
     }
 
+    protected function ensurePartnerOwnsDeal(?Deal $deal)
+    {
+        if (!$deal) {
+            abort(404, 'Deal not found');
+        }
+
+        if (optional(Auth::user()->role)->name === 'Partner' && $deal->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+    }
+
 
     // Apartments Management
     public function apartments()
@@ -36,6 +48,9 @@ class DealsController extends Controller
         $hashids = new Hashids('MchungajiZanzibarBookings', 10);
         $apartments = Deal::with('category')
             ->where('type', 'apartment')
+            ->when(optional(Auth::user()->role)->name === 'Partner', function ($query) {
+                $query->where('user_id', Auth::id());
+            })
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -75,6 +90,8 @@ class DealsController extends Controller
         if (!$hotel) {
             return redirect()->back()->with('error', 'Hotel not found');
         }
+
+        $this->ensurePartnerOwnsDeal($hotel);
 
         // Get rooms for this hotel
         $rooms = Room::with('photos')
@@ -201,6 +218,12 @@ class DealsController extends Controller
                 $seoImagePath = $request->file('seo_image')->store('deals/seo', 'public');
             }
 
+            $authUser = Auth::user();
+            $status = $request->status === 'publish' ? 1 : 0;
+            if ($authUser && optional($authUser->role)->name === 'Partner' && (int) $authUser->status !== 1) {
+                $status = 0;
+            }
+
             // Create the deal
             $deal = Deal::create([
                 'title' => $request->title,
@@ -215,8 +238,8 @@ class DealsController extends Controller
                 'map_location' => $request->map_location,
                 'cover_photo' => $coverPhotoPath,
                 'type' => $type, // Add deal type
-                'user_id' => 1, // Set user_id to 1 as requested
-                'status' => $request->status === 'publish' ? 1 : 0,
+                'user_id' => $authUser?->id ?? 1, // default to 1 for legacy data
+                'status' => $status,
                 'seo_title' => $request->seo_title,
                 'seo_description' => $request->seo_description,
                 'seo_keywords' => $request->seo_keywords,
@@ -367,6 +390,8 @@ class DealsController extends Controller
             return redirect()->back()->with('error', 'Deal not found');
         }
 
+        $this->ensurePartnerOwnsDeal($deal);
+
         // Filter categories by type and active
         // For package and activity types, fetch 'tour' categories since they share the same categories
         $categoryType = ($type === 'package' || $type === 'activity') ? 'tour' : $type;
@@ -420,6 +445,8 @@ class DealsController extends Controller
         if (!$deal) {
             return redirect()->back()->with('error', 'Deal not found');
         }
+
+        $this->ensurePartnerOwnsDeal($deal);
 
         // Base validation rules for all deal types
         $baseRules = [
@@ -514,6 +541,12 @@ class DealsController extends Controller
             }
 
             // Update the deal
+            $authUser = Auth::user();
+            $status = $request->status === 'publish' ? 1 : 0;
+            if ($authUser && optional($authUser->role)->name === 'Partner' && (int) $authUser->status !== 1) {
+                $status = 0;
+            }
+
             $deal->update([
                 'title' => $request->title,
                 'category_id' => $request->category_id,
@@ -526,7 +559,7 @@ class DealsController extends Controller
                 'long' => $request->long,
                 'map_location' => $request->map_location,
                 'cover_photo' => $coverPhotoPath,
-                'status' => $request->status === 'publish' ? 1 : 0,
+                'status' => $status,
                 'seo_title' => $request->seo_title,
                 'seo_description' => $request->seo_description,
                 'seo_keywords' => $request->seo_keywords,
@@ -710,6 +743,8 @@ class DealsController extends Controller
             return redirect()->back()->with('error', 'Hotel not found');
         }
 
+        $this->ensurePartnerOwnsDeal($hotel);
+
         try {
             DB::beginTransaction();
 
@@ -773,6 +808,8 @@ class DealsController extends Controller
         if (!$apartment) {
             return redirect()->back()->with('error', 'Apartment not found');
         }
+
+        $this->ensurePartnerOwnsDeal($apartment);
 
         try {
             DB::beginTransaction();
@@ -1081,6 +1118,8 @@ class DealsController extends Controller
         try {
             $deal = Deal::where('type', 'car')->findOrFail($decodedCarId);
 
+            $this->ensurePartnerOwnsDeal($deal);
+
             // Delete associated car data
             if ($deal->car) {
                 $deal->car->delete();
@@ -1181,6 +1220,8 @@ class DealsController extends Controller
             return redirect()->back()->with('error', 'Tour not found');
         }
 
+        $this->ensurePartnerOwnsDeal($tour);
+
         try {
             DB::beginTransaction();
 
@@ -1235,6 +1276,8 @@ class DealsController extends Controller
             return redirect()->back()->with('error', 'Tour not found');
         }
 
+        $this->ensurePartnerOwnsDeal($tour);
+
         return view('admin.pages.manage_tours', compact('tour', 'hashids'));
     }
 
@@ -1244,6 +1287,9 @@ class DealsController extends Controller
         $hashids = new Hashids('MchungajiZanzibarBookings', 10);
         $decodedTourId = $hashids->decode($tourId)[0];
         $decodedItineraryId = $hashids->decode($itineraryId)[0];
+
+        $dealForItinerary = Deal::find($decodedTourId);
+        $this->ensurePartnerOwnsDeal($dealForItinerary);
 
         $itinerary = TourItenary::where('deal_id', $decodedTourId)->find($decodedItineraryId);
 
@@ -1273,6 +1319,9 @@ class DealsController extends Controller
         ]);
 
         try {
+            $deal = Deal::findOrFail($decodedTourId);
+            $this->ensurePartnerOwnsDeal($deal);
+
             TourItenary::create([
                 'deal_id' => $decodedTourId,
                 'title' => $request->title,
@@ -1301,6 +1350,9 @@ class DealsController extends Controller
         ]);
 
         try {
+            $deal = Deal::findOrFail($decodedTourId);
+            $this->ensurePartnerOwnsDeal($deal);
+
             $itinerary = TourItenary::where('deal_id', $decodedTourId)->find($decodedItineraryId);
 
             if (!$itinerary) {
@@ -1327,6 +1379,9 @@ class DealsController extends Controller
         $decodedItineraryId = $hashids->decode($itineraryId)[0];
 
         try {
+            $deal = Deal::findOrFail($decodedTourId);
+            $this->ensurePartnerOwnsDeal($deal);
+
             $itinerary = TourItenary::where('deal_id', $decodedTourId)->find($decodedItineraryId);
 
             if (!$itinerary) {

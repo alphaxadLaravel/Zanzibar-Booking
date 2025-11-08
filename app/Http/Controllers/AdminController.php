@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\PartnerRegistration;
 use App\Mail\PartnerAccepted;
+use App\Mail\PartnerRejected;
 use Illuminate\Http\Request;
 use App\Models\Blog;
 use App\Models\Category;
@@ -118,6 +119,32 @@ class AdminController extends Controller
         }
 
         return redirect()->route('admin.users')->with('success', 'Partner approved successfully.');
+    }
+
+    public function rejectPartner(Request $request, User $user)
+    {
+        $currentRole = optional(Auth::user()->role)->name;
+        if (!in_array($currentRole, ['Super Admin', 'Admin'])) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $userRole = Role::where('name', 'User')->firstOrFail();
+
+        $user->role_id = $userRole->id;
+        $user->status = 1;
+        $user->save();
+
+        try {
+            Mail::to($user->email)->send(new PartnerRejected($user));
+            Log::info('Partner request rejected', ['user_id' => $user->id, 'rejected_by' => Auth::id()]);
+        } catch (\Throwable $th) {
+            Log::error('Failed sending partner rejection email', [
+                'user_id' => $user->id,
+                'error' => $th->getMessage()
+            ]);
+        }
+
+        return redirect()->route('admin.users')->with('info', 'Partner request rejected and user reverted.');
     }
 
    

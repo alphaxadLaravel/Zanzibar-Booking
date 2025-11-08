@@ -6,6 +6,7 @@ use App\Models\Deal;
 use Hashids\Hashids;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Illuminate\Support\Facades\Auth;
 
 class DealsList extends Component
 {
@@ -61,6 +62,11 @@ class DealsList extends Component
         // Build query with search functionality
         $query = Deal::with('category')
             ->where('type', $this->dealType);
+
+        $authUser = Auth::user();
+        if ($authUser && optional($authUser->role)->name === 'Partner') {
+            $query->where('user_id', $authUser->id);
+        }
 
         // Add search functionality
         if (!empty($this->search)) {

@@ -18,17 +18,19 @@ class PartnerRequestAdmin extends Mailable
     public ?string $notes;
     public ?string $previousRole;
     public string $approveUrl;
+    public string $rejectUrl;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(User $user, ?string $businessName = null, ?string $notes = null, ?string $previousRole = null, string $approveUrl = '#')
+    public function __construct(User $user, ?string $businessName = null, ?string $notes = null, ?string $previousRole = null, string $approveUrl = '#', string $rejectUrl = '#')
     {
         $this->user = $user;
         $this->businessName = $businessName;
         $this->notes = $notes;
         $this->previousRole = $previousRole;
         $this->approveUrl = $approveUrl;
+        $this->rejectUrl = $rejectUrl;
     }
 
     public function envelope(): Envelope

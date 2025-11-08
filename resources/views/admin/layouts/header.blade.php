@@ -106,8 +106,9 @@
                         data-bs-offset="0,16" href="#!" aria-haspopup="false" aria-expanded="false">
                         <img src="https://media.istockphoto.com/id/588348500/vector/male-avatar-profile-picture-vector.jpg?s=612x612&w=0&k=20&c=tPPah8S9tmcyOXCft1Ct0tCAdpfSaUNhGzJK7kQiQCg="
                             width="32" class="rounded-circle me-lg-2 d-flex" alt="use">
-                        <div class="d-lg-flex align-items-center gap-1 d-none">
-                            <h5 class="my-0">Adminstrator.</h5>
+                        <div class="d-lg-flex align-items-center gap-1 d-none text-start">
+                            <h5 class="my-0">{{ Auth::user()->firstname ?? Auth::user()->email }}</h5>
+                            <small class="text-muted text-uppercase">{{ optional(Auth::user()->role)->name }}</small>
                             <i class="ti ti-chevron-down align-middle"></i>
                         </div>
                     </a>

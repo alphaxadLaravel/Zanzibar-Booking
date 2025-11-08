@@ -60,6 +60,10 @@
 
         <!-- User Actions -->
         <div class="navbar-actions">
+            @php
+                $authUser = Auth::user();
+                $sidebarIsPartner = $authUser && optional($authUser->role)->name === 'Partner';
+            @endphp
             <!-- Cart Icon -->
             <div class="cart-icon-container">
                 <a href="{{ route('cart') }}" class="cart-link" title="View Cart">
@@ -77,17 +81,22 @@
             @auth
                 <!-- Authenticated User Actions -->
                 <div class="d-flex gap-3 align-items-center">
-                    <a href="#" class="btn btn-outline-primary mx-2" data-bs-toggle="modal" data-bs-target="#BecomePartner">
-                        <i class="mdi mdi-handshake"></i>
-                        <span class="btn-text">Become Partner</span>
-                    </a>
+                    @if(!$sidebarIsPartner)
+                        <a href="#" class="btn btn-outline-primary mx-2" data-bs-toggle="modal" data-bs-target="#BecomePartner">
+                            <i class="mdi mdi-handshake"></i>
+                            <span class="btn-text">Become Partner</span>
+                        </a>
+                    @endif
                     <div class="dropdown">
                         <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="mdi mdi-account"></i>
                             <span class="btn-text">{{ Auth::user()->firstname }}</span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            @if(Auth::user()->role->name === 'Super Admin' || Auth::user()->role->name === 'Admin')
+                            @php
+                                $dashboardRoles = ['Super Admin', 'Admin', 'Partner'];
+                            @endphp
+                            @if(in_array(optional(Auth::user()->role)->name, $dashboardRoles))
                                 <li><a class="dropdown-item" href="{{ route('dashboard') }}">
                                     <i class="mdi mdi-view-dashboard me-2"></i>Dashboard
                                 </a></li>

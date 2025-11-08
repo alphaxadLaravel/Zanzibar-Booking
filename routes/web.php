@@ -149,6 +149,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/partners/{user}/approve', [AdminController::class, 'approvePartner'])
         ->middleware('signed')
         ->name('admin.partners.approve');
+    Route::get('/admin/partners/{user}/reject', [AdminController::class, 'rejectPartner'])
+        ->middleware('signed')
+        ->name('admin.partners.reject');
     Route::get('/admin/manage-deal/{id}/{type}/edit', [DealsController::class, 'editDeal'])->name('admin.manage-deal.edit');
     Route::put('/admin/manage-deal/{id}/{type}/update', [DealsController::class, 'updateDeal'])->name('admin.manage-deal.update');
     Route::get('/admin/manage-deal/{type}', [DealsController::class, 'manageDeal'])->name('admin.manage-deal');

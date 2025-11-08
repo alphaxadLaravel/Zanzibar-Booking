@@ -67,28 +67,6 @@
                         <span class="menu-text">Cars</span>
                     </a>
                 </li>
-
-                <li class="side-nav-title">Account</li>
-                <li class="side-nav-item">
-                    <a href="{{ route('admin.my-bookings') }}" class="side-nav-link">
-                        <span class="menu-icon"><i class="mdi mdi-book-open-variant"></i></span>
-                        <span class="menu-text">My Bookings</span>
-                    </a>
-                </li>
-                <li class="side-nav-item">
-                    <a data-bs-toggle="collapse" href="#sidebarProfile" aria-expanded="false" aria-controls="sidebarProfile"
-                        class="side-nav-link">
-                        <span class="menu-icon"><i class="mdi mdi-account-circle"></i></span>
-                        <span class="menu-text">Profile</span>
-                        <span class="menu-arrow"></span>
-                    </a>
-                    <div class="collapse" id="sidebarProfile">
-                        <ul class="sub-menu">
-                            <li class="side-nav-item"><a href="{{ route('admin.profile') }}" class="side-nav-link">View Profile</a></li>
-                            <li class="side-nav-item"><a href="{{ route('admin.profile.edit') }}" class="side-nav-link">Edit Profile</a></li>
-                        </ul>
-                    </div>
-                </li>
             @else
                 <li class="side-nav-title">All Services</li>
 
