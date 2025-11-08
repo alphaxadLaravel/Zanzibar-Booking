@@ -77,7 +77,7 @@
             @auth
                 <!-- Authenticated User Actions -->
                 <div class="d-flex gap-3 align-items-center">
-                    <a href="become-a-partner.html" class="btn btn-outline-primary mx-2">
+                    <a href="#" class="btn btn-outline-primary mx-2" data-bs-toggle="modal" data-bs-target="#BecomePartner">
                         <i class="mdi mdi-handshake"></i>
                         <span class="btn-text">Become Partner</span>
                     </a>
@@ -111,7 +111,7 @@
             @else
                 <!-- Guest Actions -->
                 <div class="d-flex gap-3">
-                    <a href="become-a-partner.html" class="btn btn-outline-primary mx-2">
+                    <a href="#" class="btn btn-outline-primary mx-2" data-bs-toggle="modal" data-bs-target="#BecomePartner">
                         <i class="mdi mdi-handshake"></i>
                         <span class="btn-text">Become A Partner</span>
                     </a>
@@ -220,6 +220,27 @@
         }
       }
     });
+
+    @auth
+        @if ($errors->any())
+            const partnerModalEl = document.getElementById('BecomePartner');
+            if (partnerModalEl) {
+                const partnerModal = bootstrap.Modal.getOrCreateInstance(partnerModalEl);
+                partnerModal.show();
+            }
+        @endif
+    @else
+        document.querySelectorAll('[data-bs-target="#BecomePartner"]').forEach(function (el) {
+            el.addEventListener('click', function (ev) {
+                ev.preventDefault();
+                const loginModalEl = document.getElementById('exampleModal');
+                if (loginModalEl) {
+                    const modal = bootstrap.Modal.getOrCreateInstance(loginModalEl);
+                    modal.show();
+                }
+            });
+        });
+    @endauth
 
   });
 </script>

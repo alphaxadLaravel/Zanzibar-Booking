@@ -7,6 +7,7 @@ use App\Http\Controllers\DealsController;
 use App\Http\Controllers\FeatureController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MaintenanceController;
+use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\WebsiteController;
 use Illuminate\Support\Facades\Artisan;
@@ -45,6 +46,11 @@ Route::get('/newsletter/unsubscribe', [WebsiteController::class, 'unsubscribeNew
 
 // Search functionality
 Route::get('/search', [WebsiteController::class, 'search'])->name('search');
+
+// Partner routes
+Route::middleware('auth')->group(function () {
+    Route::post('/partner/request', [PartnerController::class, 'request'])->name('partner.request');
+});
 
 // contact us
 Route::get('/contact-us', [WebsiteController::class, 'contactUs'])->name('contact-us');
@@ -140,6 +146,9 @@ Route::middleware('auth')->group(function () {
 
     // deals
     Route::get('/admin/deals/{dealType}', [DealsController::class, 'dealType'])->name('admin.deal');
+    Route::get('/admin/partners/{user}/approve', [AdminController::class, 'approvePartner'])
+        ->middleware('signed')
+        ->name('admin.partners.approve');
     Route::get('/admin/manage-deal/{id}/{type}/edit', [DealsController::class, 'editDeal'])->name('admin.manage-deal.edit');
     Route::put('/admin/manage-deal/{id}/{type}/update', [DealsController::class, 'updateDeal'])->name('admin.manage-deal.update');
     Route::get('/admin/manage-deal/{type}', [DealsController::class, 'manageDeal'])->name('admin.manage-deal');

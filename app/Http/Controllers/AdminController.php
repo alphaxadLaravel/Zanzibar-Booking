@@ -39,32 +39,46 @@ class AdminController extends Controller
     // Dashboard
     public function dashboard()
     {
-        $stats = [
-            'tours_count' => Deal::where('type', 'tour')->count(),
-            'hotels_count' => Deal::where('type', 'hotel')->count(),
-            'apartments_count' => Deal::where('type', 'apartment')->count(),
-            'bookings_count' => Booking::count(),
-            'cars_count' => Deal::where('type', 'car')->count(),
-            'blog_posts_count' => Blog::count(),
-            'site_visits_count' => $this->resolveSiteVisitsCount(),
-            'total_revenue' => Payment::completed()->sum('amount'),
-        ];
+        $authUser = Auth::user();
+        $roleName = optional($authUser->role)->name;
+        $isPartner = $roleName === 'Partner';
 
-        $recentUsers = User::with('role')
-            ->latest()
-            ->take(6)
-            ->get();
+        if ($isPartner && $authUser) {
+            $stats = [
+                'tours_count' => Deal::where('type', 'tour')->where('user_id', $authUser->id)->count(),
+                'hotels_count' => Deal::where('type', 'hotel')->where('user_id', $authUser->id)->count(),
+                'apartments_count' => Deal::where('type', 'apartment')->where('user_id', $authUser->id)->count(),
+                'bookings_count' => Booking::where('user_id', $authUser->id)->count(),
+                'cars_count' => Deal::where('type', 'car')->where('user_id', $authUser->id)->count(),
+                'blog_posts_count' => Blog::where('user_id', $authUser->id)->count(),
+                'site_visits_count' => 0,
+                'total_revenue' => Payment::where('user_id', $authUser->id)->completed()->sum('amount'),
+            ];
 
-        $recentDeals = Deal::with('category')
-            ->latest()
-            ->take(6)
-            ->get();
+            $recentDeals = Deal::with('category')
+                ->where('user_id', $authUser->id)
+                ->latest()
+                ->take(10)
+                ->get();
+        } else {
+            $stats = [
+                'tours_count' => Deal::where('type', 'tour')->count(),
+                'hotels_count' => Deal::where('type', 'hotel')->count(),
+                'apartments_count' => Deal::where('type', 'apartment')->count(),
+                'bookings_count' => Booking::count(),
+                'cars_count' => Deal::where('type', 'car')->count(),
+                'blog_posts_count' => Blog::count(),
+                'site_visits_count' => $this->resolveSiteVisitsCount(),
+                'total_revenue' => Payment::completed()->sum('amount'),
+            ];
 
-        return view('admin.pages.dashboard', compact(
-            'stats',
-            'recentUsers',
-            'recentDeals'
-        ));
+            $recentDeals = Deal::with('category')
+                ->latest()
+                ->take(10)
+                ->get();
+        }
+
+        return view('admin.pages.dashboard', compact('stats', 'recentDeals', 'isPartner'));
     }
 
     private function resolveSiteVisitsCount(): int
@@ -78,6 +92,32 @@ class AdminController extends Controller
         }
 
         return 0;
+    }
+
+    public function approvePartner(Request $request, User $user)
+    {
+        $currentRole = optional(Auth::user()->role)->name;
+        if (!in_array($currentRole, ['Super Admin', 'Admin'])) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $partnerRole = Role::where('name', 'Partner')->firstOrFail();
+
+        $user->role_id = $partnerRole->id;
+        $user->status = 1;
+        $user->save();
+
+        try {
+            Mail::to($user->email)->send(new PartnerAccepted($user));
+            Log::info('Partner approved via email link', ['user_id' => $user->id, 'approved_by' => Auth::id()]);
+        } catch (\Throwable $th) {
+            Log::error('Failed sending partner approval email', [
+                'user_id' => $user->id,
+                'error' => $th->getMessage()
+            ]);
+        }
+
+        return redirect()->route('admin.users')->with('success', 'Partner approved successfully.');
     }
 
    
@@ -396,22 +436,23 @@ class AdminController extends Controller
         
         // Send email if user is promoted to Partner role and status is active
         $partnerRole = Role::where('name', 'Partner')->first();
-        if ($partnerRole && $request->role_id == $partnerRole->id && $request->status == 1) {
-            // If this is a new partner (role changed) or newly activated partner
-            if ($oldRoleId != $partnerRole->id || $oldStatus != 1) {
-                try {
-                    if ($oldRoleId != $partnerRole->id) {
-                        // Role just changed to Partner - send acceptance email
-                        Mail::to($user->email)->send(new PartnerAccepted($user));
-                        Log::info('Partner acceptance email sent', ['user_id' => $user->id]);
-                    } else {
-                        // Status activated - send registration confirmation
-                        Mail::to($user->email)->send(new PartnerRegistration($user));
-                        Log::info('Partner registration email sent', ['user_id' => $user->id]);
-                    }
-                } catch (\Exception $e) {
-                    Log::error('Failed to send partner email', ['error' => $e->getMessage(), 'user_id' => $user->id]);
+        if ($partnerRole && $request->role_id == $partnerRole->id) {
+            try {
+                $statusBecameActive = (int) $oldStatus !== 1 && (int) $request->status === 1;
+                $roleJustChangedToPartner = $oldRoleId != $partnerRole->id;
+
+                if ($roleJustChangedToPartner && (int) $request->status === 0) {
+                    // New partner set to pending - acknowledge receipt
+                    Mail::to($user->email)->send(new PartnerRegistration($user));
+                    Log::info('Partner registration acknowledgement sent', ['user_id' => $user->id]);
                 }
+
+                if ($statusBecameActive || ($roleJustChangedToPartner && (int) $request->status === 1)) {
+                    Mail::to($user->email)->send(new PartnerAccepted($user));
+                    Log::info('Partner acceptance email sent', ['user_id' => $user->id]);
+                }
+            } catch (\Exception $e) {
+                Log::error('Failed to send partner email', ['error' => $e->getMessage(), 'user_id' => $user->id]);
             }
         }
         

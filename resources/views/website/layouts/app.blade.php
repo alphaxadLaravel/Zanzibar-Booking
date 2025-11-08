@@ -10,7 +10,7 @@
     </title>
     <link rel="shortcut icon" type="image/png" href="{{asset('logo.png')}}" />
     @yield('meta')
-    
+
     @livewireStyles()
 
     @include('website.layouts.styles')
@@ -28,12 +28,14 @@
 
     @include('website.layouts.footer')
 
-    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true"
+        data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLabel">Sign In</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="background:none; border:none;">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                        style="background:none; border:none;">
                         <i class="mdi mdi-close" style="font-size: 1.5rem;"></i>
                     </button>
                 </div>
@@ -49,12 +51,16 @@
                         <div id="password-field" class="field-wrapper input mb-3">
                             <div class="d-flex justify-content-between">
                                 <label for="rpassword">PASSWORD</label>
-                                <a href="#" onclick="switchToForgotPassword()" class="forgot-pass-link text-primary fw-bold">Forgot Password?</a>
+                                <a href="#" onclick="switchToForgotPassword()"
+                                    class="forgot-pass-link text-primary fw-bold">Forgot Password?</a>
                             </div>
                             <div style="position: relative;">
-                                <input id="rpassword" name="password" type="password" class="form-control gmz-validation"
-                                    data-validation="required" placeholder="Password" style="padding-right: 40px;" />
-                                <span class="view-password" style="position: absolute; top: 50%; right: 10px; transform: translateY(-50%); cursor:pointer;" onclick="togglePassword()">
+                                <input id="rpassword" name="password" type="password"
+                                    class="form-control gmz-validation" data-validation="required"
+                                    placeholder="Password" style="padding-right: 40px;" />
+                                <span class="view-password"
+                                    style="position: absolute; top: 50%; right: 10px; transform: translateY(-50%); cursor:pointer;"
+                                    onclick="togglePassword()">
                                     <i class="fal fa-eye view" id="show-eye"></i>
                                     <i class="fal fa-eye-slash not-view" id="hide-eye" style="display:none;"></i>
                                 </span>
@@ -197,12 +203,14 @@
     </div>
 
     <!-- Signup Modal -->
-    <div class="modal fade" id="Signup" tabindex="-1" aria-labelledby="SignupLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal fade" id="Signup" tabindex="-1" aria-labelledby="SignupLabel" aria-hidden="true"
+        data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="SignupLabel">Sign Up</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="background:none; border:none;">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                        style="background:none; border:none;">
                         <i class="mdi mdi-close" style="font-size: 1.5rem;"></i>
                     </button>
                 </div>
@@ -231,16 +239,19 @@
 
                         <div id="signup-email-field" class="field-wrapper input mb-3">
                             <label for="signup-email">EMAIL</label>
-                            <input id="signup-email" name="email" type="email" value="" class="form-control gmz-validation"
-                                data-validation="required" placeholder="Email" />
+                            <input id="signup-email" name="email" type="email" value=""
+                                class="form-control gmz-validation" data-validation="required" placeholder="Email" />
                         </div>
 
                         <div id="signup-password-field" class="field-wrapper input mb-3">
                             <label for="signup-password">PASSWORD</label>
                             <div style="position: relative;">
-                                <input id="signup-password" name="password" type="password" class="form-control gmz-validation"
-                                    data-validation="required" placeholder="Password" style="padding-right: 40px;" />
-                                <span class="view-password" style="position: absolute; top: 50%; right: 10px; transform: translateY(-50%); cursor:pointer;" onclick="toggleSignupPassword()">
+                                <input id="signup-password" name="password" type="password"
+                                    class="form-control gmz-validation" data-validation="required"
+                                    placeholder="Password" style="padding-right: 40px;" />
+                                <span class="view-password"
+                                    style="position: absolute; top: 50%; right: 10px; transform: translateY(-50%); cursor:pointer;"
+                                    onclick="toggleSignupPassword()">
                                     <i class="fal fa-eye view" id="signup-show-eye"></i>
                                     <i class="fal fa-eye-slash not-view" id="signup-hide-eye" style="display:none;"></i>
                                 </span>
@@ -250,8 +261,9 @@
                         <div id="signup-password-confirmation-field" class="field-wrapper input mb-3">
                             <label for="signup-password-confirmation">CONFIRM PASSWORD</label>
                             <div style="position: relative;">
-                                <input id="signup-password-confirmation" name="password_confirmation" type="password" class="form-control gmz-validation"
-                                    data-validation="required" placeholder="Confirm Password" style="padding-right: 40px;" />
+                                <input id="signup-password-confirmation" name="password_confirmation" type="password"
+                                    class="form-control gmz-validation" data-validation="required"
+                                    placeholder="Confirm Password" style="padding-right: 40px;" />
                             </div>
                         </div>
 
@@ -291,56 +303,89 @@
                 </div>
             </div>
         </div>
-                    </div>
+    </div>
 
-    <!-- Forgot Password Modal -->
-    <div class="modal fade" id="ForgotPassword" tabindex="-1" aria-labelledby="ForgotPasswordLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog">
+    <div class="modal fade" id="BecomePartner" tabindex="-1" aria-labelledby="BecomePartnerLabel" aria-hidden="true"
+        data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="ForgotPasswordLabel">Forgot Password</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="background:none; border:none;">
-                        <i class="mdi mdi-close" style="font-size: 1.5rem;"></i>
-                    </button>
+                    <h5 class="modal-title" id="BecomePartnerLabel">Become a Partner</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="forgotPasswordForm" action="{{ route('forgot-password') }}" method="POST" class="form">
-                        @csrf
-                        <div class="mb-3">
-                            <p class="text-muted">Enter your email address and we'll send you a link to reset your password.</p>
-                        </div>
-                        
-                        <div id="forgot-email-field" class="field-wrapper input mb-3">
-                            <label for="forgot-email">EMAIL</label>
-                            <input id="forgot-email" name="email" type="email" class="form-control gmz-validation"
-                                data-validation="required" placeholder="Enter your email address" />
-                        </div>
+                    @auth
+                        @php
+                            $authUser = Auth::user();
+                            $isPartner = optional($authUser->role)->name === 'Partner';
+                            $isActivePartner = $isPartner && (int) $authUser->status === 1;
+                            $isPendingPartner = $isPartner && (int) $authUser->status !== 1;
+                        @endphp
 
-                        <div class="gmz-message"></div>
-
-                        <div class="my-2">
-                            <button type="submit" class="btn btn-primary w-100" data-loading-text="SENDING...">
-                                SEND RESET LINK
-                            </button>
+                        @if($isActivePartner)
+                            <div class="alert alert-success mb-0">
+                                <i class="mdi mdi-check-decagram me-1"></i>
+                                You are already an approved partner. Access the dashboard to manage your listings.
+                            </div>
+                        @elseif($isPendingPartner)
+                            <div class="alert alert-warning mb-0">
+                                <i class="mdi mdi-timer-sand me-1"></i>
+                                Your partner application is currently under review. We'll notify you via email once it's approved.
+                            </div>
+                        @else
+                            <p class="text-muted">
+                                Submit your request to join the Zanzibar Bookings partner program. Our team will review your details
+                                and contact you shortly.
+                            </p>
+                            <form method="POST" action="{{ route('partner.request') }}">
+                                @csrf
+                                <div class="mb-3">
+                                    <label for="partner-business-name" class="form-label">Business Name (optional)</label>
+                                    <input type="text" name="business_name" id="partner-business-name" class="form-control"
+                                        placeholder="e.g. Coastal Adventures Ltd." value="{{ old('business_name') }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="partner-notes" class="form-label">Tell us about your services (optional)</label>
+                                    <textarea name="notes" id="partner-notes" class="form-control" rows="4" placeholder="Share a brief introduction...">{{ old('notes') }}</textarea>
+                                </div>
+                                <div class="alert alert-info">
+                                    <i class="mdi mdi-information-outline me-1"></i>
+                                    After submitting, you can access the dashboard immediately. Posting new deals will remain disabled until a Super Admin verifies your account.
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="mdi mdi-handshake-outline me-1"></i> Submit Partner Request
+                                    </button>
+                                </div>
+                            </form>
+                        @endif
+                    @else
+                        <div class="text-center">
+                            <p class="text-muted mb-3">You need to sign in or create an account to request partnership.</p>
+                            <div class="d-flex justify-content-center gap-2">
+                                <a href="#" class="btn btn-primary" onclick="switchToLogin(); return false;">
+                                    <i class="mdi mdi-login me-1"></i> Sign In
+                                </a>
+                                <a href="#" class="btn btn-outline-primary" onclick="switchToSignup(); return false;">
+                                    <i class="mdi mdi-account-plus-outline me-1"></i> Create Account
+                                </a>
+                            </div>
                         </div>
-
-                        <p class="signup-link">
-                            Remember your password?
-                            <a href="#" onclick="switchToLogin()" class="text-primary fw-bold">Sign In</a>
-                        </p>
-                    </form>
+                    @endauth
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Change Password Modal -->
-    <div class="modal fade" id="ChangePassword" tabindex="-1" aria-labelledby="ChangePasswordLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal fade" id="ChangePassword" tabindex="-1" aria-labelledby="ChangePasswordLabel" aria-hidden="true"
+        data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="ChangePasswordLabel">Change Password</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="background:none; border:none;">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                        style="background:none; border:none;">
                         <i class="mdi mdi-close" style="font-size: 1.5rem;"></i>
                     </button>
                 </div>
@@ -350,15 +395,19 @@
                         <div class="mb-3">
                             <p class="text-muted">Enter your current password and choose a new password.</p>
                         </div>
-                        
+
                         <div id="current-password-field" class="field-wrapper input mb-3">
                             <label for="current-password">CURRENT PASSWORD</label>
                             <div style="position: relative;">
-                                <input id="current-password" name="current_password" type="password" class="form-control gmz-validation"
-                                    data-validation="required" placeholder="Enter current password" style="padding-right: 40px;" />
-                                <span class="view-password" style="position: absolute; top: 50%; right: 10px; transform: translateY(-50%); cursor:pointer;" onclick="toggleCurrentPassword()">
+                                <input id="current-password" name="current_password" type="password"
+                                    class="form-control gmz-validation" data-validation="required"
+                                    placeholder="Enter current password" style="padding-right: 40px;" />
+                                <span class="view-password"
+                                    style="position: absolute; top: 50%; right: 10px; transform: translateY(-50%); cursor:pointer;"
+                                    onclick="toggleCurrentPassword()">
                                     <i class="fal fa-eye view" id="current-show-eye"></i>
-                                    <i class="fal fa-eye-slash not-view" id="current-hide-eye" style="display:none;"></i>
+                                    <i class="fal fa-eye-slash not-view" id="current-hide-eye"
+                                        style="display:none;"></i>
                                 </span>
                             </div>
                         </div>
@@ -366,9 +415,12 @@
                         <div id="new-password-field" class="field-wrapper input mb-3">
                             <label for="new-password">NEW PASSWORD</label>
                             <div style="position: relative;">
-                                <input id="new-password" name="password" type="password" class="form-control gmz-validation"
-                                    data-validation="required" placeholder="Enter new password" style="padding-right: 40px;" />
-                                <span class="view-password" style="position: absolute; top: 50%; right: 10px; transform: translateY(-50%); cursor:pointer;" onclick="toggleNewPassword()">
+                                <input id="new-password" name="password" type="password"
+                                    class="form-control gmz-validation" data-validation="required"
+                                    placeholder="Enter new password" style="padding-right: 40px;" />
+                                <span class="view-password"
+                                    style="position: absolute; top: 50%; right: 10px; transform: translateY(-50%); cursor:pointer;"
+                                    onclick="toggleNewPassword()">
                                     <i class="fal fa-eye view" id="new-show-eye"></i>
                                     <i class="fal fa-eye-slash not-view" id="new-hide-eye" style="display:none;"></i>
                                 </span>
@@ -378,11 +430,15 @@
                         <div id="confirm-new-password-field" class="field-wrapper input mb-3">
                             <label for="confirm-new-password">CONFIRM NEW PASSWORD</label>
                             <div style="position: relative;">
-                                <input id="confirm-new-password" name="password_confirmation" type="password" class="form-control gmz-validation"
-                                    data-validation="required" placeholder="Confirm new password" style="padding-right: 40px;" />
-                                <span class="view-password" style="position: absolute; top: 50%; right: 10px; transform: translateY(-50%); cursor:pointer;" onclick="toggleConfirmNewPassword()">
+                                <input id="confirm-new-password" name="password_confirmation" type="password"
+                                    class="form-control gmz-validation" data-validation="required"
+                                    placeholder="Confirm new password" style="padding-right: 40px;" />
+                                <span class="view-password"
+                                    style="position: absolute; top: 50%; right: 10px; transform: translateY(-50%); cursor:pointer;"
+                                    onclick="toggleConfirmNewPassword()">
                                     <i class="fal fa-eye view" id="confirm-new-show-eye"></i>
-                                    <i class="fal fa-eye-slash not-view" id="confirm-new-hide-eye" style="display:none;"></i>
+                                    <i class="fal fa-eye-slash not-view" id="confirm-new-hide-eye"
+                                        style="display:none;"></i>
                                 </span>
                             </div>
                         </div>
@@ -410,7 +466,6 @@
     <div id="toast-container" style="position: fixed; top: 100px; right: 20px; z-index: 999999;"></div>
 
     <script>
-
         document.addEventListener("DOMContentLoaded", function() {
             const buttons = document.querySelectorAll('[data-loading-text]');
 
@@ -604,7 +659,6 @@
         .forgot-pass-link:active {
             transform: translateY(0);
         }
-
     </style>
 </body>
 

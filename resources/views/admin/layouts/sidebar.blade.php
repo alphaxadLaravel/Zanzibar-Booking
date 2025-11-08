@@ -20,10 +20,14 @@
     </button>
 
     <div class="scrollbar" data-simplebar>
+        @php
+            $sidebarUser = Auth::user();
+            $sidebarRole = optional($sidebarUser->role)->name;
+            $sidebarIsPartner = $sidebarRole === 'Partner';
+        @endphp
         <ul class="side-nav">
-            <li class="side-nav-title">ADMIN</li>
+            <li class="side-nav-title">{{ $sidebarIsPartner ? 'PARTNER' : 'ADMIN' }}</li>
 
-            <!-- Dashboard -->
             <li class="side-nav-item">
                 <a href="{{ route('dashboard') }}" class="side-nav-link">
                     <span class="menu-icon"><i class="mdi mdi-view-dashboard"></i></span>
@@ -31,145 +35,180 @@
                 </a>
             </li>
 
-            <li class="side-nav-title">All Services</li>
+            @if($sidebarIsPartner)
+                <li class="side-nav-title">My Deals</li>
+                <li class="side-nav-item">
+                    <a href="{{ route('admin.deal', 'hotel') }}" class="side-nav-link">
+                        <span class="menu-icon"><i class="mdi mdi-city-variant-outline"></i></span>
+                        <span class="menu-text">Hotels</span>
+                    </a>
+                </li>
+                <li class="side-nav-item">
+                    <a href="{{ route('admin.deal', 'apartment') }}" class="side-nav-link">
+                        <span class="menu-icon"><i class="mdi mdi-home-city"></i></span>
+                        <span class="menu-text">Apartments</span>
+                    </a>
+                </li>
+                <li class="side-nav-item">
+                    <a href="{{ route('admin.deal', 'package') }}" class="side-nav-link">
+                        <span class="menu-icon"><i class="mdi mdi-map-marker-radius"></i></span>
+                        <span class="menu-text">Packages</span>
+                    </a>
+                </li>
+                <li class="side-nav-item">
+                    <a href="{{ route('admin.deal', 'activity') }}" class="side-nav-link">
+                        <span class="menu-icon"><i class="mdi mdi-run-fast"></i></span>
+                        <span class="menu-text">Activities</span>
+                    </a>
+                </li>
+                <li class="side-nav-item">
+                    <a href="{{ route('admin.deal', 'car') }}" class="side-nav-link">
+                        <span class="menu-icon"><i class="mdi mdi-car"></i></span>
+                        <span class="menu-text">Cars</span>
+                    </a>
+                </li>
 
-            <!-- HOTELS -->
-            <li class="side-nav-item">
-                <a href="{{ route('admin.deal', 'hotel') }}" class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-city-variant-outline"></i></span>
-                    <span class="menu-text">Hotels</span>
-                </a>
-            </li>
+                <li class="side-nav-title">Account</li>
+                <li class="side-nav-item">
+                    <a href="{{ route('admin.my-bookings') }}" class="side-nav-link">
+                        <span class="menu-icon"><i class="mdi mdi-book-open-variant"></i></span>
+                        <span class="menu-text">My Bookings</span>
+                    </a>
+                </li>
+                <li class="side-nav-item">
+                    <a data-bs-toggle="collapse" href="#sidebarProfile" aria-expanded="false" aria-controls="sidebarProfile"
+                        class="side-nav-link">
+                        <span class="menu-icon"><i class="mdi mdi-account-circle"></i></span>
+                        <span class="menu-text">Profile</span>
+                        <span class="menu-arrow"></span>
+                    </a>
+                    <div class="collapse" id="sidebarProfile">
+                        <ul class="sub-menu">
+                            <li class="side-nav-item"><a href="{{ route('admin.profile') }}" class="side-nav-link">View Profile</a></li>
+                            <li class="side-nav-item"><a href="{{ route('admin.profile.edit') }}" class="side-nav-link">Edit Profile</a></li>
+                        </ul>
+                    </div>
+                </li>
+            @else
+                <li class="side-nav-title">All Services</li>
 
-            <!-- TOURS -->
-            <li class="side-nav-item">
-                <a href="{{ route('admin.deal', 'package') }}" class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-map-marker-radius"></i></span>
-                    <span class="menu-text">Packages</span>
-                </a>
-            </li>
+                <li class="side-nav-item">
+                    <a href="{{ route('admin.deal', 'hotel') }}" class="side-nav-link">
+                        <span class="menu-icon"><i class="mdi mdi-city-variant-outline"></i></span>
+                        <span class="menu-text">Hotels</span>
+                    </a>
+                </li>
+                <li class="side-nav-item">
+                    <a href="{{ route('admin.deal', 'package') }}" class="side-nav-link">
+                        <span class="menu-icon"><i class="mdi mdi-map-marker-radius"></i></span>
+                        <span class="menu-text">Packages</span>
+                    </a>
+                </li>
+                <li class="side-nav-item">
+                    <a href="{{ route('admin.deal', 'activity') }}" class="side-nav-link">
+                        <span class="menu-icon"><i class="mdi mdi-map-marker-radius"></i></span>
+                        <span class="menu-text">Activities</span>
+                    </a>
+                </li>
+                <li class="side-nav-item">
+                    <a href="{{ route('admin.deal', 'car') }}" class="side-nav-link">
+                        <span class="menu-icon"><i class="mdi mdi-car"></i></span>
+                        <span class="menu-text">Cars</span>
+                    </a>
+                </li>
+                <li class="side-nav-item">
+                    <a href="{{ route('admin.deal', 'apartment') }}" class="side-nav-link">
+                        <span class="menu-icon"><i class="mdi mdi-home-city"></i></span>
+                        <span class="menu-text">Apartments</span>
+                    </a>
+                </li>
+                <li class="side-nav-item">
+                    <a href="{{ route('admin.blog') }}" class="side-nav-link">
+                        <span class="menu-icon"><i class="mdi mdi-post-outline"></i></span>
+                        <span class="menu-text">Blog</span>
+                    </a>
+                </li>
 
-            <li class="side-nav-item">
-                <a href="{{ route('admin.deal', 'activity') }}" class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-map-marker-radius"></i></span>
-                    <span class="menu-text">Activities</span>
-                </a>
-            </li>
+                <li class="side-nav-title">Manage</li>
+                <li class="side-nav-item">
+                    <a href="{{ route('admin.bookings') }}" class="side-nav-link">
+                        <span class="menu-icon"><i class="mdi mdi-calendar-check"></i></span>
+                        <span class="menu-text">Bookings</span>
+                    </a>
+                </li>
+                <li class="side-nav-item">
+                    <a href="{{ route('admin.users') }}" class="side-nav-link">
+                        <span class="menu-icon"><i class="mdi mdi-account-group"></i></span>
+                        <span class="menu-text">Users</span>
+                    </a>
+                </li>
+                <li class="side-nav-item">
+                    <a href="{{ route('admin.payments') }}" class="side-nav-link">
+                        <span class="menu-icon"><i class="mdi mdi-cash-multiple"></i></span>
+                        <span class="menu-text">Payments</span>
+                    </a>
+                </li>
 
-            <!-- CARS -->
-            <li class="side-nav-item">
-                <a href="{{ route('admin.deal', 'car') }}" class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-car"></i></span>
-                    <span class="menu-text">Cars</span>
-                </a>
-            </li>
+                <li class="side-nav-title">Settings</li>
+                <li class="side-nav-item">
+                    <a href="{{ route('admin.categories') }}" class="side-nav-link">
+                        <span class="menu-icon"><i class="mdi mdi-shape-outline"></i></span>
+                        <span class="menu-text">Categories</span>
+                    </a>
+                </li>
+                <li class="side-nav-item">
+                    <a href="{{ route('admin.features') }}" class="side-nav-link">
+                        <span class="menu-icon"><i class="mdi mdi-star-outline"></i></span>
+                        <span class="menu-text">Features</span>
+                    </a>
+                </li>
 
-            <!-- APARTMENTS -->
-            <li class="side-nav-item">
-                <a href="{{ route('admin.deal', 'apartment') }}" class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-home-city"></i></span>
-                    <span class="menu-text">Apartments</span>
-                </a>
-            </li>
-
-            <!-- BLOG -->
-            <li class="side-nav-item">
-                <a href="{{ route('admin.blog') }}" class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-post-outline"></i></span>
-                    <span class="menu-text">Blog</span>
-                </a>
-            </li>
-
-            <li class="side-nav-title">Manage</li>
-
-            <!-- BOOKINGS -->
-            <li class="side-nav-item">
-                <a href="{{ route('admin.bookings') }}" class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-calendar-check"></i></span>
-                    <span class="menu-text">Bookings</span>
-                </a>
-            </li>
-
-            <li class="side-nav-item">
-                <a href="{{ route('admin.users') }}" class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-account-group"></i></span>
-                    <span class="menu-text">Users</span>
-                </a>
-            </li>
-
-            <!-- PAYMENTS -->
-            <li class="side-nav-item">
-                <a href="{{ route('admin.payments') }}" class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-cash-multiple"></i></span>
-                    <span class="menu-text">Payments</span>
-                </a>
-            </li>
-
-            <li class="side-nav-title">Settings</li>
-            <li class="side-nav-item">
-                <a href="{{ route('admin.categories') }}" class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-shape-outline"></i></span>
-                    <span class="menu-text">Categories</span>
-                </a>
-            </li>
-            <li class="side-nav-item">
-                <a href="{{ route('admin.features') }}" class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-star-outline"></i></span>
-                    <span class="menu-text">Features</span>
-                </a>
-            </li>
-
-            <li class="side-nav-title">Account</li>
-
-            <li class="side-nav-item">
-                <a data-bs-toggle="collapse" href="#sidebarSettings" aria-expanded="false"
-                    aria-controls="sidebarSettings" class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-cog"></i></span>
-                    <span class="menu-text">Settings</span>
-                    <span class="menu-arrow"></span>
-                </a>
-                <div class="collapse" id="sidebarSettings">
-                    <ul class="sub-menu">
-                        <li class="side-nav-item"><a href="{{ route('admin.system.settings') }}" class="side-nav-link">System Settings</a></li>
-                        <li class="side-nav-item"><a href="{{ route('admin.manage.content', 'about-us') }}" class="side-nav-link">About Us</a></li>
-                        <li class="side-nav-item"><a href="{{ route('admin.manage.content', 'become-a-partner') }}" class="side-nav-link">Become a Partner</a></li>
-                        <li class="side-nav-item"><a href="{{ route('admin.manage.content', 'our-commitment') }}" class="side-nav-link">Our Commitment</a></li>
-                        <li class="side-nav-item"><a href="{{ route('admin.manage.content', 'terms-conditions') }}" class="side-nav-link">Terms & Conditions</a></li>
-                        <li class="side-nav-item"><a href="{{ route('admin.manage.content', 'privacy-policy') }}" class="side-nav-link">Privacy Policy</a></li>
-                    </ul>
-                </div>
-            </li>
-
-            <li class="side-nav-item">
-                <a href="{{ route('admin.contact.messages') }}" class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-email"></i></span>
-                    <span class="menu-text">Contact Messages</span>
-                </a>
-            </li>
-
-            <li class="side-nav-item">
-                <a href="{{ route('admin.my-bookings') }}" class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-book-open-variant"></i></span>
-                    <span class="menu-text">My Bookings</span>
-                </a>
-            </li>
-
-            <li class="side-nav-item">
-                <a data-bs-toggle="collapse" href="#sidebarProfile" aria-expanded="false" aria-controls="sidebarProfile"
-                    class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-account-circle"></i></span>
-                    <span class="menu-text">Profile</span>
-                    <span class="menu-arrow"></span>
-                </a>
-                <div class="collapse" id="sidebarProfile">
-                    <ul class="sub-menu">
-                        <li class="side-nav-item"><a href="{{ route('admin.profile') }}" class="side-nav-link">View
-                                Profile</a></li>
-                        <li class="side-nav-item"><a href="{{ route('admin.profile.edit') }}" class="side-nav-link">Edit
-                                Profile</a></li>
-                    </ul>
-                </div>
-            </li>
+                <li class="side-nav-title">Account</li>
+                <li class="side-nav-item">
+                    <a data-bs-toggle="collapse" href="#sidebarSettings" aria-expanded="false"
+                        aria-controls="sidebarSettings" class="side-nav-link">
+                        <span class="menu-icon"><i class="mdi mdi-cog"></i></span>
+                        <span class="menu-text">Settings</span>
+                        <span class="menu-arrow"></span>
+                    </a>
+                    <div class="collapse" id="sidebarSettings">
+                        <ul class="sub-menu">
+                            <li class="side-nav-item"><a href="{{ route('admin.system.settings') }}" class="side-nav-link">System Settings</a></li>
+                            <li class="side-nav-item"><a href="{{ route('admin.manage.content', 'about-us') }}" class="side-nav-link">About Us</a></li>
+                            <li class="side-nav-item"><a href="{{ route('admin.manage.content', 'become-a-partner') }}" class="side-nav-link">Become a Partner</a></li>
+                            <li class="side-nav-item"><a href="{{ route('admin.manage.content', 'our-commitment') }}" class="side-nav-link">Our Commitment</a></li>
+                            <li class="side-nav-item"><a href="{{ route('admin.manage.content', 'terms-conditions') }}" class="side-nav-link">Terms & Conditions</a></li>
+                            <li class="side-nav-item"><a href="{{ route('admin.manage.content', 'privacy-policy') }}" class="side-nav-link">Privacy Policy</a></li>
+                        </ul>
+                    </div>
+                </li>
+                <li class="side-nav-item">
+                    <a href="{{ route('admin.contact.messages') }}" class="side-nav-link">
+                        <span class="menu-icon"><i class="mdi mdi-email"></i></span>
+                        <span class="menu-text">Contact Messages</span>
+                    </a>
+                </li>
+                <li class="side-nav-item">
+                    <a href="{{ route('admin.my-bookings') }}" class="side-nav-link">
+                        <span class="menu-icon"><i class="mdi mdi-book-open-variant"></i></span>
+                        <span class="menu-text">My Bookings</span>
+                    </a>
+                </li>
+                <li class="side-nav-item">
+                    <a data-bs-toggle="collapse" href="#sidebarProfile" aria-expanded="false" aria-controls="sidebarProfile"
+                        class="side-nav-link">
+                        <span class="menu-icon"><i class="mdi mdi-account-circle"></i></span>
+                        <span class="menu-text">Profile</span>
+                        <span class="menu-arrow"></span>
+                    </a>
+                    <div class="collapse" id="sidebarProfile">
+                        <ul class="sub-menu">
+                            <li class="side-nav-item"><a href="{{ route('admin.profile') }}" class="side-nav-link">View Profile</a></li>
+                            <li class="side-nav-item"><a href="{{ route('admin.profile.edit') }}" class="side-nav-link">Edit Profile</a></li>
+                        </ul>
+                    </div>
+                </li>
+            @endif
         </ul>
     </div>
 </div>
