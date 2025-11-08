@@ -86,6 +86,27 @@
                 min-height: 80px !important;
             }
         }
+
+        .list-hotel__content {
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            touch-action: auto !important;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        @media (max-width: 991.98px) {
+            body {
+                overflow-y: auto !important;
+            }
+
+            .list-hotel {
+                height: auto !important;
+            }
+
+            .list-hotel__content {
+                max-height: none !important;
+            }
+        }
     </style>
 
 
@@ -260,7 +281,7 @@
                                         @endif
                                         <a href="{{ $deal->view_route }}"
                                             style="display:block;">
-                                            <img src="{{ $deal->cover_photo ? asset('storage/' . $deal->cover_photo) : $deal->default_image }}"
+                                            <img src="{{ $deal->image_url }}"
                                                 alt="{{ $deal->title }}" loading="eager" width="360" height="160"
                                                 style="width:100%;height:140px;object-fit:cover;border-radius:8px;" />
                                         </a>
@@ -346,6 +367,30 @@
     </section>
 
     @push('scripts')
+    <script>
+        function adjustListingScroll() {
+            const listHotelContent = document.querySelector('.list-hotel__content');
+            if (!listHotelContent) {
+                return;
+            }
+
+            const useNativeScroll = window.matchMedia('(max-width: 991.98px)').matches;
+
+            if (useNativeScroll) {
+                listHotelContent.style.overflowY = 'auto';
+                listHotelContent.style.touchAction = 'pan-y';
+                listHotelContent.style.maxHeight = 'none';
+            } else {
+                listHotelContent.style.overflowY = 'auto';
+                listHotelContent.style.touchAction = 'auto';
+                listHotelContent.style.maxHeight = '';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', adjustListingScroll);
+        window.addEventListener('resize', adjustListingScroll);
+        document.addEventListener('livewire:update', adjustListingScroll);
+    </script>
     <script>
         let map = null;
         let markers = [];
@@ -456,7 +501,7 @@
                         <div style="padding: 8px; max-width: 220px;">
                             <div style="display: flex; align-items: flex-start; gap: 8px;">
                                 <a href="${deal.view_route}" style="text-decoration: none;">
-                                    <img src="${deal.cover_photo ? 'storage/' + deal.cover_photo : deal.default_image}" 
+                                    <img src="${deal.image_url}" 
                                          alt="${deal.title}" 
                                          style="width: 35px; height: 35px; object-fit: cover; border-radius: 4px; flex-shrink: 0; cursor: pointer;">
                                 </a>

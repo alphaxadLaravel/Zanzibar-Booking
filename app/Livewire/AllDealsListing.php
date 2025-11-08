@@ -6,6 +6,8 @@ use App\Models\Category;
 use App\Models\Deal;
 use Livewire\Component;
 use Hashids\Hashids;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class AllDealsListing extends Component
 {
@@ -200,6 +202,17 @@ class AllDealsListing extends Component
         $deals->getCollection()->transform(function ($deal) {
             $deal->view_route = $this->getViewRoute($deal);
             $deal->default_image = $this->getDefaultImage($deal->type);
+
+            $primaryImagePath = $deal->cover_photo ?: optional($deal->photos->first())->photo;
+
+            if ($primaryImagePath) {
+                $deal->image_url = Str::startsWith($primaryImagePath, ['http://', 'https://'])
+                    ? $primaryImagePath
+                    : Storage::disk('public')->url($primaryImagePath);
+            } else {
+                $deal->image_url = $deal->default_image;
+            }
+
             return $deal;
         });
 

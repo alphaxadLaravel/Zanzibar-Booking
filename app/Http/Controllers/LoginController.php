@@ -33,10 +33,10 @@ class LoginController extends Controller
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
             
-            return redirect()->back()->with('success', 'Login successful');
+            return redirect()->back()->with('success', 'Logged In successful');
         }
 
-        return redirect()->back()->with('error', 'Invalid credentials');
+        return redirect()->back()->with('error', 'Invalid email or password');
     }
 
     /**

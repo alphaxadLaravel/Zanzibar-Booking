@@ -12,6 +12,7 @@ use App\Models\Booking;
 use App\Models\Tours;
 use App\Models\Car;
 use App\Models\Pages;
+use App\Models\Payment;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\ContactMessage;
@@ -21,6 +22,8 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Hashids\Hashids;
 
 class AdminController extends Controller
@@ -36,7 +39,6 @@ class AdminController extends Controller
     // Dashboard
     public function dashboard()
     {
-        // Real counts from database
         $stats = [
             'tours_count' => Deal::where('type', 'tour')->count(),
             'hotels_count' => Deal::where('type', 'hotel')->count(),
@@ -44,11 +46,38 @@ class AdminController extends Controller
             'bookings_count' => Booking::count(),
             'cars_count' => Deal::where('type', 'car')->count(),
             'blog_posts_count' => Blog::count(),
-            'site_visits_count' => 2847, // Keep static for now - would need analytics implementation
-            'total_revenue' => 45250.75, // Keep static for now - would need payment calculation
+            'site_visits_count' => $this->resolveSiteVisitsCount(),
+            'total_revenue' => Payment::completed()->sum('amount'),
         ];
 
-        return view('admin.pages.dashboard', compact('stats'));
+        $recentUsers = User::with('role')
+            ->latest()
+            ->take(6)
+            ->get();
+
+        $recentDeals = Deal::with('category')
+            ->latest()
+            ->take(6)
+            ->get();
+
+        return view('admin.pages.dashboard', compact(
+            'stats',
+            'recentUsers',
+            'recentDeals'
+        ));
+    }
+
+    private function resolveSiteVisitsCount(): int
+    {
+        if (Schema::hasTable('flight_searches')) {
+            return DB::table('flight_searches')->count();
+        }
+
+        if (Schema::hasTable('bookings')) {
+            return Booking::distinct('user_id')->count('user_id');
+        }
+
+        return 0;
     }
 
    
