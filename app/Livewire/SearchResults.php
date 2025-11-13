@@ -5,10 +5,13 @@ namespace App\Livewire;
 use App\Models\Category;
 use App\Models\Deal;
 use Livewire\Component;
+use Livewire\WithPagination;
 use Hashids\Hashids;
 
 class SearchResults extends Component
 {
+    use WithPagination;
+    
     // Filter properties
     public $searchLocation = '';
     public $searchCategory = '';
@@ -26,6 +29,24 @@ class SearchResults extends Component
     }
     
     /**
+     * Reset pagination when filters change
+     */
+    public function updatingSearchCategory()
+    {
+        $this->resetPage();
+    }
+    
+    public function updatingSearchLocation()
+    {
+        $this->resetPage();
+    }
+    
+    public function updatingSearchName()
+    {
+        $this->resetPage();
+    }
+    
+    /**
      * Reset filters
      */
     public function resetFilters()
@@ -34,6 +55,7 @@ class SearchResults extends Component
         $this->searchCategory = '';
         $this->searchName = '';
         $this->sortBy = 'new';
+        $this->resetPage();
     }
     
     /**
@@ -42,6 +64,7 @@ class SearchResults extends Component
     public function updateSort($sortValue)
     {
         $this->sortBy = $sortValue;
+        $this->resetPage();
     }
     
     /**

@@ -252,8 +252,8 @@
                                                 style="width:100%;height:140px;object-fit:cover;border-radius:8px;" />
                                         </a>
                                         @if($deal->category)
-                                        <a class="hotel-item__type" href="#"
-                                            style="position:absolute;left:12px;bottom:12px;z-index:2;background:#2e8b57;color:#fff;padding:4px 10px;border-radius:5px;font-size:13px;">
+                                        <a class="hotel-item__type" href="#" wire:click="$set('searchCategory', '{{ $deal->category->id }}')" onclick="event.preventDefault();"
+                                            style="position:absolute;left:12px;bottom:12px;z-index:2;background:#2e8b57;color:#fff;padding:4px 10px;border-radius:5px;font-size:13px;cursor:pointer;">
                                             {{ $deal->category->category }}
                                         </a>
                                         @endif
