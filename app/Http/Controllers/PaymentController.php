@@ -19,6 +19,18 @@ class PaymentController extends Controller
         try {
             Log::info('Payment process started', ['booking_id' => $bookingId]);
             
+            // Validate Pesapal credentials before proceeding
+            $consumerKey = config('pesapal.consumer_key');
+            $consumerSecret = config('pesapal.consumer_secret');
+            
+            if (empty($consumerKey) || empty($consumerSecret)) {
+                Log::error('Pesapal credentials missing', [
+                    'consumer_key_set' => !empty($consumerKey),
+                    'consumer_secret_set' => !empty($consumerSecret)
+                ]);
+                return redirect()->route('index')->with('error', 'Payment gateway configuration error. Please contact support.');
+            }
+            
             // Decode the hashed booking ID
             $hashids = new \Hashids\Hashids('MchungajiZanzibarBookings', 10);
             $decodedIds = $hashids->decode($bookingId);
