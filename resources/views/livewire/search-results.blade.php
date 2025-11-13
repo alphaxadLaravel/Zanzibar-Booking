@@ -1,5 +1,62 @@
 <div>
     <style>
+        /* Pagination styling */
+        .pagination {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            list-style: none;
+            justify-content: center;
+        }
+        .pagination li {
+            margin-right: 5px;
+        }
+        .pagination .page-link {
+            position: relative;
+            display: block;
+            padding: 0.5rem 0.75rem;
+            line-height: 1.25;
+            color: var(--primary, #003580);
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 3px;
+            min-width: 38px;
+            height: 38px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .pagination .page-link:hover {
+            background-color: #f8f9fa;
+            border-color: #dee2e6;
+            color: var(--primary, #003580);
+        }
+        .pagination li:first-child .page-link,
+        .pagination li:last-child .page-link {
+            font-size: 24px;
+            line-height: 14px;
+            padding: 0.5rem 0.65rem;
+        }
+        .pagination .page-item.active .page-link {
+            background-color: var(--primary, #003580);
+            border-color: var(--primary, #003580);
+            color: #fff;
+            z-index: 1;
+        }
+        .pagination .page-item.disabled .page-link {
+            color: #6c757d;
+            pointer-events: none;
+            cursor: auto;
+            background-color: #fff;
+            border-color: #dee2e6;
+            opacity: 0.6;
+        }
+        .pagination .page-item.disabled .page-link:hover {
+            background-color: #fff;
+        }
+        
         /* Mobile responsive styles */
         @media (max-width: 768px) {
             .hero-bg-image {
@@ -324,9 +381,13 @@
                             @endforelse
                         </div>
 
-                        <nav>
-                            {{ $deals->links() }}
+                        @if($deals->hasPages())
+                        <nav aria-label="Page navigation" class="mt-4">
+                            <div class="d-flex justify-content-center">
+                                {{ $deals->links('pagination::bootstrap-4') }}
+                            </div>
                         </nav>
+                        @endif
                     </div>
                 </div>
             </div>

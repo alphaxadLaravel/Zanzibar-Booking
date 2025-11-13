@@ -46,9 +46,11 @@
             </table>
         </div>
 
-        <div class="mt-3">
-            {{ $bookings->links() }}
+        @if($bookings->hasPages())
+        <div class="mt-3 d-flex justify-content-center">
+            {{ $bookings->links('pagination::bootstrap-4') }}
         </div>
+        @endif
     @else
         <p class="text-muted mb-0">No bookings found for this user.</p>
     @endif

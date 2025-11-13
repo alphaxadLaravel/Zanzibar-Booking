@@ -44,9 +44,11 @@
             @endforeach
         </div>
 
-        <div class="mt-3">
-            {{ $deals->links() }}
+        @if($deals->hasPages())
+        <div class="mt-3 d-flex justify-content-center">
+            {{ $deals->links('pagination::bootstrap-4') }}
         </div>
+        @endif
     @else
         <p class="text-muted mb-0">No deals found for this partner.</p>
     @endif
