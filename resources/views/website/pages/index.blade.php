@@ -408,7 +408,7 @@
                         <div class="tour-item__meta" style="margin:18px 0 12px 0;">
                             <div class="i-meta d-flex align-items-center" style="font-size:15px;color:#888;">
                                 <i class="fal fa-calendar-alt" style="margin-right:6px;"></i>
-                                <span>{{ $tour->tours ? $tour->tours->max_people : 'N/A' }} people</span>
+                                <span>Min {{ $tour->tours ? $tour->tours->max_people : 'N/A' }} people</span>
                             </div>
                         </div>
                         <div class="d-flex justify-content-between align-items-center" style="margin-top:18px;">

@@ -49,7 +49,7 @@
                                 </div>
                                 <div class="col-auto">
                                     <span class="badge bg-light text-dark border">
-                                        <strong>Max People:</strong>
+                                        <strong>Min People:</strong>
                                         <span class="ms-1">{{ $tour->tours->max_people ?? 'N/A' }}</span>
                                     </span>
                                 </div>
