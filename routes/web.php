@@ -45,6 +45,7 @@ Route::post('/newsletter/subscribe', [WebsiteController::class, 'subscribeNewsle
 Route::get('/newsletter/unsubscribe', [WebsiteController::class, 'unsubscribeNewsletter'])->name('newsletter.unsubscribe');
 
 // Search functionality
+Route::get('/search/category/{category}', [WebsiteController::class, 'searchByCategory'])->name('search.category');
 Route::get('/search', [WebsiteController::class, 'search'])->name('search');
 
 // Partner routes

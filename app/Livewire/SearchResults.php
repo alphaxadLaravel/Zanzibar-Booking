@@ -137,9 +137,9 @@ class SearchResults extends Component
             $query->where('location', 'like', '%' . $this->searchLocation . '%');
         }
 
-        // Apply category filter
+        // Apply category filter - STRICTLY filter by category_id only
         if ($this->searchCategory) {
-            $query->where('category_id', $this->searchCategory);
+            $query->where('category_id', $this->searchCategory); // Only deals in this specific category
         }
 
         // Apply name/title filter

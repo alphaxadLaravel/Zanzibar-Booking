@@ -743,6 +743,61 @@ class WebsiteController extends Controller
     }
 
     /**
+     * Handle search by category (URL parameter)
+     */
+    public function searchByCategory($category)
+    {
+        $hashids = $this->getHashids();
+        
+        // Decode category hashid
+        $decodedIds = $hashids->decode($category);
+        if (empty($decodedIds)) {
+            abort(404, 'Category not found');
+        }
+        $categoryId = $decodedIds[0];
+
+        // Start building the query - STRICTLY filter by category only
+        $query = Deal::active()
+            ->where('category_id', $categoryId); // Only deals in this specific category
+
+        // Get all matching deals with relationships
+        $deals = $query->with(['category', 'photos'])
+            ->orderBy('is_featured', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(12);
+
+        // Get categories for filter dropdown
+        $categories = Category::whereIn('type', ['hotel', 'apartment', 'package', 'activity', 'car'])
+            ->get();
+
+        // Get locations for filter dropdown (only for this category)
+        $locations = Deal::active()
+            ->where('category_id', $categoryId)
+            ->distinct()
+            ->pluck('location')
+            ->filter()
+            ->sort()
+            ->values();
+
+        // Prepare deal data with routes and default images
+        $deals->getCollection()->transform(function ($deal) use ($hashids) {
+            $deal->view_route = $this->getViewRoute($deal, $hashids);
+            $deal->default_image = $this->getDefaultImage($deal->type);
+            return $deal;
+        });
+
+        return view('website.pages.search_results', [
+            'deals' => $deals,
+            'categories' => $categories,
+            'locations' => $locations,
+            'hashids' => $hashids,
+            'location' => '',
+            'category' => $category,
+            'name' => ''
+        ]);
+    }
+
+    /**
      * Handle search functionality from homepage
      */
     public function search(Request $request)
@@ -769,9 +824,9 @@ class WebsiteController extends Controller
             $query->where('location', 'like', '%' . $location . '%');
         }
 
-        // Apply category filter
+        // Apply category filter - STRICTLY filter by category_id
         if ($category) {
-            $query->where('category_id', $category);
+            $query->where('category_id', $category); // Only deals in this specific category
         }
 
         // Apply name/title filter

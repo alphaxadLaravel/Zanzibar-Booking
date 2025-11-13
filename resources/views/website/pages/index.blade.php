@@ -612,8 +612,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Function to search by category (hashid already provided from server)
 function searchByCategory(categoryHashId) {
-    // Build search URL with hashed category parameter
-    const searchUrl = '{{ route("search") }}?category=' + encodeURIComponent(categoryHashId);
+    // Build search URL with category as URL parameter
+    const searchUrl = '{{ route("search.category", ["category" => "PLACEHOLDER"]) }}'.replace('PLACEHOLDER', categoryHashId);
     
     // Navigate to search page
     window.location.href = searchUrl;
