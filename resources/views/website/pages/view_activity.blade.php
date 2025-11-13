@@ -357,11 +357,11 @@ document.addEventListener('DOMContentLoaded', function() {
             @endif
         @endif
         
-        // Prevent form submission if user is not logged in
-        const bookingForm = document.querySelector('.activity-booking-form');
-        if (bookingForm) {
-            bookingForm.addEventListener('submit', function(e) {
-                @guest
+        // Don't prevent form submission for logged-in users
+        @guest
+            const bookingForm = document.querySelector('.activity-booking-form');
+            if (bookingForm) {
+                bookingForm.addEventListener('submit', function(e) {
                     e.preventDefault();
                     const loginModalEl = document.getElementById('exampleModal');
                     if (loginModalEl) {
@@ -369,9 +369,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         loginModal.show();
                     }
                     return false;
-                @endguest
-            });
-        }
+                });
+            }
+        @endguest
     });
 </script>
 

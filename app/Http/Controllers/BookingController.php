@@ -558,9 +558,19 @@ class BookingController extends Controller
 
             // Validate the request based on deal type
             $validated = $this->validateDealBooking($request);
+            
+            // Ensure children is an integer
+            if (isset($validated['children'])) {
+                $validated['children'] = (int) $validated['children'];
+            }
 
             // Get the deal with required relationships
             $deal = Deal::with(['tours', 'car'])->findOrFail($validated['deal_id']);
+            
+            // For activities/packages, ensure tours relationship exists
+            if (in_array($validated['type'], ['activity', 'package']) && !$deal->tours) {
+                throw new \Exception('Activity/package pricing information is missing. The activity does not have pricing data configured.');
+            }
 
             // Calculate total price based on deal type
             $totalPrice = $this->calculateDealPrice($deal, $validated);
@@ -602,15 +612,25 @@ class BookingController extends Controller
             Log::error('Deal booking error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
                 'request' => $request->all(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
             ]);
             
-            // Don't expose detailed error to user, just show generic message
-            $errorMessage = 'An error occurred while processing your booking. Please try again.';
+            // For admin users, show more detailed error for debugging
+            $user = Auth::user();
+            $isAdmin = $user && optional($user->role)->name === 'Admin';
             
-            // Check for specific error types
-            if (str_contains($e->getMessage(), 'tours') || str_contains($e->getMessage(), 'relationship')) {
-                $errorMessage = 'Booking details are incomplete. Please contact support.';
+            if ($isAdmin) {
+                $errorMessage = 'Error: ' . $e->getMessage() . ' (File: ' . basename($e->getFile()) . ', Line: ' . $e->getLine() . ')';
+            } else {
+                // Don't expose detailed error to regular users
+                $errorMessage = 'An error occurred while processing your booking. Please try again.';
+                
+                // Check for specific error types
+                if (str_contains($e->getMessage(), 'tours') || str_contains($e->getMessage(), 'relationship')) {
+                    $errorMessage = 'Booking details are incomplete. Please contact support.';
+                }
             }
             
             return back()->withErrors(['error' => $errorMessage])->withInput();
