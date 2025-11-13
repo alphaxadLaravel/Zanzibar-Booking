@@ -23,9 +23,20 @@ class SearchResults extends Component
 
     public function mount($location = '', $category = '', $name = '')
     {
+        $hashids = $this->getHashids();
+        
         $this->searchLocation = $location;
-        $this->searchCategory = $category;
         $this->searchName = $name;
+        
+        // Decode category hashid if provided
+        if ($category) {
+            $decodedIds = $hashids->decode($category);
+            if (!empty($decodedIds)) {
+                $this->searchCategory = (string)$decodedIds[0];
+            }
+        } else {
+            $this->searchCategory = '';
+        }
     }
     
     /**

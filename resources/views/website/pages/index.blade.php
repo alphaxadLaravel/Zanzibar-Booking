@@ -230,10 +230,13 @@
         </div>
         <div class="row">
             @forelse($propertyCategories as $category)
+            @php
+                $categoryHashId = $hashids->encode($category->id);
+            @endphp
             <div class="col-lg-2 col-md-4 col-6">
-                <div class="hotel-type__item rounded" data-plugin="matchHeight" style="cursor: pointer;" onclick="searchByCategory('{{ $category->id }}')">
+                <div class="hotel-type__item rounded" data-plugin="matchHeight" style="cursor: pointer;" onclick="searchByCategory('{{ $categoryHashId }}')">
                     <div class="hotel-type__thumbnail">
-                        <a href="#" onclick="event.preventDefault(); searchByCategory('{{ $category->id }}');">
+                        <a href="#" onclick="event.preventDefault(); searchByCategory('{{ $categoryHashId }}');">
                             <img class="rounded" style="width:100%; height:120px; object-fit:cover;"
                                 src="{{ $category->image ? asset('storage/' . $category->image) : 'https://www.zanzibarbookings.com/storage/2023/09/12/dji-0973-hdr-sky5-3-1694521316-360x240.jpg' }}"
                                 alt="{{ $category->category }}" />
@@ -241,7 +244,7 @@
                     </div>
                     <div class="hotel-type__info">
                         <h3 class="hotel-type__name">
-                            <a href="#" onclick="event.preventDefault(); searchByCategory('{{ $category->id }}');">{{ $category->category }}</a>
+                            <a href="#" onclick="event.preventDefault(); searchByCategory('{{ $categoryHashId }}');">{{ $category->category }}</a>
                         </h3>
                         <div class="hotel-type__description"></div>
                     </div>
@@ -334,10 +337,13 @@
         </div>
         <div class="row">
             @forelse($tourCategories as $category)
+            @php
+                $categoryHashId = $hashids->encode($category->id);
+            @endphp
             <div class="col-lg-2 col-md-4 col-6">
-                <div class="tour-type__item" data-plugin="matchHeight" style="cursor: pointer;" onclick="searchByCategory('{{ $category->id }}')">
+                <div class="tour-type__item" data-plugin="matchHeight" style="cursor: pointer;" onclick="searchByCategory('{{ $categoryHashId }}')">
                     <div class="tour-type__thumbnail" style="width:170px; height:204px; overflow:hidden; margin:auto;">
-                        <a href="#" onclick="event.preventDefault(); searchByCategory('{{ $category->id }}');">
+                        <a href="#" onclick="event.preventDefault(); searchByCategory('{{ $categoryHashId }}');">
                             <img class="_image-tour"
                                 src="{{ $category->image ? asset('storage/' . $category->image) : 'https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=360&h=240&fit=crop&crop=center' }}"
                                 alt="{{ $category->category }}"
@@ -346,7 +352,7 @@
                     </div>
                     <div class="tour-type__info">
                         <h3 class="tour-type__name">
-                            <a href="#" onclick="event.preventDefault(); searchByCategory('{{ $category->id }}');">{{ $category->category }}</a>
+                            <a href="#" onclick="event.preventDefault(); searchByCategory('{{ $categoryHashId }}');">{{ $category->category }}</a>
                         </h3>
                     </div>
                 </div>
@@ -378,7 +384,10 @@
                                 style="width:100%;height:220px;object-fit:cover;border-radius:12px;" />
                         </a>
                         @if($tour->category)
-                        <a class="tour-item__type" href="#" onclick="event.preventDefault(); searchByCategory('{{ $tour->category->id }}');"
+                        @php
+                            $tourCategoryHashId = $hashids->encode($tour->category->id);
+                        @endphp
+                        <a class="tour-item__type" href="#" onclick="event.preventDefault(); searchByCategory('{{ $tourCategoryHashId }}');"
                             style="position:absolute;left:12px;bottom:12px;z-index:2;background:#2e8b57;color:#fff;padding:4px 10px;border-radius:5px;font-size:13px;cursor:pointer;">
                             {{ $tour->category->category }}
                         </a>
@@ -434,17 +443,20 @@
         </div>
         <div class="row">
             @forelse($carCategories as $category)
+            @php
+                $categoryHashId = $hashids->encode($category->id);
+            @endphp
             <div class="col-lg-4 col-md-6">
-                <div class="car-type__item" data-plugin="matchHeight" style="cursor: pointer;" onclick="searchByCategory('{{ $category->id }}')">
+                <div class="car-type__item" data-plugin="matchHeight" style="cursor: pointer;" onclick="searchByCategory('{{ $categoryHashId }}')">
                     <div class="car-type__left">
                         <h3 class="car-type__name">
-                            <a href="#" onclick="event.preventDefault(); searchByCategory('{{ $category->id }}');">{{ $category->category }}</a>
+                            <a href="#" onclick="event.preventDefault(); searchByCategory('{{ $categoryHashId }}');">{{ $category->category }}</a>
                         </h3>
                         <div class="car-type__description">Click here for details</div>
-                        <a href="#" class="btn btn-primary car-type__detail" onclick="event.preventDefault(); searchByCategory('{{ $category->id }}');">View Detail</a>
+                        <a href="#" class="btn btn-primary car-type__detail" onclick="event.preventDefault(); searchByCategory('{{ $categoryHashId }}');">View Detail</a>
                     </div>
                     <div class="car-type__right">
-                        <a href="#" onclick="event.preventDefault(); searchByCategory('{{ $category->id }}');">
+                        <a href="#" onclick="event.preventDefault(); searchByCategory('{{ $categoryHashId }}');">
                             <img class="rounded" style="width:120px; height:120px; object-fit:cover;"
                                 src="{{ $category->image ? asset('storage/' . $category->image) : 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=360&h=240&fit=crop&crop=center' }}"
                                 alt="{{ $category->category }}" />
@@ -598,10 +610,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Removed auto-submit on dropdown change and enter key press
 });
 
-// Function to search by category ID
-function searchByCategory(categoryId) {
-    // Build search URL with category parameter
-    const searchUrl = '{{ route("search") }}?category=' + encodeURIComponent(categoryId);
+// Function to search by category (hashid already provided from server)
+function searchByCategory(categoryHashId) {
+    // Build search URL with hashed category parameter
+    const searchUrl = '{{ route("search") }}?category=' + encodeURIComponent(categoryHashId);
     
     // Navigate to search page
     window.location.href = searchUrl;

@@ -747,9 +747,19 @@ class WebsiteController extends Controller
      */
     public function search(Request $request)
     {
+        $hashids = $this->getHashids();
         $location = $request->get('location');
-        $category = $request->get('category');
+        $categoryHash = $request->get('category');
         $name = $request->get('name');
+
+        // Decode category hashid if provided
+        $category = null;
+        if ($categoryHash) {
+            $decodedIds = $hashids->decode($categoryHash);
+            if (!empty($decodedIds)) {
+                $category = $decodedIds[0];
+            }
+        }
 
         // Start building the query
         $query = Deal::active();

@@ -346,15 +346,39 @@
         let markers = [];
         let infoWindows = [];
         let currentDeals = [];
+        let mapInitialized = false;
         
-        // Initialize map when Livewire loads
+        // Initialize map when Livewire loads (compatible with both v2 and v3)
+        document.addEventListener('livewire:init', function () {
+            console.log('Livewire initialized');
+            // Wait for Google Maps to load
+            if (typeof google !== 'undefined' && google.maps) {
+                initMap();
+            } else {
+                // Wait for Google Maps callback
+                window.initMapFromLivewire = function() {
+                    initMap();
+                };
+            }
+        });
+        
+        // Fallback for Livewire v2
         document.addEventListener('livewire:load', function () {
-            initMap();
+            console.log('Livewire loaded (v2)');
+            if (typeof google !== 'undefined' && google.maps) {
+                initMap();
+            } else {
+                window.initMapFromLivewire = function() {
+                    initMap();
+                };
+            }
         });
         
         // Update markers when Livewire updates (pagination changes)
         document.addEventListener('livewire:update', function () {
-            updateMapMarkers();
+            if (map) {
+                updateMapMarkers();
+            }
         });
 
         function initMap() {
@@ -362,8 +386,14 @@
             // Check if map container exists
             const mapElement = document.getElementById("interactive-map");
             console.log('Map element:', mapElement);
-            if (!mapElement || map) {
-                console.log('Map element not found or map already exists');
+            if (!mapElement || mapInitialized) {
+                console.log('Map element not found or map already initialized');
+                return;
+            }
+            
+            // Check if Google Maps is available
+            if (typeof google === 'undefined' || !google.maps) {
+                console.log('Google Maps not loaded yet');
                 return;
             }
             
@@ -385,6 +415,7 @@
                     ]
                 });
                 
+                mapInitialized = true;
                 console.log('Map created successfully');
                 
                 // Add initial markers
@@ -521,6 +552,24 @@
     </script>
     @endpush
 
+    <script>
+        // Make initMap available globally for Google Maps callback
+        window.initMap = function() {
+            console.log('Google Maps callback triggered');
+            if (window.initMapFromLivewire) {
+                window.initMapFromLivewire();
+            } else {
+                // If Livewire hasn't loaded yet, initialize map directly
+                setTimeout(function() {
+                    if (typeof initMapFromLivewire === 'function') {
+                        initMapFromLivewire();
+                    } else {
+                        initMap();
+                    }
+                }, 500);
+            }
+        };
+    </script>
     <script async defer
         src="https://maps.googleapis.com/maps/api/js?key={{ env('GOOGLE_MAPS_API_KEY', 'AIzaSyBvOkBwJcJjJjJjJjJjJjJjJjJjJjJjJjJj') }}&callback=initMap">
     </script>
