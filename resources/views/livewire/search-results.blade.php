@@ -296,20 +296,20 @@
                             <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
                                 <div class="tour-item tour-item--grid rounded-4" data-plugin="matchHeight"
                                     data-id="{{ $deal->id }}" data-lat="{{ $deal->lat }}"
-                                    data-lng="{{ $deal->long }}">
+                                    data-lng="{{ $deal->long }}" style="cursor: pointer;" onclick="if(event.target.tagName !== 'A' && !event.target.closest('a')) { window.location.href='{{ $deal->view_route }}'; }">
                                     <div class="hotel-item__thumbnail position-relative">
                                         @if($deal->is_featured)
                                         <span class="hotel-item__label position-absolute"
                                             style="top: 12px; left: 12px; z-index: 2; background: #ff5722; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 14px;">Featured</span>
                                         @endif
                                         <a href="{{ $deal->view_route }}"
-                                            style="display:block;">
+                                            style="display:block;" onclick="event.stopPropagation();">
                                             <img src="{{ $deal->cover_photo ? asset('storage/' . $deal->cover_photo) : ($deal->photos->count() > 0 ? asset('storage/' . $deal->photos->first()->photo) : $deal->default_image) }}"
                                                 alt="{{ $deal->title }}" loading="eager" width="360" height="160"
                                                 style="width:100%;height:140px;object-fit:cover;border-radius:8px;" />
                                         </a>
                                         @if($deal->category)
-                                        <a class="hotel-item__type" href="#" wire:click="$set('searchCategory', '{{ $deal->category->id }}')" onclick="event.preventDefault();"
+                                        <a class="hotel-item__type" href="#" wire:click="$set('searchCategory', '{{ $deal->category->id }}')" onclick="event.preventDefault(); event.stopPropagation();"
                                             style="position:absolute;left:12px;bottom:12px;z-index:2;background:#2e8b57;color:#fff;padding:4px 10px;border-radius:5px;font-size:13px;cursor:pointer;">
                                             {{ $deal->category->category }}
                                         </a>
@@ -317,7 +317,7 @@
                                         <div class="add-wishlist-wrapper"
                                             style="position:absolute;top:12px;right:12px;z-index:2;">
                                             <a href="#gmz-login-popup" class="add-wishlist gmz-box-popup"
-                                                data-effect="mfp-zoom-in">
+                                                data-effect="mfp-zoom-in" onclick="event.stopPropagation();">
                                                 <i class="fal fa-heart"></i>
                                             </a>
                                         </div>
@@ -328,7 +328,7 @@
                                         </div>
                                         <h3 class="hotel-item__title" style="font-size:1.25rem;font-weight:600;">
                                             <a href="{{ $deal->view_route }}"
-                                                style="color:#222;text-decoration:none;">{{ $deal->title }}</a>
+                                                style="color:#222;text-decoration:none;" onclick="event.stopPropagation();">{{ $deal->title }}</a>
                                         </h3>
                                         <div class="hotel-item__meta" style="margin:18px 0 12px 0;">
                                             <div class="i-meta d-flex align-items-center"
@@ -344,7 +344,7 @@
                                             <span class="_unit" style="color:#2e8b57;font-size:1rem;">
                                                 @if($deal->type == 'hotel' || $deal->type == 'apartment')
                                                     per night
-                                                @elseif($deal->type == 'tour')
+                                                @elseif($deal->type == 'tour' || $deal->type == 'activity' || $deal->type == 'package')
                                                     per person
                                                 @elseif($deal->type == 'car')
                                                     per day
@@ -353,7 +353,7 @@
                                         </div>
                                         <a class="btn btn-primary btn-sm hotel-item__view-detail w-100 d-flex justify-content-center align-items-center"
                                             href="{{ $deal->view_route }}"
-                                            style="font-size:1rem;padding:8px 0;border-radius:7px;text-align:center;">
+                                            style="font-size:1rem;padding:8px 0;border-radius:7px;text-align:center;" onclick="event.stopPropagation();">
                                             View Detail
                                         </a>
                                     </div>
@@ -537,27 +537,41 @@
                 
                 markers.push(marker);
     
+                // Use image_url from deal if available, otherwise build it
+                let imageUrl = deal.image_url || deal.default_image || '{{ asset("images/default-placeholder.jpg") }}';
+                if (!imageUrl || imageUrl === 'null') {
+                    // Fallback: build image URL if not provided
+                    if (deal.cover_photo) {
+                        imageUrl = '{{ url("/") }}/storage/' + deal.cover_photo.replace(/^\//, '');
+                    } else if (deal.photos && deal.photos.length > 0 && deal.photos[0].photo) {
+                        imageUrl = '{{ url("/") }}/storage/' + deal.photos[0].photo.replace(/^\//, '');
+                    } else {
+                        imageUrl = deal.default_image || '{{ asset("images/default-placeholder.jpg") }}';
+                    }
+                }
+                
                 // Add info window
                 const infoWindow = new google.maps.InfoWindow({
                     content: `
                         <div style="padding: 8px; max-width: 220px;">
                             <div style="display: flex; align-items: flex-start; gap: 8px;">
-                                <a href="${deal.view_route}" style="text-decoration: none;">
-                                    <img src="${deal.cover_photo ? 'storage/' + deal.cover_photo : (deal.photos && deal.photos.length > 0 ? 'storage/' + deal.photos[0].photo : deal.default_image)}" 
-                                         alt="${deal.title}" 
-                                         style="width: 35px; height: 35px; object-fit: cover; border-radius: 4px; flex-shrink: 0; cursor: pointer;">
+                                <a href="${deal.view_route || '#'}" style="text-decoration: none;">
+                                    <img src="${imageUrl}" 
+                                         alt="${deal.title || 'Deal'}" 
+                                         style="width: 35px; height: 35px; object-fit: cover; border-radius: 4px; flex-shrink: 0; cursor: pointer;"
+                                         onerror="this.src='{{ asset('images/default-placeholder.jpg') }}'">
                                 </a>
                                 <div style="flex: 1;">
-                                    <a href="${deal.view_route}" style="text-decoration: none; color: inherit;">
-                                        <h6 style="margin: 0 0 4px 0; font-weight: 600; color: #333; font-size: 13px; cursor: pointer;">${deal.title}</h6>
+                                    <a href="${deal.view_route || '#'}" style="text-decoration: none; color: inherit;">
+                                        <h6 style="margin: 0 0 4px 0; font-weight: 600; color: #333; font-size: 13px; cursor: pointer;">${deal.title || 'Deal'}</h6>
                                     </a>
                                     <p style="margin: 0 0 4px 0; color: #666; font-size: 11px;">
-                                        <i class="fas fa-map-marker-alt"></i> ${deal.location}
+                                        <i class="fas fa-map-marker-alt"></i> ${deal.location || 'N/A'}
                                     </p>
                                     <p style="margin: 0 0 6px 0; color: #2e8b57; font-weight: 600; font-size: 12px;">
-                                        USD ${parseFloat(deal.base_price).toFixed(2)}
+                                        USD ${parseFloat(deal.base_price || 0).toFixed(2)}
                                         ${deal.type === 'hotel' || deal.type === 'apartment' ? 'per night' : 
-                                          deal.type === 'tour' ? 'per person' : 
+                                          (deal.type === 'tour' || deal.type === 'activity' || deal.type === 'package') ? 'per person' : 
                                           deal.type === 'car' ? 'per day' : ''}
                                     </p>
                                 </div>

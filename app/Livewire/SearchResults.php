@@ -7,6 +7,7 @@ use App\Models\Deal;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Hashids\Hashids;
+use Illuminate\Support\Str;
 
 class SearchResults extends Component
 {
@@ -101,6 +102,10 @@ class SearchResults extends Component
                 return route('view-apartment', ['id' => $encodedId]);
             case 'tour':
                 return route('view-tour', ['id' => $encodedId]);
+            case 'activity':
+                return route('view-activity', ['id' => $encodedId]);
+            case 'package':
+                return route('view-package', ['id' => $encodedId]);
             case 'car':
                 return route('view-car', ['id' => $encodedId]);
             default:
@@ -189,6 +194,17 @@ class SearchResults extends Component
         $deals->getCollection()->transform(function ($deal) use ($hashids) {
             $deal->view_route = $this->getViewRoute($deal);
             $deal->default_image = $this->getDefaultImage($deal->type);
+            
+            // Set image URL for JavaScript/map tooltips
+            $primaryImagePath = $deal->cover_photo ?: optional($deal->photos->first())->photo;
+            if ($primaryImagePath) {
+                $deal->image_url = Str::startsWith($primaryImagePath, ['http://', 'https://'])
+                    ? $primaryImagePath
+                    : asset('storage/' . ltrim($primaryImagePath, '/'));
+            } else {
+                $deal->image_url = $deal->default_image;
+            }
+            
             return $deal;
         });
 
