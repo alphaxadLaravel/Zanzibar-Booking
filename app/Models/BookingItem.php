@@ -25,7 +25,7 @@ class BookingItem extends Model
         'check_in' => 'date',
         'check_out' => 'date',
         'total_price' => 'decimal:2',
-        'number_rooms' => 'integer',
+        'number_rooms' => 'integer', // Can be null for activities/packages/cars
         'adults' => 'integer',
         'children' => 'integer'
     ];

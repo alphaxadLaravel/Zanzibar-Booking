@@ -575,12 +575,11 @@ class BookingController extends Controller
             // Calculate total price based on deal type
             $totalPrice = $this->calculateDealPrice($deal, $validated);
 
-            // Create booking item in database
-            $bookingItem = BookingItem::create([
+            // Prepare booking item data
+            $bookingItemData = [
                 'user_id' => Auth::id(),
                 'deal_id' => $deal->id,
                 'room_id' => $validated['room_id'] ?? null,
-                'number_rooms' => ($validated['type'] === 'hotel') ? ($validated['number_rooms'] ?? 1) : null,
                 'type' => $validated['type'],
                 'check_in' => $validated['check_in'] ?? $validated['pickup_date'] ?? null,
                 'check_out' => $validated['check_out'] ?? $validated['return_date'] ?? null,
@@ -588,7 +587,17 @@ class BookingController extends Controller
                 'adults' => $validated['adults'] ?? 1,
                 'children' => $validated['children'] ?? 0,
                 'status' => 'cart',
-            ]);
+            ];
+            
+            // Only set number_rooms for hotels/apartments, leave null for activities/packages/cars
+            if (in_array($validated['type'], ['hotel', 'apartment'])) {
+                $bookingItemData['number_rooms'] = $validated['number_rooms'] ?? 1;
+            } else {
+                $bookingItemData['number_rooms'] = null;
+            }
+            
+            // Create booking item in database
+            $bookingItem = BookingItem::create($bookingItemData);
 
             if ($request->has('book_now')) {
                 DB::commit();
