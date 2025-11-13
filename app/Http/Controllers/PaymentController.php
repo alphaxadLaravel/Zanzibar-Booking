@@ -68,6 +68,49 @@ class PaymentController extends Controller
             ]);
 
             // Prepare payment details for Pesapal
+            // Generate absolute callback URLs
+            try {
+                // route() already returns absolute URLs if APP_URL is configured
+                $callbackUrl = route('payment.success');
+                $notificationUrl = route('payment.confirmation');
+                
+                // Fallback: ensure URLs are absolute even if route() returns relative
+                if (!filter_var($callbackUrl, FILTER_VALIDATE_URL)) {
+                    $callbackUrl = url($callbackUrl);
+                }
+                if (!filter_var($notificationUrl, FILTER_VALIDATE_URL)) {
+                    $notificationUrl = url($notificationUrl);
+                }
+            } catch (\Exception $e) {
+                Log::error('Failed to generate callback URLs', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                throw new \Exception('Failed to generate payment callback URLs. Please check your APP_URL configuration in .env file.');
+            }
+            
+            // Validate that URLs were generated correctly
+            if (empty($callbackUrl) || $callbackUrl === 'N/A' || !filter_var($callbackUrl, FILTER_VALIDATE_URL)) {
+                Log::error('Invalid callback URL generated', [
+                    'callback_url' => $callbackUrl,
+                    'app_url' => config('app.url')
+                ]);
+                throw new \Exception('Invalid callback URL generated. Please set APP_URL in your .env file.');
+            }
+            
+            if (empty($notificationUrl) || $notificationUrl === 'N/A' || !filter_var($notificationUrl, FILTER_VALIDATE_URL)) {
+                Log::error('Invalid notification URL generated', [
+                    'notification_url' => $notificationUrl,
+                    'app_url' => config('app.url')
+                ]);
+                throw new \Exception('Invalid notification URL generated. Please set APP_URL in your .env file.');
+            }
+            
+            Log::info('Callback URLs generated successfully', [
+                'callback_url' => $callbackUrl,
+                'notification_url' => $notificationUrl
+            ]);
+            
             $details = [
                 'amount' => $payment->amount,
                 'description' => $this->getPaymentDescription($booking),
@@ -78,8 +121,8 @@ class PaymentController extends Controller
                 'phonenumber' => $booking->phone,
                 'reference' => $payment->transactionid,
                 'currency' => config('pesapal.currency', 'USD'),
-                'callback_url' => route('payment.success'),
-                'notification_url' => route('payment.confirmation')
+                'callback_url' => $callbackUrl,
+                'notification_url' => $notificationUrl
             ];
 
             Log::info('Pesapal payment details prepared', $details);
