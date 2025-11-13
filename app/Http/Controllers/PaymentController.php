@@ -19,8 +19,20 @@ class PaymentController extends Controller
         try {
             Log::info('Payment process started', ['booking_id' => $bookingId]);
             
+            // Decode the hashed booking ID
+            $hashids = new \Hashids\Hashids('MchungajiZanzibarBookings', 10);
+            $decodedIds = $hashids->decode($bookingId);
+            
+            if (empty($decodedIds)) {
+                Log::error('Invalid booking ID hash', ['booking_id' => $bookingId]);
+                return redirect()->route('index')->with('error', 'Invalid booking reference. Please try again.');
+            }
+            
+            $actualBookingId = $decodedIds[0];
+            Log::info('Decoded booking ID', ['hashed_id' => $bookingId, 'actual_id' => $actualBookingId]);
+            
             // Load booking with relationships
-            $booking = Booking::with(['bookingItems.deal', 'bookingItems.room'])->findOrFail($bookingId);
+            $booking = Booking::with(['bookingItems.deal', 'bookingItems.room'])->findOrFail($actualBookingId);
             
             // Check if booking is already paid
             if ($booking->payment_status) {
@@ -258,6 +270,22 @@ class PaymentController extends Controller
                         'booking_id' => $booking->id,
                         'booking_code' => $booking->booking_code
                     ]);
+
+                    // Update cart items to 'paid' status
+                    if (is_array($booking->booking_items)) {
+                        foreach ($booking->booking_items as $item) {
+                            if (isset($item['booking_item_id'])) {
+                                $bookingItem = \App\Models\BookingItem::find($item['booking_item_id']);
+                                if ($bookingItem) {
+                                    $bookingItem->update(['status' => 'paid']);
+                                    Log::info('Cart item updated to paid', [
+                                        'booking_item_id' => $bookingItem->id,
+                                        'booking_id' => $booking->id
+                                    ]);
+                                }
+                            }
+                        }
+                    }
 
                     // Send payment success emails
                     try {

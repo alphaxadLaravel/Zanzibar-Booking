@@ -561,7 +561,7 @@
                     <label class="form-label">SEO Title</label>
                     <input type="text" class="form-control" name="seo_title"
                         value="{{ old('seo_title', $deal->seo_title ?? '') }}"
-                        placeholder="Enter SEO title (recommended: 50-60 characters)" maxlength="60">
+                        placeholder="Enter SEO title (recommended: 50-60 characters)">
                     <small class="text-muted">Leave empty to use deal title. Optimal length: 50-60 characters</small>
                     @error('seo_title')
                     <div class="text-danger">{{ $message }}</div>
@@ -570,8 +570,7 @@
                 <div class="col-md-12">
                     <label class="form-label">SEO Description</label>
                     <textarea class="form-control" name="seo_description" rows="3"
-                        placeholder="Enter SEO description (recommended: 150-160 characters)"
-                        maxlength="160">{{ old('seo_description', $deal->seo_description ?? '') }}</textarea>
+                        placeholder="Enter SEO description (recommended: 150-160 characters)">{{ old('seo_description', $deal->seo_description ?? '') }}</textarea>
                     <small class="text-muted">Leave empty to use deal description. Optimal length: 150-160
                         characters</small>
                     @error('seo_description')

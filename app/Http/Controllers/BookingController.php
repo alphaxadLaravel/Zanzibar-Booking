@@ -127,10 +127,9 @@ class BookingController extends Controller
             $totalAmount = 0;
 
             // Prepare booking items data
+            // NOTE: Don't update cart items to 'pending' yet - keep them as 'cart' until payment is confirmed
+            // This prevents items from being removed from cart if payment fails
             foreach ($cartItems as $cartItem) {
-                // Update status to pending
-                $cartItem->update(['status' => 'pending']);
-
                 $bookedItems[] = [
                     'deal_id' => $cartItem->deal_id,
                     'room_id' => $cartItem->room_id,
@@ -371,10 +370,9 @@ class BookingController extends Controller
 
             DB::beginTransaction();
 
+            // NOTE: Don't update cart items to 'pending' yet - keep them as 'cart' until payment is confirmed
+            // This prevents items from being removed from cart if payment fails
             foreach ($cartItems as $cartItem) {
-                // Update status to pending
-                $cartItem->update(['status' => 'pending']);
-
                 $bookedItems[] = [
                     'deal_id' => $cartItem->deal_id,
                     'room_id' => $cartItem->room_id,
