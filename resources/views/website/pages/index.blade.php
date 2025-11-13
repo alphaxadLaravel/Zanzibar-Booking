@@ -378,8 +378,8 @@
                                 style="width:100%;height:220px;object-fit:cover;border-radius:12px;" />
                         </a>
                         @if($tour->category)
-                        <a class="tour-item__type" href="#"
-                            style="position:absolute;left:12px;bottom:12px;z-index:2;background:#2e8b57;color:#fff;padding:4px 10px;border-radius:5px;font-size:13px;">
+                        <a class="tour-item__type" href="#" onclick="event.preventDefault(); searchByCategory('{{ $tour->category->id }}');"
+                            style="position:absolute;left:12px;bottom:12px;z-index:2;background:#2e8b57;color:#fff;padding:4px 10px;border-radius:5px;font-size:13px;cursor:pointer;">
                             {{ $tour->category->category }}
                         </a>
                         @endif
@@ -490,7 +490,7 @@
                             @include('website.components.star_rating', ['rating' => $car->star_rating ?? 5, 'size' => 'small'])
                         </div>
                         <h3 class="car-item__title" style="font-size:1.25rem;font-weight:600;">
-                            <a href="{{ $car->view_route }}" style="color:#222;text-decoration:none;">{{ $car->title }}</a>
+                            <a href="{{ route('view-car', ['id' => $hashids->encode($car->id)]) }}" style="color:#222;text-decoration:none;">{{ $car->title }}</a>
                         </h3>
                         <div class="tour-item__meta" style="margin:18px 0 12px 0;">
                             <div class="i-meta d-flex align-items-center" style="font-size:15px;color:#888;">
@@ -504,7 +504,7 @@
                                     {{ number_format($car->base_price, 2) }}</span>
                                 <span class="_unit" style="color:#2e8b57;font-size:1rem;">/DAY</span>
                             </div>
-                            <a class="btn btn-primary btn-sm tour-item__view-detail" href="{{ $car->view_route }}"
+                            <a class="btn btn-primary btn-sm tour-item__view-detail" href="{{ route('view-car', ['id' => $hashids->encode($car->id)]) }}"
                                 style="font-size:1rem;padding:8px 22px;border-radius:7px;">
                                 View Detail
                             </a>
