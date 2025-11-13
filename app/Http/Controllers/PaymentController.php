@@ -31,8 +31,8 @@ class PaymentController extends Controller
             $actualBookingId = $decodedIds[0];
             Log::info('Decoded booking ID', ['hashed_id' => $bookingId, 'actual_id' => $actualBookingId]);
             
-            // Load booking with relationships
-            $booking = Booking::with(['bookingItems.deal', 'bookingItems.room'])->findOrFail($actualBookingId);
+            // Load booking (booking items are stored as JSON in booking_items column, not as a relationship)
+            $booking = Booking::findOrFail($actualBookingId);
             
             // Check if booking is already paid
             if ($booking->payment_status) {
