@@ -344,4 +344,35 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle booking form submission errors - open login modal if user is not authenticated
+        @if($errors->any() && !auth()->check())
+            @if(str_contains($errors->first('error') ?? '', 'logged in') || str_contains($errors->first('error') ?? '', 'login'))
+                const loginModalEl = document.getElementById('exampleModal');
+                if (loginModalEl) {
+                    const loginModal = bootstrap.Modal.getOrCreateInstance(loginModalEl);
+                    loginModal.show();
+                }
+            @endif
+        @endif
+        
+        // Prevent form submission if user is not logged in
+        const bookingForm = document.querySelector('.activity-booking-form');
+        if (bookingForm) {
+            bookingForm.addEventListener('submit', function(e) {
+                @guest
+                    e.preventDefault();
+                    const loginModalEl = document.getElementById('exampleModal');
+                    if (loginModalEl) {
+                        const loginModal = bootstrap.Modal.getOrCreateInstance(loginModalEl);
+                        loginModal.show();
+                    }
+                    return false;
+                @endguest
+            });
+        }
+    });
+</script>
+
 @endsection

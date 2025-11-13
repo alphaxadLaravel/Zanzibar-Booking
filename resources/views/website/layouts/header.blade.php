@@ -232,15 +232,8 @@
       }
     });
 
-    @auth
-        @if ($errors->any())
-            const partnerModalEl = document.getElementById('BecomePartner');
-            if (partnerModalEl) {
-                const partnerModal = bootstrap.Modal.getOrCreateInstance(partnerModalEl);
-                partnerModal.show();
-            }
-        @endif
-    @else
+    // Redirect "Become Partner" button to login for guests
+    @guest
         document.querySelectorAll('[data-bs-target="#BecomePartner"]').forEach(function (el) {
             el.addEventListener('click', function (ev) {
                 ev.preventDefault();
@@ -251,7 +244,7 @@
                 }
             });
         });
-    @endauth
+    @endguest
 
   });
 </script>

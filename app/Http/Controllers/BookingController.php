@@ -559,8 +559,8 @@ class BookingController extends Controller
             // Validate the request based on deal type
             $validated = $this->validateDealBooking($request);
 
-            // Get the deal
-            $deal = Deal::findOrFail($validated['deal_id']);
+            // Get the deal with required relationships
+            $deal = Deal::with(['tours', 'car'])->findOrFail($validated['deal_id']);
 
             // Calculate total price based on deal type
             $totalPrice = $this->calculateDealPrice($deal, $validated);
@@ -599,8 +599,21 @@ class BookingController extends Controller
             return back()->withErrors($e->validator)->withInput();
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Deal booking error: ' . $e->getMessage());
-            return back()->withErrors(['error' => 'An error occurred while processing your booking. Please try again.'])->withInput();
+            Log::error('Deal booking error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->all(),
+                'user_id' => Auth::id()
+            ]);
+            
+            // Don't expose detailed error to user, just show generic message
+            $errorMessage = 'An error occurred while processing your booking. Please try again.';
+            
+            // Check for specific error types
+            if (str_contains($e->getMessage(), 'tours') || str_contains($e->getMessage(), 'relationship')) {
+                $errorMessage = 'Booking details are incomplete. Please contact support.';
+            }
+            
+            return back()->withErrors(['error' => $errorMessage])->withInput();
         }
     }
 
@@ -653,8 +666,18 @@ class BookingController extends Controller
         switch ($validated['type']) {
             case 'package':
             case 'activity':
+                // Check if tours relationship exists
+                if (!$deal->tours) {
+                    throw new \Exception('Activity/package pricing information is missing. Please contact support.');
+                }
+                
                 $adultPrice = $deal->tours->adult_price ?? 0;
                 $childPrice = $deal->tours->child_price ?? 0;
+                
+                if ($adultPrice <= 0) {
+                    throw new \Exception('Adult price is not set for this activity/package.');
+                }
+                
                 $adults = $validated['adults'] ?? 1;
                 $children = $validated['children'] ?? 0;
                 return ($adults * $adultPrice) + ($children * $childPrice);
