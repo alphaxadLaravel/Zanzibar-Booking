@@ -40,10 +40,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Callback URLs
+    | Callback Route
     |--------------------------------------------------------------------------
     |
-    | URLs for payment callbacks
+    | Route name for payment callback (the library uses route() to generate the URL)
+    |
+    */
+
+    'callback_route' => env('PESAPAL_CALLBACK_ROUTE', 'payment.success'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Callback URLs (optional - legacy, use callback_route instead)
+    |--------------------------------------------------------------------------
+    |
+    | URLs for payment callbacks (used as fallback)
     |
     */
 
