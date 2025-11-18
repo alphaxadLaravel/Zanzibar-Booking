@@ -19,10 +19,12 @@ return Application::configure(basePath: dirname(__DIR__))
         // Register custom middleware aliases
         $middleware->alias([
             'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
+            'track.visit' => \App\Http\Middleware\TrackSiteVisit::class,
         ]);
-
-        // Apply email verification middleware to web routes
+        
+        // Apply middleware to web routes
         $middleware->web(append: [
+            \App\Http\Middleware\TrackSiteVisit::class,
             \App\Http\Middleware\EnsureEmailIsVerified::class,
         ]);
     })

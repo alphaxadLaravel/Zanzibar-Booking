@@ -18,6 +18,7 @@ use App\Models\User;
 use App\Models\Role;
 use App\Models\ContactMessage;
 use App\Models\System;
+use App\Models\SiteVisit;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -46,7 +47,8 @@ class AdminController extends Controller
 
         if ($isPartner && $authUser) {
             $stats = [
-                'tours_count' => Deal::where('type', 'tour')->where('user_id', $authUser->id)->count(),
+                'activities_count' => Deal::where('type', 'activity')->where('user_id', $authUser->id)->count(),
+                'packages_count' => Deal::where('type', 'package')->where('user_id', $authUser->id)->count(),
                 'hotels_count' => Deal::where('type', 'hotel')->where('user_id', $authUser->id)->count(),
                 'apartments_count' => Deal::where('type', 'apartment')->where('user_id', $authUser->id)->count(),
                 'bookings_count' => Booking::where('user_id', $authUser->id)->count(),
@@ -63,7 +65,8 @@ class AdminController extends Controller
                 ->get();
         } else {
             $stats = [
-                'tours_count' => Deal::where('type', 'tour')->count(),
+                'activities_count' => Deal::where('type', 'activity')->count(),
+                'packages_count' => Deal::where('type', 'package')->count(),
                 'hotels_count' => Deal::where('type', 'hotel')->count(),
                 'apartments_count' => Deal::where('type', 'apartment')->count(),
                 'bookings_count' => Booking::count(),
@@ -84,6 +87,12 @@ class AdminController extends Controller
 
     private function resolveSiteVisitsCount(): int
     {
+        // Count unique visitors from site_visits table
+        if (Schema::hasTable('site_visits')) {
+            return SiteVisit::count();
+        }
+
+        // Fallback to old method if table doesn't exist yet
         if (Schema::hasTable('flight_searches')) {
             return DB::table('flight_searches')->count();
         }

@@ -7,19 +7,37 @@
 @endphp
 
 <div class="row row-cols-xxl-4 row-cols-lg-3 row-cols-md-2 row-cols-1 align-items-center mt-2">
-    <!-- Tours Counter -->
+    <!-- Activities Counter -->
     <div class="col">
         <div class="card">
             <div class="card-body p-2">
                 <a href="#!" class="text-muted float-end mt-n1 fs-sm"><i class="ti ti-external-link"></i></a>
-                <h5 class="mb-1" title="Total Tours">Tours</h5>
+                <h5 class="mb-1" title="Total Activities">Activities</h5>
                 <div class="d-flex align-items-center gap-1">
                     <div class="avatar-sm flex-shrink-0">
                         <span class="avatar-title text-bg-light rounded-circle fs-16">
                             <i class="ti ti-map-pin"></i>
                         </span>
                     </div>
-                    <h4 class="mb-0">{{ number_format($stats['tours_count']) }}</h4>
+                    <h4 class="mb-0">{{ number_format($stats['activities_count']) }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Packages Counter -->
+    <div class="col">
+        <div class="card">
+            <div class="card-body p-2">
+                <a href="#!" class="text-muted float-end mt-n1 fs-sm"><i class="ti ti-external-link"></i></a>
+                <h5 class="mb-1" title="Total Packages">Packages</h5>
+                <div class="d-flex align-items-center gap-1">
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title text-bg-light rounded-circle fs-16">
+                            <i class="ti ti-package"></i>
+                        </span>
+                    </div>
+                    <h4 class="mb-0">{{ number_format($stats['packages_count']) }}</h4>
                 </div>
             </div>
         </div>
