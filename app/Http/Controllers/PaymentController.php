@@ -239,6 +239,25 @@ class PaymentController extends Controller
                     'environment' => config('pesapal.environment')
                 ]);
                 
+                // Ensure route can be resolved before calling Pesapal
+                // The Pesapal library might try to validate the route internally
+                try {
+                    $testRoute = route('payment.success');
+                    if (empty($testRoute) || $testRoute === 'N/A') {
+                        Log::error('Route payment.success cannot be resolved', [
+                            'app_url' => config('app.url'),
+                            'env_app_url' => env('APP_URL')
+                        ]);
+                        throw new \Exception('Route payment.success cannot be resolved. Please ensure APP_URL is set correctly in .env file.');
+                    }
+                } catch (\Exception $routeError) {
+                    Log::error('Route resolution failed before Pesapal call', [
+                        'error' => $routeError->getMessage(),
+                        'app_url' => config('app.url')
+                    ]);
+                    throw new \Exception('Cannot resolve payment callback route. Please check your APP_URL in .env file.');
+                }
+                
                 $iframe = Pesapal::makePayment($details);
                 
                 // Log what Pesapal returned
@@ -292,12 +311,13 @@ class PaymentController extends Controller
                 }
                 
             } catch (\Exception $pesapalError) {
+                $errorMessage = $pesapalError->getMessage();
+                
                 Log::error('Pesapal makePayment exception', [
-                    'error' => $pesapalError->getMessage(),
+                    'error' => $errorMessage,
                     'error_code' => $pesapalError->getCode(),
                     'file' => $pesapalError->getFile(),
                     'line' => $pesapalError->getLine(),
-                    'trace' => $pesapalError->getTraceAsString(),
                     'details_sent' => $details,
                     'callback_url_value' => $details['callback_url'] ?? 'NOT SET',
                     'callback_url_type' => isset($details['callback_url']) ? gettype($details['callback_url']) : 'NOT SET',
@@ -305,16 +325,34 @@ class PaymentController extends Controller
                     'app_url' => config('app.url'),
                     'env_app_url' => env('APP_URL'),
                     'route_callback' => route('payment.success'),
-                    'route_notification' => route('payment.confirmation')
+                    'route_notification' => route('payment.confirmation'),
+                    'pesapal_callback_route_config' => config('pesapal.callback_route')
                 ]);
                 
-                // Provide more helpful error message
-                $errorMsg = $pesapalError->getMessage();
-                if (stripos($errorMsg, 'callback') !== false || stripos($errorMsg, 'N/A') !== false) {
-                    $errorMsg .= ' Please verify your APP_URL is set correctly in .env file and matches your live domain URL.';
+                // Handle specific Pesapal library errors
+                if (stripos($errorMessage, 'callback route does not exist') !== false || stripos($errorMessage, 'N/A') !== false) {
+                    // The Pesapal library is trying to validate the route internally
+                    // This happens when the library uses config('pesapal.callback_route') and route() helper fails
+                    $helpfulMessage = 'Pesapal callback route validation failed. ';
+                    $helpfulMessage .= 'Please ensure APP_URL in your .env file is set to: https://www.zanzibarbookings.com (with www) or https://zanzibarbookings.com (without www), matching your actual domain. ';
+                    $helpfulMessage .= 'After updating, run: php artisan config:clear';
+                    
+                    Log::error('Pesapal callback route validation failed', [
+                        'current_app_url' => config('app.url'),
+                        'env_app_url' => env('APP_URL'),
+                        'callback_route_config' => config('pesapal.callback_route'),
+                        'route_resolution_test' => route('payment.success')
+                    ]);
+                    
+                    throw new \Exception($helpfulMessage);
                 }
                 
-                throw new \Exception('Pesapal payment error: ' . $errorMsg);
+                // Generic error handling
+                if (stripos($errorMessage, 'callback') !== false || stripos($errorMessage, 'route') !== false) {
+                    $errorMessage .= ' Please verify your APP_URL is set correctly in .env file and matches your live domain URL.';
+                }
+                
+                throw new \Exception('Pesapal payment error: ' . $errorMessage);
             }
        
             // Ensure iframe is set before returning to view
