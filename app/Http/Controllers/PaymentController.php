@@ -20,17 +20,45 @@ class PaymentController extends Controller
             // Get and clean Pesapal credentials (remove quotes if present)
             $consumerKey = trim(config('pesapal.consumer_key', ''), " \t\n\r\0\x0B\"'");
             $consumerSecret = trim(config('pesapal.consumer_secret', ''), " \t\n\r\0\x0B\"'");
+            $environment = config('pesapal.environment', 'sandbox');
+            
+            // Log credentials info (without exposing full values)
+            Log::info('Pesapal credentials check', [
+                'environment' => $environment,
+                'consumer_key_length' => strlen($consumerKey),
+                'consumer_secret_length' => strlen($consumerSecret),
+                'consumer_key_first_5' => substr($consumerKey, 0, 5),
+                'consumer_secret_first_5' => substr($consumerSecret, 0, 5),
+                'has_quotes_in_key' => strpos($consumerKey, '"') !== false || strpos($consumerKey, "'") !== false,
+                'has_quotes_in_secret' => strpos($consumerSecret, '"') !== false || strpos($consumerSecret, "'") !== false
+            ]);
             
             if (empty($consumerKey) || empty($consumerSecret)) {
                 return redirect()->route('index')->with('error', 'Payment gateway not configured. Please contact support.');
             }
             
             // Update config with cleaned credentials (so Pesapal library gets clean values)
+            // IMPORTANT: The knox/pesapal library uses 'live' (boolean) not 'environment'
+            $isLive = ($environment === 'live');
             config([
                 'pesapal.consumer_key' => $consumerKey,
                 'pesapal.consumer_secret' => $consumerSecret,
-                'pesapal.callback_route' => 'payment.success'
+                'pesapal.callback_route' => 'payment.success',
+                'pesapal.environment' => $environment,
+                'pesapal.live' => $isLive  // Library uses this boolean
             ]);
+            
+            // Verify config was updated correctly
+            $verifyKey = config('pesapal.consumer_key');
+            $verifySecret = config('pesapal.consumer_secret');
+            if ($verifyKey !== $consumerKey || $verifySecret !== $consumerSecret) {
+                Log::error('Config update failed', [
+                    'expected_key' => substr($consumerKey, 0, 10),
+                    'actual_key' => substr($verifyKey, 0, 10),
+                    'expected_secret' => substr($consumerSecret, 0, 10),
+                    'actual_secret' => substr($verifySecret, 0, 10)
+                ]);
+            }
             
             // Decode booking ID
             $hashids = new \Hashids\Hashids('MchungajiZanzibarBookings', 10);

@@ -26,6 +26,28 @@ return [
     */
 
     'environment' => env('PESAPAL_ENV', 'sandbox'),
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Pesapal Live Mode (for knox/pesapal library)
+    |--------------------------------------------------------------------------
+    |
+    | The knox/pesapal library uses 'live' (boolean) to determine environment
+    | This maps PESAPAL_ENV to the library's expected format
+    |
+    */
+    'live' => env('PESAPAL_LIVE', env('PESAPAL_ENV') === 'live'),
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Pesapal Live Mode
+    |--------------------------------------------------------------------------
+    |
+    | The knox/pesapal library uses 'live' (boolean) instead of 'environment'
+    | Set to true for production, false for sandbox
+    |
+    */
+    'live' => env('PESAPAL_LIVE', env('PESAPAL_ENV') === 'live'),
 
     /*
     |--------------------------------------------------------------------------
