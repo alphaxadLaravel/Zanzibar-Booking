@@ -127,7 +127,15 @@
                     
                     <!-- Pesapal iframe will be loaded here -->
                     <div id="pesapal-payment-form">
-                        {!! $iframe !!}
+                        @if(!empty($iframe))
+                            {!! $iframe !!}
+                        @else
+                            <div class="alert alert-danger">
+                                <h6>Payment Form Error</h6>
+                                <p>Unable to load payment form. Please try again or contact support.</p>
+                                <a href="{{ route('booking.view', $booking->id) }}" class="btn btn-primary">Go Back to Booking</a>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>

@@ -82,43 +82,65 @@ class PaymentController extends Controller
             // Prepare payment details for Pesapal
             // Generate absolute callback URLs with fallback to config values
             try {
+                // Get APP_URL first and validate it
+                $appUrl = config('app.url');
+                if (empty($appUrl) || $appUrl === 'http://localhost' || !filter_var($appUrl, FILTER_VALIDATE_URL)) {
+                    Log::error('APP_URL is not set correctly', [
+                        'app_url' => $appUrl,
+                        'env_app_url' => env('APP_URL')
+                    ]);
+                    throw new \Exception('APP_URL is not set correctly in .env file. Please set APP_URL to your domain (e.g., https://yourdomain.com)');
+                }
+                
                 // Try to generate from routes first
                 $callbackUrl = route('payment.success');
                 $notificationUrl = route('payment.confirmation');
                 
-                // Fallback to config values if route generation fails
-                if (empty($callbackUrl) || !filter_var($callbackUrl, FILTER_VALIDATE_URL)) {
-                    $callbackUrl = config('pesapal.callback_url', url('/payment/success'));
-                }
-                if (empty($notificationUrl) || !filter_var($notificationUrl, FILTER_VALIDATE_URL)) {
-                    $notificationUrl = config('pesapal.notification_url', url('/payment/confirmation'));
-                }
-                
-                // Ensure URLs are absolute (prepend APP_URL if relative)
-                if (!filter_var($callbackUrl, FILTER_VALIDATE_URL)) {
-                    $callbackUrl = url($callbackUrl);
-                }
-                if (!filter_var($notificationUrl, FILTER_VALIDATE_URL)) {
-                    $notificationUrl = url($notificationUrl);
+                // Check if route() returned "N/A" or invalid URL
+                if (empty($callbackUrl) || $callbackUrl === 'N/A' || !filter_var($callbackUrl, FILTER_VALIDATE_URL)) {
+                    // Use url() helper with path directly
+                    $callbackUrl = url('/payment/success');
+                    Log::warning('Route helper failed, using url() helper for callback', [
+                        'route_result' => route('payment.success'),
+                        'fallback_url' => $callbackUrl
+                    ]);
                 }
                 
-                // Final validation - ensure we have valid URLs
+                if (empty($notificationUrl) || $notificationUrl === 'N/A' || !filter_var($notificationUrl, FILTER_VALIDATE_URL)) {
+                    // Use url() helper with path directly
+                    $notificationUrl = url('/payment/confirmation');
+                    Log::warning('Route helper failed, using url() helper for notification', [
+                        'route_result' => route('payment.confirmation'),
+                        'fallback_url' => $notificationUrl
+                    ]);
+                }
+                
+                // Final validation - ensure we have valid absolute URLs
                 if (empty($callbackUrl) || !filter_var($callbackUrl, FILTER_VALIDATE_URL)) {
-                    throw new \Exception('Failed to generate valid callback URL');
+                    throw new \Exception('Failed to generate valid callback URL. Generated: ' . $callbackUrl);
                 }
                 if (empty($notificationUrl) || !filter_var($notificationUrl, FILTER_VALIDATE_URL)) {
-                    throw new \Exception('Failed to generate valid notification URL');
+                    throw new \Exception('Failed to generate valid notification URL. Generated: ' . $notificationUrl);
+                }
+                
+                // Ensure URLs are absolute (should be already, but double-check)
+                if (!preg_match('/^https?:\/\//', $callbackUrl)) {
+                    $callbackUrl = $appUrl . '/payment/success';
+                }
+                if (!preg_match('/^https?:\/\//', $notificationUrl)) {
+                    $notificationUrl = $appUrl . '/payment/confirmation';
                 }
                 
             } catch (\Exception $e) {
                 Log::error('Failed to generate callback URLs', [
                     'error' => $e->getMessage(),
                     'app_url' => config('app.url'),
+                    'env_app_url' => env('APP_URL'),
                     'pesapal_callback' => config('pesapal.callback_url'),
                     'pesapal_notification' => config('pesapal.notification_url'),
                     'trace' => $e->getTraceAsString()
                 ]);
-                throw new \Exception('Failed to generate payment callback URLs. Please check your APP_URL and PESAPAL_CALLBACK_URL in .env file.');
+                throw new \Exception('Failed to generate payment callback URLs: ' . $e->getMessage() . '. Please check your APP_URL in .env file is set correctly (e.g., APP_URL=https://yourdomain.com)');
             }
             
             Log::info('Callback URLs generated successfully', [
@@ -207,22 +229,68 @@ class PaymentController extends Controller
                     throw new \Exception('Callback URL missing from details array right before Pesapal call');
                 }
                 
+                // Log what we're sending to Pesapal
+                Log::info('Calling Pesapal::makePayment', [
+                    'transaction_id' => $payment->transactionid,
+                    'amount' => $details['amount'],
+                    'callback_url' => $details['callback_url'],
+                    'notification_url' => $details['notification_url'],
+                    'consumer_key_set' => !empty($consumerKey),
+                    'environment' => config('pesapal.environment')
+                ]);
+                
                 $iframe = Pesapal::makePayment($details);
                 
-                if (empty($iframe) || (is_string($iframe) && (stripos($iframe, 'error') !== false || stripos($iframe, 'N/A') !== false))) {
-                    Log::error('Pesapal returned empty or error iframe', [
-                        'iframe' => is_string($iframe) ? substr($iframe, 0, 500) : $iframe,
+                // Log what Pesapal returned
+                Log::info('Pesapal::makePayment response', [
+                    'iframe_type' => gettype($iframe),
+                    'iframe_is_empty' => empty($iframe),
+                    'iframe_length' => is_string($iframe) ? strlen($iframe) : 'N/A',
+                    'iframe_preview' => is_string($iframe) ? substr($iframe, 0, 200) : 'Not a string',
+                    'has_iframe_tag' => is_string($iframe) && stripos($iframe, '<iframe') !== false,
+                    'has_error' => is_string($iframe) && (stripos($iframe, 'error') !== false || stripos($iframe, 'N/A') !== false)
+                ]);
+                
+                // Validate iframe response
+                if (empty($iframe)) {
+                    Log::error('Pesapal returned empty iframe', [
                         'details_sent' => $details,
-                        'callback_url_in_details' => $details['callback_url'] ?? 'MISSING'
+                        'callback_url' => $details['callback_url'] ?? 'MISSING'
                     ]);
-                    throw new \Exception('Pesapal payment initialization failed. Please check your Pesapal configuration and callback URLs.');
+                    throw new \Exception('Pesapal returned an empty response. Please check your Pesapal credentials and configuration.');
+                }
+                
+                // Check for error messages in the response
+                if (is_string($iframe) && (stripos($iframe, 'error') !== false || stripos($iframe, 'N/A') !== false || stripos($iframe, 'failed') !== false)) {
+                    Log::error('Pesapal returned error in iframe', [
+                        'iframe' => is_string($iframe) ? substr($iframe, 0, 1000) : $iframe,
+                        'details_sent' => $details,
+                        'callback_url' => $details['callback_url'] ?? 'MISSING'
+                    ]);
+                    throw new \Exception('Pesapal payment initialization failed. Response: ' . (is_string($iframe) ? substr($iframe, 0, 200) : 'Invalid response'));
+                }
+                
+                // Ensure iframe contains an iframe tag
+                if (is_string($iframe) && stripos($iframe, '<iframe') === false) {
+                    Log::warning('Pesapal response may not contain iframe tag', [
+                        'iframe_preview' => substr($iframe, 0, 500),
+                        'iframe_length' => strlen($iframe)
+                    ]);
+                    // Don't throw error - some Pesapal implementations might return different formats
                 }
                 
                 Log::info('Pesapal iframe generated successfully', [
                     'transaction_id' => $payment->transactionid,
                     'iframe_length' => is_string($iframe) ? strlen($iframe) : 'not_string',
-                    'callback_url_used' => $details['callback_url']
+                    'callback_url_used' => $details['callback_url'],
+                    'iframe_preview' => is_string($iframe) ? substr(strip_tags($iframe), 0, 100) : 'Not a string'
                 ]);
+                
+                // Final check: ensure iframe is set before returning
+                if (!isset($iframe) || (is_string($iframe) && empty(trim($iframe)))) {
+                    throw new \Exception('Pesapal iframe is empty or not set');
+                }
+                
             } catch (\Exception $pesapalError) {
                 Log::error('Pesapal makePayment exception', [
                     'error' => $pesapalError->getMessage(),
@@ -235,6 +303,7 @@ class PaymentController extends Controller
                     'callback_url_type' => isset($details['callback_url']) ? gettype($details['callback_url']) : 'NOT SET',
                     'notification_url_value' => $details['notification_url'] ?? 'NOT SET',
                     'app_url' => config('app.url'),
+                    'env_app_url' => env('APP_URL'),
                     'route_callback' => route('payment.success'),
                     'route_notification' => route('payment.confirmation')
                 ]);
@@ -248,6 +317,19 @@ class PaymentController extends Controller
                 throw new \Exception('Pesapal payment error: ' . $errorMsg);
             }
        
+            // Ensure iframe is set before returning to view
+            if (!isset($iframe)) {
+                Log::error('Iframe variable not set after Pesapal call');
+                throw new \Exception('Failed to generate payment iframe. Please try again or contact support.');
+            }
+            
+            Log::info('Returning payment view with iframe', [
+                'booking_id' => $booking->id,
+                'payment_id' => $payment->id,
+                'iframe_set' => isset($iframe),
+                'iframe_type' => gettype($iframe)
+            ]);
+            
             return view('website.pages.pesapal', [
                 'iframe' => $iframe,
                 'booking' => $booking,
