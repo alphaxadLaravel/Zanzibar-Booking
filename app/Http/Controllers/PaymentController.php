@@ -342,7 +342,41 @@ class PaymentController extends Controller
                     'pesapal_callback_route_config' => config('pesapal.callback_route')
                 ]);
                 
-                // Handle specific Pesapal library errors
+                // Handle invalid credentials error
+                if (stripos($errorMessage, 'Invalid consumer secret/key') !== false || stripos($errorMessage, 'Invalid consumer') !== false) {
+                    $environment = config('pesapal.environment');
+                    $consumerKey = config('pesapal.consumer_key');
+                    $consumerSecret = config('pesapal.consumer_secret');
+                    
+                    $helpfulMessage = 'Pesapal credentials are invalid. ';
+                    $helpfulMessage .= "Current environment: {$environment}. ";
+                    
+                    // Check if credentials might be for wrong environment
+                    if ($environment === 'live') {
+                        $helpfulMessage .= 'You are using LIVE environment. Please ensure you are using LIVE credentials from your Pesapal dashboard. ';
+                        $helpfulMessage .= 'If you want to test, switch to sandbox: PESAPAL_ENV=sandbox in .env file. ';
+                    } else {
+                        $helpfulMessage .= 'You are using SANDBOX environment. Please ensure you are using SANDBOX credentials. ';
+                        $helpfulMessage .= 'For production, switch to live: PESAPAL_ENV=live and use LIVE credentials. ';
+                    }
+                    
+                    $helpfulMessage .= 'Please verify your PESAPAL_CONSUMER_KEY and PESAPAL_CONSUMER_SECRET in .env file are correct and match your Pesapal account. ';
+                    $helpfulMessage .= 'Make sure there are no extra spaces or quotes around the values.';
+                    
+                    Log::error('Pesapal invalid credentials', [
+                        'environment' => $environment,
+                        'consumer_key_length' => strlen($consumerKey ?? ''),
+                        'consumer_secret_length' => strlen($consumerSecret ?? ''),
+                        'consumer_key_set' => !empty($consumerKey),
+                        'consumer_secret_set' => !empty($consumerSecret),
+                        'consumer_key_preview' => !empty($consumerKey) ? substr($consumerKey, 0, 10) . '...' : 'NOT SET',
+                        'consumer_secret_preview' => !empty($consumerSecret) ? substr($consumerSecret, 0, 10) . '...' : 'NOT SET'
+                    ]);
+                    
+                    throw new \Exception($helpfulMessage);
+                }
+                
+                // Handle callback route errors
                 if (stripos($errorMessage, 'callback route does not exist') !== false || stripos($errorMessage, 'N/A') !== false) {
                     // The Pesapal library is trying to validate the route internally
                     // This happens when the library uses config('pesapal.callback_route') and route() helper fails
