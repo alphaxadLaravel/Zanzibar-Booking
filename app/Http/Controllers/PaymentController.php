@@ -258,6 +258,19 @@ class PaymentController extends Controller
                     throw new \Exception('Cannot resolve payment callback route. Please check your APP_URL in .env file.');
                 }
                 
+                // CRITICAL FIX: Ensure Pesapal config has correct callback_route
+                // The Pesapal library uses config('pesapal.callback_route') internally
+                // If it's set to "paymentsuccess" (wrong), it will fail
+                $pesapalCallbackRoute = config('pesapal.callback_route');
+                if ($pesapalCallbackRoute !== 'payment.success') {
+                    Log::warning('Pesapal callback_route config is incorrect, fixing it', [
+                        'current_value' => $pesapalCallbackRoute,
+                        'correct_value' => 'payment.success'
+                    ]);
+                    // Temporarily override the config for this request
+                    config(['pesapal.callback_route' => 'payment.success']);
+                }
+                
                 $iframe = Pesapal::makePayment($details);
                 
                 // Log what Pesapal returned
@@ -333,14 +346,24 @@ class PaymentController extends Controller
                 if (stripos($errorMessage, 'callback route does not exist') !== false || stripos($errorMessage, 'N/A') !== false) {
                     // The Pesapal library is trying to validate the route internally
                     // This happens when the library uses config('pesapal.callback_route') and route() helper fails
+                    $currentCallbackRoute = config('pesapal.callback_route');
                     $helpfulMessage = 'Pesapal callback route validation failed. ';
-                    $helpfulMessage .= 'Please ensure APP_URL in your .env file is set to: https://www.zanzibarbookings.com (with www) or https://zanzibarbookings.com (without www), matching your actual domain. ';
-                    $helpfulMessage .= 'After updating, run: php artisan config:clear';
+                    
+                    // Check if the callback_route config is wrong
+                    if ($currentCallbackRoute !== 'payment.success') {
+                        $helpfulMessage .= "Your PESAPAL_CALLBACK_ROUTE in .env is set to '{$currentCallbackRoute}' but should be 'payment.success' (with a dot). ";
+                        $helpfulMessage .= "Please update your .env file: PESAPAL_CALLBACK_ROUTE=payment.success ";
+                    } else {
+                        $helpfulMessage .= 'Please ensure APP_URL in your .env file is set to: https://www.zanzibarbookings.com (with www) or https://zanzibarbookings.com (without www), matching your actual domain. ';
+                    }
+                    
+                    $helpfulMessage .= 'After updating, run: php artisan config:clear && php artisan cache:clear';
                     
                     Log::error('Pesapal callback route validation failed', [
                         'current_app_url' => config('app.url'),
                         'env_app_url' => env('APP_URL'),
-                        'callback_route_config' => config('pesapal.callback_route'),
+                        'callback_route_config' => $currentCallbackRoute,
+                        'expected_callback_route' => 'payment.success',
                         'route_resolution_test' => route('payment.success')
                     ]);
                     
