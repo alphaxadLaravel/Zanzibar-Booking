@@ -26,11 +26,12 @@ class FlightController extends Controller
     {
         $flights = [];
         $destinations = $this->getPopularDestinations();
-        $airlines = $this->getPopularAirlines();
+        $airlines = [];
         $error = null;
 
         // If search parameters are provided
-        if ($request->has('origin') && $request->has('destination') && $request->has('departureDate')) {
+        if ($request->has('origin') && $request->has('destination') && $request->has('departureDate') && 
+            !empty($request->input('origin')) && !empty($request->input('destination')) && !empty($request->input('departureDate'))) {
             try {
                 $flights = $this->flightService->searchFlights([
                     'origin' => $request->input('origin', 'ZNZ'),
@@ -46,13 +47,32 @@ class FlightController extends Controller
                     'max' => 50
                 ]);
 
+                // Ensure flights is an array
+                if (!is_array($flights)) {
+                    $flights = [];
+                }
+
+                // Extract unique airlines from search results
+                if (!empty($flights)) {
+                    $airlines = collect($flights)->pluck('airline')->unique()->filter()->values()->toArray();
+                }
+
                 // Store search results in session for booking
                 session(['flight_search_results' => $flights]);
                 
             } catch (\Exception $e) {
                 $error = $e->getMessage();
-                Log::error('Flight search error: ' . $e->getMessage());
+                Log::error('Flight search error: ' . $e->getMessage(), [
+                    'request' => $request->all(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                $flights = [];
             }
+        }
+
+        // If no airlines from results, use popular airlines
+        if (empty($airlines)) {
+            $airlines = array_values($this->getPopularAirlines());
         }
 
         return view('website.pages.flights', compact('flights', 'destinations', 'airlines', 'error'));
@@ -316,6 +336,7 @@ class FlightController extends Controller
     protected function getPopularDestinations(): array
     {
         return [
+            'ZNZ' => 'Zanzibar',
             'DAR' => 'Dar es Salaam',
             'JRO' => 'Kilimanjaro',
             'NBO' => 'Nairobi',
@@ -326,6 +347,10 @@ class FlightController extends Controller
             'IST' => 'Istanbul',
             'AMS' => 'Amsterdam',
             'LHR' => 'London',
+            'JNB' => 'Johannesburg',
+            'CPT' => 'Cape Town',
+            'CAI' => 'Cairo',
+            'KRT' => 'Khartoum',
         ];
     }
 

@@ -114,10 +114,10 @@
                             </div>
 
                             <div class="d-grid mt-4">
-                                <button type="submit" name="book_now" class="btn btn-primary btn-lg text-uppercase fw-semibold w-100 mb-3">
+                                <button type="submit" name="book_now" class="btn btn-primary btn-lg text-uppercase fw-semibold w-100">
                                     Book Now
                                 </button>
-                                <button type="submit" name="add_cart" class="btn btn-outline-secondary btn-lg text-uppercase fw-semibold w-100 mb-3" style="font-size: 13px;">
+                                <button type="submit" name="add_cart" class="btn btn-outline-secondary btn-lg text-uppercase fw-semibold w-100 my-3" style="font-size: 13px;">
                                     <i class="mdi mdi-cart-plus me-1"></i> ADD TO CART
                                 </button>
                             </div>
@@ -126,9 +126,16 @@
                 </div>
                 <script>
                     function calculateCarPrice() {
+                        const pricePerDay = {{ $car->base_price }};
                         const pickupDate = document.getElementById('pickup_date').value;
                         const returnDate = document.getElementById('return_date').value;
-                        const pricePerDay = {{ $car->base_price }};
+                        
+                        // Update return date minimum when pickup date changes
+                        if (pickupDate) {
+                            const pickup = new Date(pickupDate);
+                            pickup.setDate(pickup.getDate() + 1);
+                            document.getElementById('return_date').min = pickup.toISOString().split('T')[0];
+                        }
                         
                         let days = 1;
                         if (pickupDate && returnDate) {
@@ -140,20 +147,13 @@
                         }
                         
                         const totalPrice = pricePerDay * days;
-                        
                         document.getElementById('car_days').textContent = days;
                         document.getElementById('car_total_price').textContent = totalPrice.toFixed(2);
-                        
-                        // Update return date minimum date
-                        if (pickupDate) {
-                            const pickup = new Date(pickupDate);
-                            pickup.setDate(pickup.getDate() + 1);
-                            document.getElementById('return_date').min = pickup.toISOString().split('T')[0];
-                        }
                     }
                     document.addEventListener('DOMContentLoaded', function() {
                         document.getElementById('pickup_date').addEventListener('change', calculateCarPrice);
                         document.getElementById('return_date').addEventListener('change', calculateCarPrice);
+                        calculateCarPrice();
                     });
                 </script>
 
@@ -311,7 +311,7 @@
 });
 
 // Simple star rating display
-    document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
     const select = document.getElementById('rating');
     const starDisplay = document.getElementById('star-display');
     if (select && starDisplay) {
@@ -328,6 +328,38 @@
             starDisplay.textContent = stars;
         });
     }
+});
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle booking form submission errors - open login modal if user is not authenticated
+        @if($errors->any() && !auth()->check())
+            @if(str_contains($errors->first('error') ?? '', 'logged in') || str_contains($errors->first('error') ?? '', 'login'))
+                const loginModalEl = document.getElementById('exampleModal');
+                if (loginModalEl) {
+                    const loginModal = bootstrap.Modal.getOrCreateInstance(loginModalEl);
+                    loginModal.show();
+                }
+            @endif
+        @endif
+        
+        // Don't prevent form submission for logged-in users
+        @guest
+            const bookingForm = document.querySelector('.car-booking-form');
+            if (bookingForm) {
+                bookingForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const loginModalEl = document.getElementById('exampleModal');
+                    if (loginModalEl) {
+                        const loginModal = bootstrap.Modal.getOrCreateInstance(loginModalEl);
+                        loginModal.show();
+                    }
+                    return false;
+                });
+            }
+        @endguest
     });
 </script>
+
 @endsection

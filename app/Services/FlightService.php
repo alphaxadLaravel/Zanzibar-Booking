@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Amadeus\Amadeus;
 use Amadeus\Exceptions\ResponseException;
+use Amadeus\Exceptions\ClientException;
 use App\Models\FlightSearch;
 use App\Models\FlightBooking;
 use App\Models\FlightPassenger;
@@ -77,11 +78,21 @@ class FlightService
             // Parse and return results
             return $this->parseFlightOffers($response[0]);
 
-        } catch (ResponseException $e) {
-            Log::error('Amadeus API Error: ' . $e->getMessage(), [
+        } catch (ResponseException | ClientException | \Exception $e) {
+            $logData = [
                 'params' => $params,
-                'response' => $e->getResponse()
-            ]);
+                'message' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ];
+            
+            // Only add response if method exists
+            if (method_exists($e, 'getResponse')) {
+                $logData['response'] = $e->getResponse();
+            }
+            
+            Log::error('Amadeus API Error', $logData);
             
             throw new \Exception('Unable to search flights. Please try again later.');
         }
@@ -107,8 +118,12 @@ class FlightService
 
             return $response[0];
 
-        } catch (ResponseException $e) {
-            Log::error('Amadeus Pricing API Error: ' . $e->getMessage());
+        } catch (ResponseException | ClientException | \Exception $e) {
+            Log::error('Amadeus Pricing API Error: ' . $e->getMessage(), [
+                'code' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
             throw new \Exception('Unable to get flight price. Please try again.');
         }
     }
@@ -252,11 +267,21 @@ class FlightService
 
             return true;
 
-        } catch (ResponseException $e) {
-            Log::error('Amadeus Booking Confirmation Error: ' . $e->getMessage(), [
+        } catch (ResponseException | ClientException | \Exception $e) {
+            $logData = [
                 'booking_id' => $booking->id,
-                'response' => $e->getResponse()
-            ]);
+                'message' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ];
+            
+            // Only add response if method exists
+            if (method_exists($e, 'getResponse')) {
+                $logData['response'] = $e->getResponse();
+            }
+            
+            Log::error('Amadeus Booking Confirmation Error', $logData);
             return false;
         }
     }
