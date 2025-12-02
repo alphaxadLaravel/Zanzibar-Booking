@@ -80,6 +80,7 @@ Route::get('/view/car/{id}', [WebsiteController::class, 'viewCar'])->name('view-
 
 // Flight routes
 Route::get('/flights', [App\Http\Controllers\FlightController::class, 'index'])->name('flights.index');
+Route::get('/flights/search-locations', [App\Http\Controllers\FlightController::class, 'searchLocations'])->name('flights.search-locations');
 Route::get('/flights/{flightId}', [App\Http\Controllers\FlightController::class, 'show'])->name('flights.show');
 Route::get('/flights/{flightId}/book', [App\Http\Controllers\FlightController::class, 'bookingForm'])->name('flights.booking.form');
 Route::post('/flights/book', [App\Http\Controllers\FlightController::class, 'processBooking'])->name('flights.booking.process');

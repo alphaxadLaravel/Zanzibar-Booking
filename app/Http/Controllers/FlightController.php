@@ -369,4 +369,39 @@ class FlightController extends Controller
             'TK' => 'Turkish Airlines',
         ]);
     }
+
+    /**
+     * Search for airports and cities (AJAX endpoint)
+     */
+    public function searchLocations(Request $request)
+    {
+        $request->validate([
+            'keyword' => 'required|string|min:2|max:100',
+            'countryCode' => 'nullable|string|size:2',
+            'subTypes' => 'nullable|array',
+            'limit' => 'nullable|integer|min:1|max:20',
+        ]);
+
+        try {
+            $keyword = $request->input('keyword');
+            $countryCode = $request->input('countryCode');
+            $subTypes = $request->input('subTypes', ['AIRPORT', 'CITY']);
+            $limit = $request->input('limit', 10);
+
+            $locations = $this->flightService->searchLocations($keyword, $countryCode, $subTypes, $limit);
+
+            return response()->json([
+                'success' => true,
+                'data' => $locations
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Location search error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to search locations. Please try again.',
+                'data' => []
+            ], 500);
+        }
+    }
 }

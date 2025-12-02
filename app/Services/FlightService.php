@@ -422,5 +422,100 @@ class FlightService
             return "{$minutes}m";
         }
     }
+
+    /**
+     * Search for airports and cities using Amadeus Location API
+     *
+     * @param string $keyword
+     * @param string|null $countryCode
+     * @param array $subTypes
+     * @param int $limit
+     * @return array
+     */
+    public function searchLocations(string $keyword, ?string $countryCode = null, array $subTypes = ['AIRPORT', 'CITY'], int $limit = 10): array
+    {
+        try {
+            // Build search parameters
+            $params = [
+                'subType' => implode(',', $subTypes),
+                'keyword' => $keyword,
+                'page[limit]' => $limit,
+                'page[offset]' => 0,
+                'sort' => 'analytics.travelers.score',
+                'view' => 'LIGHT', // Use LIGHT for faster response
+            ];
+
+            if ($countryCode) {
+                $params['countryCode'] = $countryCode;
+            }
+
+            // Call Amadeus Location API
+            $response = $this->amadeus->getReferenceData()->getLocations()->get($params);
+
+            // Parse and format results
+            $locations = [];
+            if (isset($response[0]['data']) && is_array($response[0]['data'])) {
+                foreach ($response[0]['data'] as $location) {
+                    $locations[] = [
+                        'id' => $location['id'] ?? null,
+                        'type' => $location['type'] ?? 'location',
+                        'subType' => $location['subType'] ?? 'AIRPORT',
+                        'iataCode' => $location['iataCode'] ?? null,
+                        'name' => $location['name'] ?? '',
+                        'detailedName' => $location['detailedName'] ?? '',
+                        'cityName' => $location['address']['cityName'] ?? '',
+                        'countryName' => $location['address']['countryName'] ?? '',
+                        'countryCode' => $location['address']['countryCode'] ?? '',
+                        'displayName' => $this->formatLocationDisplayName($location),
+                    ];
+                }
+            }
+
+            return $locations;
+
+        } catch (ResponseException | ClientException | \Exception $e) {
+            Log::error('Amadeus Location Search Error', [
+                'keyword' => $keyword,
+                'message' => $e->getMessage(),
+                'code' => $e->getCode(),
+            ]);
+            
+            // Return empty array on error instead of throwing
+            return [];
+        }
+    }
+
+    /**
+     * Format location display name for autocomplete
+     *
+     * @param array $location
+     * @return string
+     */
+    protected function formatLocationDisplayName(array $location): string
+    {
+        $name = $location['name'] ?? '';
+        $cityName = $location['address']['cityName'] ?? '';
+        $countryName = $location['address']['countryName'] ?? '';
+        $iataCode = $location['iataCode'] ?? '';
+        $subType = $location['subType'] ?? 'AIRPORT';
+
+        $parts = [];
+        
+        if ($iataCode) {
+            $parts[] = $iataCode;
+        }
+        
+        if ($subType === 'CITY' && $cityName) {
+            $parts[] = $cityName;
+        } elseif ($name) {
+            $parts[] = $name;
+        }
+        
+        if ($countryName) {
+            $parts[] = $countryName;
+        }
+
+        return implode(', ', $parts);
+    }
 }
 
