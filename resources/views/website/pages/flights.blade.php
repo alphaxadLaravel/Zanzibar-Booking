@@ -202,9 +202,15 @@
                                        id="origin-input" 
                                        placeholder="From (Airport/City)"
                                        autocomplete="off"
+                                       list="origin-popular"
                                        value="{{ request('origin') && isset($destinations[request('origin')]) ? request('origin') . ' - ' . $destinations[request('origin')] : (request('origin', 'ZNZ') . ' - ' . ($destinations[request('origin', 'ZNZ')] ?? 'Zanzibar')) }}"
                                        style="height: 45px;"
                                        required>
+                                <datalist id="origin-popular">
+                                    @foreach($destinations as $code => $name)
+                                    <option value="{{ $code }} - {{ $name }}" data-code="{{ $code }}">{{ $code }} - {{ $name }}</option>
+                                    @endforeach
+                                </datalist>
                                 <input type="hidden" name="origin" id="origin-code" value="{{ request('origin', 'ZNZ') }}">
                                 <div class="autocomplete-dropdown" id="origin-dropdown"></div>
                             </div>
@@ -216,9 +222,15 @@
                                        id="destination-input" 
                                        placeholder="To (Airport/City)"
                                        autocomplete="off"
+                                       list="destination-popular"
                                        value="{{ request('destination') && isset($destinations[request('destination')]) ? request('destination') . ' - ' . $destinations[request('destination')] : '' }}"
                                        style="height: 45px;"
                                        required>
+                                <datalist id="destination-popular">
+                                    @foreach($destinations as $code => $name)
+                                    <option value="{{ $code }} - {{ $name }}" data-code="{{ $code }}">{{ $code }} - {{ $name }}</option>
+                                    @endforeach
+                                </datalist>
                                 <input type="hidden" name="destination" id="destination-code" value="{{ request('destination', '') }}">
                                 <div class="autocomplete-dropdown" id="destination-dropdown"></div>
                             </div>
@@ -784,12 +796,32 @@
 
         if (!input || !codeInput || !dropdown) return;
 
+        // Handle datalist selection (popular options)
+        input.addEventListener('change', function() {
+            const value = this.value.trim();
+            // Check if it matches a popular option format: "CODE - Name"
+            const match = value.match(/^([A-Z]{3})\s*-\s*(.+)$/);
+            if (match) {
+                const code = match[1];
+                codeInput.value = code;
+            }
+        });
+
         input.addEventListener('input', function() {
             const keyword = this.value.trim();
             
+            // Check if it's a popular option selection
+            const match = keyword.match(/^([A-Z]{3})\s*-\s*(.+)$/);
+            if (match) {
+                const code = match[1];
+                codeInput.value = code;
+                dropdown.classList.remove('show');
+                return;
+            }
+            
             if (keyword.length < 2) {
                 dropdown.classList.remove('show');
-                codeInput.value = '';
+                // Don't clear codeInput if it was a valid selection
                 return;
             }
 
@@ -800,8 +832,10 @@
         });
 
         input.addEventListener('focus', function() {
-            if (this.value.trim().length >= 2) {
-                searchLocations(this.value.trim(), dropdown, codeInput, input);
+            const keyword = this.value.trim();
+            // Only search if it's not a popular option format
+            if (keyword.length >= 2 && !keyword.match(/^[A-Z]{3}\s*-\s*.+$/)) {
+                searchLocations(keyword, dropdown, codeInput, input);
             }
         });
 
@@ -841,8 +875,10 @@
         dropdown.classList.add('show');
         selectedIndex = -1;
 
-        // Filter by Tanzania (TZ) only
-        fetch('{{ route("flights.search-locations") }}?keyword=' + encodeURIComponent(keyword) + '&countryCode=TZ&subTypes[]=AIRPORT&subTypes[]=CITY&limit=10', {
+        // Search East Africa countries: Tanzania (TZ), Kenya (KE), Uganda (UG), Rwanda (RW), Burundi (BI), Ethiopia (ET)
+        // For now, focus on Tanzania but allow broader search
+        const countryCodes = 'TZ,KE,UG,RW,BI,ET';
+        fetch('{{ route("flights.search-locations") }}?keyword=' + encodeURIComponent(keyword) + '&subTypes[]=AIRPORT&subTypes[]=CITY&limit=10&view=FULL', {
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',

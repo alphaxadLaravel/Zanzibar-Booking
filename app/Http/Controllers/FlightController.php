@@ -331,26 +331,57 @@ class FlightController extends Controller
     }
 
     /**
-     * Get popular destinations
+     * Get popular destinations - Tanzania and East Africa
      */
     protected function getPopularDestinations(): array
     {
         return [
-            'ZNZ' => 'Zanzibar',
-            'DAR' => 'Dar es Salaam',
-            'JRO' => 'Kilimanjaro',
-            'NBO' => 'Nairobi',
-            'MBA' => 'Mombasa',
-            'DXB' => 'Dubai',
-            'DOH' => 'Doha',
-            'ADD' => 'Addis Ababa',
-            'IST' => 'Istanbul',
-            'AMS' => 'Amsterdam',
-            'LHR' => 'London',
-            'JNB' => 'Johannesburg',
-            'CPT' => 'Cape Town',
-            'CAI' => 'Cairo',
-            'KRT' => 'Khartoum',
+            // Tanzania Airports
+            'ZNZ' => 'Zanzibar - Abeid Amani Karume International',
+            'DAR' => 'Dar es Salaam - Julius Nyerere International',
+            'JRO' => 'Kilimanjaro International',
+            'MWZ' => 'Mwanza Airport',
+            'TBO' => 'Tabora Airport',
+            'DOD' => 'Dodoma Airport',
+            'ARK' => 'Arusha Airport',
+            
+            // Kenya
+            'NBO' => 'Nairobi - Jomo Kenyatta International',
+            'MBA' => 'Mombasa - Moi International',
+            'KIS' => 'Kisumu Airport',
+            'ELD' => 'Eldoret International',
+            
+            // Uganda
+            'EBB' => 'Kampala - Entebbe International',
+            
+            // Rwanda
+            'KGL' => 'Kigali International',
+            
+            // Burundi
+            'BJM' => 'Bujumbura International',
+            
+            // Ethiopia
+            'ADD' => 'Addis Ababa - Bole International',
+            
+            // South Sudan
+            'JUB' => 'Juba International',
+            
+            // Somalia
+            'MGQ' => 'Mogadishu - Aden Adde International',
+            
+            // Djibouti
+            'JIB' => 'Djibouti - Ambouli International',
+            
+            // Popular International Hubs
+            'DXB' => 'Dubai International',
+            'DOH' => 'Doha - Hamad International',
+            'IST' => 'Istanbul Airport',
+            'AMS' => 'Amsterdam - Schiphol',
+            'LHR' => 'London - Heathrow',
+            'JNB' => 'Johannesburg - O.R. Tambo',
+            'CPT' => 'Cape Town International',
+            'CAI' => 'Cairo International',
+            'KRT' => 'Khartoum International',
         ];
     }
 
@@ -380,6 +411,7 @@ class FlightController extends Controller
             'countryCode' => 'nullable|string|size:2',
             'subTypes' => 'nullable|array',
             'limit' => 'nullable|integer|min:1|max:20',
+            'view' => 'nullable|string|in:FULL,LIGHT',
         ]);
 
         try {
@@ -387,8 +419,9 @@ class FlightController extends Controller
             $countryCode = $request->input('countryCode');
             $subTypes = $request->input('subTypes', ['AIRPORT', 'CITY']);
             $limit = $request->input('limit', 10);
+            $view = $request->input('view', 'FULL');
 
-            $locations = $this->flightService->searchLocations($keyword, $countryCode, $subTypes, $limit);
+            $locations = $this->flightService->searchLocations($keyword, $countryCode, $subTypes, $limit, $view);
 
             return response()->json([
                 'success' => true,

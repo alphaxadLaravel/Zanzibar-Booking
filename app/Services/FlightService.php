@@ -17,9 +17,18 @@ class FlightService
 
     public function __construct()
     {
+        // Validate API credentials are configured
+        $apiKey = config('amadeus.api_key');
+        $apiSecret = config('amadeus.api_secret');
+
+        if (empty($apiKey) || empty($apiSecret)) {
+            Log::warning('Amadeus API credentials not configured. Please set AMADEUS_API_KEY and AMADEUS_API_SECRET in your .env file.');
+            // Don't throw exception here - let it fail gracefully during API calls
+        }
+
         $builder = Amadeus::builder(
-            config('amadeus.api_key'),
-            config('amadeus.api_secret')
+            $apiKey ?: '',
+            $apiSecret ?: ''
         );
 
         // Set production environment if configured
@@ -39,6 +48,15 @@ class FlightService
      */
     public function searchFlights(array $params): array
     {
+        // Check if API credentials are configured
+        $apiKey = config('amadeus.api_key');
+        $apiSecret = config('amadeus.api_secret');
+        
+        if (empty($apiKey) || empty($apiSecret)) {
+            Log::error('Amadeus API credentials not configured');
+            throw new \Exception('Flight search is currently unavailable. Please contact support or try again later.');
+        }
+
         try {
             // Log search for analytics
             $this->logSearch($params);
@@ -73,11 +91,102 @@ class FlightService
             }
 
             // Call Amadeus API
-            $response = $this->amadeus->getShopping()->getFlightOffers()->get($searchParams);
+            // Wrap in additional try-catch to handle SDK authentication errors
+            try {
+                $response = $this->amadeus->getShopping()->getFlightOffers()->get($searchParams);
+            } catch (\TypeError $typeError) {
+                // Handle SDK type errors (like the __toString() null return)
+                if (str_contains($typeError->getMessage(), '__toString') || 
+                    str_contains($typeError->getMessage(), 'null returned')) {
+                    Log::error('Amadeus SDK Authentication Error - likely missing or invalid credentials', [
+                        'error' => $typeError->getMessage(),
+                        'file' => $typeError->getFile(),
+                        'line' => $typeError->getLine(),
+                    ]);
+                    throw new \Exception('Amadeus API authentication failed. Please verify your API credentials are correctly configured in the .env file.');
+                }
+                throw $typeError;
+            }
+
+            // Convert response to array format - handle both array and object responses
+            // Similar pattern to searchLocations method
+            $responseBody = null;
+            
+            if (is_array($response) && isset($response[0])) {
+                $responseBody = $response[0];
+                
+                // Convert object to array if it's an object (like FlightOffer)
+                if (is_object($responseBody)) {
+                    $responseBody = json_decode(json_encode($responseBody), true);
+                }
+            }
+            
+            // Structure the data for parseFlightOffers - it expects ['data' => [...]]
+            $parsedData = ['data' => []];
+            
+            if (is_array($responseBody)) {
+                // If responseBody has 'data' key (standard Amadeus format)
+                if (isset($responseBody['data']) && is_array($responseBody['data'])) {
+                    // Convert any FlightOffer objects within the data array to arrays
+                    $flightOffers = [];
+                    foreach ($responseBody['data'] as $offer) {
+                        if (is_object($offer)) {
+                            $flightOffers[] = json_decode(json_encode($offer), true);
+                        } else {
+                            $flightOffers[] = $offer;
+                        }
+                    }
+                    $parsedData = ['data' => $flightOffers];
+                }
+                // If responseBody IS the data array (direct array of flight offers)
+                elseif (!empty($responseBody) && isset($responseBody[0])) {
+                    // Check if elements look like flight offers
+                    $firstItem = $responseBody[0];
+                    if ((is_array($firstItem) && (isset($firstItem['itineraries']) || isset($firstItem['id']))) ||
+                        (is_object($firstItem))) {
+                        // Convert all to arrays
+                        $flightOffers = [];
+                        foreach ($responseBody as $offer) {
+                            if (is_object($offer)) {
+                                $flightOffers[] = json_decode(json_encode($offer), true);
+                            } else {
+                                $flightOffers[] = $offer;
+                            }
+                        }
+                        $parsedData = ['data' => $flightOffers];
+                    }
+                }
+                // Handle case where responseBody is a single flight offer (converted from object)
+                elseif (!empty($responseBody) && (isset($responseBody['itineraries']) || isset($responseBody['id']))) {
+                    // Single flight offer converted from object to array - wrap it
+                    $parsedData = ['data' => [$responseBody]];
+                }
+            }
 
             // Parse and return results
-            return $this->parseFlightOffers($response[0]);
+            return $this->parseFlightOffers($parsedData);
 
+        } catch (\TypeError $typeError) {
+            // Handle SDK type errors (like the __toString() null return during authentication)
+            Log::error('Amadeus SDK TypeError', [
+                'params' => $params,
+                'message' => $typeError->getMessage(),
+                'file' => $typeError->getFile(),
+                'line' => $typeError->getLine(),
+                'trace' => $typeError->getTraceAsString(),
+            ]);
+            
+            $errorMessage = 'Amadeus API authentication failed. ';
+            
+            if (str_contains($typeError->getMessage(), '__toString') || 
+                str_contains($typeError->getMessage(), 'null returned')) {
+                $errorMessage .= 'This usually means your API credentials are missing or invalid. ';
+                $errorMessage .= 'Please check that AMADEUS_API_KEY and AMADEUS_API_SECRET are correctly set in your .env file.';
+            } else {
+                $errorMessage .= 'Please verify your API configuration or try again later.';
+            }
+            
+            throw new \Exception($errorMessage);
         } catch (ResponseException | ClientException | \Exception $e) {
             $logData = [
                 'params' => $params,
@@ -85,16 +194,32 @@ class FlightService
                 'code' => $e->getCode(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
             ];
             
             // Only add response if method exists
             if (method_exists($e, 'getResponse')) {
-                $logData['response'] = $e->getResponse();
+                try {
+                    $logData['response'] = $e->getResponse();
+                } catch (\Exception $responseError) {
+                    $logData['response_error'] = 'Could not get response: ' . $responseError->getMessage();
+                }
             }
             
             Log::error('Amadeus API Error', $logData);
             
-            throw new \Exception('Unable to search flights. Please try again later.');
+            // Provide user-friendly error message
+            $errorMessage = 'Unable to search flights at this time. ';
+            
+            // Check if it's an authentication error
+            if (str_contains($e->getMessage(), 'token') || str_contains($e->getMessage(), 'authentication') || 
+                str_contains($e->getMessage(), 'credentials') || str_contains($e->getMessage(), '__toString')) {
+                $errorMessage .= 'Please verify API configuration.';
+            } else {
+                $errorMessage .= 'Please try again later or contact support if the problem persists.';
+            }
+            
+            throw new \Exception($errorMessage);
         }
     }
 
@@ -430,9 +555,10 @@ class FlightService
      * @param string|null $countryCode
      * @param array $subTypes
      * @param int $limit
+     * @param string $view
      * @return array
      */
-    public function searchLocations(string $keyword, ?string $countryCode = null, array $subTypes = ['AIRPORT', 'CITY'], int $limit = 10): array
+    public function searchLocations(string $keyword, ?string $countryCode = null, array $subTypes = ['AIRPORT', 'CITY'], int $limit = 10, string $view = 'FULL'): array
     {
         try {
             // Build search parameters
@@ -442,7 +568,7 @@ class FlightService
                 'page[limit]' => $limit,
                 'page[offset]' => 0,
                 'sort' => 'analytics.travelers.score',
-                'view' => 'LIGHT', // Use LIGHT for faster response
+                'view' => $view, // FULL or LIGHT
             ];
 
             if ($countryCode) {
