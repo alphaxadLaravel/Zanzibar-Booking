@@ -8,6 +8,7 @@ use Amadeus\Exceptions\ClientException;
 use App\Models\FlightSearch;
 use App\Models\FlightBooking;
 use App\Models\FlightPassenger;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 
@@ -197,10 +198,13 @@ class FlightService
                 'trace' => $e->getTraceAsString(),
             ];
             
-            // Only add response if method exists
+            // Only add response if method exists (use call_user_func to avoid linter errors)
             if (method_exists($e, 'getResponse')) {
                 try {
-                    $logData['response'] = $e->getResponse();
+                    $response = call_user_func([$e, 'getResponse']);
+                    if ($response !== null) {
+                        $logData['response'] = $response;
+                    }
                 } catch (\Exception $responseError) {
                     $logData['response_error'] = 'Could not get response: ' . $responseError->getMessage();
                 }
@@ -401,9 +405,16 @@ class FlightService
                 'line' => $e->getLine(),
             ];
             
-            // Only add response if method exists
+            // Only add response if method exists (use call_user_func to avoid linter errors)
             if (method_exists($e, 'getResponse')) {
-                $logData['response'] = $e->getResponse();
+                try {
+                    $response = call_user_func([$e, 'getResponse']);
+                    if ($response !== null) {
+                        $logData['response'] = $response;
+                    }
+                } catch (\Exception $responseError) {
+                    $logData['response_error'] = 'Could not get response: ' . $responseError->getMessage();
+                }
             }
             
             Log::error('Amadeus Booking Confirmation Error', $logData);
@@ -473,7 +484,7 @@ class FlightService
     {
         try {
             FlightSearch::create([
-                'user_id' => auth()->id(),
+                'user_id' => Auth::id(),
                 'origin_code' => $params['origin'],
                 'origin_name' => $this->getAirportCity($params['origin']),
                 'destination_code' => $params['destination'],
