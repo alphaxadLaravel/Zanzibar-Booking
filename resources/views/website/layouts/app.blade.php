@@ -224,7 +224,7 @@
                                     <label for="signup-first_name">FIRST NAME</label>
                                     <input id="signup-first_name" name="first_name" type="text"
                                         class="form-control gmz-validation" data-validation="required"
-                                        placeholder="First Name" />
+                                        placeholder="First Name" value="{{ old('first_name') }}" />
                                 </div>
                             </div>
                             <div class="col-lg-6">
@@ -232,14 +232,14 @@
                                     <label for="signup-last_name">LAST NAME</label>
                                     <input id="signup-last_name" name="last_name" type="text"
                                         class="form-control gmz-validation" data-validation="required"
-                                        placeholder="Last Name" />
+                                        placeholder="Last Name" value="{{ old('last_name') }}" />
                                 </div>
                             </div>
                         </div>
 
                         <div id="signup-email-field" class="field-wrapper input mb-3">
                             <label for="signup-email">EMAIL</label>
-                            <input id="signup-email" name="email" type="email" value=""
+                            <input id="signup-email" name="email" type="email" value="{{ old('email') }}"
                                 class="form-control gmz-validation" data-validation="required" placeholder="Email" />
                         </div>
 
@@ -575,6 +575,22 @@
             @foreach($errors->all() as $error)
                 showToast('{{ $error }}', 'error');
             @endforeach
+        @endif
+        
+        // Reopen signup modal if there's a signup error (email already exists)
+        @if(session('error'))
+            @php
+                $errorMsg = strtolower(session('error'));
+                $isSignupError = str_contains($errorMsg, 'email already exists') || 
+                                 str_contains($errorMsg, 'already exists') ||
+                                 str_contains($errorMsg, 'try logging in');
+            @endphp
+            @if($isSignupError)
+                setTimeout(function() {
+                    var signupModal = new bootstrap.Modal(document.getElementById('Signup'));
+                    signupModal.show();
+                }, 100);
+            @endif
         @endif
         
         // Add click to close functionality

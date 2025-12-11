@@ -516,7 +516,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                             name="adults" 
                                             required
                                         >
-                                            @for($i = 1; $i <= min($room->people ?? 2, 8); $i++)
+                                            @for($i = 1; $i <= 20; $i++)
                                                 <option value="{{ $i }}" {{ old('adults', 2) == $i ? 'selected' : '' }}>
                                                     {{ $i }} Adult{{ $i > 1 ? 's' : '' }}
                                                 </option>
@@ -531,7 +531,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                             name="children"
                                         >
                                             <option value="0" {{ old('children', 0) == 0 ? 'selected' : '' }}>No Children</option>
-                                            @for($i = 1; $i <= 4; $i++)
+                                            @for($i = 1; $i <= 20; $i++)
                                                 <option value="{{ $i }}" {{ old('children') == $i ? 'selected' : '' }}>
                                                     {{ $i }} Child{{ $i > 1 ? 'ren' : '' }}
                                                 </option>

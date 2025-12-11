@@ -53,7 +53,16 @@ class LoginController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return redirect()->back()->with('error', 'Validation failed');
+            // Check if email already exists
+            if ($validator->errors()->has('email')) {
+                $emailError = $validator->errors()->first('email');
+                if (str_contains(strtolower($emailError), 'already been taken') || str_contains(strtolower($emailError), 'has already been taken')) {
+                    return redirect()->back()
+                        ->withInput()
+                        ->with('error', 'This email already exists. Please try logging in instead.');
+                }
+            }
+            return redirect()->back()->withErrors($validator)->withInput()->with('error', 'Validation failed');
         }
 
         // Get default user role (assuming role_id 2 is for regular users)

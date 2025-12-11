@@ -495,7 +495,7 @@ use Illuminate\Support\Str;
                                 <div class="col-md-6 mb-3">
                                     <label for="adults" class="form-label">Adults</label>
                                     <select class="form-control" id="adults" name="adults" required>
-                                        @for($i = 1; $i <= ($apartment->max_adults ?? 8); $i++)
+                                        @for($i = 1; $i <= 20; $i++)
                                             <option value="{{ $i }}" {{ $i===2 ? 'selected' : '' }}>{{ $i }} Adult{{ $i
                                                 > 1 ? 's' : '' }}</option>
                                             @endfor
@@ -505,7 +505,7 @@ use Illuminate\Support\Str;
                                     <label for="children" class="form-label">Children</label>
                                     <select class="form-control" id="children" name="children">
                                         <option value="0">No Children</option>
-                                        @for($i = 1; $i <= ($apartment->max_children ?? 4); $i++)
+                                        @for($i = 1; $i <= 20; $i++)
                                             <option value="{{ $i }}">{{ $i }} Child{{ $i > 1 ? 'ren' : '' }}</option>
                                             @endfor
                                     </select>

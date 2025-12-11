@@ -99,7 +99,7 @@
                                     <label for="adults" class="form-label">Adults</label>
                                     <select class="form-control" id="adults" name="adults" required
                                         onchange="calculateActivityPrice()">
-                                        @for($i = 1; $i <= ($activity->tours->max_people ?? 8); $i++)
+                                        @for($i = 1; $i <= 20; $i++)
                                             <option value="{{ $i }}" {{ $i===2 ? 'selected' : '' }}>{{ $i }} Adult{{ $i
                                                 > 1 ? 's' : '' }}</option>
                                             @endfor
@@ -110,7 +110,7 @@
                                     <select class="form-control" id="children" name="children"
                                         onchange="calculateActivityPrice()">
                                         <option value="0">No Children</option>
-                                        @for($i = 1; $i <= 4; $i++) <option value="{{ $i }}">{{ $i }} Child{{ $i > 1 ?
+                                        @for($i = 1; $i <= 20; $i++) <option value="{{ $i }}">{{ $i }} Child{{ $i > 1 ?
                                             'ren' : '' }}</option>
                                             @endfor
                                     </select>

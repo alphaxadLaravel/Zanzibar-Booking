@@ -97,7 +97,7 @@
                                 <div class="col-md-6 mb-3">
                                     <label for="adults" class="form-label">Adults</label>
                                     <select class="form-control" id="adults" name="adults" required onchange="calculatePackagePrice()">
-                                        @for($i = 1; $i <= ($package->tours->max_people ?? 8); $i++)
+                                        @for($i = 1; $i <= 20; $i++)
                                             <option value="{{ $i }}" {{ $i===2 ? 'selected' : '' }}>{{ $i }} Adult{{ $i > 1 ? 's' : '' }}</option>
                                         @endfor
                                     </select>
@@ -106,7 +106,7 @@
                                     <label for="children" class="form-label">Children</label>
                                     <select class="form-control" id="children" name="children" onchange="calculatePackagePrice()">
                                         <option value="0">No Children</option>
-                                        @for($i = 1; $i <= 4; $i++)
+                                        @for($i = 1; $i <= 20; $i++)
                                             <option value="{{ $i }}">{{ $i }} Child{{ $i > 1 ? 'ren' : '' }}</option>
                                         @endfor
                                     </select>
