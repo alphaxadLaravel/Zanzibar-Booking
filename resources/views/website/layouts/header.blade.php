@@ -122,7 +122,7 @@
             @else
                 <!-- Guest Actions -->
                 <div class="d-flex gap-3">
-                    <a href="#" class="btn btn-outline-primary mx-2" data-bs-toggle="modal" data-bs-target="#BecomePartner">
+                    <a href="#" class="btn btn-outline-primary mx-2 become-partner-btn">
                         <i class="mdi mdi-handshake"></i>
                         <span class="btn-text">Become A Partner</span>
                     </a>
@@ -234,9 +234,10 @@
 
     // Redirect "Become Partner" button to login for guests
     @guest
-        document.querySelectorAll('[data-bs-target="#BecomePartner"]').forEach(function (el) {
+        document.querySelectorAll('.become-partner-btn').forEach(function (el) {
             el.addEventListener('click', function (ev) {
                 ev.preventDefault();
+                ev.stopPropagation();
                 const loginModalEl = document.getElementById('exampleModal');
                 if (loginModalEl) {
                     const modal = bootstrap.Modal.getOrCreateInstance(loginModalEl);
