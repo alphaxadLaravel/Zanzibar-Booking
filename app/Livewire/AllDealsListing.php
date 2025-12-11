@@ -151,7 +151,8 @@ class AllDealsListing extends Component
     public function render()
     {
         // Build the query with appropriate relationships based on deal type
-        $query = Deal::where('type', $this->dealType);
+        $query = Deal::where('type', $this->dealType)
+            ->where('status', 1);
         
         // Apply filters
         if ($this->searchLocation) {
@@ -211,6 +212,7 @@ class AllDealsListing extends Component
             ->get();
 
         $locations = Deal::where('type', $this->dealType)
+            ->where('status', 1)
             ->whereNotNull('location')
             ->distinct()
             ->pluck('location')

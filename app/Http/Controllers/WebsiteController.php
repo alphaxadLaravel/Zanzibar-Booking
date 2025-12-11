@@ -36,6 +36,7 @@ class WebsiteController extends Controller
 
         // Fetch all deals (hotels/apartments)
         $featuredDeals = Deal::whereIn('type', ['hotel', 'apartment'])
+            ->where('status', 1)
             ->with(['category', 'photos'])
             ->limit(6)
             ->get();
@@ -47,6 +48,7 @@ class WebsiteController extends Controller
 
         // Fetch all packages and activities
         $featuredTours = Deal::whereIn('type', ['package', 'activity'])
+            ->where('status', 1)
             ->with(['category', 'photos', 'tours'])
             ->limit(6)
             ->get();
@@ -58,6 +60,7 @@ class WebsiteController extends Controller
 
         // Fetch all cars
         $featuredCars = Deal::where('type', 'car')
+            ->where('status', 1)
             ->with(['category', 'photos', 'car'])
             ->limit(6)
             ->get();
