@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 // MAINTENANCE MODE - Maintenance page as the index route
-Route::get('/', [MaintenanceController::class, 'index'])->name('maintenance');
+// Route::get('/', [MaintenanceController::class, 'index'])->name('maintenance');
 
 Route::get('/linkstorages', function () {
     Artisan::call('config:clear');
@@ -24,7 +24,7 @@ Route::get('/linkstorages', function () {
 });
 
 // Original index route moved to /home for when maintenance is disabled
-Route::get('/home', [WebsiteController::class, 'index'])->name('index');
+Route::get('/', [WebsiteController::class, 'index'])->name('index');
 Route::get('/login', [WebsiteController::class, 'index'])->name('login');
 
 // Authentication routes
