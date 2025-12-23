@@ -53,7 +53,7 @@
                                 <tbody>
                                     @forelse($deals as $index => $deal)
                                     <tr>
-                                        <td>{{ $index + 1 }}</td>
+                                        <td>{{ $deals->firstItem() + $index }}</td>
                                         <td>
                                             @if($deal->cover_photo)
                                             <img src="{{ asset('storage/' . $deal->cover_photo) }}"
