@@ -177,7 +177,7 @@
                                 Showing {{ $deals->firstItem() }} to {{ $deals->lastItem() }} of {{ $deals->total() }} results
                             </div>
                             <nav aria-label="Page navigation example">
-                                {{ $deals->links('pagination::bootstrap-4') }}
+                                {{ $deals->links() }}
                             </nav>
                         </div>
                         @endif

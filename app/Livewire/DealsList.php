@@ -12,6 +12,8 @@ class DealsList extends Component
 {
     use WithPagination;
 
+    protected $paginationTheme = 'bootstrap';
+
     // mount dealType
     public $dealType;
     public $search = '';
