@@ -16,7 +16,7 @@
 </div>
 
 <style>
-    /* View Hotel: mobile order = Content → Rooms → Map → Video → Reviews */
+    /* View Hotel: mobile/tablet order = Overview → Rooms → Features → Map → Need Help? → Video → Reviews */
     @media (max-width: 991.98px) {
         .view-hotel-row {
             display: flex;
@@ -27,6 +27,8 @@
         .view-hotel-row .view-hotel-order-3 { order: 3; }
         .view-hotel-row .view-hotel-order-4 { order: 4; }
         .view-hotel-row .view-hotel-order-5 { order: 5; }
+        .view-hotel-row .view-hotel-order-6 { order: 6; }
+        .view-hotel-row .view-hotel-order-7 { order: 7; }
     }
 </style>
 <div class="container">
@@ -53,74 +55,68 @@
                     @include('website.components.deal_meta_info', ['deal' => $hotel, 'type' => 'hotel'])
                     <hr>
                     @include('website.components.deal_description', ['deal' => $hotel, 'title' => 'Hotel Overview'])
-                    <hr>
-                    @include('website.components.deal_features', ['deal' => $hotel, 'type' => 'include', 'title' =>
-                    'Features & Facilities'])
-                    <hr>
-
-                    {{-- Video: desktop here, mobile order 4 (shown in block below) --}}
+                    {{-- Features, nearby, policies, video, map: desktop here; mobile shown after Rooms/Map/Video/Reviews (order 6) --}}
                     <div class="d-none d-lg-block">
+                        <hr>
+                        @include('website.components.deal_features', ['deal' => $hotel, 'type' => 'include', 'title' =>
+                        'Features & Facilities'])
+                        <hr>
                         @include('website.components.deal_video', ['deal' => $hotel])
-                    </div>
-
-                    @if($hotel->nearbyLocations && $hotel->nearbyLocations->count() > 0)
-                    <section class="nearby-locations">
-                        <h4 class="section-title mb-3">Nearby Locations</h4>
-                        <div class="section-content">
-                            <div class="d-flex flex-wrap" style="gap: 10px;">
-                                @foreach($hotel->nearbyLocations as $location)
-                                <div class="facility-card d-flex align-items-center px-3 py-2 mb-2"
-                                    style="background: #fff; border-radius: 6px; border: 1px solid #e0e0e0; min-height: 38px; flex: 0 0 auto; min-width: 180px; max-width: 320px; width: calc(100%/6 - 10px);">
-                                    <span class="me-2" style="width: 22px; text-align: center;">
-                                        @php
-                                        $iconMap = [
-                                        'Airport' => 'mdi-airplane',
-                                        'Ferry Port' => 'mdi-ferry',
-                                        'Beach' => 'mdi-beach',
-                                        'School' => 'mdi-school',
-                                        'Hospital' => 'mdi-hospital',
-                                        'Shopping Center' => 'mdi-shopping',
-                                        'Restaurant' => 'mdi-food',
-                                        'Bank' => 'mdi-bank',
-                                        'ATM' => 'mdi-credit-card',
-                                        'Gas Station' => 'mdi-gas-station',
-                                        'Bus Station' => 'mdi-bus',
-                                        'Train Station' => 'mdi-train',
-                                        'Tourist Attraction' => 'mdi-camera',
-                                        'Market' => 'mdi-store',
-                                        'Pharmacy' => 'mdi-pill',
-                                        'Police Station' => 'mdi-shield',
-                                        'Post Office' => 'mdi-mail',
-                                        'Gym' => 'mdi-dumbbell',
-                                        'Park' => 'mdi-tree',
-                                        'Mosque' => 'mdi-mosque',
-                                        'Church' => 'mdi-church',
-                                        ];
-                                        $icon = $iconMap[$location->category] ?? 'mdi-map-marker';
-                                        @endphp
-                                        <i class="mdi {{ $icon }}" style="font-size: 1.2rem; color: #2e8b57;"></i>
-                                    </span>
-                                    <span
-                                        style="font-size: 13px; font-weight: 500; color: #333; line-height: 1.3; flex:1;">
-                                        {{ $location->title }}
-                                    </span>
-                                    <span class="ms-2 text-nowrap"
-                                        style="font-size: 13px; color: #2e8b57; font-weight: 600;">
-                                        {{ $location->formatted_distance }}
-                                    </span>
+                        <hr>
+                        @if($hotel->nearbyLocations && $hotel->nearbyLocations->count() > 0)
+                        <section class="nearby-locations">
+                            <h4 class="section-title mb-3">Nearby Locations</h4>
+                            <div class="section-content">
+                                <div class="d-flex flex-wrap" style="gap: 10px;">
+                                    @foreach($hotel->nearbyLocations as $location)
+                                    <div class="facility-card d-flex align-items-center px-3 py-2 mb-2"
+                                        style="background: #fff; border-radius: 6px; border: 1px solid #e0e0e0; min-height: 38px; flex: 0 0 auto; min-width: 180px; max-width: 320px; width: calc(100%/6 - 10px);">
+                                        <span class="me-2" style="width: 22px; text-align: center;">
+                                            @php
+                                            $iconMap = [
+                                            'Airport' => 'mdi-airplane',
+                                            'Ferry Port' => 'mdi-ferry',
+                                            'Beach' => 'mdi-beach',
+                                            'School' => 'mdi-school',
+                                            'Hospital' => 'mdi-hospital',
+                                            'Shopping Center' => 'mdi-shopping',
+                                            'Restaurant' => 'mdi-food',
+                                            'Bank' => 'mdi-bank',
+                                            'ATM' => 'mdi-credit-card',
+                                            'Gas Station' => 'mdi-gas-station',
+                                            'Bus Station' => 'mdi-bus',
+                                            'Train Station' => 'mdi-train',
+                                            'Tourist Attraction' => 'mdi-camera',
+                                            'Market' => 'mdi-store',
+                                            'Pharmacy' => 'mdi-pill',
+                                            'Police Station' => 'mdi-shield',
+                                            'Post Office' => 'mdi-mail',
+                                            'Gym' => 'mdi-dumbbell',
+                                            'Park' => 'mdi-tree',
+                                            'Mosque' => 'mdi-mosque',
+                                            'Church' => 'mdi-church',
+                                            ];
+                                            $icon = $iconMap[$location->category] ?? 'mdi-map-marker';
+                                            @endphp
+                                            <i class="mdi {{ $icon }}" style="font-size: 1.2rem; color: #2e8b57;"></i>
+                                        </span>
+                                        <span
+                                            style="font-size: 13px; font-weight: 500; color: #333; line-height: 1.3; flex:1;">
+                                            {{ $location->title }}
+                                        </span>
+                                        <span class="ms-2 text-nowrap"
+                                            style="font-size: 13px; color: #2e8b57; font-weight: 600;">
+                                            {{ $location->formatted_distance }}
+                                        </span>
+                                    </div>
+                                    @endforeach
                                 </div>
-                                @endforeach
                             </div>
-                        </div>
-                    </section>
-                    <hr>
-                    @endif
-
-                    @include('website.components.deal_policies', ['deal' => $hotel])
-                    <hr>
-
-                    {{-- Map: desktop here, mobile order 3 (shown in block below) --}}
-                    <div class="d-none d-lg-block">
+                        </section>
+                        <hr>
+                        @endif
+                        @include('website.components.deal_policies', ['deal' => $hotel])
+                        <hr>
                         @include('website.components.deal_map', ['deal' => $hotel, 'title' => 'Hotel Location On Map'])
                     </div>
 
@@ -192,12 +188,72 @@
                 @endforelse
             </div>
 
-            {{-- Contact Information --}}
-            @include('website.components.contact_card')
+            {{-- Contact Information (desktop only in sidebar; on mobile shown after Map) --}}
+            <div class="d-none d-lg-block">
+                @include('website.components.contact_card')
+            </div>
         </div>
 
-        {{-- ############## MAP (mobile only, order 3) ############################# --}}
+        {{-- ############## FEATURES, NEARBY, POLICIES (mobile only, order 3 — after Rooms) ############################# --}}
         <div class="col-12 col-lg-8 d-lg-none view-hotel-order-3 pb-4">
+            <div class="card">
+                <div class="card-body">
+                    <hr>
+                    @include('website.components.deal_features', ['deal' => $hotel, 'type' => 'include', 'title' => 'Features & Facilities'])
+                    <hr>
+                    @if($hotel->nearbyLocations && $hotel->nearbyLocations->count() > 0)
+                    <section class="nearby-locations">
+                        <h4 class="section-title mb-3">Nearby Locations</h4>
+                        <div class="section-content">
+                            <div class="d-flex flex-wrap" style="gap: 10px;">
+                                @foreach($hotel->nearbyLocations as $location)
+                                <div class="facility-card d-flex align-items-center px-3 py-2 mb-2"
+                                    style="background: #fff; border-radius: 6px; border: 1px solid #e0e0e0; min-height: 38px; flex: 0 0 auto; min-width: 180px; max-width: 320px; width: calc(100%/6 - 10px);">
+                                    <span class="me-2" style="width: 22px; text-align: center;">
+                                        @php
+                                        $iconMap = [
+                                        'Airport' => 'mdi-airplane',
+                                        'Ferry Port' => 'mdi-ferry',
+                                        'Beach' => 'mdi-beach',
+                                        'School' => 'mdi-school',
+                                        'Hospital' => 'mdi-hospital',
+                                        'Shopping Center' => 'mdi-shopping',
+                                        'Restaurant' => 'mdi-food',
+                                        'Bank' => 'mdi-bank',
+                                        'ATM' => 'mdi-credit-card',
+                                        'Gas Station' => 'mdi-gas-station',
+                                        'Bus Station' => 'mdi-bus',
+                                        'Train Station' => 'mdi-train',
+                                        'Tourist Attraction' => 'mdi-camera',
+                                        'Market' => 'mdi-store',
+                                        'Pharmacy' => 'mdi-pill',
+                                        'Police Station' => 'mdi-shield',
+                                        'Post Office' => 'mdi-mail',
+                                        'Gym' => 'mdi-dumbbell',
+                                        'Park' => 'mdi-tree',
+                                        'Mosque' => 'mdi-mosque',
+                                        'Church' => 'mdi-church',
+                                        ];
+                                        $icon = $iconMap[$location->category] ?? 'mdi-map-marker';
+                                        @endphp
+                                        <i class="mdi {{ $icon }}" style="font-size: 1.2rem; color: #2e8b57;"></i>
+                                    </span>
+                                    <span style="font-size: 13px; font-weight: 500; color: #333; line-height: 1.3; flex:1;">{{ $location->title }}</span>
+                                    <span class="ms-2 text-nowrap" style="font-size: 13px; color: #2e8b57; font-weight: 600;">{{ $location->formatted_distance }}</span>
+                                </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </section>
+                    <hr>
+                    @endif
+                    @include('website.components.deal_policies', ['deal' => $hotel])
+                </div>
+            </div>
+        </div>
+
+        {{-- ############## MAP (mobile only, order 4) ############################# --}}
+        <div class="col-12 col-lg-8 d-lg-none view-hotel-order-4 pb-4">
             <div class="card">
                 <div class="card-body">
                     @include('website.components.deal_map', ['deal' => $hotel, 'title' => 'Hotel Location On Map'])
@@ -205,8 +261,13 @@
             </div>
         </div>
 
-        {{-- ############## VIDEO (mobile only, order 4) ############################# --}}
-        <div class="col-12 col-lg-8 d-lg-none view-hotel-order-4 pb-4">
+        {{-- ############## NEED HELP? (mobile only, order 5 — after Map) ############################# --}}
+        <div class="col-12 col-lg-8 d-lg-none view-hotel-order-5 pb-4">
+            @include('website.components.contact_card')
+        </div>
+
+        {{-- ############## VIDEO (mobile only, order 6) ############################# --}}
+        <div class="col-12 col-lg-8 d-lg-none view-hotel-order-6 pb-4">
             <div class="card">
                 <div class="card-body">
                     @include('website.components.deal_video', ['deal' => $hotel])
@@ -214,8 +275,8 @@
             </div>
         </div>
 
-        {{-- ############## REVIEWS (mobile only, order 5) ############################# --}}
-        <div class="col-12 col-lg-8 d-lg-none view-hotel-order-5 pb-5">
+        {{-- ############## REVIEWS (mobile only, order 7) ############################# --}}
+        <div class="col-12 col-lg-8 d-lg-none view-hotel-order-7 pb-5">
             @include('website.components.deal_reviews', ['deal' => $hotel, 'paginatedReviews' => $paginatedReviews ?? collect(), 'reviewTitle' => 'Reviews for this Hotel'])
         </div>
     </div>
