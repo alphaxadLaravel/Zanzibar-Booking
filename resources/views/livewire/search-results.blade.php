@@ -143,6 +143,28 @@
                 min-height: 80px !important;
             }
         }
+
+        /* Allow native page scroll on small screens (match activities page) */
+        .list-hotel__content {
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            touch-action: auto !important;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        @media (max-width: 991.98px) {
+            body {
+                overflow-y: auto !important;
+            }
+
+            .list-hotel {
+                height: auto !important;
+            }
+
+            .list-hotel__content {
+                max-height: none !important;
+            }
+        }
     </style>
 
     <section class="hero-slider" style="min-height: 160px; position: relative;">
@@ -228,7 +250,7 @@
             <div class="col-lg-7 my-5">
                 <div class="list-hotel h-100 d-flex flex-column">
                     <div class="list-hotel__content flex-grow-1" data-plugin="nicescroll" tabindex="1"
-                        style="overflow: hidden; outline: none; touch-action: none;">
+                        style="outline: none;">
                         <div class="results-count d-flex align-items-center justify-content-between">
                             <div>
                                 Found <b>{{ $deals->total() }} Results</b>
@@ -402,6 +424,30 @@
     </section>
     
     @push('scripts')
+    <script>
+        function adjustListingScroll() {
+            const listHotelContent = document.querySelector('.list-hotel__content');
+            if (!listHotelContent) {
+                return;
+            }
+
+            const useNativeScroll = window.matchMedia('(max-width: 991.98px)').matches;
+
+            if (useNativeScroll) {
+                listHotelContent.style.overflowY = 'auto';
+                listHotelContent.style.touchAction = 'pan-y';
+                listHotelContent.style.maxHeight = 'none';
+            } else {
+                listHotelContent.style.overflowY = 'auto';
+                listHotelContent.style.touchAction = 'auto';
+                listHotelContent.style.maxHeight = '';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', adjustListingScroll);
+        window.addEventListener('resize', adjustListingScroll);
+        document.addEventListener('livewire:update', adjustListingScroll);
+    </script>
     <script>
         let map = null;
         let markers = [];
