@@ -15,10 +15,24 @@
     </div>
 </div>
 
+<style>
+    /* View Hotel: mobile order = Content → Rooms → Map → Video → Reviews */
+    @media (max-width: 991.98px) {
+        .view-hotel-row {
+            display: flex;
+            flex-direction: column;
+        }
+        .view-hotel-row .view-hotel-order-1 { order: 1; }
+        .view-hotel-row .view-hotel-order-2 { order: 2; }
+        .view-hotel-row .view-hotel-order-3 { order: 3; }
+        .view-hotel-row .view-hotel-order-4 { order: 4; }
+        .view-hotel-row .view-hotel-order-5 { order: 5; }
+    }
+</style>
 <div class="container">
-    <div class="row">
-        {{-- ############## MAIN ############################# --}}
-        <div class="col-lg-8 pb-5">
+    <div class="row view-hotel-row">
+        {{-- ############## MAIN CONTENT (mobile order 1) ############################# --}}
+        <div class="col-lg-8 pb-5 view-hotel-order-1">
             <div class="card">
                 <div class="card-body">
                     <div class="hotel-star">
@@ -44,8 +58,11 @@
                     'Features & Facilities'])
                     <hr>
 
-                    @include('website.components.deal_video', ['deal' => $hotel])
-                    <hr>
+                    {{-- Video: desktop here, mobile order 4 (shown in block below) --}}
+                    <div class="d-none d-lg-block">
+                        @include('website.components.deal_video', ['deal' => $hotel])
+                    </div>
+
                     @if($hotel->nearbyLocations && $hotel->nearbyLocations->count() > 0)
                     <section class="nearby-locations">
                         <h4 class="section-title mb-3">Nearby Locations</h4>
@@ -102,20 +119,22 @@
                     @include('website.components.deal_policies', ['deal' => $hotel])
                     <hr>
 
-                    @include('website.components.deal_map', ['deal' => $hotel, 'title' => 'Hotel Location On Map'])
+                    {{-- Map: desktop here, mobile order 3 (shown in block below) --}}
+                    <div class="d-none d-lg-block">
+                        @include('website.components.deal_map', ['deal' => $hotel, 'title' => 'Hotel Location On Map'])
+                    </div>
 
                 </div>
             </div>
-            <hr>
-
-
-            @include('website.components.deal_reviews', ['deal' => $hotel, 'paginatedReviews' => $paginatedReviews ??
-            collect(), 'reviewTitle' => 'Reviews for this Hotel'])
+            {{-- Reviews: desktop here, mobile order 5 (shown in block below) --}}
+            <div class="d-none d-lg-block">
+                <hr>
+                @include('website.components.deal_reviews', ['deal' => $hotel, 'paginatedReviews' => $paginatedReviews ?? collect(), 'reviewTitle' => 'Reviews for this Hotel'])
+            </div>
         </div>
 
-
-        {{-- ################ ROOMS LIST ################ --}}
-        <div class="col-lg-4">
+        {{-- ################ ROOMS LIST (mobile order 2) ################ --}}
+        <div class="col-lg-4 view-hotel-order-2">
             <div class="siderbar-single">
                 <h4 class="post-title my-2 bold">
                     Hotel Rooms To Book
@@ -175,6 +194,29 @@
 
             {{-- Contact Information --}}
             @include('website.components.contact_card')
+        </div>
+
+        {{-- ############## MAP (mobile only, order 3) ############################# --}}
+        <div class="col-12 col-lg-8 d-lg-none view-hotel-order-3 pb-4">
+            <div class="card">
+                <div class="card-body">
+                    @include('website.components.deal_map', ['deal' => $hotel, 'title' => 'Hotel Location On Map'])
+                </div>
+            </div>
+        </div>
+
+        {{-- ############## VIDEO (mobile only, order 4) ############################# --}}
+        <div class="col-12 col-lg-8 d-lg-none view-hotel-order-4 pb-4">
+            <div class="card">
+                <div class="card-body">
+                    @include('website.components.deal_video', ['deal' => $hotel])
+                </div>
+            </div>
+        </div>
+
+        {{-- ############## REVIEWS (mobile only, order 5) ############################# --}}
+        <div class="col-12 col-lg-8 d-lg-none view-hotel-order-5 pb-5">
+            @include('website.components.deal_reviews', ['deal' => $hotel, 'paginatedReviews' => $paginatedReviews ?? collect(), 'reviewTitle' => 'Reviews for this Hotel'])
         </div>
     </div>
 </div>
