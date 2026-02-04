@@ -73,11 +73,9 @@
                     <div class="card-header" style="background: #f8f9fa; padding: 15px;">
                         <h5 class="mb-0" style="font-size: 1.2rem; font-weight: 600; color: #333;">
                             <i class="mdi mdi-currency-usd me-2"></i>
-                            Adult: <span style="color: #218080;">${{ number_format($activity->tours->adult_price ?? 0,
-                                2) }}</span>
+                            Adult: <span style="color: #218080;">{{ priceForUser($activity->tours->adult_price ?? 0, 2) }}</span>
                             &nbsp;|&nbsp;
-                            Child: <span style="color: #218080;">${{ number_format($activity->tours->child_price ?? 0,
-                                2) }}</span>
+                            Child: <span style="color: #218080;">{{ priceForUser($activity->tours->child_price ?? 0, 2) }}</span>
                         </h5>
                     </div>
                     <div class="card-body p-4">
@@ -123,18 +121,20 @@
                                     <div>
                                         <h6 style="color: #333; font-weight: 600; margin-bottom: 5px;">Total Price</h6>
                                         <p class="mb-1" style="font-size: 0.9rem; color: #666;">
-                                            <span id="activity_adults">2</span> adult(s) × ${{
-                                            number_format($activity->tours->adult_price ?? 0, 2) }}<br>
-                                            <span id="activity_children">0</span> child(ren) × ${{
-                                            number_format($activity->tours->child_price ?? 0, 2) }}
+                                            <span id="activity_adults">2</span> adult(s) ×
+                                            {{ priceForUser($activity->tours->adult_price ?? 0, 2) }}<br>
+                                            <span id="activity_children">0</span> child(ren) ×
+                                            {{ priceForUser($activity->tours->child_price ?? 0, 2) }}
                                         </p>
                                     </div>
-                                    <div class="text-end">
-                                        <p class="mb-0" style="font-size: 1.5rem; font-weight: 700; color: #ff5722;">
-                                            $<span id="activity_total_price">{{
-                                                number_format(($activity->tours->adult_price ?? 0) * 2, 2) }}</span>
-                                        </p>
-                                    </div>
+                                <div class="text-end">
+                                    <p class="mb-0" style="font-size: 1.5rem; font-weight: 700; color: #ff5722;">
+                                        {{-- Total displayed in user's currency (approximation from USD) --}}
+                                        <span id="activity_total_price_display">
+                                            {{ priceForUser(($activity->tours->adult_price ?? 0) * 2, 2) }}
+                                        </span>
+                                    </p>
+                                </div>
                                 </div>
                             </div>
 
@@ -159,7 +159,11 @@
 
                         document.getElementById('activity_adults').textContent = adults;
                         document.getElementById('activity_children').textContent = children;
-                        document.getElementById('activity_total_price').textContent = totalPrice.toFixed(2);
+                        // Keep numeric total (USD) in a data attribute if needed; display base value (server-converted)
+                        const totalElement = document.getElementById('activity_total_price_display');
+                        if (totalElement) {
+                            totalElement.dataset.usdTotal = totalPrice.toFixed(2);
+                        }
                     }
                     document.addEventListener('DOMContentLoaded', function() {
                         document.getElementById('adults').addEventListener('change', calculateActivityPrice);
@@ -218,8 +222,9 @@
                         </div>
                         <div class="d-flex justify-content-between align-items-center" style="margin-top:18px;">
                             <div class="tour-item__price">
-                                <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600;">USD
-                                    {{ number_format($nearbyTour->base_price, 2) }}</span>
+                                <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600;">
+                                    {{ priceForUser($nearbyTour->base_price, 2) }}
+                                </span>
                                 <span class="_unit" style="color:#2e8b57;font-size:1rem;">/person</span>
                             </div>
                             <a class="btn btn-primary btn-sm tour-item__view-detail"

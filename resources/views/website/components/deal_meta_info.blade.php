@@ -42,11 +42,11 @@
                         @if($type === 'package' || $type === 'activity')
                             {{ $deal->tours ? $deal->tours->max_people : 'N/A' }} People
                         @elseif($type === 'hotel')
-                            USD {{ number_format($deal->base_price, 2) }}/night
+                            {{ priceForUser($deal->base_price, 2) }}/night
                         @elseif($type === 'car')
-                            USD {{ number_format($deal->base_price, 2) }}/day
+                            {{ priceForUser($deal->base_price, 2) }}/day
                         @else
-                            USD {{ number_format($deal->base_price, 2) }}/person
+                            {{ priceForUser($deal->base_price, 2) }}/person
                         @endif
                     </div>
                     <div class="text-muted small" style="white-space:nowrap;">

@@ -81,7 +81,7 @@
                         <!-- Price + button -->
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <div class="fw-bold text-dark" style="font-size: 2rem;">
-                                USD {{ number_format($tour->base_price, 2) }}
+                                {{ priceForUser($tour->base_price, 2) }}
                                 <small class="text-muted" style="font-size: 1rem;">/person</small>
                             </div>
                         </div>
@@ -146,8 +146,9 @@
                         </div>
                         <div class="d-flex justify-content-between align-items-center" style="margin-top:18px;">
                             <div class="tour-item__price">
-                                <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600;">USD
-                                    {{ number_format($nearbyTour->base_price, 2) }}</span>
+                                <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600;">
+                                    {{ priceForUser($nearbyTour->base_price, 2) }}
+                                </span>
                                 <span class="_unit" style="color:#2e8b57;font-size:1rem;">/person</span>
                             </div>
                             <a class="btn btn-primary btn-sm tour-item__view-detail"

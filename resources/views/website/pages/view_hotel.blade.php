@@ -444,7 +444,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </h5>
                     <div class="price-display d-flex align-items-end" style="gap: 0.3rem;">
                         <span class="price-amount" style="font-size: 1.5rem; font-weight: 700; color: #ff5722;">
-                            ${{ number_format($room->price ?? $hotel->base_price, 0) }}
+                            {{ priceForUser($room->price ?? $hotel->base_price, 0) }}
                         </span>
                         <span class="price-unit" style="color: #888; font-size: 0.9rem;">/ night</span>
                     </div>
@@ -649,7 +649,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                             <p class="mb-1" style="font-size: 0.9rem; color: #666;">
                                                 <span id="nights{{ $room->id }}">1</span> night(s) ×
                                                 <span id="rooms{{ $room->id }}">1</span> room(s) ×
-                                                ${{ number_format($room->price ?? $hotel->base_price, 2) }}/night
+                                                {{ priceForUser($room->price ?? $hotel->base_price, 2) }}/night
                                             </p>
                                         </div>
                                         <div class="text-end">

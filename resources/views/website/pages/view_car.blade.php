@@ -74,7 +74,7 @@
                     <div class="card-header" style="background: #f8f9fa; padding: 15px;">
                         <h5 class="mb-0" style="font-size: 1.2rem; font-weight: 600; color: #333;">
                             <i class="mdi mdi-currency-usd me-2"></i>
-                            From <span style="color: #218080;">${{ number_format($car->base_price, 2) }}</span> / day
+                            From <span style="color: #218080;">{{ priceForUser($car->base_price, 2) }}</span> / day
                         </h5>
                     </div>
                     <div class="card-body p-4">
@@ -102,12 +102,14 @@
                                     <div>
                                         <h6 style="color: #333; font-weight: 600; margin-bottom: 5px;">Total Price</h6>
                                         <p class="mb-1" style="font-size: 0.9rem; color: #666;">
-                                            <span id="car_days">1</span> day(s) × ${{ number_format($car->base_price, 2) }}/day
+                                            <span id="car_days">1</span> day(s) × {{ priceForUser($car->base_price, 2) }}/day
                                         </p>
                                     </div>
                                     <div class="text-end">
                                         <p class="mb-0" style="font-size: 1.5rem; font-weight: 700; color: #ff5722;">
-                                            $<span id="car_total_price">{{ number_format($car->base_price, 2) }}</span>
+                                            <span id="car_total_price_display">
+                                                {{ priceForUser($car->base_price, 2) }}
+                                            </span>
                                         </p>
                                     </div>
                                 </div>
@@ -148,7 +150,10 @@
                         
                         const totalPrice = pricePerDay * days;
                         document.getElementById('car_days').textContent = days;
-                        document.getElementById('car_total_price').textContent = totalPrice.toFixed(2);
+                        const totalElement = document.getElementById('car_total_price_display');
+                        if (totalElement) {
+                            totalElement.dataset.usdTotal = totalPrice.toFixed(2);
+                        }
                     }
                     document.addEventListener('DOMContentLoaded', function() {
                         document.getElementById('pickup_date').addEventListener('change', calculateCarPrice);

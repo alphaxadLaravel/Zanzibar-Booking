@@ -124,7 +124,7 @@ use Illuminate\Support\Str;
                                     <div class="flex-grow-1" style="min-width:0;">
                                         <div class="fw-bold text-dark"
                                             style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                            USD {{ number_format($apartment->base_price, 2) }}/night
+                                            {{ priceForUser($apartment->base_price, 2) }}/night
                                         </div>
                                         <div class="text-muted small" style="white-space:nowrap;">Price</div>
                                     </div>
@@ -468,7 +468,7 @@ use Illuminate\Support\Str;
                     <div class="card-header" style="background: #f8f9fa; padding: 15px;">
                         <h5 class="mb-0" style="font-size: 1.2rem; font-weight: 600; color: #333;">
                             <i class="mdi mdi-currency-usd me-2"></i>
-                            From <span style="color: #218080;">${{ number_format($apartment->base_price, 2) }}</span> / night
+                            From <span style="color: #218080;">{{ priceForUser($apartment->base_price, 2) }}</span> / night
                         </h5>
                     </div>
                     <div class="card-body p-4">
@@ -624,8 +624,9 @@ use Illuminate\Support\Str;
                         </div>
                         <div class="d-flex justify-content-between align-items-center" style="margin-top:18px;">
                             <div class="tour-item__price">
-                                <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600;">USD
-                                    {{ number_format($nearbyHotel->base_price, 2) }}</span>
+                                <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600;">
+                                    {{ priceForUser($nearbyHotel->base_price, 2) }}
+                                </span>
                                 <span class="_unit" style="color:#2e8b57;font-size:1rem;">/Night</span>
                             </div>
                             <a class="btn btn-primary btn-sm tour-item__view-detail"
@@ -688,8 +689,9 @@ use Illuminate\Support\Str;
                         @endif
                         <div class="d-flex justify-content-between align-items-center" style="margin-top:18px;">
                             <div class="tour-item__price">
-                                <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600;">USD
-                                    {{ number_format($tour->base_price, 2) }}</span>
+                                <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600;">
+                                    {{ priceForUser($tour->base_price, 2) }}
+                                </span>
                                 <span class="_unit" style="color:#2e8b57;font-size:1rem;">/person</span>
                             </div>
                             <a class="btn btn-primary btn-sm tour-item__view-detail"
