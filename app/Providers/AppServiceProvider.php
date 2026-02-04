@@ -23,9 +23,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Ensure generated URLs do not include /public (e.g. Packages link going to /public/packages)
+        // Normalize app URL: if APP_URL ends with /public, all route()/url() will generate without it.
+        // On production, prefer setting APP_URL to the site root (e.g. https://www.zanzibarbookings.com).
         $appUrl = rtrim(config('app.url'), '/');
-        if (str_ends_with($appUrl, '/public')) {
+        if ($appUrl !== '' && str_ends_with($appUrl, '/public')) {
             URL::forceRootUrl(preg_replace('#/public$#', '', $appUrl));
         }
 

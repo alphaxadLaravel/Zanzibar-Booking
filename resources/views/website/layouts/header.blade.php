@@ -43,7 +43,7 @@
                         <a  href="{{ route('activities') }}">Activities</a>
                     </li>
                     <li class="menu-item menu-item-5">
-                        <a  href="{{ route('packages') }}">Packages</a>
+                        <a href="{{ route('packages') }}">Packages</a>
                     </li>
                     <li class="menu-item menu-item-5">
                         <a  href="{{ route('cars') }}">Cars</a>
