@@ -315,9 +315,9 @@
                             </div>
                         </div>
                         <div class="d-flex justify-content-between align-items-center tour-item__price-row" style="margin-top:18px;">
-                            <div class="tour-item__price">
-                                <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600; display:block;">{{ priceForUser($deal->base_price, 2) }}</span>
-                                <span class="_unit" style="color:#2e8b57;font-size:1rem;">/Night</span>
+                            <div class="tour-item__price" style="white-space: nowrap;">
+                                <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600;">{{ priceForUser($deal->base_price, 2) }}</span>
+                                <span class="_unit" style="color:#2e8b57;font-size:1rem; margin-left: 4px;">/Night</span>
                             </div>
                             <a class="btn btn-primary btn-sm tour-item__view-detail"
                                 href="{{ $deal->type === 'apartment' ? route('view-apartment', ['id' => $hashids->encode($deal->id)]) : route('view-hotel', ['id' => $hashids->encode($deal->id)]) }}"
@@ -430,12 +430,12 @@
                                 <span>Min {{ $tour->tours ? $tour->tours->max_people : 'N/A' }} people</span>
                             </div>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center" style="margin-top:18px;">
-                            <div class="tour-item__price">
+                        <div class="d-flex justify-content-between align-items-center tour-item__price-row" style="margin-top:18px;">
+                            <div class="tour-item__price" style="white-space: nowrap;">
                                 <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600;">
                                     {{ priceForUser($tour->tours ? $tour->tours->adult_price : $tour->base_price, 2) }}
                                 </span>
-                                <span class="_unit" style="color:#2e8b57;font-size:1rem;">/person</span>
+                                <span class="_unit" style="color:#2e8b57;font-size:1rem; margin-left: 4px;">/person</span>
                             </div>
                             <a class="btn btn-primary btn-sm tour-item__view-detail" href="{{ $tour->type === 'activity' ? route('view-activity', ['id' => $hashids->encode($tour->id)]) : ($tour->type === 'package' ? route('view-package', ['id' => $hashids->encode($tour->id)]) : route('view-tour', ['id' => $hashids->encode($tour->id)])) }}"
                                 style="font-size:1rem;padding:8px 22px;border-radius:7px;">
@@ -529,12 +529,12 @@
                                 <span>{{ $car->car ? $car->car->capacity : 'N/A' }} Passengers</span>
                             </div>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center" style="margin-top:18px;">
-                            <div class="tour-item__price">
+                        <div class="d-flex justify-content-between align-items-center tour-item__price-row" style="margin-top:18px;">
+                            <div class="tour-item__price" style="white-space: nowrap;">
                                 <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600;">
                                     {{ priceForUser($car->base_price, 2) }}
                                 </span>
-                                <span class="_unit" style="color:#2e8b57;font-size:1rem;">/DAY</span>
+                                <span class="_unit" style="color:#2e8b57;font-size:1rem; margin-left: 4px;">/DAY</span>
                             </div>
                             <a class="btn btn-primary btn-sm tour-item__view-detail" href="{{ route('view-car', ['id' => $hashids->encode($car->id)]) }}"
                                 style="font-size:1rem;padding:8px 22px;border-radius:7px;">
