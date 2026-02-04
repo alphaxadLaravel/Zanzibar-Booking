@@ -8,6 +8,7 @@
     "require": {
         "php": "^8.2",
         "amadeus4dev/amadeus-php": "^0.3.0",
+        "devrabiul/laravel-geo-genius": "^1.5",
         "knox/pesapal": "^2.2",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
@@ -28,7 +29,10 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        }
+        },
+        "files": [
+            "app/Helpers/price_helpers.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

@@ -161,8 +161,7 @@
                                 </div>
                                 <div class="d-flex align-items-center justify-content-between">
                                     <div>
-                                        <span class="fw-bold" style="font-size: 1.1rem; color: #ff5722;">${{
-                                            number_format($room->price ?? $hotel->base_price, 0) }}</span>
+                                        <span class="fw-bold" style="font-size: 1.1rem; color: #ff5722;">{{ priceForUser($room->price ?? $hotel->base_price, 0) }}</span>
                                         <span style="font-size: 13px; color: #888;">/ night</span>
                                     </div>
                                     <button class="btn btn-primary" style="font-size: 13px;"
@@ -325,8 +324,7 @@
                         </div>
                         <div class="d-flex justify-content-between align-items-center" style="margin-top:18px;">
                             <div class="tour-item__price">
-                                <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600;">USD
-                                    {{ number_format($nearbyHotel->base_price, 2) }}</span>
+                                <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600;">{{ priceForUser($nearbyHotel->base_price, 2) }}</span>
                                 <span class="_unit" style="color:#2e8b57;font-size:1rem;">/Night</span>
                             </div>
                             <a class="btn btn-primary btn-sm tour-item__view-detail"
@@ -391,8 +389,7 @@
                         @endif
                         <div class="d-flex justify-content-between align-items-center" style="margin-top:18px;">
                             <div class="tour-item__price">
-                                <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600;">USD
-                                    {{ number_format($tour->base_price, 2) }}</span>
+                                <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600;">{{ priceForUser($tour->base_price, 2) }}</span>
                                 <span class="_unit" style="color:#2e8b57;font-size:1rem;">/person</span>
                             </div>
                             <a class="btn btn-primary btn-sm tour-item__view-detail"

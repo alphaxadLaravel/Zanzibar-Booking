@@ -30,5 +30,11 @@ class AppServiceProvider extends ServiceProvider
             $systemSettings = System::first();
             $view->with('systemSettings', $systemSettings);
         });
+
+        // Share user currency for geo-based price conversion (GeoGenius)
+        View::composer('*', function ($view) {
+            $view->with('userCurrency', userCurrency());
+            $view->with('userCountryCode', userCountryCode());
+        });
     }
 }

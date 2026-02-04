@@ -361,8 +361,7 @@
                                         </div>
                                         <div class="hotel-item__price mb-3">
                                             <span class="_retail"
-                                                style="color:#2e8b57;font-size:1.3rem;font-weight:600;">USD {{
-                                                number_format($deal->base_price, 2) }}</span>
+                                                style="color:#2e8b57;font-size:1.3rem;font-weight:600;">{{ priceForUser($deal->base_price, 2) }}</span>
                                             <span class="_unit" style="color:#2e8b57;font-size:1rem;">
                                                 @if($deal->type == 'hotel' || $deal->type == 'apartment')
                                                     per night
