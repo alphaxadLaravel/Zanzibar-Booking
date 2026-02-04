@@ -129,9 +129,14 @@
                                     </div>
                                 <div class="text-end">
                                     <p class="mb-0" style="font-size: 1.5rem; font-weight: 700; color: #ff5722;">
-                                        {{-- Total displayed in user's currency (approximation from USD) --}}
-                                        <span id="activity_total_price_display">
-                                            {{ priceForUser(($activity->tours->adult_price ?? 0) * 2, 2) }}
+                                        {{-- Total displayed in user's currency; data attributes for JS recalc --}}
+                                        @php $activityPriceData = priceForUser(($activity->tours->adult_price ?? 0) * 2, 2, true); @endphp
+                                        <span id="activity_total_price_display"
+                                            data-rate="{{ userCurrencyRate() }}"
+                                            data-symbol="{{ e($activityPriceData['symbol']) }}"
+                                            data-currency="{{ e($activityPriceData['currency']) }}"
+                                            data-decimals="2">
+                                            {{ $activityPriceData['formatted'] }}
                                         </span>
                                     </p>
                                 </div>
@@ -150,6 +155,11 @@
                     </div>
                 </div>
                 <script>
+                    function formatPriceForUser(usdTotal, rate, symbol, currency, decimals) {
+                        const amount = usdTotal * rate;
+                        const formatted = amount.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+                        return currency === 'USD' ? (symbol + formatted) : (symbol + ' ' + formatted);
+                    }
                     function calculateActivityPrice() {
                         const adultPrice = {{ $activity->tours->adult_price ?? 0 }};
                         const childPrice = {{ $activity->tours->child_price ?? 0 }};
@@ -159,10 +169,14 @@
 
                         document.getElementById('activity_adults').textContent = adults;
                         document.getElementById('activity_children').textContent = children;
-                        // Keep numeric total (USD) in a data attribute if needed; display base value (server-converted)
                         const totalElement = document.getElementById('activity_total_price_display');
                         if (totalElement) {
                             totalElement.dataset.usdTotal = totalPrice.toFixed(2);
+                            const rate = parseFloat(totalElement.dataset.rate) || 1;
+                            const symbol = totalElement.dataset.symbol || '$';
+                            const currency = totalElement.dataset.currency || 'USD';
+                            const decimals = parseInt(totalElement.dataset.decimals, 10) || 2;
+                            totalElement.textContent = formatPriceForUser(totalPrice, rate, symbol, currency, decimals);
                         }
                     }
                     document.addEventListener('DOMContentLoaded', function() {

@@ -37,3 +37,17 @@ if (! function_exists('userCountryCode')) {
         return PriceForUserService::getUserCountryCode();
     }
 }
+
+if (! function_exists('userCurrencyRate')) {
+    /**
+     * Get the exchange rate from USD to user's currency (1 USD = rate × user currency).
+     * Used for client-side price recalculation in booking widgets.
+     */
+    function userCurrencyRate(): float
+    {
+        $currency = userCurrency();
+        $rates = \App\Services\CurrencyConverter::getRates();
+
+        return (float) ($rates[$currency] ?? 1.0);
+    }
+}

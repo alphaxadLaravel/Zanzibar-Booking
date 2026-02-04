@@ -125,8 +125,13 @@
                                     </div>
                                     <div class="text-end">
                                         <p class="mb-0" style="font-size: 1.5rem; font-weight: 700; color: #ff5722;">
-                                            <span id="package_total_price_display">
-                                                {{ priceForUser(($package->tours->adult_price ?? 0) * 2, 2) }}
+                                            @php $packagePriceData = priceForUser(($package->tours->adult_price ?? 0) * 2, 2, true); @endphp
+                                            <span id="package_total_price_display"
+                                                data-rate="{{ userCurrencyRate() }}"
+                                                data-symbol="{{ e($packagePriceData['symbol']) }}"
+                                                data-currency="{{ e($packagePriceData['currency']) }}"
+                                                data-decimals="2">
+                                                {{ $packagePriceData['formatted'] }}
                                             </span>
                                         </p>
                                     </div>
@@ -145,6 +150,11 @@
                     </div>
                 </div>
                 <script>
+                    function formatPriceForUser(usdTotal, rate, symbol, currency, decimals) {
+                        const amount = usdTotal * rate;
+                        const formatted = amount.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+                        return currency === 'USD' ? (symbol + formatted) : (symbol + ' ' + formatted);
+                    }
                     function calculatePackagePrice() {
                         const adultPrice = {{ $package->tours->adult_price ?? 0 }};
                         const childPrice = {{ $package->tours->child_price ?? 0 }};
@@ -157,6 +167,11 @@
                         const totalElement = document.getElementById('package_total_price_display');
                         if (totalElement) {
                             totalElement.dataset.usdTotal = totalPrice.toFixed(2);
+                            const rate = parseFloat(totalElement.dataset.rate) || 1;
+                            const symbol = totalElement.dataset.symbol || '$';
+                            const currency = totalElement.dataset.currency || 'USD';
+                            const decimals = parseInt(totalElement.dataset.decimals, 10) || 2;
+                            totalElement.textContent = formatPriceForUser(totalPrice, rate, symbol, currency, decimals);
                         }
                     }
                     document.addEventListener('DOMContentLoaded', function() {
