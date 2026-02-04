@@ -237,6 +237,26 @@
             width: 100%;
             text-align: center;
         }
+
+        /* Section headers: title + small button on the right without overlap */
+        .section-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-header-row .section-title {
+            font-size: 1.25rem;
+            flex: 1 1 auto;
+        }
+
+        .section-header-row .btn {
+            flex: 0 0 auto;
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
     }
 </style>
 
@@ -244,7 +264,7 @@
 
 <section class="hotel-type">
     <div class="container py-40">
-        <div class="d-flex justify-content-between align-items-center mb-20">
+        <div class="d-flex justify-content-between align-items-center mb-20 section-header-row">
             <h2 class="section-title mb-0">Hotel Types</h2>
         </div>
         <div class="row">
@@ -279,7 +299,7 @@
 </section>
 <section class="list-hotel list-hotel--grid py-40 bg-gray-100">
     <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-20">
+        <div class="d-flex justify-content-between align-items-center mb-20 section-header-row">
             <h2 class="section-title mb-0">List Of Hotels</h2>
             <a href="{{ route('hotels') }}" class="btn btn-primary">View All</a>
         </div>
@@ -351,7 +371,7 @@
 </section>
 <section class="tour-type">
     <div class="container py-40">
-        <div class="d-flex justify-content-between align-items-center mb-20">
+        <div class="d-flex justify-content-between align-items-center mb-20 section-header-row">
             <h2 class="section-title mb-0">Package & Activity Types</h2>
         </div>
         <div class="row">
@@ -386,7 +406,7 @@
 </section>
 <section class="list-tour list-tour--grid py-40 bg-gray-100">
     <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-20">
+        <div class="d-flex justify-content-between align-items-center mb-20 section-header-row">
             <h2 class="section-title mb-0">Packages and Activities</h2>
             <a href="{{ route('activities') }}" class="btn btn-primary">View All</a>
         </div>
@@ -457,7 +477,7 @@
 </section>
 <section class="car-type">
     <div class="container py-40">
-        <div class="d-flex justify-content-between align-items-center mb-20">
+        <div class="d-flex justify-content-between align-items-center mb-20 section-header-row">
             <h2 class="section-title mb-0">Car Types</h2>
         </div>
         <div class="row">
@@ -493,7 +513,7 @@
 </section>
 <section class="list-car list-car--grid py-40 bg-gray-100">
     <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-20">
+        <div class="d-flex justify-content-between align-items-center mb-20 section-header-row">
             <h2 class="section-title mb-0">List Of Cars</h2>
             <a href="{{ route('cars') }}" class="btn btn-primary">View All</a>
         </div>
