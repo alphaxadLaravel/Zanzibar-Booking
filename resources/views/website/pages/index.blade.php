@@ -219,6 +219,25 @@
         transform: scale(1.05);
         transition: transform 0.3s ease;
     }
+
+    /* Price + button layout on small screens */
+    @media (max-width: 576px) {
+        .tour-item__price-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .tour-item__price-row .tour-item__price {
+            width: 100%;
+            text-align: left;
+        }
+
+        .tour-item__price-row .tour-item__view-detail {
+            width: 100%;
+            text-align: center;
+        }
+    }
 </style>
 
 
@@ -295,12 +314,13 @@
                                 <i class="fas fa-map-marker-alt me-2"></i>{{ $deal->location }}
                             </div>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center" style="margin-top:18px;">
+                        <div class="d-flex justify-content-between align-items-center tour-item__price-row" style="margin-top:18px;">
                             <div class="tour-item__price">
-                                <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600;">{{ priceForUser($deal->base_price, 2) }}</span>
+                                <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600; display:block;">{{ priceForUser($deal->base_price, 2) }}</span>
                                 <span class="_unit" style="color:#2e8b57;font-size:1rem;">/Night</span>
                             </div>
-                            <a class="btn btn-primary btn-sm tour-item__view-detail" href="{{ $deal->type === 'apartment' ? route('view-apartment', ['id' => $hashids->encode($deal->id)]) : route('view-hotel', ['id' => $hashids->encode($deal->id)]) }}"
+                            <a class="btn btn-primary btn-sm tour-item__view-detail"
+                                href="{{ $deal->type === 'apartment' ? route('view-apartment', ['id' => $hashids->encode($deal->id)]) : route('view-hotel', ['id' => $hashids->encode($deal->id)]) }}"
                                 style="font-size:1rem;padding:8px 22px;border-radius:7px;">
                                 View Detail
                             </a>
