@@ -222,8 +222,7 @@
                                             <div class="col-6 col-md-4 mb-2">
                                                 <small class="text-muted"><i class="mdi mdi-currency-usd me-1"></i>Total
                                                     Price</small><br>
-                                                <strong class="text-success">${{ number_format($item->total_price, 2)
-                                                    }}</strong>
+                                                <strong class="text-success">{{ priceForUser($item->total_price, 2) }}</strong>
                                             </div>
 
                                             <!-- Pickup/Return locations (for cars) -->
@@ -275,7 +274,7 @@
                         <div class="card-body p-4">
                             <div class="summary-item d-flex justify-content-between mb-3">
                                 <span class="text-muted">Items ({{ $cartItems->count() }}):</span>
-                                <span class="fw-bold">${{ number_format($totalAmount, 2) }}</span>
+                                <span class="fw-bold">{{ priceForUser($totalAmount, 2) }}</span>
                             </div>
                             <div class="summary-item d-flex justify-content-between mb-3">
                                 <span class="text-muted">Service Fee:</span>
@@ -284,7 +283,7 @@
                             <hr class="my-3">
                             <div class="summary-total d-flex justify-content-between mb-4">
                                 <strong class="fs-5">Total:</strong>
-                                <strong class="fs-4 text-success">${{ number_format($totalAmount, 2) }}</strong>
+                                <strong class="fs-4 text-success">{{ priceForUser($totalAmount, 2) }}</strong>
                             </div>
 
                             <div class="d-grid gap-3">
