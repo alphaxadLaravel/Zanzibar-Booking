@@ -655,8 +655,17 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <div class="text-end">
                                             <p class="mb-0"
                                                 style="font-size: 1.5rem; font-weight: 700; color: #ff5722;">
-                                                $<span id="total_price{{ $room->id }}">{{ number_format($room->price ??
-                                                    $hotel->base_price, 2) }}</span>
+                                                @php
+                                                    $roomPriceUsd = $room->price ?? $hotel->base_price;
+                                                    $roomPriceData = priceForUser($roomPriceUsd, 2, true);
+                                                @endphp
+                                                <span id="total_price{{ $room->id }}"
+                                                    data-rate="{{ userCurrencyRate() }}"
+                                                    data-symbol="{{ e($roomPriceData['symbol']) }}"
+                                                    data-currency="{{ e($roomPriceData['currency']) }}"
+                                                    data-decimals="2">
+                                                    {{ $roomPriceData['formatted'] }}
+                                                </span>
                                             </p>
                                         </div>
                                     </div>
@@ -701,6 +710,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 }
 
+function formatPriceForUserHotel(usdTotal, rate, symbol, currency, decimals) {
+    const amount = usdTotal * rate;
+    const formatted = amount.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    return currency === 'USD' ? (symbol + formatted) : (symbol + ' ' + formatted);
+}
 @foreach($rooms as $room)
 function calculatePrice{{ $room->id }}() {
     const checkIn = document.getElementById('check_in{{ $room->id }}').value;
@@ -721,9 +735,17 @@ function calculatePrice{{ $room->id }}() {
     
     document.getElementById('nights{{ $room->id }}').textContent = nights;
     document.getElementById('rooms{{ $room->id }}').textContent = numberRooms;
-    document.getElementById('total_price{{ $room->id }}').textContent = totalPrice.toFixed(2);
     
-    // Update the hidden price input field for this specific room
+    const totalEl = document.getElementById('total_price{{ $room->id }}');
+    if (totalEl) {
+        const rate = parseFloat(totalEl.dataset.rate) || 1;
+        const symbol = totalEl.dataset.symbol || '$';
+        const currency = totalEl.dataset.currency || 'USD';
+        const decimals = parseInt(totalEl.dataset.decimals, 10) || 2;
+        totalEl.textContent = formatPriceForUserHotel(totalPrice, rate, symbol, currency, decimals);
+    }
+    
+    // Update the hidden price input field for this specific room (always USD for server)
     const form = document.querySelector('#roomDetailsModal{{ $room->id }} form');
     const priceInput = form.querySelector('input[name="price"]');
     if (priceInput) {
