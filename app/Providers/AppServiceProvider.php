@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use App\Models\System;
 
@@ -22,6 +23,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Ensure generated URLs do not include /public (e.g. Packages link going to /public/packages)
+        $appUrl = rtrim(config('app.url'), '/');
+        if (str_ends_with($appUrl, '/public')) {
+            URL::forceRootUrl(preg_replace('#/public$#', '', $appUrl));
+        }
+
         // Set custom pagination view
         Paginator::defaultView('pagination.custom');
 
