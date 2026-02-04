@@ -573,7 +573,7 @@
                                         <i class="fas fa-map-marker-alt"></i> ${deal.location}
                                     </p>
                                     <p style="margin: 0 0 6px 0; color: #2e8b57; font-weight: 600; font-size: 12px;">
-                                        USD ${parseFloat(deal.base_price).toFixed(2)}{{ $priceUnit }}
+                                        ${deal.display_price || ('USD ' + parseFloat(deal.base_price).toFixed(2))}{{ $priceUnit }}
                                     </p>
                                 </div>
                             </div>

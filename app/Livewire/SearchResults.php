@@ -190,7 +190,7 @@ class SearchResults extends Component
 
         $hashids = $this->getHashids();
 
-        // Prepare deal data with routes and default images
+        // Prepare deal data with routes, images, and display price for JS/map tooltips
         $deals->getCollection()->transform(function ($deal) use ($hashids) {
             $deal->view_route = $this->getViewRoute($deal);
             $deal->default_image = $this->getDefaultImage($deal->type);
@@ -203,6 +203,13 @@ class SearchResults extends Component
                     : asset('storage/' . ltrim($primaryImagePath, '/'));
             } else {
                 $deal->image_url = $deal->default_image;
+            }
+            
+            // Pre-computed display price string in user's currency (for map tooltips)
+            if (function_exists('priceForUser')) {
+                $deal->display_price = priceForUser($deal->base_price, 2);
+            } else {
+                $deal->display_price = number_format($deal->base_price, 2);
             }
             
             return $deal;

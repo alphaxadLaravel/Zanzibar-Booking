@@ -614,7 +614,7 @@
                                         <i class="fas fa-map-marker-alt"></i> ${deal.location || 'N/A'}
                                     </p>
                                     <p style="margin: 0 0 6px 0; color: #2e8b57; font-weight: 600; font-size: 12px;">
-                                        USD ${parseFloat(deal.base_price || 0).toFixed(2)}
+                                        ${deal.display_price || ('USD ' + parseFloat(deal.base_price || 0).toFixed(2))}
                                         ${deal.type === 'hotel' || deal.type === 'apartment' ? 'per night' : 
                                           (deal.type === 'tour' || deal.type === 'activity' || deal.type === 'package') ? 'per person' : 
                                           deal.type === 'car' ? 'per day' : ''}

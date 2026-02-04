@@ -181,7 +181,7 @@ window.ZanzibarMapManager = {
                     <i class="fas fa-map-marker-alt"></i> ${deal.location}
                 </p>
                 <p style="margin: 0 0 8px 0; color: #2e8b57; font-weight: 600;">
-                    USD ${parseFloat(deal.base_price).toFixed(2)} ${priceUnit}
+                    ${deal.display_price || ('USD ' + parseFloat(deal.base_price).toFixed(2))} ${priceUnit}
                 </p>
                 ${deal.category ? `<span style="background: #2e8b57; color: white; padding: 2px 8px; border-radius: 3px; font-size: 12px;">${deal.category.category}</span>` : ''}
                 <div style="margin-top: 10px;">

@@ -236,6 +236,13 @@ class AllDealsListing extends Component
             } else {
                 $deal->image_url = $deal->default_image;
             }
+            
+            // Pre-computed display price string in user's currency (for map tooltips)
+            if (function_exists('priceForUser')) {
+                $deal->display_price = priceForUser($deal->base_price, 2);
+            } else {
+                $deal->display_price = number_format($deal->base_price, 2);
+            }
 
             return $deal;
         });
