@@ -26,7 +26,7 @@
                                     <i class="mdi mdi-information me-2"></i>Payment Instructions
                                 </h6>
                                 <ol class="mb-0">
-                                    <li>Transfer the exact amount: <strong>${{ number_format($booking->total_amount, 2) }}</strong></li>
+                                    <li>Transfer the exact amount: <strong>{{ priceForUser($booking->total_amount, 2) }}</strong></li>
                                     <li>After paying, send the receipt to our email or WhatsApp numbers of Zanzibar Bookings.</li>
                                     <li>Don't hesitate to call or contact us after you have made the booking or after you have paid.</li>
                                 </ol>
@@ -154,8 +154,7 @@
                                     <hr>
                                     <div class="d-flex justify-content-between align-items-center">
                                         <strong class="fs-5">Total Amount:</strong>
-                                        <span class="fs-4 fw-bold text-success">${{
-                                            number_format($booking->total_amount, 2) }}</span>
+                                        <span class="fs-4 fw-bold text-success">{{ priceForUser($booking->total_amount, 2) }}</span>
                                     </div>
                                 </div>
                             </div>

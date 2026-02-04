@@ -69,7 +69,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Total Amount:</label>
-                            <div class="fw-bold text-success fs-5">${{ number_format($booking->total_amount, 2) }}</div>
+                            <div class="fw-bold text-success fs-5">{{ priceForUser($booking->total_amount, 2) }}</div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Payment Method:</label>
@@ -124,7 +124,7 @@
                                 </small>
                                 @endif
                             </div>
-                            <div class="fw-bold text-success">${{ number_format($item['item_data']['total_price'], 2) }}</div>
+                            <div class="fw-bold text-success">{{ priceForUser($item['item_data']['total_price'], 2) }}</div>
                         </div>
                         
                         <div class="row g-2">

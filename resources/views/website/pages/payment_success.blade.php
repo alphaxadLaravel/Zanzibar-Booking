@@ -55,7 +55,7 @@
                     <div class="row">
                         <div class="col-md-6">
                             <h6 class="text-muted mb-2">Amount Paid</h6>
-                            <h5 class="text-success font-weight-bold">{{ config('pesapal.currency', 'USD') }} {{ number_format($payment->amount, 2) }}</h5>
+                            <h5 class="text-success font-weight-bold">{{ priceForUser($payment->amount, 2) }}</h5>
                         </div>
                         <div class="col-md-6">
                             <h6 class="text-muted mb-2">Payment Status</h6>

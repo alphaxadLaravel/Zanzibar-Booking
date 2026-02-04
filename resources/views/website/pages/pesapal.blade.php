@@ -92,7 +92,7 @@
                     
                     <div class="mb-3">
                         <h6 class="text-muted mb-1">Total Amount</h6>
-                        <h4 class="text-success font-weight-bold">{{ config('pesapal.currency', 'USD') }} {{ number_format($payment->amount, 2) }}</h4>
+                        <h4 class="text-success font-weight-bold">{{ priceForUser($payment->amount, 2) }}</h4>
                     </div>
 
                     <hr>
@@ -123,7 +123,7 @@
                         <div class="border-bottom pb-2 mb-2">
                             <div class="d-flex justify-content-between">
                                 <span class="font-weight-bold">{{ $itemDeal ? $itemDeal->title : 'Item' }}</span>
-                                <span class="text-success">{{ config('pesapal.currency', 'USD') }} {{ number_format($item['total_price'] ?? 0, 2) }}</span>
+                                <span class="text-success">{{ priceForUser($item['total_price'] ?? 0, 2) }}</span>
                             </div>
                             @if(isset($item['check_in']))
                             <small class="text-muted">

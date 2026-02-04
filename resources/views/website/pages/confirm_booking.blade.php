@@ -219,7 +219,7 @@
                             </div>
 
                             <div class="text-end">
-                                <div class="fw-bold text-success">${{ number_format($item->total_price, 2) }}</div>
+                                <div class="fw-bold text-success">{{ priceForUser($item->total_price, 2) }}</div>
                         </div>
                         </div>
                         @endforeach
@@ -230,7 +230,7 @@
                         <h6 class="mb-3 fw-semibold">Price Breakdown</h6>
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted">Items ({{ $cartItems->count() }}):</span>
-                            <span class="fw-bold">${{ number_format($totalAmount, 2) }}</span>
+                            <span class="fw-bold">{{ priceForUser($totalAmount, 2) }}</span>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted">Service Fee:</span>
@@ -239,7 +239,7 @@
                         <hr class="my-2">
                         <div class="d-flex justify-content-between">
                             <span class="fw-bold">Total:</span>
-                            <span class="fw-bold text-success fs-5">${{ number_format($totalAmount, 2) }}</span>
+                            <span class="fw-bold text-success fs-5">{{ priceForUser($totalAmount, 2) }}</span>
                         </div>
                     </div>
 

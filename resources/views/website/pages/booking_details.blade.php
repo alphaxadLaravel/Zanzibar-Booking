@@ -62,7 +62,7 @@
                     
                     <div class="text-center">
                         <h6 class="text-muted">Total Amount</h6>
-                        <h5 class="text-success font-weight-bold">USD {{ number_format($booking->total_price, 2) }}</h5>
+                        <h5 class="text-success font-weight-bold">{{ priceForUser($booking->total_price, 2) }}</h5>
                     </div>
                 </div>
             </div>
@@ -85,7 +85,7 @@
                                 {{ $payment->status }}
                             </span>
                         </div>
-                        <small class="text-muted">USD {{ number_format($payment->amount, 2) }} - {{ $payment->created_at->format('M d, Y H:i') }}</small>
+                        <small class="text-muted">{{ priceForUser($payment->amount, 2) }} - {{ $payment->created_at->format('M d, Y H:i') }}</small>
                     </div>
                     @endforeach
                 </div>
