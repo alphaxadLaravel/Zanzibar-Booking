@@ -15,7 +15,7 @@ return [
     | Update manually or run artisan command to fetch from API.
     | Set EXCHANGE_RATES_USE_API=true to fetch from Frankfurter so display rates
     | match "current day" rates (e.g. closer to what Pesapal shows). Use
-    | EXCHANGE_RATES_CACHE_TTL_MINUTES=60 (default) to refresh hourly.
+    | EXCHANGE_RATES_CACHE_TTL_MINUTES=1 (default) to refresh every minute.
     |--------------------------------------------------------------------------
     */
     'rates' => [
@@ -82,10 +82,10 @@ return [
     /*
     |--------------------------------------------------------------------------
     | Cache key and TTL for API-fetched rates (minutes).
-    | Shorter TTL (e.g. 60) keeps display rates close to Pesapal's current rate.
+    | TTL in minutes (default 1) keeps display rates close to Pesapal's current rate.
     |--------------------------------------------------------------------------
     */
     'cache_key' => 'currency_rates_usd',
-    'cache_ttl_minutes' => env('EXCHANGE_RATES_CACHE_TTL_MINUTES', 60),
+    'cache_ttl_minutes' => env('EXCHANGE_RATES_CACHE_TTL_MINUTES', 1),
 
 ];
