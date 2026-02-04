@@ -70,7 +70,7 @@ Route::get('/view/hotel/{id}', [WebsiteController::class, 'viewHotel'])->name('v
 Route::get('/view/apartment/{id}', [WebsiteController::class, 'viewApartment'])->name('view-apartment');
 Route::get('/tours', [WebsiteController::class, 'tours'])->name('tours');
 Route::get('/activities', [WebsiteController::class, 'activities'])->name('activities');
-Route::get('/packages', [WebsiteController::class, 'packages'])->name('packages');
+Route::get('/explore-packages', [WebsiteController::class, 'packages'])->name('packages');
 Route::get('/view/tour/{id}', [WebsiteController::class, 'viewTour'])->name('view-tour');
 Route::get('/view/activity/{id}', [WebsiteController::class, 'viewActivity'])->name('view-activity');
 Route::get('/view/package/{id}', [WebsiteController::class, 'viewPackage'])->name('view-package');
