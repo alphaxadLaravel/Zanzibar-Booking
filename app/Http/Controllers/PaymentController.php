@@ -6,6 +6,7 @@ use App\Mail\PaymentSuccessUser;
 use App\Mail\PaymentSuccessAdmin;
 use App\Models\Booking;
 use App\Models\Payment;
+use App\Services\CurrencyConverter;
 use Hashids\Hashids;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -87,10 +88,21 @@ class PaymentController extends Controller
             // Generate callback URLs
             $callbackUrl = url('/payment/success');
             $notificationUrl = url('/payment/confirmation');
-            
+
+            // Send amount in user's currency using our rate so Pesapal shows same amount as booking summary
+            $userCurrency = userCurrency();
+            $amountUsd = (float) $booking->total_amount;
+            if ($userCurrency !== 'USD') {
+                $amountToSend = round(CurrencyConverter::convertFromBase($amountUsd, $userCurrency), 2);
+                $currencyToSend = $userCurrency;
+            } else {
+                $amountToSend = $amountUsd;
+                $currencyToSend = 'USD';
+            }
+
             // Prepare payment details
             $details = [
-                'amount' => (float) $payment->amount,
+                'amount' => $amountToSend,
                 'description' => $this->getPaymentDescription($booking),
                 'type' => 'MERCHANT',
                 'first_name' => $this->getFirstName($booking->fullname),
@@ -98,11 +110,11 @@ class PaymentController extends Controller
                 'email' => $booking->email,
                 'phonenumber' => $booking->phone,
                 'reference' => $payment->transactionid,
-                'currency' => config('pesapal.currency', 'USD'),
+                'currency' => $currencyToSend,
                 'callback_url' => $callbackUrl,
                 'notification_url' => $notificationUrl
             ];
-            
+
             // Call Pesapal
             $iframe = Pesapal::makePayment($details);
             
