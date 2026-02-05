@@ -251,14 +251,13 @@ class BookingController extends Controller
                 'check_in' => 'required|date|after_or_equal:today',
                 'check_out' => 'required|date|after:check_in',
                 'number_of_rooms' => 'required|integer|min:1',
-                'price' => 'required|numeric|min:0',
                 'adults' => 'required|integer|min:1',
                 'children' => 'nullable|integer|min:0',
             ]);
 
 
             // Get the room and deal
-            $room = Room::findOrFail($validated['room_id']);
+            $room = Room::with('priceIntervals')->findOrFail($validated['room_id']);
             $deal = Deal::findOrFail($validated['deal_id']);
 
             // Verify the room belongs to the deal
@@ -267,10 +266,16 @@ class BookingController extends Controller
                 return back()->withErrors(['room_id' => 'The selected room does not belong to this hotel.'])->withInput();
             }
 
-            // Check room availability (basic check)
-            $checkIn = \Carbon\Carbon::parse($validated['check_in']);
-            $checkOut = \Carbon\Carbon::parse($validated['check_out']);
-            $nights = $checkIn->diffInDays($checkOut);
+            // Calculate price server-side (never trust client)
+            $priceService = new \App\Services\RoomPriceService();
+            $totalPrice = $priceService->calculateTotalPrice(
+                $room,
+                $validated['check_in'],
+                $validated['check_out'],
+                $validated['number_of_rooms'],
+                $validated['adults'],
+                $validated['children'] ?? 0
+            );
 
             // Create booking item in database
             $bookingItem = BookingItem::create([
@@ -281,7 +286,7 @@ class BookingController extends Controller
                 'type' => 'hotel',
                 'check_in' => $validated['check_in'],
                 'check_out' => $validated['check_out'],
-                'total_price' => $validated['price'],
+                'total_price' => $totalPrice,
                 'adults' => $validated['adults'],
                 'children' => $validated['children'] ?? 0,
                 'status' => 'cart',

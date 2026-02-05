@@ -81,7 +81,7 @@
                                     <th>Room Title</th>
                                     <th>Capacity</th>
                                     <th>Beds</th>
-                                    <th>Price/Night</th>
+                                    <th>Price</th>
                                     <th>Availability</th>
                                     <th>Actions</th>
                                 </tr>
@@ -109,7 +109,8 @@
                                     <td>{{ $room->people }} people</td>
                                     <td>{{ $room->beds }} bed(s)</td>
                                     <td>
-                                        <span class="fw-bold text-success">${{ number_format($room->price, 2) }}</span>
+                                        <span class="fw-bold text-success">${{ number_format($room->price ?? $room->price_per_person ?? 0, 2) }}</span>
+                                        <small class="d-block text-muted">{{ $room->price_type === 'per_person_per_night' ? 'per person/night' : 'per night' }}</small>
                                     </td>
                                     <td>
                                         @if($room->availability)
@@ -158,15 +159,28 @@
                                                                         min="1" value="1" required>
                                                                 </div>
 
-                                                                <!-- Price -->
+                                                                <!-- Price Type -->
                                                                 <div class="col-md-6">
-                                                                    <label for="room_price" class="form-label">Price per
-                                                                        Night <span class="text-danger">*</span></label>
+                                                                    <label for="room_price_type" class="form-label">Price Type <span class="text-danger">*</span></label>
+                                                                    <select class="form-select" id="room_price_type" name="price_type" required onchange="togglePriceFields('add')">
+                                                                        <option value="per_night">Price Per Night</option>
+                                                                        <option value="per_person_per_night">Price Per Person per Night</option>
+                                                                    </select>
+                                                                </div>
+                                                                <!-- Price per Night -->
+                                                                <div class="col-md-6" id="add_price_per_night_wrap">
+                                                                    <label for="room_price" class="form-label">Price per Night <span class="text-danger">*</span></label>
                                                                     <div class="input-group">
                                                                         <span class="input-group-text">$</span>
-                                                                        <input type="number" class="form-control"
-                                                                            id="room_price" name="price" step="0.01"
-                                                                            min="0" required placeholder="0.00">
+                                                                        <input type="number" class="form-control" id="room_price" name="price" step="0.01" min="0" required placeholder="0.00">
+                                                                    </div>
+                                                                </div>
+                                                                <!-- Price per Person (shown when per_person_per_night) -->
+                                                                <div class="col-md-6 d-none" id="add_price_per_person_wrap">
+                                                                    <label for="room_price_per_person" class="form-label">Price per Person per Night <span class="text-danger">*</span></label>
+                                                                    <div class="input-group">
+                                                                        <span class="input-group-text">$</span>
+                                                                        <input type="number" class="form-control" id="room_price_per_person" name="price_per_person" step="0.01" min="0" placeholder="0.00">
                                                                     </div>
                                                                 </div>
 
@@ -237,6 +251,18 @@
                                                                     </div>
                                                                     <small class="text-muted">You can drop or select
                                                                         multiple images.</small>
+                                                                </div>
+
+                                                                <!-- Price Intervals -->
+                                                                <div class="col-12">
+                                                                    <label class="form-label">Price Intervals (Seasonal Pricing)</label>
+                                                                    <div id="add_price_intervals" class="border rounded p-3 bg-light">
+                                                                        <p class="text-muted small mb-2">Add different prices for specific date ranges (e.g. Jan-Mar $90, Christmas $150)</p>
+                                                                        <div id="add_interval_rows"></div>
+                                                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addIntervalRow('add')">
+                                                                            <i class="ti ti-plus"></i> Add Interval
+                                                                        </button>
+                                                                    </div>
                                                                 </div>
 
                                                                 <!-- Room Description -->
@@ -403,14 +429,28 @@
                                 min="1" value="1" required>
                         </div>
 
-                        <!-- Price -->
+                        <!-- Price Type -->
                         <div class="col-md-6">
-                            <label for="edit_room_price" class="form-label">Price per Night <span
-                                    class="text-danger">*</span></label>
+                            <label for="edit_room_price_type" class="form-label">Price Type <span class="text-danger">*</span></label>
+                            <select class="form-select" id="edit_room_price_type" name="price_type" required onchange="togglePriceFields('edit')">
+                                <option value="per_night">Price Per Night</option>
+                                <option value="per_person_per_night">Price Per Person per Night</option>
+                            </select>
+                        </div>
+                        <!-- Price per Night -->
+                        <div class="col-md-6" id="edit_price_per_night_wrap">
+                            <label for="edit_room_price" class="form-label">Price per Night <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" id="edit_room_price" name="price" step="0.01"
-                                    min="0" required placeholder="0.00">
+                                <input type="number" class="form-control" id="edit_room_price" name="price" step="0.01" min="0" required placeholder="0.00">
+                            </div>
+                        </div>
+                        <!-- Price per Person -->
+                        <div class="col-md-6 d-none" id="edit_price_per_person_wrap">
+                            <label for="edit_room_price_per_person" class="form-label">Price per Person per Night <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="edit_room_price_per_person" name="price_per_person" step="0.01" min="0" placeholder="0.00">
                             </div>
                         </div>
 
@@ -464,6 +504,18 @@
                             </div>
                             <small class="text-muted">Upload new images to replace existing ones. Leave empty to keep
                                 current images.</small>
+                        </div>
+
+                        <!-- Price Intervals -->
+                        <div class="col-12">
+                            <label class="form-label">Price Intervals (Seasonal Pricing)</label>
+                            <div id="edit_price_intervals" class="border rounded p-3 bg-light">
+                                <p class="text-muted small mb-2">Add different prices for specific date ranges (e.g. Jan-Mar $90, Christmas $150)</p>
+                                <div id="edit_interval_rows"></div>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="addIntervalRow('edit')">
+                                    <i class="ti ti-plus"></i> Add Interval
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Room Description -->
@@ -559,14 +611,28 @@
                                 min="1" value="1" required>
                         </div>
 
-                        <!-- Price -->
+                        <!-- Price Type -->
                         <div class="col-md-6">
-                            <label for="room_price" class="form-label">Price per Night <span
-                                    class="text-danger">*</span></label>
+                            <label for="room_price_type" class="form-label">Price Type <span class="text-danger">*</span></label>
+                            <select class="form-select" id="room_price_type" name="price_type" required onchange="togglePriceFields('add')">
+                                <option value="per_night">Price Per Night</option>
+                                <option value="per_person_per_night">Price Per Person per Night</option>
+                            </select>
+                        </div>
+                        <!-- Price per Night -->
+                        <div class="col-md-6" id="add_price_per_night_wrap">
+                            <label for="room_price" class="form-label">Price per Night <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" id="room_price" name="price" step="0.01"
-                                    min="0" required placeholder="0.00">
+                                <input type="number" class="form-control" id="room_price" name="price" step="0.01" min="0" required placeholder="0.00">
+                            </div>
+                        </div>
+                        <!-- Price per Person -->
+                        <div class="col-md-6 d-none" id="add_price_per_person_wrap">
+                            <label for="room_price_per_person" class="form-label">Price per Person per Night</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="room_price_per_person" name="price_per_person" step="0.01" min="0" placeholder="0.00">
                             </div>
                         </div>
 
@@ -623,6 +689,18 @@
                                 </div>
                             </div>
                             <small class="text-muted">You can drop or select multiple images.</small>
+                        </div>
+
+                        <!-- Price Intervals -->
+                        <div class="col-12">
+                            <label class="form-label">Price Intervals (Seasonal Pricing)</label>
+                            <div id="add_price_intervals" class="border rounded p-3 bg-light">
+                                <p class="text-muted small mb-2">Add different prices for specific date ranges (e.g. Jan-Mar $90, Christmas $150)</p>
+                                <div id="add_interval_rows"></div>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="addIntervalRow('add')">
+                                    <i class="ti ti-plus"></i> Add Interval
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Room Description -->
@@ -910,6 +988,41 @@
         }
     });
 
+    // Price intervals and price type toggle
+    let addIntervalIndex = 0;
+    let editIntervalIndex = 0;
+
+    function togglePriceFields(form) {
+        const isPerPerson = (form === 'add' ? document.getElementById('room_price_type') : document.getElementById('edit_room_price_type'))?.value === 'per_person_per_night';
+        if (form === 'add') {
+            document.getElementById('add_price_per_night_wrap').classList.toggle('d-none', isPerPerson);
+            document.getElementById('add_price_per_person_wrap').classList.toggle('d-none', !isPerPerson);
+            document.getElementById('room_price').required = !isPerPerson;
+            document.getElementById('room_price_per_person').required = isPerPerson;
+        } else {
+            document.getElementById('edit_price_per_night_wrap').classList.toggle('d-none', isPerPerson);
+            document.getElementById('edit_price_per_person_wrap').classList.toggle('d-none', !isPerPerson);
+            document.getElementById('edit_room_price').required = !isPerPerson;
+            document.getElementById('edit_room_price_per_person').required = isPerPerson;
+        }
+    }
+
+    function addIntervalRow(form) {
+        const prefix = form === 'add' ? 'add' : 'edit';
+        const idx = form === 'add' ? addIntervalIndex++ : editIntervalIndex++;
+        const container = document.getElementById(prefix + '_interval_rows');
+        const row = document.createElement('div');
+        row.className = 'row g-2 align-items-end mb-2 interval-row';
+        row.innerHTML = `
+            <div class="col-md-3"><input type="date" class="form-control form-control-sm" name="price_intervals[${idx}][start_date]" placeholder="Start" required></div>
+            <div class="col-md-3"><input type="date" class="form-control form-control-sm" name="price_intervals[${idx}][end_date]" placeholder="End" required></div>
+            <div class="col-md-2"><input type="text" class="form-control form-control-sm" name="price_intervals[${idx}][label]" placeholder="Label (e.g. Christmas)"></div>
+            <div class="col-md-2"><div class="input-group input-group-sm"><span class="input-group-text">$</span><input type="number" step="0.01" class="form-control" name="price_intervals[${idx}][price]" placeholder="Price" required></div></div>
+            <div class="col-md-1"><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.interval-row').remove()"><i class="ti ti-trash"></i></button></div>
+        `;
+        container.appendChild(row);
+    }
+
     // Edit room function
     function editRoom(roomId) {
         // Show loading state
@@ -921,17 +1034,36 @@
             .then(response => response.json())
             .then(data => {
                 if (data.room) {
+                    const room = data.room;
                     // Populate form fields
-                    document.getElementById('edit_room_title').value = data.room.title;
-                    document.getElementById('edit_number_of_rooms').value = data.room.number_of_rooms;
-                    document.getElementById('edit_room_price').value = data.room.price;
-                    document.getElementById('edit_people_capacity').value = data.room.people;
-                    document.getElementById('edit_number_of_beds').value = data.room.beds;
-                    document.getElementById('edit_room_availability').value = data.room.availability ? '1' : '0';
-                    document.getElementById('edit_room_description').value = data.room.description || '';
+                    document.getElementById('edit_room_title').value = room.title;
+                    document.getElementById('edit_number_of_rooms').value = room.number_of_rooms;
+                    document.getElementById('edit_room_price').value = room.price;
+                    document.getElementById('edit_room_price_type').value = room.price_type || 'per_night';
+                    document.getElementById('edit_room_price_per_person').value = room.price_per_person || '';
+                    document.getElementById('edit_people_capacity').value = room.people;
+                    document.getElementById('edit_number_of_beds').value = room.beds;
+                    document.getElementById('edit_room_availability').value = room.availability ? '1' : '0';
+                    document.getElementById('edit_room_description').value = room.description || '';
+                    togglePriceFields('edit');
+
+                    // Price intervals
+                    document.getElementById('edit_interval_rows').innerHTML = '';
+                    editIntervalIndex = 0;
+                    (data.price_intervals || []).forEach((pi, i) => {
+                        addIntervalRow('edit');
+                        const rows = document.getElementById('edit_interval_rows').querySelectorAll('.interval-row');
+                        const r = rows[rows.length - 1];
+                        if (r) {
+                            r.querySelector('input[name*="[start_date]"]').value = pi.start_date || '';
+                            r.querySelector('input[name*="[end_date]"]').value = pi.end_date || '';
+                            r.querySelector('input[name*="[label]"]').value = pi.label || '';
+                            r.querySelector('input[name*="[price]"]').value = pi.price || '';
+                        }
+                    });
 
                     // Set Quill editor content
-                    editRoomDescriptionQuill.root.innerHTML = data.room.description || '';
+                    editRoomDescriptionQuill.root.innerHTML = room.description || '';
 
                     // Set form action
                     document.getElementById('editRoomForm').action = `/admin/hotels/{{ $hashids->encode($hotelId) }}/rooms/${roomId}`;

@@ -161,8 +161,8 @@
                                 </div>
                                 <div class="d-flex align-items-center justify-content-between">
                                     <div>
-                                        <span class="fw-bold" style="font-size: 1.1rem; color: #ff5722;">{{ priceForUser($room->price ?? $hotel->base_price, 0) }}</span>
-                                        <span style="font-size: 13px; color: #888;">/ night</span>
+                                        <span class="fw-bold" style="font-size: 1.1rem; color: #ff5722;">{{ priceForUser($room->getMinPrice() ?: ($room->price ?? $hotel->base_price), 0) }}</span>
+                                        <span style="font-size: 13px; color: #888;">{{ $room->getPriceUnitLabel() }}</span>
                                     </div>
                                     <button class="btn btn-primary" style="font-size: 13px;"
                                         onclick="event.stopPropagation(); openRoomDetailsModal({{ $room->id }})">
@@ -444,9 +444,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     </h5>
                     <div class="price-display d-flex align-items-end" style="gap: 0.3rem;">
                         <span class="price-amount" style="font-size: 1.5rem; font-weight: 700; color: #ff5722;">
-                            {{ priceForUser($room->price ?? $hotel->base_price, 0) }}
+                            {{ priceForUser($room->getMinPrice() ?: ($room->price ?? $hotel->base_price), 0) }}
                         </span>
-                        <span class="price-unit" style="color: #888; font-size: 0.9rem;">/ night</span>
+                        <span class="price-unit" style="color: #888; font-size: 0.9rem;">{{ $room->getPriceUnitLabel() }}</span>
                     </div>
                 </div>
                 <button type="button" class="btn-close d-flex align-items-center justify-content-center"
@@ -573,7 +573,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                             required 
                                             min="{{ date('Y-m-d') }}"
                                             onchange="calculatePrice{{ $room->id }}()"
-                                            value="{{ old('check_in') }}"
+                                            value="{{ old('check_in', date('Y-m-d')) }}"
                                         >
                                     </div>
                                     <div class="col-md-6 mb-3">
@@ -586,7 +586,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                             required 
                                             min="{{ date('Y-m-d', strtotime('+1 day')) }}"
                                             onchange="calculatePrice{{ $room->id }}()"
-                                            value="{{ old('check_out') }}"
+                                            value="{{ old('check_out', date('Y-m-d', strtotime('+1 day'))) }}"
                                         >
                                     </div>
                                 </div>
@@ -615,6 +615,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                             id="adult{{ $room->id }}" 
                                             name="adults" 
                                             required
+                                            onchange="calculatePrice{{ $room->id }}()"
                                         >
                                             @for($i = 1; $i <= 20; $i++)
                                                 <option value="{{ $i }}" {{ old('adults', 2) == $i ? 'selected' : '' }}>
@@ -629,6 +630,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                             class="form-control" 
                                             id="children{{ $room->id }}" 
                                             name="children"
+                                            onchange="calculatePrice{{ $room->id }}()"
                                         >
                                             <option value="0" {{ old('children', 0) == 0 ? 'selected' : '' }}>No Children</option>
                                             @for($i = 1; $i <= 20; $i++)
@@ -648,8 +650,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                             </h6>
                                             <p class="mb-1" style="font-size: 0.9rem; color: #666;">
                                                 <span id="nights{{ $room->id }}">1</span> night(s) ×
-                                                <span id="rooms{{ $room->id }}">1</span> room(s) ×
-                                                {{ priceForUser($room->price ?? $hotel->base_price, 2) }}/night
+                                                <span id="rooms{{ $room->id }}">1</span> room(s)
+                                                <span id="price_detail{{ $room->id }}">—</span>
                                             </p>
                                         </div>
                                         <div class="text-end">
@@ -698,15 +700,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function openRoomDetailsModal(roomId) {
     const modal = new bootstrap.Modal(document.getElementById('roomDetailsModal' + roomId));
     modal.show();
-    
-    // Initialize the price input with the default room price
-    const form = document.querySelector('#roomDetailsModal' + roomId + ' form');
-    const priceInput = form.querySelector('input[name="price"]');
-    if (priceInput) {
-        // Get the room price from the displayed price in the modal
-        const displayedPrice = document.querySelector('#roomDetailsModal' + roomId + ' .price-amount').textContent;
-        const roomPrice = parseFloat(displayedPrice.replace('$', '').replace(',', ''));
-        priceInput.value = roomPrice.toFixed(2);
+    // Trigger price calculation when modal opens
+    if (typeof window['calculatePrice' + roomId] === 'function') {
+        window['calculatePrice' + roomId]();
     }
 }
 
@@ -717,11 +713,12 @@ function formatPriceForUserHotel(usdTotal, rate, symbol, currency, decimals) {
 }
 @foreach($rooms as $room)
 function calculatePrice{{ $room->id }}() {
-    const checkIn = document.getElementById('check_in{{ $room->id }}').value;
-    const checkOut = document.getElementById('check_out{{ $room->id }}').value;
-    const numberRooms = parseInt(document.getElementById('number_rooms{{ $room->id }}').value);
-    const pricePerNight = {{ $room->price ?? $hotel->base_price }};
-    
+    const checkIn = document.getElementById('check_in{{ $room->id }}')?.value;
+    const checkOut = document.getElementById('check_out{{ $room->id }}')?.value;
+    const numberRooms = parseInt(document.getElementById('number_rooms{{ $room->id }}')?.value || 1);
+    const adults = parseInt(document.getElementById('adult{{ $room->id }}')?.value || 1);
+    const children = parseInt(document.getElementById('children{{ $room->id }}')?.value || 0);
+
     let nights = 1;
     if (checkIn && checkOut) {
         const checkInDate = new Date(checkIn);
@@ -730,33 +727,48 @@ function calculatePrice{{ $room->id }}() {
             nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
         }
     }
-    
-    const totalPrice = pricePerNight * numberRooms * nights;
-    
+
     document.getElementById('nights{{ $room->id }}').textContent = nights;
     document.getElementById('rooms{{ $room->id }}').textContent = numberRooms;
-    
+
+    if (!checkIn || !checkOut) {
+        document.getElementById('price_detail{{ $room->id }}').textContent = '—';
+        const totalEl = document.getElementById('total_price{{ $room->id }}');
+        if (totalEl) totalEl.textContent = '—';
+        return;
+    }
+
+    document.getElementById('price_detail{{ $room->id }}').textContent = '...';
     const totalEl = document.getElementById('total_price{{ $room->id }}');
-    if (totalEl) {
-        const rate = parseFloat(totalEl.dataset.rate) || 1;
-        const symbol = totalEl.dataset.symbol || '$';
-        const currency = totalEl.dataset.currency || 'USD';
-        const decimals = parseInt(totalEl.dataset.decimals, 10) || 2;
-        totalEl.textContent = formatPriceForUserHotel(totalPrice, rate, symbol, currency, decimals);
-    }
-    
-    // Update the hidden price input field for this specific room (always USD for server)
-    const form = document.querySelector('#roomDetailsModal{{ $room->id }} form');
-    const priceInput = form.querySelector('input[name="price"]');
-    if (priceInput) {
-        priceInput.value = totalPrice.toFixed(2);
-    }
-    
-    // Update check-out minimum date
+    if (totalEl) totalEl.textContent = '...';
+
+    fetch('{{ url("/room/{$room->id}/price") }}?check_in=' + encodeURIComponent(checkIn) + '&check_out=' + encodeURIComponent(checkOut) + '&number_rooms=' + numberRooms + '&adults=' + adults + '&children=' + children)
+        .then(r => r.json())
+        .then(data => {
+            const totalPrice = data.total_price || 0;
+            if (totalEl) {
+                const rate = parseFloat(totalEl.dataset.rate) || 1;
+                const symbol = totalEl.dataset.symbol || '$';
+                const currency = totalEl.dataset.currency || 'USD';
+                const decimals = parseInt(totalEl.dataset.decimals, 10) || 2;
+                totalEl.textContent = formatPriceForUserHotel(totalPrice, rate, symbol, currency, decimals);
+            }
+            document.getElementById('price_detail{{ $room->id }}').textContent = '';
+
+            const form = document.querySelector('#roomDetailsModal{{ $room->id }} form');
+            const priceInput = form?.querySelector('input[name="price"]');
+            if (priceInput) priceInput.value = totalPrice.toFixed(2);
+        })
+        .catch(() => {
+            document.getElementById('price_detail{{ $room->id }}').textContent = '(select dates)';
+            if (totalEl) totalEl.textContent = '—';
+        });
+
     if (checkIn) {
         const checkInDate = new Date(checkIn);
         checkInDate.setDate(checkInDate.getDate() + 1);
-        document.getElementById('check_out{{ $room->id }}').min = checkInDate.toISOString().split('T')[0];
+        const coEl = document.getElementById('check_out{{ $room->id }}');
+        if (coEl) coEl.min = checkInDate.toISOString().split('T')[0];
     }
 }
 @endforeach

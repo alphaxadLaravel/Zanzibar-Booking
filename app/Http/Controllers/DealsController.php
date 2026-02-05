@@ -13,6 +13,7 @@ use App\Models\TourInclude;
 use App\Models\TourItenary;
 use App\Models\Room;
 use App\Models\RoomPhotos;
+use App\Models\RoomPriceInterval;
 use App\Models\Near;
 use App\Models\NearbyLocation;
 use Hashids\Hashids;
@@ -893,7 +894,9 @@ class DealsController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'number_of_rooms' => 'required|integer|min:1',
+            'price_type' => 'required|in:per_night,per_person_per_night',
             'price' => 'required|numeric|min:0',
+            'price_per_person' => 'nullable|numeric|min:0',
             'people' => 'required|integer|min:1',
             'beds' => 'required|integer|min:1',
             'availability' => 'required|in:0,1',
@@ -911,12 +914,23 @@ class DealsController extends Controller
                 $coverPhotoPath = $request->file('cover_photo')->store('rooms/cover', 'public');
             }
 
+            $priceType = $request->price_type;
+            $price = (float) $request->price;
+            $pricePerPerson = $priceType === 'per_person_per_night'
+                ? ((float) ($request->price_per_person ?? $request->price))
+                : null;
+            if ($priceType === 'per_person_per_night' && $pricePerPerson > 0) {
+                $price = $pricePerPerson; // use as base for getMinPrice fallback
+            }
+
             // Create the room
             $room = Room::create([
                 'deal_id' => $hotel_id,
                 'title' => $request->title,
                 'number_of_rooms' => $request->number_of_rooms,
-                'price' => $request->price,
+                'price' => $price,
+                'price_type' => $priceType,
+                'price_per_person' => $pricePerPerson,
                 'people' => $request->people,
                 'beds' => $request->beds,
                 'availability' => (bool) $request->availability,
@@ -924,6 +938,8 @@ class DealsController extends Controller
                 'description' => $request->description,
                 'status' => 1
             ]);
+
+            $this->syncRoomPriceIntervals($room, $request);
 
             // Handle other images
             if ($request->hasFile('other_images')) {
@@ -952,7 +968,7 @@ class DealsController extends Controller
         $decodedRoomId = $hashids->decode($room_id)[0];
 
         $hotel = Deal::where('type', 'hotel')->find($decodedHotelId);
-        $room = Room::with('photos')->find($decodedRoomId);
+        $room = Room::with(['photos', 'priceIntervals'])->find($decodedRoomId);
 
         if (!$hotel || !$room || $room->deal_id != $decodedHotelId) {
             return redirect()->back()->with('error', 'Room not found');
@@ -960,7 +976,8 @@ class DealsController extends Controller
 
         return response()->json([
             'room' => $room,
-            'photos' => $room->photos
+            'photos' => $room->photos,
+            'price_intervals' => $room->priceIntervals
         ]);
     }
 
@@ -973,7 +990,9 @@ class DealsController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'number_of_rooms' => 'required|integer|min:1',
+            'price_type' => 'required|in:per_night,per_person_per_night',
             'price' => 'required|numeric|min:0',
+            'price_per_person' => 'nullable|numeric|min:0',
             'people' => 'required|integer|min:1',
             'beds' => 'required|integer|min:1',
             'availability' => 'required|in:0,1',
@@ -1001,17 +1020,30 @@ class DealsController extends Controller
                 $coverPhotoPath = $request->file('cover_photo')->store('rooms/cover', 'public');
             }
 
+            $priceType = $request->price_type;
+            $price = (float) $request->price;
+            $pricePerPerson = $priceType === 'per_person_per_night'
+                ? ((float) ($request->price_per_person ?? $request->price))
+                : null;
+            if ($priceType === 'per_person_per_night' && $pricePerPerson > 0) {
+                $price = $pricePerPerson;
+            }
+
             // Update the room
             $room->update([
                 'title' => $request->title,
                 'number_of_rooms' => $request->number_of_rooms,
-                'price' => $request->price,
+                'price' => $price,
+                'price_type' => $priceType,
+                'price_per_person' => $pricePerPerson,
                 'people' => $request->people,
                 'beds' => $request->beds,
                 'availability' => (bool) $request->availability,
                 'cover_photo' => $coverPhotoPath,
                 'description' => $request->description
             ]);
+
+            $this->syncRoomPriceIntervals($room, $request);
 
             // Handle other images
             if ($request->hasFile('other_images')) {
@@ -1079,6 +1111,28 @@ class DealsController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Failed to delete room: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Sync room price intervals from request
+     */
+    private function syncRoomPriceIntervals(Room $room, Request $request): void
+    {
+        $intervals = $request->input('price_intervals', []);
+        $room->priceIntervals()->delete();
+
+        foreach ($intervals as $item) {
+            if (empty($item['start_date']) || empty($item['end_date']) || !isset($item['price'])) {
+                continue;
+            }
+            RoomPriceInterval::create([
+                'room_id' => $room->id,
+                'start_date' => $item['start_date'],
+                'end_date' => $item['end_date'],
+                'price' => (float) $item['price'],
+                'label' => $item['label'] ?? null,
+            ]);
         }
     }
 

@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Category;
 use App\Models\Deal;
+use App\Models\Room;
 use App\Models\Tours;
 use App\Models\Car;
+use App\Services\RoomPriceService;
 use App\Models\Blog;
 use App\Models\Near;
 use App\Models\DealReviews;
@@ -243,7 +245,7 @@ class WebsiteController extends Controller
             ->paginate(5);
 
         // Ensure we have rooms data - if no rooms exist, we'll show default room in view
-        $rooms = $hotel->rooms()->active()->available()->get();
+        $rooms = $hotel->rooms()->active()->available()->with('priceIntervals')->get();
 
         // Fetch nearby deals from the nears table
         $nearbyDeals = Near::where('deal_id', $hotelId)
@@ -267,6 +269,35 @@ class WebsiteController extends Controller
         $nearbyTours = $nearbyTours->take(6);
 
         return view('website.pages.view_hotel', compact('hotel', 'rooms', 'nearbyHotels', 'nearbyTours', 'paginatedReviews', 'hashids'));
+    }
+
+    /**
+     * Get calculated room price for given dates and guests (JSON API)
+     */
+    public function getRoomPrice(Request $request, $roomId)
+    {
+        $room = Room::with('priceIntervals')->find($roomId);
+        if (!$room) {
+            return response()->json(['error' => 'Room not found'], 404);
+        }
+
+        $checkIn = $request->query('check_in');
+        $checkOut = $request->query('check_out');
+        $numberRooms = (int) $request->query('number_rooms', 1);
+        $adults = (int) $request->query('adults', 1);
+        $children = (int) $request->query('children', 0);
+
+        if (!$checkIn || !$checkOut) {
+            return response()->json(['error' => 'check_in and check_out are required'], 422);
+        }
+
+        $service = new RoomPriceService();
+        $totalPrice = $service->calculateTotalPrice($room, $checkIn, $checkOut, $numberRooms, $adults, $children);
+
+        return response()->json([
+            'total_price' => $totalPrice,
+            'room_id' => $room->id,
+        ]);
     }
 
     // viewApartment
