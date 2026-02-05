@@ -216,21 +216,22 @@ class BookingController extends Controller
         }
 
         $hashids = $this->getHashids();
-        
+        $bookingIdHash = $bookingId; // keep hashed id for payment link
+
         // Decode the hashed booking ID
         $decodedIds = $hashids->decode($bookingId);
         if (empty($decodedIds)) {
             abort(404, 'Booking not found');
         }
         $bookingId = $decodedIds[0];
-        
+
         // Get the booking
         $booking = Booking::where('id', $bookingId)
             ->where('user_id', Auth::id())
             ->with(['user'])
             ->firstOrFail();
 
-        return view('website.pages.offline_payment', compact('booking'));
+        return view('website.pages.offline_payment', compact('booking', 'bookingIdHash'));
     }
 
     // book room
@@ -530,7 +531,9 @@ class BookingController extends Controller
                 }
             }
 
-            return view('website.pages.booking-details', compact('booking', 'bookingItems'));
+            $hashids = $this->getHashids();
+            $bookingIdHash = $hashids->encode($booking->id);
+            return view('website.pages.booking-details', compact('booking', 'bookingItems', 'bookingIdHash'));
 
         } catch (\Exception $e) {
             Log::error('Booking lookup error: ' . $e->getMessage(), [

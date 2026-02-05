@@ -6,8 +6,72 @@
 @endsection
 
 @section('pages')
+<style>
+@media print {
+    body * { visibility: hidden; }
+    .print-payment-bill, .print-payment-bill * { visibility: visible; }
+    .print-payment-bill {
+        display: block !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        padding: 20px;
+        background: #fff;
+        font-size: 14px;
+        color: #000;
+    }
+    .print-payment-bill .print-section { margin-bottom: 24px; }
+    .print-payment-bill h1 { font-size: 20px; margin-bottom: 20px; }
+    .print-payment-bill h2 { font-size: 16px; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 4px; }
+    .print-payment-bill table { width: 100%; border-collapse: collapse; }
+    .print-payment-bill td { padding: 4px 8px; vertical-align: top; }
+    .print-payment-bill .amount-row { font-size: 16px; font-weight: bold; }
+    .no-print { display: none !important; }
+}
+</style>
 
-<div class="container py-5">
+<!-- Simple bill layout for print only (hidden on screen) -->
+<div class="print-payment-bill" style="display: none;">
+    <h1 style="font-size: 20px; margin-bottom: 20px;">Zanzibar Bookings – Payment Details</h1>
+
+    <div class="print-section">
+        <h2>Booking</h2>
+        <table>
+            <tr><td><strong>Reference:</strong></td><td>{{ $booking->booking_code }}</td></tr>
+            <tr><td><strong>Date:</strong></td><td>{{ $booking->created_at->format('M d, Y') }}</td></tr>
+            <tr><td><strong>Customer:</strong></td><td>{{ $booking->fullname }}</td></tr>
+            <tr><td><strong>Email:</strong></td><td>{{ $booking->email }}</td></tr>
+            <tr><td><strong>Phone:</strong></td><td>{{ $booking->phone }}</td></tr>
+            <tr><td><strong>Total amount to pay:</strong></td><td class="amount-row">{{ priceForUser($booking->total_amount, 2) }}</td></tr>
+        </table>
+    </div>
+
+    <div class="print-section">
+        <h2>Payment instructions</h2>
+        <p>Transfer the exact amount above to the account below. After paying, send the receipt to our email or WhatsApp.</p>
+    </div>
+
+    <div class="print-section">
+        <h2>Bank details</h2>
+        <table>
+            <tr><td><strong>Bank:</strong></td><td>EQUITY BANK TANZANIA LIMITED</td></tr>
+            <tr><td><strong>Branch:</strong></td><td>MALINDI, ZANZIBAR</td></tr>
+            <tr><td><strong>Account name:</strong></td><td>S & A ZANZIBAR BOOKINGS</td></tr>
+            <tr><td><strong>Account number:</strong></td><td>3014211938950 (USD)</td></tr>
+            <tr><td><strong>Swift code:</strong></td><td>EQBLTZTZ</td></tr>
+            <tr><td><strong>Bank code:</strong></td><td>047</td></tr>
+            <tr><td><strong>Address:</strong></td><td>Zanzibar Branch, Mlandege Street, ZANZIBAR, TANZANIA</td></tr>
+        </table>
+    </div>
+
+    <div class="print-section">
+        <h2>Contact</h2>
+        <p>Email: {{ $systemSettings->email ?? 'info@zanzibarbookings.com' }} &nbsp;|&nbsp; Phone: {{ $systemSettings->phone ?? '—' }}</p>
+    </div>
+</div>
+
+<div class="container py-5 no-print">
     <div class="row justify-content-center">
         <div class="col-lg-10">
 
@@ -172,25 +236,32 @@
                                     <div class="row">
                                         <div class="col-md-4 mb-2">
                                             <i class="mdi mdi-email text-primary me-2"></i>
-                                            <strong>Email:</strong> info@zanzibarbookings.com
+                                            <strong>Email:</strong>
+                                            <a href="mailto:{{ $systemSettings->email ?? 'info@zanzibarbookings.com' }}" class="text-decoration-none">{{ $systemSettings->email ?? 'info@zanzibarbookings.com' }}</a>
                                         </div>
                                         <div class="col-md-4 mb-2">
                                             <i class="mdi mdi-phone text-primary me-2"></i>
-                                            <strong>Phone:</strong> +255 XXX XXX XXX
+                                            <strong>Phone:</strong>
+                                            <a href="tel:{{ str_replace(' ', '', $systemSettings->phone ?? '') }}" class="text-decoration-none">{{ $systemSettings->phone ?? '—' }}</a>
                                         </div>
                                         <div class="col-md-4 mb-2">
                                             <i class="mdi mdi-whatsapp text-success me-2"></i>
-                                            <strong>WhatsApp:</strong> +255 XXX XXX XXX
+                                            <strong>WhatsApp:</strong>
+                                            @if(!empty($systemSettings->whatsapp_url))
+                                                <a href="{{ $systemSettings->whatsapp_url }}" target="_blank" rel="noopener" class="text-decoration-none">{{ $systemSettings->secondary_phone ?? $systemSettings->phone ?? 'Chat on WhatsApp' }}</a>
+                                            @else
+                                                <a href="tel:{{ str_replace(' ', '', $systemSettings->secondary_phone ?? $systemSettings->phone ?? '') }}" class="text-decoration-none">{{ $systemSettings->secondary_phone ?? $systemSettings->phone ?? '—' }}</a>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="col-md-12">
+                        <div class="col-md-12 no-print">
                             <div class="d-flex justify-content-end">
                                 <div class="">
-                                    <a href="{{ route('payment.process', $booking->id) }}" class="btn btn-outline-primary me-3">
+                                    <a href="{{ route('payment.process', ['bookingId' => $bookingIdHash]) }}" class="btn btn-outline-primary me-3">
                                         <i class="mdi mdi-credit-card me-2"></i>PAY BY PESAPAL
                                     </a>
                                     <button type="button" class="btn btn-primary" onclick="window.print()">
