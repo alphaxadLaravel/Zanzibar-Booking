@@ -300,6 +300,31 @@ class WebsiteController extends Controller
         ]);
     }
 
+    /**
+     * Get room prices for a month (for calendar display)
+     */
+    public function getRoomPricesCalendar(Request $request, $roomId)
+    {
+        $room = Room::with('priceIntervals')->find($roomId);
+        if (!$room) {
+            return response()->json(['error' => 'Room not found'], 404);
+        }
+
+        $year = (int) $request->query('year', date('Y'));
+        $month = (int) $request->query('month', date('n'));
+        $adults = (int) $request->query('adults', 1);
+        $children = (int) $request->query('children', 0);
+
+        $service = new RoomPriceService();
+        $prices = $service->getPricesForMonth($room, $year, $month, $adults, $children);
+
+        return response()->json([
+            'year' => $year,
+            'month' => $month,
+            'prices' => $prices,
+        ]);
+    }
+
     // viewApartment
     public function viewApartment($id)
     {

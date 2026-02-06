@@ -113,6 +113,7 @@ Route::post('/book-deal', [BookingController::class, 'bookDeal'])->name('book-de
 
 // book rooms
 Route::get('/room/{roomId}/price', [WebsiteController::class, 'getRoomPrice'])->name('room.price');
+Route::get('/room/{roomId}/prices-calendar', [WebsiteController::class, 'getRoomPricesCalendar'])->name('room.prices-calendar');
 Route::post('/book-room', [BookingController::class, 'bookRoom'])->name('book-room');
 Route::post('/complete-booking', [BookingController::class, 'completeBooking'])->name('complete-booking');
 Route::post('/book-all-cart', [BookingController::class, 'bookAllCart'])->name('book-all-cart');

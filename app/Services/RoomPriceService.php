@@ -106,6 +106,39 @@ class RoomPriceService
     }
 
     /**
+     * Get prices for each day in a month (for calendar display).
+     * Returns array of {date, price} - price is base per-night or per-person before guest multiplier.
+     */
+    public function getPricesForMonth(Room $room, int $year, int $month, int $adults = 1, int $children = 0): array
+    {
+        $start = Carbon::create($year, $month, 1)->startOfDay();
+        $end = $start->copy()->endOfMonth();
+        $intervals = $room->priceIntervals()
+            ->where('end_date', '>=', $start)
+            ->where('start_date', '<=', $end)
+            ->orderBy('start_date')
+            ->get();
+
+        $result = [];
+        $current = $start->copy();
+        $totalGuests = max(1, $adults + $children);
+
+        while ($current->lte($end)) {
+            $price = $this->getPriceForDate($room, $current, $intervals);
+            if (($room->price_type ?? 'per_night') === 'per_person_per_night') {
+                $price *= $totalGuests;
+            }
+            $result[] = [
+                'date' => $current->format('Y-m-d'),
+                'price' => round($price, 2),
+            ];
+            $current->addDay();
+        }
+
+        return $result;
+    }
+
+    /**
      * Get minimum price across all intervals and base price.
      */
     public function getMinPrice(Room $room): float

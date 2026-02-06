@@ -974,10 +974,19 @@ class DealsController extends Controller
             return redirect()->back()->with('error', 'Room not found');
         }
 
+        $priceIntervals = $room->priceIntervals->map(function ($pi) {
+            return [
+                'start_date' => $pi->start_date->format('Y-m-d'),
+                'end_date' => $pi->end_date->format('Y-m-d'),
+                'label' => $pi->label,
+                'price' => $pi->price,
+            ];
+        })->values()->toArray();
+
         return response()->json([
             'room' => $room,
             'photos' => $room->photos,
-            'price_intervals' => $room->priceIntervals
+            'price_intervals' => $priceIntervals
         ]);
     }
 

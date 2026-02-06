@@ -1011,16 +1011,48 @@
         const prefix = form === 'add' ? 'add' : 'edit';
         const idx = form === 'add' ? addIntervalIndex++ : editIntervalIndex++;
         const container = document.getElementById(prefix + '_interval_rows');
+        const today = new Date().toISOString().split('T')[0];
+        const minAttr = form === 'add' ? ` min="${today}"` : '';
         const row = document.createElement('div');
         row.className = 'row g-2 align-items-end mb-2 interval-row';
+        row.dataset.rowIndex = idx;
         row.innerHTML = `
-            <div class="col-md-3"><input type="date" class="form-control form-control-sm" name="price_intervals[${idx}][start_date]" placeholder="Start" required></div>
-            <div class="col-md-3"><input type="date" class="form-control form-control-sm" name="price_intervals[${idx}][end_date]" placeholder="End" required></div>
+            <div class="col-md-3"><input type="date" class="form-control form-control-sm interval-date" data-type="start"${minAttr} name="price_intervals[${idx}][start_date]" placeholder="Start" required></div>
+            <div class="col-md-3"><input type="date" class="form-control form-control-sm interval-date" data-type="end"${minAttr} name="price_intervals[${idx}][end_date]" placeholder="End" required></div>
             <div class="col-md-2"><input type="text" class="form-control form-control-sm" name="price_intervals[${idx}][label]" placeholder="Label (e.g. Christmas)"></div>
             <div class="col-md-2"><div class="input-group input-group-sm"><span class="input-group-text">$</span><input type="number" step="0.01" class="form-control" name="price_intervals[${idx}][price]" placeholder="Price" required></div></div>
             <div class="col-md-1"><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.interval-row').remove()"><i class="ti ti-trash"></i></button></div>
         `;
         container.appendChild(row);
+        row.querySelectorAll('.interval-date').forEach(input => {
+            input.addEventListener('change', () => validateIntervalOverlap(container, row));
+        });
+    }
+
+    function validateIntervalOverlap(container, currentRow) {
+        const rows = container.querySelectorAll('.interval-row');
+        const getRange = (row) => {
+            const start = row.querySelector('input[data-type="start"]')?.value;
+            const end = row.querySelector('input[data-type="end"]')?.value;
+            return start && end ? { start, end, row } : null;
+        };
+        const ranges = Array.from(rows).map(getRange).filter(Boolean);
+        const current = getRange(currentRow);
+        if (!current) return;
+        for (const r of ranges) {
+            if (r.row === currentRow) continue;
+            const overlap = (current.start <= r.end && current.end >= r.start);
+            if (overlap) {
+                alert('This date range overlaps with another interval. Please choose different dates.');
+                currentRow.querySelector('input[data-type="start"]').value = '';
+                currentRow.querySelector('input[data-type="end"]').value = '';
+                return;
+            }
+        }
+        if (current.start > current.end) {
+            alert('End date must be after start date.');
+            currentRow.querySelector('input[data-type="end"]').value = '';
+        }
     }
 
     // Edit room function
@@ -1048,17 +1080,25 @@
                     togglePriceFields('edit');
 
                     // Price intervals
-                    document.getElementById('edit_interval_rows').innerHTML = '';
+                    const intervalContainer = document.getElementById('edit_interval_rows');
+                    intervalContainer.innerHTML = '';
                     editIntervalIndex = 0;
-                    (data.price_intervals || []).forEach((pi, i) => {
+                    const formatDateForInput = (d) => {
+                        if (!d) return '';
+                        const s = String(d);
+                        return s.substring(0, 10);
+                    };
+                    (data.price_intervals || []).forEach((pi) => {
                         addIntervalRow('edit');
-                        const rows = document.getElementById('edit_interval_rows').querySelectorAll('.interval-row');
+                        const rows = intervalContainer.querySelectorAll('.interval-row');
                         const r = rows[rows.length - 1];
                         if (r) {
-                            r.querySelector('input[name*="[start_date]"]').value = pi.start_date || '';
-                            r.querySelector('input[name*="[end_date]"]').value = pi.end_date || '';
+                            const startIn = r.querySelector('input[data-type="start"], input[name*="[start_date]"]');
+                            const endIn = r.querySelector('input[data-type="end"], input[name*="[end_date]"]');
+                            if (startIn) startIn.value = formatDateForInput(pi.start_date);
+                            if (endIn) endIn.value = formatDateForInput(pi.end_date);
                             r.querySelector('input[name*="[label]"]').value = pi.label || '';
-                            r.querySelector('input[name*="[price]"]').value = pi.price || '';
+                            r.querySelector('input[name*="[price]"]').value = pi.price ?? '';
                         }
                     });
 
