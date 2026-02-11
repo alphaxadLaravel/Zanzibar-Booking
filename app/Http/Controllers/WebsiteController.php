@@ -157,7 +157,9 @@ class WebsiteController extends Controller
         $categories = Category::where('type', 'blog')
             ->get();
 
-        return view('website.pages.blog', compact('blogs', 'categories'));
+        $hashids = $this->getHashids();
+
+        return view('website.pages.blog', compact('blogs', 'categories', 'hashids'));
     }
 
     // viewBlog
@@ -188,7 +190,9 @@ class WebsiteController extends Controller
         $categories = Category::where('type', 'blog')
             ->get();
 
-        return view('website.pages.view_post', compact('blog', 'recentBlogs', 'categories'));
+        $hashids = $this->getHashids();
+
+        return view('website.pages.view_post', compact('blog', 'recentBlogs', 'categories', 'hashids'));
     }
 
     // hotels

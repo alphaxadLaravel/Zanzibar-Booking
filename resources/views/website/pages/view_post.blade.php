@@ -135,7 +135,7 @@
                     <div class="widget-content">
                         @forelse($recentBlogs as $recentBlog)
                         <div class="post-item d-flex align-items-center mb-3">
-                            <a href="{{route('view-blog', ['id' => $recentBlog->id])}}" class="flex-shrink-0"
+                            <a href="{{route('view-blog', ['id' => $hashids->encode($recentBlog->id)])}}" class="flex-shrink-0"
                                 style="width: 60px; height: 60px; display: block; margin-right: 16px;">
                                 <img src="{{ $recentBlog->cover_photo ? asset('storage/' . $recentBlog->cover_photo) : 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80' }}"
                                     alt="{{ $recentBlog->title }}"
@@ -144,7 +144,7 @@
                             <div class="info">
                                 <h6 class="mb-1"
                                     style="font-size: 1rem; max-height: 2.8em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; text-overflow: ellipsis;">
-                                    <a href="{{route('view-blog', ['id' => $recentBlog->id])}}"
+                                    <a href="{{route('view-blog', ['id' => $hashids->encode($recentBlog->id)])}}"
                                         class="text-dark text-decoration-none" style="display: inline; color: inherit;">
                                         {{ $recentBlog->title }}
                                     </a>

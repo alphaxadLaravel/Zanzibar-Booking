@@ -7,7 +7,7 @@
 <div class="breadcrumb">
     <div class="container">
         <ul>
-            <li><a href="index.html">Home</a></li>
+            <li><a href="{{ route('index') }}">Home</a></li>
             <li><span>Blog</span></li>
         </ul>
     </div>
@@ -45,7 +45,7 @@
                 <div class="col-12 mb-4">
                     <div class="card d-flex flex-row blog-card-flex align-items-stretch shadow-sm border-0">
                         <div class="col-md-4 blog-card-img-col p-0 d-flex align-items-center mx-2">
-                            <a href="{{route('view-blog', ['id' => $blog->id])}}" class="w-100 h-100 d-block">
+                            <a href="{{ route('view-blog', ['id' => $hashids->encode($blog->id)]) }}" class="w-100 h-100 d-block">
                                 <img src="{{ $blog->cover_photo ? asset('storage/' . $blog->cover_photo) : 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80' }}"
                                     class="img-fluid rounded-start w-100 h-100 object-fit-cover"
                                     style="min-height: 200px; max-height: 220px; object-fit: cover;"
@@ -55,7 +55,7 @@
                         <div class="col-md-8 blog-card-content-col p-4 d-flex flex-column position-relative">
                             <div>
                                 <h3 class="card-title mb-2" style="font-size:1.3rem;">
-                                    <a href="{{route('view-blog', ['id' => $blog->id])}}" class="text-decoration-none text-dark">
+                                    <a href="{{ route('view-blog', ['id' => $hashids->encode($blog->id)]) }}" class="text-decoration-none text-dark">
                                         {{ $blog->title }}
                                     </a>
                                 </h3>
@@ -73,7 +73,7 @@
                                 </p>
                             </div>
                             <div class="mt-auto d-flex flex-wrap justify-content-end align-items-end gap-2">
-                                <a href="{{route('view-blog', ['id' => $blog->id])}}" class="btn btn-primary ms-2">
+                                <a href="{{ route('view-blog', ['id' => $hashids->encode($blog->id)]) }}" class="btn btn-primary ms-2">
                                     Read More
                                 </a>
                             </div>
@@ -101,14 +101,14 @@
                     <div class="widget-content">
                         @forelse($blogs->take(5) as $recentBlog)
                         <div class="post-item d-flex align-items-center mb-3">
-                            <a href="{{route('view-blog', ['id' => $recentBlog->id])}}" class="flex-shrink-0" style="width: 60px; height: 60px; display: block; margin-right: 16px;">
+                            <a href="{{ route('view-blog', ['id' => $hashids->encode($recentBlog->id)]) }}" class="flex-shrink-0" style="width: 60px; height: 60px; display: block; margin-right: 16px;">
                                 <img src="{{ $recentBlog->cover_photo ? asset('storage/' . $recentBlog->cover_photo) : 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80' }}"
                                     alt="{{ $recentBlog->title }}"
                                     class="img-fluid rounded" style="object-fit: cover; width: 100%; height: 100%;" />
                             </a>
                             <div class="info">
                                 <h6 class="mb-1" style="font-size: 1rem; max-height: 2.8em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; text-overflow: ellipsis;">
-                                    <a href="{{route('view-blog', ['id' => $recentBlog->id])}}" class="text-dark text-decoration-none" style="display: inline; color: inherit;">
+                                    <a href="{{ route('view-blog', ['id' => $hashids->encode($recentBlog->id)]) }}" class="text-dark text-decoration-none" style="display: inline; color: inherit;">
                                         {{ $recentBlog->title }}
                                     </a>
                                 </h6>
