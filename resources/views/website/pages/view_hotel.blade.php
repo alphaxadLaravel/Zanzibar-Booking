@@ -809,7 +809,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const dateStr = s.year + '-' + String(s.month).padStart(2,'0') + '-' + String(d).padStart(2,'0');
                     const p = prices[dateStr];
                     const priceVal = (p !== undefined && p !== null) ? p : 0;
-                    const fmt = (currency === 'USD' ? symbol : symbol + ' ') + (priceVal * rate).toFixed(0);
+                    const fmt = (currency === 'USD' ? symbol : symbol + ' ') + (priceVal * rate).toLocaleString(undefined, { maximumFractionDigits: 0, minimumFractionDigits: 0 });
                     const isPast = dateStr < today;
                     const clickable = !isPast ? 'cursor:pointer;' : 'opacity:0.5;';
                     html += '<div class="border rounded p-1 text-center cal-day-cell" style="width:calc(14.28% - 4px);min-height:44px;box-sizing:border-box;font-size:0.65rem;' + clickable + '" data-date="' + dateStr + '" data-price="' + priceVal + '" ' + (isPast ? '' : 'onclick="selectCalendarDate(' + roomId + ',\'' + dateStr + '\')"') + ' title="' + dateStr + ': ' + fmt + '">';
