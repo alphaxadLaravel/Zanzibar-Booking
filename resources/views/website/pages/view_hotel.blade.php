@@ -583,31 +583,15 @@ document.addEventListener('DOMContentLoaded', function() {
                                     </div>
                                 </div>
                                 <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="check_in{{ $room->id }}" class="form-label">Check-in Date</label>
-                                        <input 
-                                            type="date" 
-                                            class="form-control" 
-                                            id="check_in{{ $room->id }}"
-                                            name="check_in"
-                                            required 
-                                            min="{{ date('Y-m-d') }}"
-                                            onchange="calculatePrice{{ $room->id }}()"
-                                            value="{{ old('check_in', date('Y-m-d')) }}"
-                                        >
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="check_out{{ $room->id }}" class="form-label">Check-out Date</label>
-                                        <input 
-                                            type="date" 
-                                            class="form-control" 
-                                            id="check_out{{ $room->id }}"
-                                            name="check_out"
-                                            required 
-                                            min="{{ date('Y-m-d', strtotime('+1 day')) }}"
-                                            onchange="calculatePrice{{ $room->id }}()"
-                                            value="{{ old('check_out', date('Y-m-d', strtotime('+1 day'))) }}"
-                                        >
+                                    <div class="col-12 mb-3">
+                                        <label for="booking_dates{{ $room->id }}" class="form-label">Check-in / Check-out Dates</label>
+                                        <input type="text" class="form-control flatpickr-booking-dates" id="booking_dates{{ $room->id }}"
+                                            placeholder="Select dates..." required readonly
+                                            data-room-id="{{ $room->id }}"
+                                            data-check-in="{{ old('check_in', date('Y-m-d')) }}"
+                                            data-check-out="{{ old('check_out', date('Y-m-d', strtotime('+1 day'))) }}">
+                                        <input type="hidden" name="check_in" id="check_in{{ $room->id }}" value="{{ old('check_in', date('Y-m-d')) }}">
+                                        <input type="hidden" name="check_out" id="check_out{{ $room->id }}" value="{{ old('check_out', date('Y-m-d', strtotime('+1 day'))) }}">
                                     </div>
                                 </div>
 
@@ -717,6 +701,13 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 @endforeach
 
+@push('scripts')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .flatpickr-day .flatpickr-day-price { margin-top: 2px; }
+    .flatpickr-day { min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
     const priceCalState = {};
     const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -848,6 +839,68 @@ function calculatePrice{{ $room->id }}() {
     }
 }
 @endforeach
+
+    (function initBookingFlatpickr() {
+        const priceCache = {};
+        document.querySelectorAll('.flatpickr-booking-dates').forEach(input => {
+            const roomId = input.dataset.roomId;
+            const checkIn = input.dataset.checkIn || new Date().toISOString().split('T')[0];
+            const checkOut = input.dataset.checkOut || (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().split('T')[0]; })();
+            if (!roomId) return;
+
+            const fetchPrices = (year, month) => {
+                const adults = parseInt(document.getElementById('adult' + roomId)?.value || 1);
+                const children = parseInt(document.getElementById('children' + roomId)?.value || 0);
+                const key = year + '-' + month;
+                if (priceCache[roomId] && priceCache[roomId][key]) return Promise.resolve(priceCache[roomId][key]);
+                return fetch('{{ url("/room") }}/' + roomId + '/prices-calendar?year=' + year + '&month=' + month + '&adults=' + adults + '&children=' + children)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (!priceCache[roomId]) priceCache[roomId] = {};
+                        (data.prices || []).forEach(p => { priceCache[roomId][p.date] = p.price; });
+                        priceCache[roomId][key] = true;
+                        return data.prices || [];
+                    });
+            };
+
+            flatpickr(input, {
+                mode: 'range',
+                dateFormat: 'Y-m-d',
+                minDate: 'today',
+                defaultDate: [checkIn, checkOut],
+                onChange: function(sel) {
+                    const form = input.closest('form');
+                    const checkInEl = form?.querySelector('input[name="check_in"]');
+                    const checkOutEl = form?.querySelector('input[name="check_out"]');
+                    if (sel[0]) checkInEl && (checkInEl.value = sel[0]);
+                    if (sel[1]) checkOutEl && (checkOutEl.value = sel[1]);
+                    if (typeof window['calculatePrice' + roomId] === 'function') window['calculatePrice' + roomId]();
+                },
+                onReady: function(sel, dateStr, fp) {
+                    fetchPrices(fp.currentYear, fp.currentMonth + 1).then(() => fp.redraw());
+                },
+                onMonthChange: function(sel, dateStr, fp) {
+                    fetchPrices(fp.currentYear, fp.currentMonth + 1).then(() => fp.redraw());
+                },
+                onDayCreate: function(dObj, dStr, fp, dayElem) {
+                    const totalEl = document.getElementById('total_price' + roomId);
+                    const rate = totalEl ? parseFloat(totalEl.dataset.rate) || 1 : 1;
+                    const symbol = totalEl?.dataset.symbol || '$';
+                    const currency = totalEl?.dataset.currency || 'USD';
+                    const price = (priceCache[roomId] || {})[dStr];
+                    if (price !== undefined) {
+                        const fmt = (currency === 'USD' ? symbol : symbol + ' ') + (price * rate).toFixed(0);
+                        const span = document.createElement('span');
+                        span.className = 'flatpickr-day-price';
+                        span.style.cssText = 'display:block;font-size:9px;color:#ff5722;font-weight:600;';
+                        span.textContent = fmt;
+                        dayElem.appendChild(span);
+                    }
+                }
+            });
+        });
+    })();
 </script>
+@endpush
 
 @endsection

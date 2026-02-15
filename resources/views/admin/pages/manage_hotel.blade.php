@@ -868,7 +868,9 @@
 
 @push('scripts')
 <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
     // Room Quill editor config
     var roomQuillToolbarOptions = [
@@ -1007,51 +1009,96 @@
         }
     }
 
+    function getOtherIntervalRanges(container, excludeRow) {
+        const rows = container.querySelectorAll('.interval-row');
+        const ranges = [];
+        rows.forEach(r => {
+            if (r === excludeRow) return;
+            const start = r.querySelector('input[data-type="start"]')?.value;
+            const end = r.querySelector('input[data-type="end"]')?.value;
+            if (start && end) ranges.push({ from: start, to: end });
+        });
+        return ranges;
+    }
+
+    function initIntervalFlatpickr(inputEl, type, container, row, form, minDate) {
+        if (inputEl._flatpickr) inputEl._flatpickr.destroy();
+        const otherRanges = getOtherIntervalRanges(container, row);
+        let initMinDate = minDate || null;
+        if (type === 'end') {
+            const startVal = row.querySelector('input[data-type="start"]')?.value;
+            if (startVal) initMinDate = startVal;
+        }
+        flatpickr(inputEl, {
+            dateFormat: 'Y-m-d',
+            minDate: initMinDate,
+            disable: otherRanges,
+            onChange: function(selDates, dateStr) {
+                updateAllIntervalFlatpickr(container, form);
+                if (type === 'start') {
+                    const endIn = row.querySelector('input[data-type="end"]');
+                    if (endIn && endIn._flatpickr && dateStr) {
+                        endIn._flatpickr.set('minDate', dateStr);
+                    }
+                }
+            }
+        });
+    }
+
+    function updateAllIntervalFlatpickr(container, form) {
+        const today = form === 'add' ? new Date().toISOString().split('T')[0] : null;
+        container.querySelectorAll('.interval-row').forEach(row => {
+            const startIn = row.querySelector('input[data-type="start"]');
+            const endIn = row.querySelector('input[data-type="end"]');
+            if (startIn && startIn._flatpickr) {
+                const otherRanges = getOtherIntervalRanges(container, row);
+                startIn._flatpickr.set('disable', otherRanges);
+                if (form === 'add') startIn._flatpickr.set('minDate', today);
+            }
+            if (endIn && endIn._flatpickr) {
+                const otherRanges = getOtherIntervalRanges(container, row);
+                endIn._flatpickr.set('disable', otherRanges);
+                const startVal = startIn?.value;
+                if (startVal) endIn._flatpickr.set('minDate', startVal);
+                if (form === 'add') endIn._flatpickr.set('minDate', endIn._flatpickr.config.minDate || today);
+            }
+        });
+    }
+
     function addIntervalRow(form) {
         const prefix = form === 'add' ? 'add' : 'edit';
         const idx = form === 'add' ? addIntervalIndex++ : editIntervalIndex++;
         const container = document.getElementById(prefix + '_interval_rows');
         const today = new Date().toISOString().split('T')[0];
-        const minAttr = form === 'add' ? ` min="${today}"` : '';
+        const minDate = form === 'add' ? today : null;
         const row = document.createElement('div');
         row.className = 'row g-2 align-items-end mb-2 interval-row';
         row.dataset.rowIndex = idx;
         row.innerHTML = `
-            <div class="col-md-3"><input type="date" class="form-control form-control-sm interval-date" data-type="start"${minAttr} name="price_intervals[${idx}][start_date]" placeholder="Start" required></div>
-            <div class="col-md-3"><input type="date" class="form-control form-control-sm interval-date" data-type="end"${minAttr} name="price_intervals[${idx}][end_date]" placeholder="End" required></div>
+            <div class="col-md-3"><input type="text" class="form-control form-control-sm interval-date" data-type="start" name="price_intervals[${idx}][start_date]" placeholder="Start date" required readonly></div>
+            <div class="col-md-3"><input type="text" class="form-control form-control-sm interval-date" data-type="end" name="price_intervals[${idx}][end_date]" placeholder="End date" required readonly></div>
             <div class="col-md-2"><input type="text" class="form-control form-control-sm" name="price_intervals[${idx}][label]" placeholder="Label (e.g. Christmas)"></div>
             <div class="col-md-2"><div class="input-group input-group-sm"><span class="input-group-text">$</span><input type="number" step="0.01" class="form-control" name="price_intervals[${idx}][price]" placeholder="Price" required></div></div>
-            <div class="col-md-1"><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.interval-row').remove()"><i class="ti ti-trash"></i></button></div>
+            <div class="col-md-1"><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeIntervalRow(this)"><i class="ti ti-trash"></i></button></div>
         `;
         container.appendChild(row);
-        row.querySelectorAll('.interval-date').forEach(input => {
-            input.addEventListener('change', () => validateIntervalOverlap(container, row));
-        });
+        const startIn = row.querySelector('input[data-type="start"]');
+        const endIn = row.querySelector('input[data-type="end"]');
+        initIntervalFlatpickr(startIn, 'start', container, row, form, minDate);
+        initIntervalFlatpickr(endIn, 'end', container, row, form, minDate);
     }
 
-    function validateIntervalOverlap(container, currentRow) {
-        const rows = container.querySelectorAll('.interval-row');
-        const getRange = (row) => {
-            const start = row.querySelector('input[data-type="start"]')?.value;
-            const end = row.querySelector('input[data-type="end"]')?.value;
-            return start && end ? { start, end, row } : null;
-        };
-        const ranges = Array.from(rows).map(getRange).filter(Boolean);
-        const current = getRange(currentRow);
-        if (!current) return;
-        for (const r of ranges) {
-            if (r.row === currentRow) continue;
-            const overlap = (current.start <= r.end && current.end >= r.start);
-            if (overlap) {
-                alert('This date range overlaps with another interval. Please choose different dates.');
-                currentRow.querySelector('input[data-type="start"]').value = '';
-                currentRow.querySelector('input[data-type="end"]').value = '';
-                return;
-            }
-        }
-        if (current.start > current.end) {
-            alert('End date must be after start date.');
-            currentRow.querySelector('input[data-type="end"]').value = '';
+    function removeIntervalRow(btn) {
+        const row = btn.closest('.interval-row');
+        const container = row?.parentElement;
+        ['start', 'end'].forEach(t => {
+            const inp = row?.querySelector(`input[data-type="${t}"]`);
+            if (inp && inp._flatpickr) inp._flatpickr.destroy();
+        });
+        row?.remove();
+        if (container) {
+            const prefix = container.id ? container.id.replace('_interval_rows', '') : 'edit';
+            updateAllIntervalFlatpickr(container, prefix);
         }
     }
 
@@ -1093,14 +1140,23 @@
                         const rows = intervalContainer.querySelectorAll('.interval-row');
                         const r = rows[rows.length - 1];
                         if (r) {
-                            const startIn = r.querySelector('input[data-type="start"], input[name*="[start_date]"]');
-                            const endIn = r.querySelector('input[data-type="end"], input[name*="[end_date]"]');
-                            if (startIn) startIn.value = formatDateForInput(pi.start_date);
-                            if (endIn) endIn.value = formatDateForInput(pi.end_date);
+                            const startStr = formatDateForInput(pi.start_date);
+                            const endStr = formatDateForInput(pi.end_date);
+                            const startIn = r.querySelector('input[data-type="start"]');
+                            const endIn = r.querySelector('input[data-type="end"]');
+                            if (startIn) {
+                                if (startIn._flatpickr) startIn._flatpickr.setDate(startStr, false);
+                                else startIn.value = startStr;
+                            }
+                            if (endIn) {
+                                if (endIn._flatpickr) endIn._flatpickr.setDate(endStr, false);
+                                else endIn.value = endStr;
+                            }
                             r.querySelector('input[name*="[label]"]').value = pi.label || '';
                             r.querySelector('input[name*="[price]"]').value = pi.price ?? '';
                         }
                     });
+                    updateAllIntervalFlatpickr(intervalContainer, 'edit');
 
                     // Set Quill editor content
                     editRoomDescriptionQuill.root.innerHTML = room.description || '';
