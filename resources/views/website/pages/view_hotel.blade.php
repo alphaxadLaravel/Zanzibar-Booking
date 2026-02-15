@@ -566,33 +566,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                 
 
                                 <div class="mb-3">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary mb-2" data-bs-toggle="collapse" data-bs-target="#priceCalendarCollapse{{ $room->id }}" aria-expanded="false" onclick="loadPriceCalendar{{ $room->id }}()">
-                                        <i class="mdi mdi-calendar-month me-1"></i> View prices by date
-                                    </button>
-                                    <div class="collapse" id="priceCalendarCollapse{{ $room->id }}">
-                                        <div class="card card-body p-2">
-                                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="prevPriceMonth({{ $room->id }})">&larr;</button>
-                                                <span id="priceCalMonthLabel{{ $room->id }}" style="font-weight: 600;">—</span>
-                                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="nextPriceMonth({{ $room->id }})">&rarr;</button>
-                                            </div>
-                                            <div id="priceCalendarGrid{{ $room->id }}" style="font-size: 0.7rem; min-height: 60px;">
-                                                <div class="text-center text-muted">Loading...</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-12 mb-3">
-                                        <label for="booking_dates{{ $room->id }}" class="form-label">Check-in / Check-out Dates</label>
-                                        <input type="text" class="form-control flatpickr-booking-dates" id="booking_dates{{ $room->id }}"
-                                            placeholder="Select dates..." required readonly
-                                            data-room-id="{{ $room->id }}"
-                                            data-check-in="{{ old('check_in', date('Y-m-d')) }}"
-                                            data-check-out="{{ old('check_out', date('Y-m-d', strtotime('+1 day'))) }}">
-                                        <input type="hidden" name="check_in" id="check_in{{ $room->id }}" value="{{ old('check_in', date('Y-m-d')) }}">
-                                        <input type="hidden" name="check_out" id="check_out{{ $room->id }}" value="{{ old('check_out', date('Y-m-d', strtotime('+1 day'))) }}">
-                                    </div>
+                                    <label class="form-label fw-semibold">Select Check-in & Check-out Dates</label>
+                                    <p class="text-muted small mb-2">Click on the calendar to select your stay. Prices shown per night.</p>
+                                    <div id="inlineCalendar{{ $room->id }}" class="mb-2"></div>
+                                    <input type="hidden" name="check_in" id="check_in{{ $room->id }}" value="{{ old('check_in', date('Y-m-d')) }}" required>
+                                    <input type="hidden" name="check_out" id="check_out{{ $room->id }}" value="{{ old('check_out', date('Y-m-d', strtotime('+1 day'))) }}" required>
                                 </div>
 
                                 <div class="row">
@@ -657,6 +635,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                                 <span id="rooms{{ $room->id }}">1</span> room(s)
                                                 <span id="price_detail{{ $room->id }}">—</span>
                                                 <span class="text-muted d-block mt-1" style="font-size: 0.8rem;">{{ ($room->price_type ?? 'per_night') === 'per_person_per_night' ? '(per person/night)' : '(per room/night)' }}</span>
+                                                <span id="selected_range{{ $room->id }}" class="d-block mt-1 text-muted" style="font-size: 0.8rem;"></span>
                                             </p>
                                         </div>
                                         <div class="text-end">
@@ -709,9 +688,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </style>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-    const priceCalState = {};
-    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-
     function openRoomDetailsModal(roomId) {
         const modal = new bootstrap.Modal(document.getElementById('roomDetailsModal' + roomId));
         modal.show();
@@ -719,59 +695,6 @@ document.addEventListener('DOMContentLoaded', function() {
             window['calculatePrice' + roomId]();
         }
     }
-
-    function loadPriceCalendar(roomId) {
-        const now = new Date();
-        if (!priceCalState[roomId]) priceCalState[roomId] = { year: now.getFullYear(), month: now.getMonth() + 1 };
-        const s = priceCalState[roomId];
-        const adults = parseInt(document.getElementById('adult' + roomId)?.value || 1);
-        const children = parseInt(document.getElementById('children' + roomId)?.value || 0);
-        document.getElementById('priceCalMonthLabel' + roomId).textContent = monthNames[s.month - 1] + ' ' + s.year;
-        fetch('{{ url("/room") }}/' + roomId + '/prices-calendar?year=' + s.year + '&month=' + s.month + '&adults=' + adults + '&children=' + children)
-            .then(r => r.json())
-            .then(data => {
-                const grid = document.getElementById('priceCalendarGrid' + roomId);
-                const totalEl = document.getElementById('total_price' + roomId);
-                const rate = totalEl ? parseFloat(totalEl.dataset.rate) || 1 : 1;
-                const symbol = totalEl?.dataset.symbol || '$';
-                const currency = totalEl?.dataset.currency || 'USD';
-                const prices = (data.prices || []).reduce((a, p) => { a[p.date] = p.price; return a; }, {});
-                const firstDay = new Date(s.year, s.month - 1, 1).getDay();
-                const daysInMonth = new Date(s.year, s.month, 0).getDate();
-                const weekdays = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-                let html = '<div class="d-flex flex-wrap mb-1" style="gap:2px;">';
-                for (let w = 0; w < 7; w++) html += '<div class="text-center" style="width:calc(14.28% - 4px);font-size:0.6rem;font-weight:600;color:#888;">' + weekdays[w] + '</div>';
-                html += '</div><div class="d-flex flex-wrap" style="gap:2px;">';
-                for (let i = 0; i < firstDay; i++) html += '<div style="width:calc(14.28% - 4px);min-height:38px;padding:2px;box-sizing:border-box;"></div>';
-                for (let d = 1; d <= daysInMonth; d++) {
-                    const dateStr = s.year + '-' + String(s.month).padStart(2,'0') + '-' + String(d).padStart(2,'0');
-                    const p = prices[dateStr] || 0;
-                    const fmt = (currency === 'USD' ? symbol : symbol + ' ') + (p * rate).toFixed(0);
-                    html += '<div class="border rounded p-1 text-center" style="width:calc(14.28% - 4px);min-height:38px;box-sizing:border-box;font-size:0.65rem;" title="' + dateStr + ': ' + fmt + '"><div>' + d + '</div><div style="color:#ff5722;font-weight:600;font-size:0.55rem;">' + fmt + '</div></div>';
-                }
-                html += '</div>';
-                grid.innerHTML = html;
-            })
-            .catch(() => { document.getElementById('priceCalendarGrid' + roomId).innerHTML = '<div class="col-12 text-danger">Error loading</div>'; });
-    }
-
-    function prevPriceMonth(roomId) {
-        if (!priceCalState[roomId]) priceCalState[roomId] = { year: new Date().getFullYear(), month: new Date().getMonth() + 1 };
-        const s = priceCalState[roomId];
-        if (s.month === 1) { s.month = 12; s.year--; } else s.month--;
-        loadPriceCalendar(roomId);
-    }
-
-    function nextPriceMonth(roomId) {
-        if (!priceCalState[roomId]) priceCalState[roomId] = { year: new Date().getFullYear(), month: new Date().getMonth() + 1 };
-        const s = priceCalState[roomId];
-        if (s.month === 12) { s.month = 1; s.year++; } else s.month++;
-        loadPriceCalendar(roomId);
-    }
-
-    @foreach($rooms as $room)
-    function loadPriceCalendar{{ $room->id }}() { loadPriceCalendar({{ $room->id }}); }
-    @endforeach
 
 function formatPriceForUserHotel(usdTotal, rate, symbol, currency, decimals) {
     const amount = usdTotal * rate;
@@ -821,6 +744,8 @@ function calculatePrice{{ $room->id }}() {
                 totalEl.textContent = formatPriceForUserHotel(totalPrice, rate, symbol, currency, decimals);
             }
             document.getElementById('price_detail{{ $room->id }}').textContent = '';
+            const rangeEl = document.getElementById('selected_range{{ $room->id }}');
+            if (rangeEl) rangeEl.textContent = checkIn + ' to ' + checkOut;
 
             const form = document.querySelector('#roomDetailsModal{{ $room->id }} form');
             const priceInput = form?.querySelector('input[name="price"]');
@@ -842,11 +767,13 @@ function calculatePrice{{ $room->id }}() {
 
     (function initBookingFlatpickr() {
         const priceCache = {};
-        document.querySelectorAll('.flatpickr-booking-dates').forEach(input => {
-            const roomId = input.dataset.roomId;
-            const checkIn = input.dataset.checkIn || new Date().toISOString().split('T')[0];
-            const checkOut = input.dataset.checkOut || (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().split('T')[0]; })();
-            if (!roomId) return;
+        @foreach($rooms as $room)
+        (function() {
+            const roomId = {{ $room->id }};
+            const calendarEl = document.getElementById('inlineCalendar' + roomId);
+            if (!calendarEl) return;
+            const checkIn = '{{ old("check_in", date("Y-m-d")) }}';
+            const checkOut = '{{ old("check_out", date("Y-m-d", strtotime("+1 day"))) }}';
 
             const fetchPrices = (year, month) => {
                 const adults = parseInt(document.getElementById('adult' + roomId)?.value || 1);
@@ -863,21 +790,27 @@ function calculatePrice{{ $room->id }}() {
                     });
             };
 
-            flatpickr(input, {
+            flatpickr(calendarEl, {
+                inline: true,
                 mode: 'range',
                 dateFormat: 'Y-m-d',
                 minDate: 'today',
                 defaultDate: [checkIn, checkOut],
                 onChange: function(sel) {
-                    const form = input.closest('form');
-                    const checkInEl = form?.querySelector('input[name="check_in"]');
-                    const checkOutEl = form?.querySelector('input[name="check_out"]');
+                    const checkInEl = document.getElementById('check_in' + roomId);
+                    const checkOutEl = document.getElementById('check_out' + roomId);
+                    const rangeEl = document.getElementById('selected_range' + roomId);
                     if (sel[0]) checkInEl && (checkInEl.value = sel[0]);
                     if (sel[1]) checkOutEl && (checkOutEl.value = sel[1]);
+                    if (rangeEl) rangeEl.textContent = sel[0] && sel[1] ? sel[0] + ' to ' + sel[1] : '';
                     if (typeof window['calculatePrice' + roomId] === 'function') window['calculatePrice' + roomId]();
                 },
                 onReady: function(sel, dateStr, fp) {
                     fetchPrices(fp.currentYear, fp.currentMonth + 1).then(() => fp.redraw());
+                    const checkInEl = document.getElementById('check_in' + roomId);
+                    const checkOutEl = document.getElementById('check_out' + roomId);
+                    const rangeEl = document.getElementById('selected_range' + roomId);
+                    if (checkIn && checkOut && rangeEl) rangeEl.textContent = checkIn + ' to ' + checkOut;
                 },
                 onMonthChange: function(sel, dateStr, fp) {
                     fetchPrices(fp.currentYear, fp.currentMonth + 1).then(() => fp.redraw());
@@ -898,7 +831,8 @@ function calculatePrice{{ $room->id }}() {
                     }
                 }
             });
-        });
+        })();
+        @endforeach
     })();
 </script>
 @endpush
