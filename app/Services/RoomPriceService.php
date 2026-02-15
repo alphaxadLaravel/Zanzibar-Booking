@@ -78,12 +78,7 @@ class RoomPriceService
             return (float) $room->price_per_person;
         }
 
-        // Fallback to room price, or deal/hotel base price if room price not set
-        $basePrice = (float) $room->price;
-        if ($basePrice <= 0) {
-            $basePrice = (float) (optional($room->deal)->base_price ?? 0);
-        }
-        return $basePrice;
+        return (float) $room->price;
     }
 
     /**

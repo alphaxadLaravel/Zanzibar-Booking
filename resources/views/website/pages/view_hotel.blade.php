@@ -558,19 +558,28 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <i class="mdi mdi-information-outline me-1"></i>
                                 <strong>Pricing:</strong> {{ ($room->price_type ?? 'per_night') === 'per_person_per_night' ? 'Per person per night' : 'Per room per night' }}
                             </div>
-                            <form action="{{ route('book-room') }}" method="POST">
+                            <form action="{{ route('book-room') }}" method="POST" class="room-booking-form" data-room-id="{{ $room->id }}">
                                 @csrf
                                 <input type="hidden" name="deal_id" value="{{ $hotel->id }}">
                                 <input type="hidden" name="room_id" value="{{ $room->id }}">
                                 <input type="hidden" name="price" value="">
-                                
+                                <input type="hidden" name="check_in" id="check_in{{ $room->id }}" value="">
+                                <input type="hidden" name="check_out" id="check_out{{ $room->id }}" value="">
 
                                 <div class="mb-3">
-                                    <label class="form-label fw-semibold">Select Check-in & Check-out Dates</label>
-                                    <p class="text-muted small mb-2">Click on the calendar to select your stay. Prices shown per night.</p>
-                                    <div id="inlineCalendar{{ $room->id }}" class="mb-2"></div>
-                                    <input type="hidden" name="check_in" id="check_in{{ $room->id }}" value="{{ old('check_in', date('Y-m-d')) }}" required>
-                                    <input type="hidden" name="check_out" id="check_out{{ $room->id }}" value="{{ old('check_out', date('Y-m-d', strtotime('+1 day'))) }}" required>
+                                    <label class="form-label fw-semibold">Select check-in & check-out dates</label>
+                                    <p class="small text-muted mb-2">Click a date for check-in, then another for check-out. Prices use room base price when no interval is set.</p>
+                                    <div class="card card-body p-2 border">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="prevPriceMonth({{ $room->id }})">&larr;</button>
+                                            <span id="priceCalMonthLabel{{ $room->id }}" style="font-weight: 600;">—</span>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="nextPriceMonth({{ $room->id }})">&rarr;</button>
+                                        </div>
+                                        <div id="priceCalendarGrid{{ $room->id }}" class="price-calendar-grid" style="font-size: 0.7rem; min-height: 200px;">
+                                            <div class="text-center text-muted py-4">Loading...</div>
+                                        </div>
+                                        <div id="priceCalSelectedRange{{ $room->id }}" class="small text-muted mt-2" style="min-height: 1.2em;"></div>
+                                    </div>
                                 </div>
 
                                 <div class="row">
@@ -597,7 +606,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                             id="adult{{ $room->id }}" 
                                             name="adults" 
                                             required
-                                            onchange="calculatePrice{{ $room->id }}()"
+                                            onchange="calculatePrice{{ $room->id }}(); loadPriceCalendar({{ $room->id }});"
                                         >
                                             @for($i = 1; $i <= 20; $i++)
                                                 <option value="{{ $i }}" {{ old('adults', 2) == $i ? 'selected' : '' }}>
@@ -612,7 +621,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                             class="form-control" 
                                             id="children{{ $room->id }}" 
                                             name="children"
-                                            onchange="calculatePrice{{ $room->id }}()"
+                                            onchange="calculatePrice{{ $room->id }}(); loadPriceCalendar({{ $room->id }});"
                                         >
                                             <option value="0" {{ old('children', 0) == 0 ? 'selected' : '' }}>No Children</option>
                                             @for($i = 1; $i <= 20; $i++)
@@ -635,7 +644,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                                 <span id="rooms{{ $room->id }}">1</span> room(s)
                                                 <span id="price_detail{{ $room->id }}">—</span>
                                                 <span class="text-muted d-block mt-1" style="font-size: 0.8rem;">{{ ($room->price_type ?? 'per_night') === 'per_person_per_night' ? '(per person/night)' : '(per room/night)' }}</span>
-                                                <span id="selected_range{{ $room->id }}" class="d-block mt-1 text-muted" style="font-size: 0.8rem;"></span>
                                             </p>
                                         </div>
                                         <div class="text-end">
@@ -681,19 +689,152 @@ document.addEventListener('DOMContentLoaded', function() {
 @endforeach
 
 @push('scripts')
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
-    .flatpickr-day .flatpickr-day-price { margin-top: 2px; }
-    .flatpickr-day { min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .cal-day-cell:hover:not([style*="opacity:0.5"]) { background: #f0f4fa !important; }
+    .cal-day-cell.cal-selected { background: #218080 !important; color: #fff !important; }
+    .cal-day-cell.cal-selected .cal-day-price { color: #fff !important; }
+    .cal-day-cell.cal-range { background: #e6f4f1 !important; }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
+    const priceCalState = {};
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    const priceCalSelection = {};
+
     function openRoomDetailsModal(roomId) {
         const modal = new bootstrap.Modal(document.getElementById('roomDetailsModal' + roomId));
         modal.show();
-        if (typeof window['calculatePrice' + roomId] === 'function') {
+        loadPriceCalendar(roomId);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.room-booking-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                const roomId = this.dataset.roomId;
+                const checkIn = document.getElementById('check_in' + roomId)?.value;
+                const checkOut = document.getElementById('check_out' + roomId)?.value;
+                if (!checkIn || !checkOut) {
+                    e.preventDefault();
+                    alert('Please select check-in and check-out dates on the calendar above.');
+                }
+            });
+        });
+    });
+
+    function selectCalendarDate(roomId, dateStr) {
+        if (!priceCalSelection[roomId]) priceCalSelection[roomId] = {};
+        const sel = priceCalSelection[roomId];
+        const today = new Date().toISOString().split('T')[0];
+        if (dateStr < today) return;
+
+        if (!sel.checkIn || (sel.checkIn && sel.checkOut)) {
+            sel.checkIn = dateStr;
+            sel.checkOut = null;
+        } else {
+            if (dateStr <= sel.checkIn) {
+                sel.checkIn = dateStr;
+                sel.checkOut = null;
+            } else {
+                sel.checkOut = dateStr;
+            }
+        }
+
+        const checkInEl = document.getElementById('check_in' + roomId);
+        const checkOutEl = document.getElementById('check_out' + roomId);
+        if (checkInEl) checkInEl.value = sel.checkIn || '';
+        if (checkOutEl) checkOutEl.value = sel.checkOut || '';
+        updateCalendarSelectionDisplay(roomId);
+        if (sel.checkIn && sel.checkOut && typeof window['calculatePrice' + roomId] === 'function') {
             window['calculatePrice' + roomId]();
         }
+        highlightSelectedRange(roomId);
+    }
+
+    function updateCalendarSelectionDisplay(roomId) {
+        const sel = priceCalSelection[roomId] || {};
+        const el = document.getElementById('priceCalSelectedRange' + roomId);
+        if (!el) return;
+        if (sel.checkIn && sel.checkOut) {
+            el.textContent = 'Selected: ' + sel.checkIn + ' to ' + sel.checkOut;
+            el.classList.remove('text-muted');
+            el.classList.add('text-success', 'fw-semibold');
+        } else if (sel.checkIn) {
+            el.textContent = 'Check-in: ' + sel.checkIn + ' — Click check-out date';
+            el.classList.remove('text-success');
+            el.classList.add('text-muted');
+        } else {
+            el.textContent = 'Click a date for check-in';
+            el.classList.remove('text-success');
+            el.classList.add('text-muted');
+        }
+    }
+
+    function highlightSelectedRange(roomId) {
+        const grid = document.getElementById('priceCalendarGrid' + roomId);
+        if (!grid) return;
+        grid.querySelectorAll('.cal-day-cell').forEach(cell => {
+            cell.classList.remove('cal-selected', 'cal-range');
+            const ds = cell.dataset.date;
+            const sel = priceCalSelection[roomId] || {};
+            if (sel.checkIn && ds === sel.checkIn) cell.classList.add('cal-selected');
+            if (sel.checkOut && ds === sel.checkOut) cell.classList.add('cal-selected');
+            if (sel.checkIn && sel.checkOut && ds > sel.checkIn && ds < sel.checkOut) cell.classList.add('cal-range');
+        });
+    }
+
+    function loadPriceCalendar(roomId) {
+        const now = new Date();
+        if (!priceCalState[roomId]) priceCalState[roomId] = { year: now.getFullYear(), month: now.getMonth() + 1 };
+        const s = priceCalState[roomId];
+        const adults = parseInt(document.getElementById('adult' + roomId)?.value || 1);
+        const children = parseInt(document.getElementById('children' + roomId)?.value || 0);
+        document.getElementById('priceCalMonthLabel' + roomId).textContent = monthNames[s.month - 1] + ' ' + s.year;
+        fetch('{{ url("/room") }}/' + roomId + '/prices-calendar?year=' + s.year + '&month=' + s.month + '&adults=' + adults + '&children=' + children)
+            .then(r => r.json())
+            .then(data => {
+                const grid = document.getElementById('priceCalendarGrid' + roomId);
+                const totalEl = document.getElementById('total_price' + roomId);
+                const rate = totalEl ? parseFloat(totalEl.dataset.rate) || 1 : 1;
+                const symbol = totalEl?.dataset.symbol || '$';
+                const currency = totalEl?.dataset.currency || 'USD';
+                const prices = (data.prices || []).reduce((a, p) => { a[p.date] = p.price; return a; }, {});
+                const firstDay = new Date(s.year, s.month - 1, 1).getDay();
+                const daysInMonth = new Date(s.year, s.month, 0).getDate();
+                const weekdays = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+                let html = '<div class="d-flex flex-wrap mb-1" style="gap:2px;">';
+                for (let w = 0; w < 7; w++) html += '<div class="text-center" style="width:calc(14.28% - 4px);font-size:0.6rem;font-weight:600;color:#888;">' + weekdays[w] + '</div>';
+                html += '</div><div class="d-flex flex-wrap cal-days-wrap" style="gap:2px;">';
+                const today = new Date().toISOString().split('T')[0];
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const dateStr = s.year + '-' + String(s.month).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+                    const p = prices[dateStr];
+                    const priceVal = (p !== undefined && p !== null) ? p : 0;
+                    const fmt = (currency === 'USD' ? symbol : symbol + ' ') + (priceVal * rate).toFixed(0);
+                    const isPast = dateStr < today;
+                    const clickable = !isPast ? 'cursor:pointer;' : 'opacity:0.5;';
+                    html += '<div class="border rounded p-1 text-center cal-day-cell" style="width:calc(14.28% - 4px);min-height:44px;box-sizing:border-box;font-size:0.65rem;' + clickable + '" data-date="' + dateStr + '" data-price="' + priceVal + '" ' + (isPast ? '' : 'onclick="selectCalendarDate(' + roomId + ',\'' + dateStr + '\')"') + ' title="' + dateStr + ': ' + fmt + '">';
+                    html += '<div>' + d + '</div><div class="cal-day-price" style="color:#dc3545;font-weight:600;font-size:0.55rem;">' + fmt + '</div></div>';
+                }
+                html += '</div>';
+                grid.innerHTML = html;
+                highlightSelectedRange(roomId);
+                updateCalendarSelectionDisplay(roomId);
+            })
+            .catch(() => { document.getElementById('priceCalendarGrid' + roomId).innerHTML = '<div class="col-12 text-danger">Error loading</div>'; });
+    }
+
+    function prevPriceMonth(roomId) {
+        if (!priceCalState[roomId]) priceCalState[roomId] = { year: new Date().getFullYear(), month: new Date().getMonth() + 1 };
+        const s = priceCalState[roomId];
+        if (s.month === 1) { s.month = 12; s.year--; } else s.month--;
+        loadPriceCalendar(roomId);
+    }
+
+    function nextPriceMonth(roomId) {
+        if (!priceCalState[roomId]) priceCalState[roomId] = { year: new Date().getFullYear(), month: new Date().getMonth() + 1 };
+        const s = priceCalState[roomId];
+        if (s.month === 12) { s.month = 1; s.year++; } else s.month++;
+        loadPriceCalendar(roomId);
     }
 
 function formatPriceForUserHotel(usdTotal, rate, symbol, currency, decimals) {
@@ -722,7 +863,8 @@ function calculatePrice{{ $room->id }}() {
     document.getElementById('rooms{{ $room->id }}').textContent = numberRooms;
 
     if (!checkIn || !checkOut) {
-        document.getElementById('price_detail{{ $room->id }}').textContent = '—';
+        const detailEl = document.getElementById('price_detail{{ $room->id }}');
+        if (detailEl) detailEl.textContent = '—';
         const totalEl = document.getElementById('total_price{{ $room->id }}');
         if (totalEl) totalEl.textContent = '—';
         return;
@@ -744,8 +886,6 @@ function calculatePrice{{ $room->id }}() {
                 totalEl.textContent = formatPriceForUserHotel(totalPrice, rate, symbol, currency, decimals);
             }
             document.getElementById('price_detail{{ $room->id }}').textContent = '';
-            const rangeEl = document.getElementById('selected_range{{ $room->id }}');
-            if (rangeEl) rangeEl.textContent = checkIn + ' to ' + checkOut;
 
             const form = document.querySelector('#roomDetailsModal{{ $room->id }} form');
             const priceInput = form?.querySelector('input[name="price"]');
@@ -755,85 +895,8 @@ function calculatePrice{{ $room->id }}() {
             document.getElementById('price_detail{{ $room->id }}').textContent = '(select dates)';
             if (totalEl) totalEl.textContent = '—';
         });
-
-    if (checkIn) {
-        const checkInDate = new Date(checkIn);
-        checkInDate.setDate(checkInDate.getDate() + 1);
-        const coEl = document.getElementById('check_out{{ $room->id }}');
-        if (coEl) coEl.min = checkInDate.toISOString().split('T')[0];
-    }
 }
 @endforeach
-
-    (function initBookingFlatpickr() {
-        const priceCache = {};
-        @foreach($rooms as $room)
-        (function() {
-            const roomId = {{ $room->id }};
-            const calendarEl = document.getElementById('inlineCalendar' + roomId);
-            if (!calendarEl) return;
-            const checkIn = '{{ old("check_in", date("Y-m-d")) }}';
-            const checkOut = '{{ old("check_out", date("Y-m-d", strtotime("+1 day"))) }}';
-
-            const fetchPrices = (year, month) => {
-                const adults = parseInt(document.getElementById('adult' + roomId)?.value || 1);
-                const children = parseInt(document.getElementById('children' + roomId)?.value || 0);
-                const key = year + '-' + month;
-                if (priceCache[roomId] && priceCache[roomId][key]) return Promise.resolve(priceCache[roomId][key]);
-                return fetch('{{ url("/room") }}/' + roomId + '/prices-calendar?year=' + year + '&month=' + month + '&adults=' + adults + '&children=' + children)
-                    .then(r => r.json())
-                    .then(data => {
-                        if (!priceCache[roomId]) priceCache[roomId] = {};
-                        (data.prices || []).forEach(p => { priceCache[roomId][p.date] = p.price; });
-                        priceCache[roomId][key] = true;
-                        return data.prices || [];
-                    });
-            };
-
-            flatpickr(calendarEl, {
-                inline: true,
-                mode: 'range',
-                dateFormat: 'Y-m-d',
-                minDate: 'today',
-                defaultDate: [checkIn, checkOut],
-                onChange: function(sel) {
-                    const checkInEl = document.getElementById('check_in' + roomId);
-                    const checkOutEl = document.getElementById('check_out' + roomId);
-                    const rangeEl = document.getElementById('selected_range' + roomId);
-                    if (sel[0]) checkInEl && (checkInEl.value = sel[0]);
-                    if (sel[1]) checkOutEl && (checkOutEl.value = sel[1]);
-                    if (rangeEl) rangeEl.textContent = sel[0] && sel[1] ? sel[0] + ' to ' + sel[1] : '';
-                    if (typeof window['calculatePrice' + roomId] === 'function') window['calculatePrice' + roomId]();
-                },
-                onReady: function(sel, dateStr, fp) {
-                    fetchPrices(fp.currentYear, fp.currentMonth + 1).then(() => fp.redraw());
-                    const checkInEl = document.getElementById('check_in' + roomId);
-                    const checkOutEl = document.getElementById('check_out' + roomId);
-                    const rangeEl = document.getElementById('selected_range' + roomId);
-                    if (checkIn && checkOut && rangeEl) rangeEl.textContent = checkIn + ' to ' + checkOut;
-                },
-                onMonthChange: function(sel, dateStr, fp) {
-                    fetchPrices(fp.currentYear, fp.currentMonth + 1).then(() => fp.redraw());
-                },
-                onDayCreate: function(dObj, dStr, fp, dayElem) {
-                    const totalEl = document.getElementById('total_price' + roomId);
-                    const rate = totalEl ? parseFloat(totalEl.dataset.rate) || 1 : 1;
-                    const symbol = totalEl?.dataset.symbol || '$';
-                    const currency = totalEl?.dataset.currency || 'USD';
-                    const price = (priceCache[roomId] || {})[dStr];
-                    if (price !== undefined) {
-                        const fmt = (currency === 'USD' ? symbol : symbol + ' ') + (price * rate).toFixed(0);
-                        const span = document.createElement('span');
-                        span.className = 'flatpickr-day-price';
-                        span.style.cssText = 'display:block;font-size:9px;color:#ff5722;font-weight:600;';
-                        span.textContent = fmt;
-                        dayElem.appendChild(span);
-                    }
-                }
-            });
-        })();
-        @endforeach
-    })();
 </script>
 @endpush
 
