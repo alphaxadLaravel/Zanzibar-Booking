@@ -474,11 +474,12 @@
                 var form = e.target;
                 if (form.getAttribute('data-require-login') === '1' && !window.isLoggedIn) {
                     e.preventDefault();
+                    e.stopImmediatePropagation();
                     var redirectInput = document.getElementById('loginRedirect');
                     if (redirectInput) redirectInput.value = window.location.href;
-                    var loginModal = document.getElementById('exampleModal');
-                    if (loginModal && typeof bootstrap !== 'undefined') {
-                        (new bootstrap.Modal(loginModal)).show();
+                    var loginModalEl = document.getElementById('exampleModal');
+                    if (loginModalEl && typeof bootstrap !== 'undefined') {
+                        bootstrap.Modal.getOrCreateInstance(loginModalEl).show();
                     }
                 }
             }, true);

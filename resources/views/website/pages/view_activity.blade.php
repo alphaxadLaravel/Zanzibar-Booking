@@ -375,22 +375,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             @endif
         @endif
-        
-        // Don't prevent form submission for logged-in users
-        @guest
-            const bookingForm = document.querySelector('.activity-booking-form');
-            if (bookingForm) {
-                bookingForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    const loginModalEl = document.getElementById('exampleModal');
-                    if (loginModalEl) {
-                        const loginModal = bootstrap.Modal.getOrCreateInstance(loginModalEl);
-                        loginModal.show();
-                    }
-                    return false;
-                });
-            }
-        @endguest
     });
 </script>
 
