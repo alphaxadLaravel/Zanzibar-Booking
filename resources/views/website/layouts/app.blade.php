@@ -474,7 +474,12 @@
                 var form = e.target;
                 if (form.getAttribute('data-require-login') === '1' && !window.isLoggedIn) {
                     e.preventDefault();
-                    window.location = '{{ url("/login") }}?redirect=' + encodeURIComponent(window.location.href);
+                    var redirectInput = document.getElementById('loginRedirect');
+                    if (redirectInput) redirectInput.value = window.location.href;
+                    var loginModal = document.getElementById('exampleModal');
+                    if (loginModal && typeof bootstrap !== 'undefined') {
+                        (new bootstrap.Modal(loginModal)).show();
+                    }
                 }
             }, true);
         });
