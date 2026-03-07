@@ -17,7 +17,7 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ route('booking.lookup') }}">
+                    <form method="POST" action="{{ route('booking.lookup.post') }}">
                         @csrf
                         
                         <div class="mb-3">

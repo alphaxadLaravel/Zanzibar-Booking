@@ -106,7 +106,7 @@ Route::post('/booking/{id}/cancel', [BookingController::class, 'cancelBooking'])
 
 // Booking lookup routes
 Route::get('/booking-lookup', [BookingController::class, 'bookingLookup'])->name('booking.lookup');
-Route::post('/booking-lookup', [BookingController::class, 'processBookingLookup'])->name('booking.lookup');
+Route::post('/booking-lookup', [BookingController::class, 'processBookingLookup'])->name('booking.lookup.post');
 
 // Deal booking routes (packages, activities, cars)
 Route::post('/book-deal', [BookingController::class, 'bookDeal'])->name('book-deal');
