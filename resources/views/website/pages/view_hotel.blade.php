@@ -558,7 +558,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <i class="mdi mdi-information-outline me-1"></i>
                                 <strong>Pricing:</strong> {{ ($room->price_type ?? 'per_night') === 'per_person_per_night' ? 'Per person per night' : 'Per room per night' }}
                             </div>
-                            <form action="{{ route('book-room') }}" method="POST" class="room-booking-form" data-room-id="{{ $room->id }}">
+                            <form action="{{ route('book-room') }}" method="POST" class="room-booking-form" data-room-id="{{ $room->id }}" data-require-login="1">
                                 @csrf
                                 <input type="hidden" name="deal_id" value="{{ $hotel->id }}">
                                 <input type="hidden" name="room_id" value="{{ $room->id }}">

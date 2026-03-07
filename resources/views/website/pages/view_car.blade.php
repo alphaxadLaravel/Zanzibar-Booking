@@ -78,7 +78,7 @@
                         </h5>
                     </div>
                     <div class="card-body p-4">
-                        <form action="{{ route('book-deal') }}" method="POST" class="car-booking-form">
+                        <form action="{{ route('book-deal') }}" method="POST" class="car-booking-form" data-require-login="1">
                             @csrf
                             <input type="hidden" name="deal_id" value="{{ $car->id }}">
                             <input type="hidden" name="type" value="car">

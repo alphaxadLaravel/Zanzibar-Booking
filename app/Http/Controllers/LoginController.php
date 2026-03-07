@@ -32,7 +32,12 @@ class LoginController extends Controller
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
-            
+
+            $redirect = $request->input('redirect');
+            if ($redirect && \Illuminate\Support\Str::startsWith($redirect, url('/'))) {
+                return redirect($redirect)->with('success', 'Logged In successful');
+            }
+
             return redirect()->back()->with('success', 'Logged In successful');
         }
 

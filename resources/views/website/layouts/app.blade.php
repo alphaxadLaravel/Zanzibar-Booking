@@ -17,6 +17,7 @@
 </head>
 
 <body class="body">
+    <script>window.isLoggedIn = @json(auth()->check());</script>
 
     @include('website.layouts.header')
 
@@ -42,6 +43,7 @@
                 <div class="modal-body">
                     <form id="loginForm" action="{{ route('login') }}" method="POST" class="form">
                         @csrf
+                        <input type="hidden" name="redirect" id="loginRedirect" value="">
                         <div id="email-field" class="field-wrapper input mb-3">
                             <label for="remail">EMAIL</label>
                             <input id="remail" name="email" type="email" value="" class="form-control gmz-validation"
@@ -459,6 +461,24 @@
     @livewireScripts()
 
     @include('website.layouts.js')
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var redirectInput = document.getElementById('loginRedirect');
+            if (redirectInput) {
+                var p = new URLSearchParams(window.location.search);
+                var r = p.get('redirect');
+                if (r) redirectInput.value = r;
+            }
+            document.addEventListener('submit', function(e) {
+                var form = e.target;
+                if (form.getAttribute('data-require-login') === '1' && !window.isLoggedIn) {
+                    e.preventDefault();
+                    window.location = '{{ url("/login") }}?redirect=' + encodeURIComponent(window.location.href);
+                }
+            }, true);
+        });
+    </script>
 
     @stack('scripts')
 
