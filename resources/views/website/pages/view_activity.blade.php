@@ -375,6 +375,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             @endif
         @endif
+
+        // Require login for activity booking: open login modal if guest clicks Book now / Add to cart
+        (function() {
+            var form = document.querySelector('.activity-booking-form');
+            if (!form) return;
+            form.addEventListener('submit', function(e) {
+                if (window.isLoggedIn) return;
+                e.preventDefault();
+                e.stopPropagation();
+                var redirectInput = document.getElementById('loginRedirect');
+                if (redirectInput) redirectInput.value = window.location.href;
+                var loginModalEl = document.getElementById('exampleModal');
+                if (loginModalEl && typeof bootstrap !== 'undefined') {
+                    bootstrap.Modal.getOrCreateInstance(loginModalEl).show();
+                }
+                return false;
+            }, true);
+        })();
     });
 </script>
 
