@@ -479,7 +479,14 @@
                     if (redirectInput) redirectInput.value = window.location.href;
                     var loginModalEl = document.getElementById('exampleModal');
                     if (loginModalEl && typeof bootstrap !== 'undefined') {
-                        bootstrap.Modal.getOrCreateInstance(loginModalEl).show();
+                        var parentModal = form.closest('.modal');
+                        if (parentModal && parentModal !== loginModalEl) {
+                            var openModal = bootstrap.Modal.getInstance(parentModal);
+                            if (openModal) openModal.hide();
+                        }
+                        setTimeout(function() {
+                            bootstrap.Modal.getOrCreateInstance(loginModalEl).show();
+                        }, parentModal ? 150 : 0);
                     }
                 }
             }, true);
