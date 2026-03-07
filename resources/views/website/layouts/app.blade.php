@@ -41,7 +41,7 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form id="loginForm" action="{{ route('login') }}" method="POST" class="form">
+                    <form id="loginForm" action="{{ route('login.post') }}" method="POST" class="form">
                         @csrf
                         <input type="hidden" name="redirect" id="loginRedirect" value="">
                         <div id="email-field" class="field-wrapper input mb-3">
