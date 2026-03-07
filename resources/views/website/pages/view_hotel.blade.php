@@ -564,41 +564,32 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <input type="hidden" name="room_id" value="{{ $room->id }}">
                                 <input type="hidden" name="price" value="">
 
-                                <div class="mb-4 p-3 rounded border bg-light">
-                                    <label class="form-label fw-semibold mb-3 d-block" style="font-size: 1rem;">Select your dates</label>
-                                    <div class="row g-3">
-                                        <div class="col-6 col-md-6">
-                                            <label for="check_in{{ $room->id }}" class="form-label small text-muted mb-1">Check-in</label>
-                                            <input type="date" class="form-control form-control-lg" id="check_in{{ $room->id }}" name="check_in" required
-                                                min="{{ date('Y-m-d') }}"
-                                                placeholder="Pick date"
-                                                data-room-id="{{ $room->id }}">
-                                        </div>
-                                        <div class="col-6 col-md-6">
-                                            <label for="check_out{{ $room->id }}" class="form-label small text-muted mb-1">Check-out</label>
-                                            <input type="date" class="form-control form-control-lg" id="check_out{{ $room->id }}" name="check_out" required
-                                                placeholder="Pick date"
-                                                data-room-id="{{ $room->id }}">
-                                        </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="check_in{{ $room->id }}" class="form-label">Check-in date</label>
+                                        <input type="date" class="form-control" id="check_in{{ $room->id }}" name="check_in" required
+                                            min="{{ date('Y-m-d') }}"
+                                            data-room-id="{{ $room->id }}">
                                     </div>
-                                    <div id="priceCalSelectedRange{{ $room->id }}" class="small text-muted mt-2" style="min-height: 1.2em;"></div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="check_out{{ $room->id }}" class="form-label">Check-out date</label>
+                                        <input type="date" class="form-control" id="check_out{{ $room->id }}" name="check_out" required
+                                            data-room-id="{{ $room->id }}">
+                                    </div>
                                 </div>
 
                                 <div class="mb-3">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary w-100 mb-2" data-bs-toggle="collapse" data-bs-target="#priceCalCollapse{{ $room->id }}" aria-expanded="false">
-                                        <i class="mdi mdi-calendar-blank-outline me-1"></i> View daily price breakdown
-                                    </button>
-                                    <div class="collapse" id="priceCalCollapse{{ $room->id }}">
-                                        <div class="card card-body p-2 border">
-                                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="prevPriceMonth({{ $room->id }})">&larr;</button>
-                                                <span id="priceCalMonthLabel{{ $room->id }}" style="font-weight: 600;">—</span>
-                                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="nextPriceMonth({{ $room->id }})">&rarr;</button>
-                                            </div>
-                                            <div id="priceCalendarGrid{{ $room->id }}" class="price-calendar-grid" style="font-size: 0.7rem; min-height: 200px;">
-                                                <div class="text-center text-muted py-4">Loading...</div>
-                                            </div>
+                                    <label class="form-label">Daily prices per night</label>
+                                    <div class="card card-body p-2 border">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="prevPriceMonth({{ $room->id }})">&larr;</button>
+                                            <span id="priceCalMonthLabel{{ $room->id }}" style="font-weight: 600;">—</span>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="nextPriceMonth({{ $room->id }})">&rarr;</button>
                                         </div>
+                                        <div id="priceCalendarGrid{{ $room->id }}" class="price-calendar-grid" style="font-size: 0.7rem; min-height: 200px;">
+                                            <div class="text-center text-muted py-4">Loading...</div>
+                                        </div>
+                                        <div id="priceCalSelectedRange{{ $room->id }}" class="small text-muted mt-2" style="min-height: 1.2em;"></div>
                                     </div>
                                 </div>
 
