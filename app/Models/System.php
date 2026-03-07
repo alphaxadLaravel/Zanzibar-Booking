@@ -19,5 +19,9 @@ class System extends Model
         'instagram_url',
         'tripadvisor_url',
         'youtube_url',
+        'home_seo_title',
+        'home_seo_description',
+        'home_seo_keywords',
+        'home_seo_image',
     ];
 }

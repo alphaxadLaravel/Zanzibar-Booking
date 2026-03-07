@@ -814,4 +814,42 @@ class AdminController extends Controller
 
         return redirect()->back()->with('success', 'System settings updated successfully!');
     }
+
+    public function homeSeoSettings()
+    {
+        $settings = System::first();
+        if (!$settings) {
+            $settings = new System();
+        }
+        return view('admin.pages.home_seo', compact('settings'));
+    }
+
+    public function updateHomeSeoSettings(Request $request)
+    {
+        $request->validate([
+            'home_seo_title' => 'nullable|string|max:60',
+            'home_seo_description' => 'nullable|string|max:160',
+            'home_seo_keywords' => 'nullable|string',
+            'home_seo_image' => 'nullable|image',
+        ]);
+
+        $settings = System::first();
+        if (!$settings) {
+            $settings = new System();
+        }
+
+        if ($request->hasFile('home_seo_image')) {
+            if ($settings->home_seo_image && Storage::disk('public')->exists($settings->home_seo_image)) {
+                Storage::disk('public')->delete($settings->home_seo_image);
+            }
+            $settings->home_seo_image = $request->file('home_seo_image')->store('system/seo', 'public');
+        }
+
+        $settings->home_seo_title = $request->home_seo_title;
+        $settings->home_seo_description = $request->home_seo_description;
+        $settings->home_seo_keywords = $request->home_seo_keywords;
+        $settings->save();
+
+        return redirect()->back()->with('success', 'Home page SEO settings updated successfully!');
+    }
 }

@@ -13,6 +13,7 @@ use App\Models\Blog;
 use App\Models\Near;
 use App\Models\DealReviews;
 use App\Models\Pages;
+use App\Models\System;
 use App\Models\ContactMessage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -69,6 +70,12 @@ class WebsiteController extends Controller
 
         $hashids = $this->getHashids();
 
+        $settings = System::first();
+        $home_seo_title = $settings?->home_seo_title;
+        $home_seo_description = $settings?->home_seo_description;
+        $home_seo_keywords = $settings?->home_seo_keywords;
+        $home_seo_image = $settings?->home_seo_image;
+
         return view('website.pages.index', compact(
             'propertyCategories',
             'featuredDeals',
@@ -76,7 +83,11 @@ class WebsiteController extends Controller
             'featuredTours',
             'carCategories',
             'featuredCars',
-            'hashids'
+            'hashids',
+            'home_seo_title',
+            'home_seo_description',
+            'home_seo_keywords',
+            'home_seo_image'
         ));
     }
 

@@ -1,5 +1,7 @@
 @extends('website.layouts.app')
 
+@include('website.components.home_seo')
+
 @section('pages')
 <section class="hero-slider" style="height: 450px; position: relative;">
     <div class="container-fluid no-gutters p-0">

@@ -69,7 +69,7 @@
             </div>
         </div>
     </div>
-    <div class="footer-bottom pt-30 pb-30">
+    {{-- <div class="footer-bottom pt-30 pb-30">
         <div class="container">
             <div class="row my-3 align-items-bottom">
                 <div class="col-md-3">
@@ -128,7 +128,7 @@
                 </li>
             </ul>
         </div>
-    </div>
+    </div> --}}
 </footer>
 <div class="whatsapp-widget">
     <div class="widget-circle" onclick="openWidget()">

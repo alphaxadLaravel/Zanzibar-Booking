@@ -301,4 +301,8 @@ Route::middleware('auth')->group(function () {
     // System settings management
     Route::get('/admin/system-settings', [AdminController::class, 'systemSettings'])->name('admin.system.settings');
     Route::put('/admin/system-settings', [AdminController::class, 'updateSystemSettings'])->name('admin.system.settings.update');
+
+    // Home page SEO
+    Route::get('/admin/home-seo', [AdminController::class, 'homeSeoSettings'])->name('admin.home.seo');
+    Route::put('/admin/home-seo', [AdminController::class, 'updateHomeSeoSettings'])->name('admin.home.seo.update');
 });

@@ -152,6 +152,7 @@
                     <div class="collapse" id="sidebarSettings">
                         <ul class="sub-menu">
                             <li class="side-nav-item"><a href="{{ route('admin.system.settings') }}" class="side-nav-link">System Settings</a></li>
+                            <li class="side-nav-item"><a href="{{ route('admin.home.seo') }}" class="side-nav-link">Home Page SEO</a></li>
                             <li class="side-nav-item"><a href="{{ route('admin.manage.content', 'about-us') }}" class="side-nav-link">About Us</a></li>
                             <li class="side-nav-item"><a href="{{ route('admin.manage.content', 'become-a-partner') }}" class="side-nav-link">Become a Partner</a></li>
                             <li class="side-nav-item"><a href="{{ route('admin.manage.content', 'our-commitment') }}" class="side-nav-link">Our Commitment</a></li>
