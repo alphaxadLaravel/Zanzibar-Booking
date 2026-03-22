@@ -199,6 +199,13 @@ Route::middleware('auth')->group(function () {
 
     // Users Management
     Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');
+    Route::get('/admin/users/create', [AdminController::class, 'createUser'])->name('admin.users.create');
+    Route::post('/admin/users', [AdminController::class, 'storeUser'])->name('admin.users.store');
+    Route::put('/admin/users/{id}/suspend', [AdminController::class, 'suspendUser'])->name('admin.users.suspend');
+    Route::put('/admin/users/{id}/unsuspend', [AdminController::class, 'unsuspendUser'])->name('admin.users.unsuspend');
+    Route::get('/admin/partners', [AdminController::class, 'partners'])->name('admin.partners');
+    Route::get('/admin/partners/{id}/assign-deals', [AdminController::class, 'assignDealsToPartnerForm'])->name('admin.partners.assign-deals');
+    Route::post('/admin/partners/{id}/assign-deals', [AdminController::class, 'assignDealsToPartner'])->name('admin.partners.assign-deals.store');
     Route::get('/admin/users/{id}', [AdminController::class, 'showUser'])->name('admin.users.show');
     Route::get('/admin/users/{id}/edit', [AdminController::class, 'editUser'])->name('admin.users.edit');
     Route::put('/admin/users/{id}', [AdminController::class, 'updateUser'])->name('admin.users.update');

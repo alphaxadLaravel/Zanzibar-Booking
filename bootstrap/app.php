@@ -20,12 +20,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
             'track.visit' => \App\Http\Middleware\TrackSiteVisit::class,
+            'not.suspended' => \App\Http\Middleware\EnsureUserNotSuspended::class,
         ]);
         
         // Apply middleware to web routes
         $middleware->web(append: [
             \App\Http\Middleware\TrackSiteVisit::class,
             \App\Http\Middleware\EnsureEmailIsVerified::class,
+            \App\Http\Middleware\EnsureUserNotSuspended::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

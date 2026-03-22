@@ -121,6 +121,12 @@
                     </a>
                 </li>
                 <li class="side-nav-item">
+                    <a href="{{ route('admin.partners') }}" class="side-nav-link">
+                        <span class="menu-icon"><i class="mdi mdi-handshake-outline"></i></span>
+                        <span class="menu-text">Partners</span>
+                    </a>
+                </li>
+                <li class="side-nav-item">
                     <a href="{{ route('admin.payments') }}" class="side-nav-link">
                         <span class="menu-icon"><i class="mdi mdi-cash-multiple"></i></span>
                         <span class="menu-text">Payments</span>

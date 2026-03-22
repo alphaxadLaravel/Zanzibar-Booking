@@ -4,183 +4,160 @@
 
 @section('content')
 <div class="container-fluid">
-    <!-- Page Header -->
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box">
-                <div class="page-title-right">
-                    <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Users</li>
-                    </ol>
-                </div>
-                <h4 class="page-title">All Users</h4>
+    <div class="row align-items-center mb-3">
+        <div class="col">
+            <div class="page-title-box mb-0">
+                <h4 class="page-title mb-1">Users</h4>
+                <ol class="breadcrumb m-0 bg-transparent p-0">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Users</li>
+                </ol>
             </div>
+        </div>
+        <div class="col-auto d-flex flex-wrap gap-2 justify-content-end">
+            <a href="{{ route('admin.users.create') }}" class="btn btn-primary">
+                <i class="mdi mdi-account-plus me-1"></i> Add user
+            </a>
+            <a href="{{ route('admin.users.create', ['partner' => 1]) }}" class="btn btn-outline-primary">
+                <i class="mdi mdi-handshake-outline me-1"></i> Add partner
+            </a>
+            <a href="{{ route('admin.partners') }}" class="btn btn-outline-secondary">Partners list</a>
         </div>
     </div>
 
-    <!-- User Statistics -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
+    @php $s = $userStats ?? ['total' => 0, 'active' => 0, 'inactive' => 0, 'verified' => 0, 'suspended' => 0]; @endphp
+
+    <div class="row g-2 mb-3">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body py-3 px-3 d-flex align-items-center" style="min-height: 96px;">
+                    <div class="d-flex justify-content-between align-items-center w-100">
                         <div>
-                            <h4 class="mb-0 text-primary">{{ $users->total() }}</h4>
-                            <p class="mb-0 text-muted">Total Users</p>
+                            <h4 class="mb-0 text-primary">{{ $s['total'] }}</h4>
+                            <p class="mb-0 text-muted small">{{ $s['active'] }} active, {{ $s['inactive'] }} inactive</p>
                         </div>
-                        <div class="align-self-center">
-                            <i class="ti ti-users text-primary" style="font-size: 2rem;"></i>
-                        </div>
+                        <i class="ti ti-users text-primary opacity-75" style="font-size: 1.6rem;"></i>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body py-3 px-3 d-flex align-items-center" style="min-height: 96px;">
+                    <div class="d-flex justify-content-between align-items-center w-100">
                         <div>
-                            <h4 class="mb-0 text-success">{{ $users->where('status', 1)->count() }}</h4>
-                            <p class="mb-0 text-muted">Active Users</p>
+                            <h4 class="mb-0 text-info">{{ $s['verified'] }}</h4>
+                            <p class="mb-0 text-muted small">Verified email</p>
                         </div>
-                        <div class="align-self-center">
-                            <i class="ti ti-user-check text-success" style="font-size: 2rem;"></i>
-                        </div>
+                        <i class="ti ti-mail-check text-info opacity-75" style="font-size: 1.6rem;"></i>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body py-3 px-3 d-flex align-items-center" style="min-height: 96px;">
+                    <div class="d-flex justify-content-between align-items-center w-100">
                         <div>
-                            <h4 class="mb-0 text-warning">{{ $users->where('status', 0)->count() }}</h4>
-                            <p class="mb-0 text-muted">Inactive Users</p>
+                            <h4 class="mb-0 text-danger">{{ $s['suspended'] }}</h4>
+                            <p class="mb-0 text-muted small">Suspended</p>
                         </div>
-                        <div class="align-self-center">
-                            <i class="ti ti-user-x text-warning" style="font-size: 2rem;"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h4 class="mb-0 text-info">{{ $users->where('email_verified_at', '!=', null)->count() }}</h4>
-                            <p class="mb-0 text-muted">Verified Users</p>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="ti ti-mail-check text-info" style="font-size: 2rem;"></i>
-                        </div>
+                        <i class="ti ti-ban text-danger opacity-75" style="font-size: 1.6rem;"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Page Content -->
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">All Users</h5>
-                    <div class="card-tools">
-                        <span class="badge bg-primary">{{ $users->total() }} Total</span>
-                    </div>
+                <div class="card-header d-flex justify-content-between align-items-center py-3">
+                    <h5 class="card-title mb-0">Directory</h5>
+                    <span class="text-muted small">{{ $users->total() }} records</span>
                 </div>
-                <div class="card-body">
-                    <!-- Success Message -->
+                <div class="card-body pt-0">
                     @if(session('success'))
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <div class="alert alert-success alert-dismissible fade show mt-3">
                             {{ session('success') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
+                    @if(session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show mt-3">
+                            {{ session('error') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     @endif
 
                     @if($users->count() > 0)
-                        <!-- Users Table -->
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead>
+                        <div class="table-responsive mt-2">
+                            <table class="table table-hover align-middle mb-0" style="min-width: 920px;">
+                                <thead class="table-light">
                                     <tr>
-                                        <th>ID</th>
-                                        <th>Name</th>
-                                        <th>Email</th>
-                                        <th>Phone</th>
-                                        <th>Role</th>
-                                        <th>Status</th>
-                                        <th>Email Verified</th>
-                                        <th>Registered</th>
-                                        <th>Actions</th>
+                                        <th class="text-nowrap" style="width:48px;">#</th>
+                                        <th>User</th>
+                                        <th class="text-nowrap">Phone</th>
+                                        <th class="text-nowrap">Role</th>
+                                        <th class="text-nowrap text-center">Partner</th>
+                                        <th class="text-nowrap">Account</th>
+                                        <th class="text-nowrap text-center">Verified</th>
+                                        <th class="text-nowrap">Joined</th>
+                                        <th class="text-end text-nowrap" style="width: 200px;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($users as $user)
-                                        <tr>
+                                        <tr class="{{ $user->is_suspended ? 'table-secondary' : '' }}">
+                                            <td class="text-muted">{{ $user->id }}</td>
                                             <td>
-                                                <strong>#{{ $user->id }}</strong>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center flex-shrink-0"
+                                                        style="width:42px;height:42px;font-size:0.9rem;font-weight:600;">
                                                         {{ strtoupper(substr($user->firstname, 0, 1)) }}{{ strtoupper(substr($user->lastname, 0, 1)) }}
                                                     </div>
-                                                    <div>
-                                                        <strong>{{ $user->full_name }}</strong>
+                                                    <div class="min-w-0">
+                                                        <div class="fw-medium text-truncate">{{ $user->full_name }}</div>
+                                                        <div class="text-muted text-truncate" style="font-size: 0.9rem;">{{ $user->email }}</div>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td>{{ $user->email }}</td>
-                                            <td>{{ $user->phone ?? 'N/A' }}</td>
-                                            <td>
-                                                @if($user->role)
-                                                    <span class="badge bg-info">{{ $user->role->name }}</span>
-                                                @else
-                                                    <span class="badge bg-secondary">No Role</span>
-                                                @endif
-                                            </td>
+                                            <td class="text-muted">{{ $user->phone ?: '—' }}</td>
+                                            <td>{{ $user->role?->name ?? '—' }}</td>
+                                            <td class="text-center">{{ optional($user->role)->name === 'Partner' ? 'Yes' : '—' }}</td>
                                             <td>
                                                 @if($user->status)
-                                                    <span class="badge bg-success">Active</span>
+                                                    <span class="text-success">Active</span>
                                                 @else
-                                                    <span class="badge bg-danger">Inactive</span>
+                                                    <span class="text-warning">Inactive</span>
+                                                @endif
+                                                @if($user->is_suspended)
+                                                    <span class="text-danger"> · Blocked</span>
                                                 @endif
                                             </td>
-                                            <td>
-                                                @if($user->email_verified_at)
-                                                    <span class="badge bg-success">
-                                                        <i class="ti ti-check"></i> Verified
-                                                    </span>
-                                                @else
-                                                    <span class="badge bg-warning">
-                                                        <i class="ti ti-clock"></i> Pending
-                                                    </span>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                <small>{{ $user->created_at->format('M d, Y') }}</small><br>
-                                                <small class="text-muted">{{ $user->created_at->format('h:i A') }}</small>
-                                            </td>
-                                            <td>
-                                                <a href="{{ route('admin.users.show', $hashids->encode($user->id)) }}" class="btn btn-sm btn-outline-info" title="View User">
-                                                    <i class="ti ti-eye"></i>
-                                                </a>
+                                            <td class="text-center text-muted">{{ $user->email_verified_at ? 'Yes' : 'No' }}</td>
+                                            <td class="text-muted text-nowrap">{{ $user->created_at->format('M j, Y') }}</td>
+                                            <td class="text-end">
+                                                <div class="btn-group" role="group">
+                                                    <a href="{{ route('admin.users.show', $hashids->encode($user->id)) }}" class="btn btn-outline-secondary" title="View">View</a>
+                                                    <a href="{{ route('admin.users.edit', $hashids->encode($user->id)) }}" class="btn btn-outline-secondary" title="Edit">Edit</a>
+                                                    @if(optional($user->role)->name === 'Partner')
+                                                        <a href="{{ route('admin.partners.assign-deals', $hashids->encode($user->id)) }}" class="btn btn-outline-secondary" title="Deals">Deals</a>
+                                                    @endif
+                                                </div>
                                                 @if(optional($user->role)->name === 'Partner' && (int) $user->status !== 1)
-                                                    <form action="{{ route('admin.users.partner.approve', $user->id) }}" method="POST" class="d-inline">
-                                                        @csrf
-                                                        @method('PUT')
-                                                        <button type="submit" class="btn btn-sm btn-success">Approve</button>
-                                                    </form>
-                                                    <form action="{{ route('admin.users.partner.reject', $user->id) }}" method="POST" class="d-inline">
-                                                        @csrf
-                                                        @method('PUT')
-                                                        <button type="submit" class="btn btn-sm btn-danger">Reject</button>
-                                                    </form>
+                                                    <div class="mt-2 d-flex gap-1 justify-content-end flex-wrap">
+                                                        <form action="{{ route('admin.users.partner.approve', $user->id) }}" method="POST" class="d-inline">
+                                                            @csrf
+                                                            @method('PUT')
+                                                            <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                                                        </form>
+                                                        <form action="{{ route('admin.users.partner.reject', $user->id) }}" method="POST" class="d-inline">
+                                                            @csrf
+                                                            @method('PUT')
+                                                            <button type="submit" class="btn btn-outline-danger btn-sm">Reject</button>
+                                                        </form>
+                                                    </div>
                                                 @endif
                                             </td>
                                         </tr>
@@ -189,18 +166,13 @@
                             </table>
                         </div>
 
-                        <!-- Pagination -->
                         <div class="d-flex justify-content-center mt-4">
                             {{ $users->links() }}
                         </div>
                     @else
-                        <!-- No Users Message -->
-                        <div class="text-center py-5">
-                            <div class="mb-4">
-                                <i class="ti ti-users" style="font-size: 4rem; color: #dee2e6;"></i>
-                            </div>
-                            <h4 class="text-muted">No Users Found</h4>
-                            <p class="text-muted">There are no users registered in the system yet.</p>
+                        <div class="text-center py-5 text-muted">
+                            <p class="mb-2">No users found.</p>
+                            <a href="{{ route('admin.users.create') }}" class="btn btn-primary">Add user</a>
                         </div>
                     @endif
                 </div>
@@ -208,57 +180,4 @@
         </div>
     </div>
 </div>
-
-<script>
-function toggleUserStatus(userId, currentStatus) {
-    const action = currentStatus ? 'deactivate' : 'activate';
-    const statusText = currentStatus ? 'inactive' : 'active';
-    
-    if (confirm(`Are you sure you want to ${action} this user?`)) {
-        // Create a form and submit
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/admin/users/${userId}/toggle-status`;
-        
-        const csrfToken = document.createElement('input');
-        csrfToken.type = 'hidden';
-        csrfToken.name = '_token';
-        csrfToken.value = '{{ csrf_token() }}';
-        
-        const methodField = document.createElement('input');
-        methodField.type = 'hidden';
-        methodField.name = '_method';
-        methodField.value = 'PUT';
-        
-        form.appendChild(csrfToken);
-        form.appendChild(methodField);
-        document.body.appendChild(form);
-        form.submit();
-    }
-}
-
-function deleteUser(userId) {
-    if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-        // Create a form and submit
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/admin/users/${userId}`;
-        
-        const csrfToken = document.createElement('input');
-        csrfToken.type = 'hidden';
-        csrfToken.name = '_token';
-        csrfToken.value = '{{ csrf_token() }}';
-        
-        const methodField = document.createElement('input');
-        methodField.type = 'hidden';
-        methodField.name = '_method';
-        methodField.value = 'DELETE';
-        
-        form.appendChild(csrfToken);
-        form.appendChild(methodField);
-        document.body.appendChild(form);
-        form.submit();
-    }
-}
-</script>
 @endsection

@@ -20,6 +20,7 @@ use App\Models\ContactMessage;
 use App\Models\System;
 use App\Models\SiteVisit;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -431,10 +432,190 @@ class AdminController extends Controller
             ->where('role_id', '!=', 1)
             ->orderBy('created_at', 'desc')
             ->paginate(15);
-        
+
         $hashids = $this->getHashids();
-        
-        return view('admin.pages.users', compact('users', 'hashids'));
+        $baseQuery = User::query()->where('role_id', '!=', 1);
+        $userStats = [
+            'total' => (clone $baseQuery)->count(),
+            'active' => (clone $baseQuery)->where('status', 1)->count(),
+            'inactive' => (clone $baseQuery)->where('status', 0)->count(),
+            'verified' => (clone $baseQuery)->whereNotNull('email_verified_at')->count(),
+            'suspended' => (clone $baseQuery)->where('is_suspended', true)->count(),
+        ];
+        return view('admin.pages.users', compact('users', 'hashids', 'userStats'));
+    }
+
+    public function createUser(Request $request)
+    {
+        $this->ensureAdminOrSuperAdmin();
+        $roles = Role::where('name', '!=', 'Super Admin')->orderBy('name')->get();
+        $prefillPartner = $request->boolean('partner');
+
+        return view('admin.pages.users.create', compact('roles', 'prefillPartner'));
+    }
+
+    public function storeUser(Request $request)
+    {
+        $this->ensureAdminOrSuperAdmin();
+
+        $request->validate([
+            'firstname' => 'required|string|max:255',
+            'lastname' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email',
+            'phone' => 'nullable|string|max:30',
+            'password' => 'required|string|min:6|confirmed',
+            'role_id' => 'required|exists:roles,id',
+            'status' => 'required|boolean',
+        ]);
+
+        $role = Role::findOrFail($request->role_id);
+        if ($role->name === 'Super Admin') {
+            return redirect()->back()->withInput()->with('error', 'Cannot assign Super Admin from this form.');
+        }
+
+        $user = User::create([
+            'firstname' => $request->firstname,
+            'lastname' => $request->lastname,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'password' => Hash::make($request->password),
+            'role_id' => $request->role_id,
+            'status' => (int) $request->status,
+            'is_suspended' => false,
+            'email_verified_at' => now(),
+        ]);
+
+        if ($role->name === 'Partner') {
+            try {
+                if ((int) $user->status === 0) {
+                    Mail::to($user->email)->send(new PartnerRegistration($user));
+                } else {
+                    Mail::to($user->email)->send(new PartnerAccepted($user));
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Partner welcome email failed on admin create', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+            }
+        }
+
+        return redirect()->route('admin.users')->with('success', 'User created successfully.');
+    }
+
+    /**
+     * Partners only (active Partner role). Admins can suspend / assign deals.
+     */
+    public function partners()
+    {
+        $this->ensureAdminOrSuperAdmin();
+
+        $partnerRole = Role::where('name', 'Partner')->firstOrFail();
+
+        $partners = User::with('role')
+            ->where('role_id', $partnerRole->id)
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        $hashids = $this->getHashids();
+
+        return view('admin.pages.partners', compact('partners', 'hashids'));
+    }
+
+    public function suspendUser(Request $request, string $id)
+    {
+        $this->ensureAdminOrSuperAdmin();
+
+        $hashids = $this->getHashids();
+        $decodedIds = $hashids->decode($id);
+        if (empty($decodedIds)) {
+            return redirect()->route('admin.users')->with('error', 'Invalid user ID.');
+        }
+
+        $user = User::findOrFail($decodedIds[0]);
+        if ($user->id === Auth::id()) {
+            return redirect()->back()->with('error', 'You cannot suspend your own account.');
+        }
+
+        $user->is_suspended = true;
+        $user->save();
+
+        return redirect()->back()->with('success', 'User has been suspended and cannot log in.');
+    }
+
+    public function unsuspendUser(Request $request, string $id)
+    {
+        $this->ensureAdminOrSuperAdmin();
+
+        $hashids = $this->getHashids();
+        $decodedIds = $hashids->decode($id);
+        if (empty($decodedIds)) {
+            return redirect()->route('admin.users')->with('error', 'Invalid user ID.');
+        }
+
+        $user = User::findOrFail($decodedIds[0]);
+        $user->is_suspended = false;
+        $user->save();
+
+        return redirect()->back()->with('success', 'Suspension removed. User can log in again.');
+    }
+
+    public function assignDealsToPartnerForm(string $id)
+    {
+        $this->ensureAdminOrSuperAdmin();
+
+        $hashids = $this->getHashids();
+        $decodedIds = $hashids->decode($id);
+        if (empty($decodedIds)) {
+            return redirect()->route('admin.partners')->with('error', 'Invalid partner ID.');
+        }
+
+        $partner = User::with('role')->findOrFail($decodedIds[0]);
+        if (optional($partner->role)->name !== 'Partner') {
+            return redirect()->route('admin.partners')->with('error', 'Selected user is not a partner.');
+        }
+
+        $deals = Deal::with(['user', 'category'])
+            ->orderBy('type')
+            ->orderBy('title')
+            ->get();
+
+        return view('admin.pages.partners.assign_deals', compact('partner', 'deals', 'hashids'));
+    }
+
+    public function assignDealsToPartner(Request $request, string $id)
+    {
+        $this->ensureAdminOrSuperAdmin();
+
+        $request->validate([
+            'deal_ids' => 'nullable|array',
+            'deal_ids.*' => 'integer|exists:deals,id',
+        ]);
+
+        $hashids = $this->getHashids();
+        $decodedIds = $hashids->decode($id);
+        if (empty($decodedIds)) {
+            return redirect()->route('admin.partners')->with('error', 'Invalid partner ID.');
+        }
+
+        $partner = User::with('role')->findOrFail($decodedIds[0]);
+        if (optional($partner->role)->name !== 'Partner') {
+            return redirect()->route('admin.partners')->with('error', 'Selected user is not a partner.');
+        }
+
+        $dealIds = $request->input('deal_ids', []);
+        if (count($dealIds) === 0) {
+            return redirect()->back()->with('info', 'No deals selected.');
+        }
+
+        Deal::whereIn('id', $dealIds)->update(['user_id' => $partner->id]);
+
+        return redirect()->back()->with('success', count($dealIds) . ' deal(s) assigned to ' . $partner->full_name . '. They will appear in the partner dashboard.');
+    }
+
+    protected function ensureAdminOrSuperAdmin(): void
+    {
+        $role = optional(Auth::user()->role)->name;
+        if (!in_array($role, ['Super Admin', 'Admin'], true)) {
+            abort(403, 'Unauthorized.');
+        }
     }
 
     public function editUser($id)
@@ -466,8 +647,9 @@ class AdminController extends Controller
 
         $userId = $decodedIds[0];
         $user = User::with('role')->findOrFail($userId);
+        $hashids = $this->getHashids();
 
-        return view('admin.pages.users.view', compact('user'));
+        return view('admin.pages.users.view', compact('user', 'hashids'));
     }
 
     public function updateUser(Request $request, $id)
@@ -478,7 +660,7 @@ class AdminController extends Controller
             'email' => 'required|email|max:255',
             'phone' => 'nullable|string|max:20',
             'status' => 'required|boolean',
-            'role_id' => 'required|exists:roles,id'
+            'role_id' => 'required|exists:roles,id',
         ]);
 
         $hashids = $this->getHashids();
@@ -494,8 +676,11 @@ class AdminController extends Controller
         // Check if role is being changed to Partner
         $oldRoleId = $user->role_id;
         $oldStatus = $user->status;
-        
-        $user->update($request->only(['firstname', 'lastname', 'email', 'phone', 'status', 'role_id']));
+
+        $user->update(array_merge(
+            $request->only(['firstname', 'lastname', 'email', 'phone', 'status', 'role_id']),
+            ['is_suspended' => $request->boolean('is_suspended')]
+        ));
         
         // Send email if user is promoted to Partner role and status is active
         $partnerRole = Role::where('name', 'Partner')->first();

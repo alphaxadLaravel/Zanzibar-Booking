@@ -17,8 +17,9 @@ return new class extends Migration
             $table->text('user_agent')->nullable();
             $table->string('session_id', 255)->nullable()->index();
             $table->string('visitor_hash', 64)->index(); // Hash of IP + User Agent for uniqueness
-            $table->timestamp('first_visit_at');
-            $table->timestamp('last_visit_at');
+            // dateTime avoids MySQL "Invalid default value" for multiple TIMESTAMP NOT NULL (strict sql_mode)
+            $table->dateTime('first_visit_at')->nullable();
+            $table->dateTime('last_visit_at')->nullable();
             $table->integer('visit_count')->default(1);
             $table->timestamps();
             

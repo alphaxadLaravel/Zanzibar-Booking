@@ -26,6 +26,7 @@ class User extends Authenticatable
         'password',
         'status',
         'role_id',
+        'is_suspended',
     ];
 
     /**
@@ -48,7 +49,13 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_suspended' => 'boolean',
         ];
+    }
+
+    public function isPartner(): bool
+    {
+        return optional($this->role)->name === 'Partner';
     }
 
     /**

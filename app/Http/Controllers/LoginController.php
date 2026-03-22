@@ -31,6 +31,15 @@ class LoginController extends Controller
         $credentials = $request->only('email', 'password');
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            $user = Auth::user();
+            if ($user->is_suspended) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return redirect()->back()->with('error', 'Your account has been suspended. Please contact support.');
+            }
+
             $request->session()->regenerate();
 
             $redirect = $request->input('redirect');
