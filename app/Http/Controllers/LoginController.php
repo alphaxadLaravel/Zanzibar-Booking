@@ -47,6 +47,10 @@ class LoginController extends Controller
                 return redirect($redirect)->with('success', 'Logged In successful');
             }
 
+            if ($user->canAccessAdminPanel()) {
+                return redirect($user->adminLandingUrl())->with('success', 'Logged In successful');
+            }
+
             return redirect()->back()->with('success', 'Logged In successful');
         }
 

@@ -813,7 +813,12 @@ class WebsiteController extends Controller
             ->with(['category', 'photos', 'tours', 'features', 'tourIncludes.feature'])
             ->firstOrFail();
 
-        return view('website.pages.view_package', compact('package', 'hashids'));
+        $groupPackageStats = null;
+        if ($package->tours?->is_group_package) {
+            $groupPackageStats = app(\App\Services\GroupPackageCapacityService::class)->statsFor($package->tours);
+        }
+
+        return view('website.pages.view_package', compact('package', 'hashids', 'groupPackageStats'));
     }
 
     /**

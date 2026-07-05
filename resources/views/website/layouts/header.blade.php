@@ -99,7 +99,7 @@
                                 $dashboardRoles = ['Super Admin', 'Admin', 'Partner'];
                             @endphp
                             @if(in_array(optional(Auth::user()->role)->name, $dashboardRoles))
-                                <li><a class="dropdown-item" href="{{ route('dashboard') }}">
+                                <li><a class="dropdown-item" href="{{ Auth::user()->adminLandingUrl() }}">
                                     <i class="mdi mdi-view-dashboard me-2"></i>Dashboard
                                 </a></li>
                             @endif

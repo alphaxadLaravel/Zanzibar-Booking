@@ -78,7 +78,7 @@
                     </select>
                 </div>
                 <div class="col-12">
-                    <button type="submit" class="btn btn-primary">Create account</button>
+                    <button type="submit" class="btn btn-primary" data-loading-text="Creating...">Create account</button>
                 </div>
             </form>
         </div>

@@ -90,13 +90,20 @@
                         </div>
 
                         <h6 class="mb-3 fw-semibold mt-4"><i class="mdi mdi-credit-card me-2"></i> Payment Method</h6>
+                        @if(!empty($requiresOnlinePayment))
+                            <div class="alert alert-info py-2">
+                                Your cart includes a group package. Online payment via Pesapal is required.
+                            </div>
+                        @endif
                         <div class="row g-3">
                             <div class="col-md-6 my-2">
                                 <label class="form-label">Payment Method *</label>
                                 <select class="form-control" name="payment_method" required>
                                     <option value="">Select Payment Method</option>
-                                    <option value="pesapal">Pesapal (Online Payment)</option>
-                                    <option value="pay_offline">Pay Offline</option>
+                                    <option value="pesapal" {{ !empty($requiresOnlinePayment) ? 'selected' : '' }}>Pesapal (Online Payment)</option>
+                                    @if(empty($requiresOnlinePayment))
+                                        <option value="pay_offline">Pay Offline</option>
+                                    @endif
                                 </select>
                                         </div>
                                     </div>

@@ -4,9 +4,12 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use App\Models\System;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -32,6 +35,18 @@ class AppServiceProvider extends ServiceProvider
 
         // Set custom pagination view
         Paginator::defaultView('pagination.custom');
+
+        Blade::if('permission', function (string $slug) {
+            $user = Auth::user();
+
+            return $user instanceof User && $user->hasPermission($slug);
+        });
+
+        Blade::if('anyPermission', function (...$slugs) {
+            $user = Auth::user();
+
+            return $user instanceof User && $user->hasAnyPermission($slugs);
+        });
 
         // Share system settings with all views
         View::composer('*', function ($view) {

@@ -36,6 +36,14 @@
                     @endif
 
                     @include('website.components.deal_meta_info', ['deal' => $package, 'type' => 'package'])
+
+                    @if($groupPackageStats && $package->tours?->is_group_package)
+                        @include('website.components.group_package_progress', [
+                            'stats' => $groupPackageStats,
+                            'tour' => $package->tours,
+                        ])
+                    @endif
+
                     <hr>
                     @include('website.components.deal_description', ['deal' => $package, 'title' => 'Activity Overview'])
                     <hr>
@@ -69,6 +77,13 @@
                     Book This Package
                 </h4>
 
+                @php
+                    $isGroupPackage = $package->tours?->is_group_package ?? false;
+                    $bookingOpen = !$isGroupPackage || ($groupPackageStats['is_open'] ?? true);
+                    $remainingSpots = $isGroupPackage ? ($groupPackageStats['remaining'] ?? 0) : 20;
+                    $maxParticipants = max(1, min(20, $remainingSpots));
+                @endphp
+
                 <div class="card mb-4 booking-card rounded"
                     style="overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
                     <div class="card-header" style="background: #f8f9fa; padding: 15px;">
@@ -78,8 +93,22 @@
                             &nbsp;|&nbsp;
                             Child: <span style="color: #218080;">{{ priceForUser($package->tours->child_price ?? 0, 2) }}</span>
                         </h5>
+                        @if($isGroupPackage)
+                            <small class="text-muted d-block mt-1">Online payment required for group packages.</small>
+                        @endif
                     </div>
                     <div class="card-body p-4">
+                        @if(!$bookingOpen)
+                            <div class="alert alert-warning mb-0">
+                                @if($groupPackageStats['is_full'] ?? false)
+                                    This group package is fully booked.
+                                @elseif($groupPackageStats['deadline_passed'] ?? false)
+                                    The booking deadline has passed.
+                                @else
+                                    Booking is currently unavailable.
+                                @endif
+                            </div>
+                        @else
                         <form action="{{ route('book-deal') }}" method="POST" class="package-booking-form" data-require-login="1">
                             @csrf
                             <input type="hidden" name="deal_id" value="{{ $package->id }}">
@@ -88,8 +117,13 @@
                             <div class="row">
                                 <div class="col-md-12 mb-3">
                                     <label for="check_in" class="form-label">Package Date</label>
-                                    <input type="date" class="form-control" id="check_in" name="check_in" required
-                                        min="{{ date('Y-m-d') }}">
+                                    @if($isGroupPackage && $package->tours->group_departure_date)
+                                        <input type="date" class="form-control" id="check_in" name="check_in" required readonly
+                                            value="{{ $package->tours->group_departure_date->format('Y-m-d') }}">
+                                    @else
+                                        <input type="date" class="form-control" id="check_in" name="check_in" required
+                                            min="{{ date('Y-m-d') }}">
+                                    @endif
                                 </div>
                             </div>
 
@@ -97,8 +131,8 @@
                                 <div class="col-md-6 mb-3">
                                     <label for="adults" class="form-label">Adults</label>
                                     <select class="form-control" id="adults" name="adults" required onchange="calculatePackagePrice()">
-                                        @for($i = 1; $i <= 20; $i++)
-                                            <option value="{{ $i }}" {{ $i===2 ? 'selected' : '' }}>{{ $i }} Adult{{ $i > 1 ? 's' : '' }}</option>
+                                        @for($i = 1; $i <= $maxParticipants; $i++)
+                                            <option value="{{ $i }}" {{ $i===1 ? 'selected' : '' }}>{{ $i }} Adult{{ $i > 1 ? 's' : '' }}</option>
                                         @endfor
                                     </select>
                                 </div>
@@ -106,10 +140,13 @@
                                     <label for="children" class="form-label">Children</label>
                                     <select class="form-control" id="children" name="children" onchange="calculatePackagePrice()">
                                         <option value="0">No Children</option>
-                                        @for($i = 1; $i <= 20; $i++)
+                                        @for($i = 1; $i <= $maxParticipants; $i++)
                                             <option value="{{ $i }}">{{ $i }} Child{{ $i > 1 ? 'ren' : '' }}</option>
                                         @endfor
                                     </select>
+                                    @if($isGroupPackage)
+                                        <small class="text-muted">Max {{ $remainingSpots }} participant(s) total.</small>
+                                    @endif
                                 </div>
                             </div>
 
@@ -119,13 +156,13 @@
                                     <div>
                                         <h6 style="color: #333; font-weight: 600; margin-bottom: 5px;">Total Price</h6>
                                         <p class="mb-1" style="font-size: 0.9rem; color: #666;">
-                                            <span id="package_adults">2</span> adult(s) × {{ priceForUser($package->tours->adult_price ?? 0, 2) }}<br>
+                                            <span id="package_adults">1</span> adult(s) × {{ priceForUser($package->tours->adult_price ?? 0, 2) }}<br>
                                             <span id="package_children">0</span> child(ren) × {{ priceForUser($package->tours->child_price ?? 0, 2) }}
                                         </p>
                                     </div>
                                     <div class="text-end">
                                         <p class="mb-0" style="font-size: 1.5rem; font-weight: 700; color: #ff5722;">
-                                            @php $packagePriceData = priceForUser(($package->tours->adult_price ?? 0) * 2, 2, true); @endphp
+                                            @php $packagePriceData = priceForUser($package->tours->adult_price ?? 0, 2, true); @endphp
                                             <span id="package_total_price_display"
                                                 data-rate="{{ userCurrencyRate() }}"
                                                 data-symbol="{{ e($packagePriceData['symbol']) }}"
@@ -147,9 +184,11 @@
                                 </button>
                             </div>
                         </form>
+                        @endif
                     </div>
                 </div>
                 <script>
+                    const maxGroupParticipants = {{ $maxParticipants }};
                     function formatPriceForUser(usdTotal, rate, symbol, currency, decimals) {
                         const amount = usdTotal * rate;
                         const formatted = amount.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
@@ -158,8 +197,17 @@
                     function calculatePackagePrice() {
                         const adultPrice = {{ $package->tours->adult_price ?? 0 }};
                         const childPrice = {{ $package->tours->child_price ?? 0 }};
-                        const adults = parseInt(document.getElementById('adults').value) || 0;
-                        const children = parseInt(document.getElementById('children').value) || 0;
+                        const adults = parseInt(document.getElementById('adults')?.value) || 0;
+                        let children = parseInt(document.getElementById('children')?.value) || 0;
+
+                        if (typeof maxGroupParticipants !== 'undefined' && (adults + children) > maxGroupParticipants) {
+                            children = Math.max(0, maxGroupParticipants - adults);
+                            const childrenSelect = document.getElementById('children');
+                            if (childrenSelect) {
+                                childrenSelect.value = String(children);
+                            }
+                        }
+
                         const totalPrice = (adults * adultPrice) + (children * childPrice);
 
                         document.getElementById('package_adults').textContent = adults;
@@ -175,8 +223,10 @@
                         }
                     }
                     document.addEventListener('DOMContentLoaded', function() {
-                        document.getElementById('adults').addEventListener('change', calculatePackagePrice);
-                        document.getElementById('children').addEventListener('change', calculatePackagePrice);
+                        const adultsEl = document.getElementById('adults');
+                        const childrenEl = document.getElementById('children');
+                        if (adultsEl) adultsEl.addEventListener('change', calculatePackagePrice);
+                        if (childrenEl) childrenEl.addEventListener('change', calculatePackagePrice);
                         calculatePackagePrice();
                     });
                 </script>

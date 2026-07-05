@@ -12,6 +12,7 @@
     <link href="{{asset('assets/css/vendors.min.css')}}" rel="stylesheet" type="text/css">
     <script src="{{asset('assets/js/config.js')}}"></script>
     <link href="{{asset('assets/css/app.min.css')}}" rel="stylesheet" type="text/css">
+    @stack('styles')
 </head>
 
 <body>
@@ -32,22 +33,35 @@
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const buttons = document.querySelectorAll('[data-loading-text]');
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('form').forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    const submitter = event.submitter;
+                    const button = submitter && submitter.matches('[data-loading-text]')
+                        ? submitter
+                        : form.querySelector('[type="submit"][data-loading-text]');
 
-            buttons.forEach(function(button) {
-                const form = button.closest('form');
+                    if (!button || button.disabled) {
+                        return;
+                    }
 
-                if (form) {
-                    form.addEventListener('submit', function(e) {
-                        if (form.checkValidity()) {
-                            button.disabled = true;
-                            button.innerHTML =
-                                `<img src="{{ asset('assets/images/fast.svg') }}" alt="Loading..." class="me-2"> ` +
-                                button.dataset.loadingText;
-                        }
+                    if (typeof form.checkValidity === 'function' && !form.checkValidity()) {
+                        return;
+                    }
+
+                    const loadingText = button.dataset.loadingText;
+                    if (!loadingText) {
+                        return;
+                    }
+
+                    form.querySelectorAll('[type="submit"]').forEach(function (btn) {
+                        btn.disabled = true;
                     });
-                }
+
+                    button.innerHTML =
+                        '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>' +
+                        loadingText;
+                });
             });
         });
 

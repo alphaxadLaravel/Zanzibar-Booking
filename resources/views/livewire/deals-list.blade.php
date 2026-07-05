@@ -71,6 +71,20 @@
                                                 <h6 class="mb-1">{{ $deal->title }}</h6>
                                                 <small class="text-muted">{{ $deal->category->category ?? 'N/A'
                                                     }}</small>
+                                                @if($dealType === 'package' && ($deal->tours->is_group_package ?? false))
+                                                    <div class="mt-1">
+                                                        <span class="badge bg-info">Group Package</span>
+                                                        @if(isset($groupPackageStats[$deal->id]))
+                                                            <small class="text-muted d-block mt-1">
+                                                                {{ $groupPackageStats[$deal->id]['booked'] }}/{{ $groupPackageStats[$deal->id]['capacity'] }} paid
+                                                                ({{ $groupPackageStats[$deal->id]['remaining'] }} left)
+                                                            </small>
+                                                            <div class="progress mt-1" style="height:6px; max-width:140px;">
+                                                                <div class="progress-bar bg-info" style="width: {{ $groupPackageStats[$deal->id]['percent'] }}%;"></div>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                @endif
                                             </div>
                                         </td>
                                         <td>

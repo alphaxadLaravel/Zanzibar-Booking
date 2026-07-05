@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Deal;
+use App\Services\GroupPackageCapacityService;
 use Hashids\Hashids;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -62,7 +63,7 @@ class DealsList extends Component
         }
 
         // Build query with search functionality
-        $query = Deal::with('category')
+        $query = Deal::with(['category', 'tours'])
             ->where('type', $this->dealType);
 
         $authUser = Auth::user();
@@ -86,10 +87,21 @@ class DealsList extends Component
         $deals = $query->orderBy('created_at', 'desc')
                       ->paginate($this->perPage);
 
+        $capacityService = app(GroupPackageCapacityService::class);
+        $groupPackageStats = [];
+        if ($this->dealType === 'package') {
+            foreach ($deals as $deal) {
+                if ($deal->tours?->is_group_package) {
+                    $groupPackageStats[$deal->id] = $capacityService->statsFor($deal->tours);
+                }
+            }
+        }
+
         return view('livewire.deals-list', [
             'deals' => $deals,
             'hashids' => $hashids,
             'dealTitle' => $dealTitle,
+            'groupPackageStats' => $groupPackageStats,
         ]);
     }
 }

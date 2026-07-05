@@ -7,6 +7,7 @@ use App\Mail\PaymentSuccessAdmin;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Services\CurrencyConverter;
+use App\Services\GroupPackageCapacityService;
 use Hashids\Hashids;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -73,6 +74,26 @@ class PaymentController extends Controller
             
             if ($booking->payment_status) {
                 return redirect()->route('booking.view', $bookingId)->with('info', 'This booking has already been paid.');
+            }
+
+            $capacityService = app(GroupPackageCapacityService::class);
+            if (is_array($booking->booking_items)) {
+                foreach ($booking->booking_items as $item) {
+                    if (!isset($item['deal_id'])) {
+                        continue;
+                    }
+
+                    $tour = \App\Models\Tours::where('deal_id', $item['deal_id'])->first();
+                    if (!$tour || !$tour->is_group_package) {
+                        continue;
+                    }
+
+                    $participants = ($item['adults'] ?? 0) + ($item['children'] ?? 0);
+                    $check = $capacityService->canBook($tour, $participants);
+                    if (!$check['allowed']) {
+                        return redirect()->route('booking.view', $bookingId)->with('error', $check['message']);
+                    }
+                }
             }
 
             // Create payment record

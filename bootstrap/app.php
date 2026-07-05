@@ -21,6 +21,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
             'track.visit' => \App\Http\Middleware\TrackSiteVisit::class,
             'not.suspended' => \App\Http\Middleware\EnsureUserNotSuspended::class,
+            'admin.panel' => \App\Http\Middleware\EnsureAdminPanelAccess::class,
+            'permission' => \App\Http\Middleware\EnsurePermission::class,
+            'permission.deal' => \App\Http\Middleware\EnsureDealPermission::class,
+            'super.admin' => \App\Http\Middleware\EnsureSuperAdmin::class,
         ]);
         
         // Apply middleware to web routes

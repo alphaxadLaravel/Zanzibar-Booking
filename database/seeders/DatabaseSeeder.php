@@ -12,11 +12,13 @@ class DatabaseSeeder extends Seeder
         // Seed roles first
         $this->call([
             RoleSeeder::class,
+            PermissionSeeder::class,
             AdminSeeder::class,
             FeaturesSeeder::class,
             // CategorySeeder::class,
             PageSeeder::class,
             SystemSeeder::class,
+            GroupPackageSeeder::class,
         ]);
 
     }

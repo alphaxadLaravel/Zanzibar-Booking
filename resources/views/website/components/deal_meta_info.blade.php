@@ -40,7 +40,11 @@
                     <div class="fw-bold text-dark"
                         style="font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                         @if($type === 'package' || $type === 'activity')
-                            {{ $deal->tours ? $deal->tours->max_people : 'N/A' }} People
+                            @if($type === 'package' && ($deal->tours?->is_group_package ?? false))
+                                {{ $deal->tours->group_max_capacity ?? 'N/A' }} People
+                            @else
+                                {{ $deal->tours ? $deal->tours->max_people : 'N/A' }} People
+                            @endif
                         @elseif($type === 'hotel')
                             {{ priceForUser($deal->base_price, 2) }}/night
                         @elseif($type === 'car')
@@ -51,7 +55,11 @@
                     </div>
                     <div class="text-muted small" style="white-space:nowrap;">
                         @if($type === 'package' || $type === 'activity')
-                            Min People
+                            @if($type === 'package' && ($deal->tours?->is_group_package ?? false))
+                                Group Capacity
+                            @else
+                                Min People
+                            @endif
                         @else
                             Price
                         @endif

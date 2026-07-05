@@ -58,12 +58,81 @@ class User extends Authenticatable
         return optional($this->role)->name === 'Partner';
     }
 
+    public function isSuperAdmin(): bool
+    {
+        return optional($this->role)->name === 'Super Admin';
+    }
+
+    public function isAdmin(): bool
+    {
+        return in_array(optional($this->role)->name, ['Super Admin', 'Admin'], true);
+    }
+
+    public function canAccessAdminPanel(): bool
+    {
+        return in_array(optional($this->role)->name, ['Super Admin', 'Admin', 'Partner'], true);
+    }
+
+    public function hasPermission(string $slug): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        if (optional($this->role)->name !== 'Admin') {
+            return false;
+        }
+
+        if (!$this->relationLoaded('permissions')) {
+            $this->load('permissions');
+        }
+
+        return $this->permissions->contains('slug', $slug);
+    }
+
+    public function hasAnyPermission(array $slugs): bool
+    {
+        foreach ($slugs as $slug) {
+            if ($this->hasPermission($slug)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function canDeal(string $type, string $action): bool
+    {
+        return $this->hasPermission(\App\Support\DealPermissions::slug($type, $action));
+    }
+
+    public function adminLandingUrl(): string
+    {
+        if (!$this->canAccessAdminPanel()) {
+            return route('index');
+        }
+
+        return \App\Support\AdminLanding::urlFor($this);
+    }
+
+    public function syncPermissions(array $permissionIds): void
+    {
+        if (!$this->isSuperAdmin() && optional($this->role)->name === 'Admin') {
+            $this->permissions()->sync($permissionIds);
+        }
+    }
+
     /**
      * Get the role that belongs to the user.
      */
     public function role()
     {
         return $this->belongsTo(Role::class);
+    }
+
+    public function permissions()
+    {
+        return $this->belongsToMany(Permission::class)->withTimestamps();
     }
 
     /**

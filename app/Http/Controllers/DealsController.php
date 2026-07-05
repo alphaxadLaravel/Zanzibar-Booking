@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use App\Support\DealPermissions;
+use App\Services\GroupPackageCapacityService;
 
 class DealsController extends Controller
 {
@@ -40,6 +42,39 @@ class DealsController extends Controller
         if (optional(Auth::user()->role)->name === 'Partner' && $deal->user_id !== Auth::id()) {
             abort(403, 'Unauthorized action.');
         }
+    }
+
+    protected function ensureDealTypePermission(string $action, ?string $type = null, ?Deal $deal = null): void
+    {
+        $user = Auth::user();
+
+        if (!$user || $user->isSuperAdmin() || $user->isPartner()) {
+            return;
+        }
+
+        $dealType = DealPermissions::normalizeType($type ?? $deal?->type);
+
+        if (!$dealType || !$user->hasPermission(DealPermissions::slug($dealType, $action))) {
+            abort(403, 'You do not have permission to perform this action on this deal type.');
+        }
+    }
+
+    protected function findDealForPermissionCheck(string $encodedId, ?array $allowedTypes = null): Deal
+    {
+        $hashids = new Hashids('MchungajiZanzibarBookings', 10);
+        $decoded = $hashids->decode($encodedId);
+
+        if (empty($decoded)) {
+            abort(404, 'Deal not found');
+        }
+
+        $query = Deal::query()->where('id', $decoded[0]);
+
+        if ($allowedTypes) {
+            $query->whereIn('type', $allowedTypes);
+        }
+
+        return $query->firstOrFail();
     }
 
 
@@ -93,6 +128,7 @@ class DealsController extends Controller
         }
 
         $this->ensurePartnerOwnsDeal($hotel);
+        $this->ensureDealTypePermission('view', deal: $hotel);
 
         // Get rooms for this hotel
         $rooms = Room::with('photos')
@@ -199,6 +235,10 @@ class DealsController extends Controller
                 break;
         }
 
+        if ($type === 'package') {
+            $typeSpecificRules = array_merge($typeSpecificRules, $this->groupPackageValidationRules($request));
+        }
+
         // Merge base rules with type-specific rules
         $validationRules = array_merge($baseRules, $typeSpecificRules);
 
@@ -284,13 +324,19 @@ class DealsController extends Controller
                 case 'package':
             case 'activity':
                     // Handle tour data
-                    Tours::create([
+                    $tourAttributes = [
                         'deal_id' => $deal->id,
                         'period' => $type === 'activity' ? 1 : $request->tour_period,
                         'max_people' => $request->max_people,
                         'adult_price' => $request->adult_price,
-                        'child_price' => $request->child_price
-                    ]);
+                        'child_price' => $request->child_price,
+                    ];
+
+                    if ($type === 'package') {
+                        $tourAttributes = array_merge($tourAttributes, $this->groupPackageTourAttributes($request));
+                    }
+
+                    Tours::create($tourAttributes);
 
                     // Handle tour includes
                     if ($request->has('tour_includes')) {
@@ -513,6 +559,10 @@ class DealsController extends Controller
                 break;
         }
 
+        if ($type === 'package') {
+            $typeSpecificRules = array_merge($typeSpecificRules, $this->groupPackageValidationRules($request));
+        }
+
         // Merge base rules with type-specific rules
         $validationRules = array_merge($baseRules, $typeSpecificRules);
 
@@ -619,21 +669,21 @@ class DealsController extends Controller
             case 'activity':
                     // Update tour data
                     $tourData = Tours::where('deal_id', $deal->id)->first();
+                    $tourAttributes = [
+                        'period' => $type === 'activity' ? 1 : $request->tour_period,
+                        'max_people' => $request->max_people,
+                        'adult_price' => $request->adult_price,
+                        'child_price' => $request->child_price,
+                    ];
+
+                    if ($type === 'package') {
+                        $tourAttributes = array_merge($tourAttributes, $this->groupPackageTourAttributes($request));
+                    }
+
                     if ($tourData) {
-                        $tourData->update([
-                            'period' => $type === 'activity' ? 1 : $request->tour_period,
-                            'max_people' => $request->max_people,
-                            'adult_price' => $request->adult_price,
-                            'child_price' => $request->child_price
-                        ]);
+                        $tourData->update($tourAttributes);
                     } else {
-                        Tours::create([
-                            'deal_id' => $deal->id,
-                            'period' => $type === 'activity' ? 1 : $request->tour_period,
-                            'max_people' => $request->max_people,
-                            'adult_price' => $request->adult_price,
-                            'child_price' => $request->child_price
-                        ]);
+                        Tours::create(array_merge(['deal_id' => $deal->id], $tourAttributes));
                     }
 
                     // Update tour includes
@@ -745,6 +795,7 @@ class DealsController extends Controller
         }
 
         $this->ensurePartnerOwnsDeal($hotel);
+        $this->ensureDealTypePermission('delete', deal: $hotel);
 
         try {
             DB::beginTransaction();
@@ -811,6 +862,7 @@ class DealsController extends Controller
         }
 
         $this->ensurePartnerOwnsDeal($apartment);
+        $this->ensureDealTypePermission('delete', deal: $apartment);
 
         try {
             DB::beginTransaction();
@@ -1182,6 +1234,7 @@ class DealsController extends Controller
             $deal = Deal::where('type', 'car')->findOrFail($decodedCarId);
 
             $this->ensurePartnerOwnsDeal($deal);
+            $this->ensureDealTypePermission('delete', deal: $deal);
 
             // Delete associated car data
             if ($deal->car) {
@@ -1284,6 +1337,7 @@ class DealsController extends Controller
         }
 
         $this->ensurePartnerOwnsDeal($tour);
+        $this->ensureDealTypePermission('delete', deal: $tour);
 
         try {
             DB::beginTransaction();
@@ -1340,8 +1394,14 @@ class DealsController extends Controller
         }
 
         $this->ensurePartnerOwnsDeal($tour);
+        $this->ensureDealTypePermission('view', deal: $tour);
 
-        return view('admin.pages.manage_tours', compact('tour', 'hashids'));
+        $groupBookings = collect();
+        if ($tour->tours?->is_group_package) {
+            $groupBookings = app(GroupPackageCapacityService::class)->paidBookingsForDeal($tour->id);
+        }
+
+        return view('admin.pages.manage_tours', compact('tour', 'hashids', 'groupBookings'));
     }
 
     // Itinerary CRUD Methods
@@ -1353,6 +1413,7 @@ class DealsController extends Controller
 
         $dealForItinerary = Deal::find($decodedTourId);
         $this->ensurePartnerOwnsDeal($dealForItinerary);
+        $this->ensureDealTypePermission('view', deal: $dealForItinerary);
 
         $itinerary = TourItenary::where('deal_id', $decodedTourId)->find($decodedItineraryId);
 
@@ -1384,6 +1445,7 @@ class DealsController extends Controller
         try {
             $deal = Deal::findOrFail($decodedTourId);
             $this->ensurePartnerOwnsDeal($deal);
+            $this->ensureDealTypePermission('create', deal: $deal);
 
             TourItenary::create([
                 'deal_id' => $decodedTourId,
@@ -1415,6 +1477,7 @@ class DealsController extends Controller
         try {
             $deal = Deal::findOrFail($decodedTourId);
             $this->ensurePartnerOwnsDeal($deal);
+            $this->ensureDealTypePermission('edit', deal: $deal);
 
             $itinerary = TourItenary::where('deal_id', $decodedTourId)->find($decodedItineraryId);
 
@@ -1444,6 +1507,7 @@ class DealsController extends Controller
         try {
             $deal = Deal::findOrFail($decodedTourId);
             $this->ensurePartnerOwnsDeal($deal);
+            $this->ensureDealTypePermission('delete', deal: $deal);
 
             $itinerary = TourItenary::where('deal_id', $decodedTourId)->find($decodedItineraryId);
 
@@ -1535,5 +1599,39 @@ class DealsController extends Controller
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Failed to remove nearby deal: ' . $e->getMessage()], 500);
         }
+    }
+
+    protected function groupPackageValidationRules(Request $request): array
+    {
+        $rules = [
+            'is_group_package' => 'nullable|boolean',
+        ];
+
+        if ($request->boolean('is_group_package')) {
+            $rules['group_max_capacity'] = 'required|integer|min:1';
+            $rules['group_booking_deadline'] = 'required|date';
+            $rules['group_departure_date'] = 'nullable|date';
+        }
+
+        return $rules;
+    }
+
+    protected function groupPackageTourAttributes(Request $request): array
+    {
+        if (!$request->boolean('is_group_package')) {
+            return [
+                'is_group_package' => false,
+                'group_max_capacity' => null,
+                'group_booking_deadline' => null,
+                'group_departure_date' => null,
+            ];
+        }
+
+        return [
+            'is_group_package' => true,
+            'group_max_capacity' => $request->group_max_capacity,
+            'group_booking_deadline' => $request->group_booking_deadline,
+            'group_departure_date' => $request->group_departure_date ?: null,
+        ];
     }
 }

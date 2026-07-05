@@ -15,13 +15,17 @@
             </div>
         </div>
         <div class="col-auto d-flex flex-wrap gap-2 justify-content-end">
+            @permission('users.manage')
             <a href="{{ route('admin.users.create') }}" class="btn btn-primary">
                 <i class="mdi mdi-account-plus me-1"></i> Add user
             </a>
             <a href="{{ route('admin.users.create', ['partner' => 1]) }}" class="btn btn-outline-primary">
                 <i class="mdi mdi-handshake-outline me-1"></i> Add partner
             </a>
+            @endpermission
+            @anyPermission('partners.view', 'partners.manage')
             <a href="{{ route('admin.partners') }}" class="btn btn-outline-secondary">Partners list</a>
+            @endanyPermission
         </div>
     </div>
 

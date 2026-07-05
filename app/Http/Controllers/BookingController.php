@@ -9,6 +9,7 @@ use App\Models\BookingItem;
 use App\Models\Deal;
 use App\Models\Room;
 use App\Models\Tours;
+use App\Services\GroupPackageCapacityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -55,14 +56,20 @@ class BookingController extends Controller
             $cartItems = BookingItem::where('user_id', Auth::id())
                 ->where('status', 'cart')
                 ->whereIn('id', $cartItemIds)
-                ->with(['deal.category', 'deal.photos', 'room'])
+                ->with(['deal.category', 'deal.photos', 'deal.tours', 'room'])
                 ->get();
 
             $totalAmount = $cartItems->sum('total_price');
         }
 
+        $requiresOnlinePayment = $cartItems->contains(function ($item) {
+            return $item->deal
+                && $item->deal->tours
+                && $item->deal->tours->is_group_package;
+        });
+
         $hashids = $this->getHashids();
-        return view('website.pages.confirm_booking', compact('cartItems', 'totalAmount', 'hashids'));
+        return view('website.pages.confirm_booking', compact('cartItems', 'totalAmount', 'hashids', 'requiresOnlinePayment'));
     }
 
     /**
@@ -109,7 +116,7 @@ class BookingController extends Controller
             $cartItems = BookingItem::where('user_id', Auth::id())
                 ->where('status', 'cart')
                 ->whereIn('id', $selectedItemIds)
-                ->with(['deal', 'room'])
+                ->with(['deal', 'deal.tours', 'room'])
                 ->get();
 
             if ($cartItems->isEmpty()) {
@@ -120,6 +127,32 @@ class BookingController extends Controller
             foreach ($cartItems as $item) {
                 if ($item->user_id !== Auth::id()) {
                     return back()->withErrors(['selected_items' => 'Unauthorized access to booking items.'])->withInput();
+                }
+            }
+
+            $hasGroupPackage = $cartItems->contains(function ($item) {
+                return $item->deal
+                    && $item->deal->tours
+                    && $item->deal->tours->is_group_package;
+            });
+
+            if ($hasGroupPackage && $validated['payment_method'] !== 'pesapal') {
+                return back()->withErrors([
+                    'payment_method' => 'Group packages require online payment. Please select Pesapal.',
+                ])->withInput();
+            }
+
+            $capacityService = app(GroupPackageCapacityService::class);
+            foreach ($cartItems as $cartItem) {
+                $tour = $cartItem->deal?->tours;
+                if (!$tour || !$tour->is_group_package) {
+                    continue;
+                }
+
+                $participants = ($cartItem->adults ?? 0) + ($cartItem->children ?? 0);
+                $check = $capacityService->canBook($tour, $participants);
+                if (!$check['allowed']) {
+                    return back()->withErrors(['selected_items' => $check['message']])->withInput();
                 }
             }
 
@@ -576,6 +609,20 @@ class BookingController extends Controller
             // For activities/packages, ensure tours relationship exists
             if (in_array($validated['type'], ['activity', 'package']) && !$deal->tours) {
                 throw new \Exception('Activity/package pricing information is missing. The activity does not have pricing data configured.');
+            }
+
+            if ($validated['type'] === 'package' && $deal->tours?->is_group_package) {
+                $participants = ($validated['adults'] ?? 1) + ($validated['children'] ?? 0);
+                $capacityService = app(GroupPackageCapacityService::class);
+                $check = $capacityService->canBook($deal->tours, $participants);
+
+                if (!$check['allowed']) {
+                    throw new \Exception($check['message']);
+                }
+
+                if ($deal->tours->group_departure_date) {
+                    $validated['check_in'] = $deal->tours->group_departure_date->format('Y-m-d');
+                }
             }
 
             // Calculate total price based on deal type

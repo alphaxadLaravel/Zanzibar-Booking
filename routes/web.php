@@ -142,40 +142,120 @@ Route::match(['get', 'post'], '/payment/ipn', [PaymentController::class, 'paymen
 ##########################################################################################
 ##########################################################################################
 
-// wrap auth
-Route::middleware('auth')->group(function () {
+// wrap auth + admin panel access
+Route::middleware(['auth', 'admin.panel'])->group(function () {
 
     ### ADMIN
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
-    // deals
-    Route::get('/admin/deals/{dealType}', [DealsController::class, 'dealType'])->name('admin.deal');
+    // Super Admin — admin account management
+    Route::middleware('super.admin')->prefix('admin/admins')->name('admin.admins.')->group(function () {
+        Route::get('/', [AdminController::class, 'admins'])->name('index');
+        Route::get('/create', [AdminController::class, 'createAdmin'])->name('create');
+        Route::post('/', [AdminController::class, 'storeAdmin'])->name('store');
+        Route::get('/{id}/edit', [AdminController::class, 'editAdmin'])->name('edit');
+        Route::put('/{id}/password', [AdminController::class, 'updateAdminPassword'])->name('password.update');
+        Route::put('/{id}', [AdminController::class, 'updateAdmin'])->name('update');
+        Route::delete('/{id}', [AdminController::class, 'deactivateAdmin'])->name('delete');
+    });
+
+    // deals — view (dynamic type from route)
+    Route::middleware('permission.deal:view,partner')->group(function () {
+        Route::get('/admin/deals/{dealType}', [DealsController::class, 'dealType'])->name('admin.deal');
+        Route::get('/admin/manage-deal/{id}/{type}/edit', [DealsController::class, 'editDeal'])->name('admin.manage-deal.edit');
+        Route::get('/admin/manage-deal/{type}', [DealsController::class, 'manageDeal'])->name('admin.manage-deal');
+        Route::get('/admin/tours/{id}/manage', [DealsController::class, 'manageTour'])->name('admin.tours.manage');
+    });
+
+    Route::middleware('permission.deal:view,partner,hotel')->group(function () {
+        Route::get('/admin/hotels/{id}/manage', [DealsController::class, 'manageHotel'])->name('admin.hotels.manage');
+        Route::get('/admin/hotels/{hotelId}/get-deals-by-type/{type}', [DealsController::class, 'getDealsByType'])->name('admin.hotels.get-deals-by-type');
+    });
+
+    Route::middleware('permission.deal:view,partner,activity')->group(function () {
+        Route::get('/admin/activities', [DealsController::class, 'activities'])->name('admin.activities');
+        Route::get('/admin/activities/{id}/manage', [DealsController::class, 'manageActivity'])->name('admin.activities.manage');
+    });
+
+    Route::middleware('permission.deal:view,partner,package')->group(function () {
+        Route::get('/admin/packages', [DealsController::class, 'packages'])->name('admin.packages');
+        Route::get('/admin/packages/{id}/manage', [DealsController::class, 'managePackage'])->name('admin.packages.manage');
+    });
+
+    // deals — create
+    Route::middleware('permission.deal:create,partner')->group(function () {
+        Route::post('/admin/manage-deal/{type}/store', [DealsController::class, 'storeDeal'])->name('admin.manage-deal.store');
+    });
+
+    Route::middleware('permission.deal:create,partner,activity')->group(function () {
+        Route::get('/admin/activities/create', [DealsController::class, 'createActivity'])->name('admin.activities.create');
+        Route::post('/admin/activities/store', [DealsController::class, 'storeActivity'])->name('admin.activities.store');
+        Route::post('/admin/tours/{tourId}/itinerary', [DealsController::class, 'storeItinerary'])->name('admin.tours.itinerary.store');
+    });
+
+    Route::middleware('permission.deal:create,partner,package')->group(function () {
+        Route::get('/admin/packages/create', [DealsController::class, 'createPackage'])->name('admin.packages.create');
+        Route::post('/admin/packages/store', [DealsController::class, 'storePackage'])->name('admin.packages.store');
+    });
+
+    Route::middleware('permission.deal:create,partner,hotel')->group(function () {
+        Route::post('/admin/hotels/{hotel_id}/rooms', [DealsController::class, 'storeRoom'])->name('admin.rooms.store');
+        Route::post('/admin/hotels/{hotelId}/add-nearby', [DealsController::class, 'addNearbyDeals'])->name('admin.hotels.add-nearby');
+    });
+
+    // deals — edit
+    Route::middleware('permission.deal:edit,partner')->group(function () {
+        Route::put('/admin/manage-deal/{id}/{type}/update', [DealsController::class, 'updateDeal'])->name('admin.manage-deal.update');
+    });
+
+    Route::middleware('permission.deal:edit,partner,activity')->group(function () {
+        Route::get('/admin/activities/{id}/edit', [DealsController::class, 'editActivity'])->name('admin.activities.edit');
+        Route::put('/admin/activities/{id}', [DealsController::class, 'updateActivity'])->name('admin.activities.update');
+        Route::get('/admin/tours/{tourId}/itinerary/{itineraryId}', [DealsController::class, 'getItinerary'])->name('admin.tours.itinerary.get');
+        Route::put('/admin/tours/{tourId}/itinerary/{itineraryId}', [DealsController::class, 'updateItinerary'])->name('admin.tours.itinerary.update');
+    });
+
+    Route::middleware('permission.deal:edit,partner,package')->group(function () {
+        Route::get('/admin/packages/{id}/edit', [DealsController::class, 'editPackage'])->name('admin.packages.edit');
+        Route::put('/admin/packages/{id}', [DealsController::class, 'updatePackage'])->name('admin.packages.update');
+    });
+
+    Route::middleware('permission.deal:edit,partner,hotel')->group(function () {
+        Route::get('/admin/hotels/{hotel_id}/rooms/{room_id}/edit', [DealsController::class, 'editRoom'])->name('admin.rooms.edit');
+        Route::put('/admin/hotels/{hotel_id}/rooms/{room_id}', [DealsController::class, 'updateRoom'])->name('admin.rooms.update');
+    });
+
+    // deals — delete
+    Route::middleware('permission.deal:delete,partner,hotel')->group(function () {
+        Route::delete('/admin/hotels/{id}', [DealsController::class, 'deleteHotel'])->name('admin.hotels.delete');
+        Route::delete('/admin/hotels/{hotel_id}/rooms/{room_id}', [DealsController::class, 'deleteRoom'])->name('admin.rooms.delete');
+        Route::delete('/admin/hotels/{hotelId}/remove-nearby/{nearId}', [DealsController::class, 'removeNearbyDeal'])->name('admin.hotels.remove-nearby');
+    });
+
+    Route::middleware('permission.deal:delete,partner,car')->group(function () {
+        Route::delete('/admin/cars/{id}', [DealsController::class, 'deleteCar'])->name('admin.cars.delete');
+    });
+
+    Route::middleware('permission.deal:delete,partner,apartment')->group(function () {
+        Route::delete('/admin/apartments/{id}', [DealsController::class, 'deleteApartment'])->name('admin.apartments.delete');
+    });
+
+    Route::middleware('permission.deal:delete,partner,activity')->group(function () {
+        Route::delete('/admin/tours/{id}', [DealsController::class, 'deleteTour'])->name('admin.tours.delete');
+        Route::delete('/admin/activities/{id}', [DealsController::class, 'deleteActivity'])->name('admin.activities.delete');
+        Route::delete('/admin/tours/{tourId}/itinerary/{itineraryId}', [DealsController::class, 'deleteItinerary'])->name('admin.tours.itinerary.delete');
+    });
+
+    Route::middleware('permission.deal:delete,partner,package')->group(function () {
+        Route::delete('/admin/packages/{id}', [DealsController::class, 'deletePackage'])->name('admin.packages.delete');
+    });
+
     Route::get('/admin/partners/{user}/approve', [AdminController::class, 'approvePartner'])
-        ->middleware('signed')
+        ->middleware(['signed', 'permission:partners.manage'])
         ->name('admin.partners.approve');
     Route::get('/admin/partners/{user}/reject', [AdminController::class, 'rejectPartner'])
-        ->middleware('signed')
+        ->middleware(['signed', 'permission:partners.manage'])
         ->name('admin.partners.reject');
-    Route::get('/admin/manage-deal/{id}/{type}/edit', [DealsController::class, 'editDeal'])->name('admin.manage-deal.edit');
-    Route::put('/admin/manage-deal/{id}/{type}/update', [DealsController::class, 'updateDeal'])->name('admin.manage-deal.update');
-    Route::get('/admin/manage-deal/{type}', [DealsController::class, 'manageDeal'])->name('admin.manage-deal');
-    Route::post('/admin/manage-deal/{type}/store', [DealsController::class, 'storeDeal'])->name('admin.manage-deal.store');
-
-    // amanage tours
-    Route::get('/admin/tours/{id}/manage', [DealsController::class, 'manageTour'])->name('admin.tours.manage');
-    Route::delete('/admin/tours/{id}', [DealsController::class, 'deleteTour'])->name('admin.tours.delete');
-    Route::post('/admin/tours/{tourId}/itinerary', [DealsController::class, 'storeItinerary'])->name('admin.tours.itinerary.store');
-    Route::get('/admin/tours/{tourId}/itinerary/{itineraryId}', [DealsController::class, 'getItinerary'])->name('admin.tours.itinerary.get');
-    Route::put('/admin/tours/{tourId}/itinerary/{itineraryId}', [DealsController::class, 'updateItinerary'])->name('admin.tours.itinerary.update');
-    Route::delete('/admin/tours/{tourId}/itinerary/{itineraryId}', [DealsController::class, 'deleteItinerary'])->name('admin.tours.itinerary.delete');
-
-
-    Route::get('/admin/hotels/{id}/manage', [DealsController::class, 'manageHotel'])->name('admin.hotels.manage');
-    Route::delete('/admin/hotels/{id}', [DealsController::class, 'deleteHotel'])->name('admin.hotels.delete');
-
-    Route::delete('/admin/cars/{id}', [DealsController::class, 'deleteCar'])->name('admin.cars.delete');
-
-    Route::delete('/admin/apartments/{id}', [DealsController::class, 'deleteApartment'])->name('admin.apartments.delete');
 
 
 
@@ -185,131 +265,118 @@ Route::middleware('auth')->group(function () {
 
 
     // Blog Management
-    Route::get('/admin/blog', [AdminController::class, 'blog'])->name('admin.blog');
-    Route::get('/admin/blog/create', [AdminController::class, 'createBlog'])->name('admin.blog.create');
-    Route::post('/admin/blog/store', [AdminController::class, 'storeBlog'])->name('admin.blog.store');
-    Route::get('/admin/blog/{id}/edit', [AdminController::class, 'editBlog'])->name('admin.blog.edit');
-    Route::put('/admin/blog/{id}', [AdminController::class, 'updateBlog'])->name('admin.blog.update');
-    Route::delete('/admin/blog/{id}', [AdminController::class, 'deleteBlog'])->name('admin.blog.delete');
+    Route::middleware('permission:blog.view')->group(function () {
+        Route::get('/admin/blog', [AdminController::class, 'blog'])->name('admin.blog');
+    });
+    Route::middleware('permission:blog.create')->group(function () {
+        Route::get('/admin/blog/create', [AdminController::class, 'createBlog'])->name('admin.blog.create');
+        Route::post('/admin/blog/store', [AdminController::class, 'storeBlog'])->name('admin.blog.store');
+    });
+    Route::middleware('permission:blog.edit')->group(function () {
+        Route::get('/admin/blog/{id}/edit', [AdminController::class, 'editBlog'])->name('admin.blog.edit');
+        Route::put('/admin/blog/{id}', [AdminController::class, 'updateBlog'])->name('admin.blog.update');
+    });
+    Route::delete('/admin/blog/{id}', [AdminController::class, 'deleteBlog'])
+        ->middleware('permission:blog.delete')
+        ->name('admin.blog.delete');
 
     // Bookings Management
-    Route::get('/admin/bookings', [AdminController::class, 'bookings'])->name('admin.bookings');
-    Route::get('/admin/bookings/{id}', [AdminController::class, 'viewBooking'])->name('admin.bookings.view');
-    Route::put('/admin/bookings/{id}/status', [AdminController::class, 'updateBookingStatus'])->name('admin.bookings.status');
+    Route::middleware('permission:bookings.view')->group(function () {
+        Route::get('/admin/bookings', [AdminController::class, 'bookings'])->name('admin.bookings');
+        Route::get('/admin/bookings/{id}', [AdminController::class, 'viewBooking'])->name('admin.bookings.view');
+        Route::get('/admin/my-bookings', [AdminController::class, 'myBookings'])->name('admin.my-bookings');
+    });
+    Route::put('/admin/bookings/{id}/status', [AdminController::class, 'updateBookingStatus'])
+        ->middleware('permission:bookings.manage')
+        ->name('admin.bookings.status');
 
     // Users Management
-    Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');
-    Route::get('/admin/users/create', [AdminController::class, 'createUser'])->name('admin.users.create');
-    Route::post('/admin/users', [AdminController::class, 'storeUser'])->name('admin.users.store');
-    Route::put('/admin/users/{id}/suspend', [AdminController::class, 'suspendUser'])->name('admin.users.suspend');
-    Route::put('/admin/users/{id}/unsuspend', [AdminController::class, 'unsuspendUser'])->name('admin.users.unsuspend');
-    Route::get('/admin/partners', [AdminController::class, 'partners'])->name('admin.partners');
-    Route::get('/admin/partners/{id}/assign-deals', [AdminController::class, 'assignDealsToPartnerForm'])->name('admin.partners.assign-deals');
-    Route::post('/admin/partners/{id}/assign-deals', [AdminController::class, 'assignDealsToPartner'])->name('admin.partners.assign-deals.store');
-    Route::get('/admin/users/{id}', [AdminController::class, 'showUser'])->name('admin.users.show');
-    Route::get('/admin/users/{id}/edit', [AdminController::class, 'editUser'])->name('admin.users.edit');
-    Route::put('/admin/users/{id}', [AdminController::class, 'updateUser'])->name('admin.users.update');
-    Route::delete('/admin/users/{id}', [AdminController::class, 'deleteUser'])->name('admin.users.delete');
-    Route::put('/admin/users/{id}/partner/approve', [AdminController::class, 'approvePartnerRequest'])->name('admin.users.partner.approve');
-    Route::put('/admin/users/{id}/partner/reject', [AdminController::class, 'rejectPartnerRequest'])->name('admin.users.partner.reject');
+    Route::middleware('permission:users.view')->group(function () {
+        Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');
+        Route::get('/admin/users/{id}', [AdminController::class, 'showUser'])->name('admin.users.show');
+    });
+    Route::middleware('permission:users.manage')->group(function () {
+        Route::get('/admin/users/create', [AdminController::class, 'createUser'])->name('admin.users.create');
+        Route::post('/admin/users', [AdminController::class, 'storeUser'])->name('admin.users.store');
+        Route::put('/admin/users/{id}/suspend', [AdminController::class, 'suspendUser'])->name('admin.users.suspend');
+        Route::put('/admin/users/{id}/unsuspend', [AdminController::class, 'unsuspendUser'])->name('admin.users.unsuspend');
+        Route::get('/admin/users/{id}/edit', [AdminController::class, 'editUser'])->name('admin.users.edit');
+        Route::put('/admin/users/{id}', [AdminController::class, 'updateUser'])->name('admin.users.update');
+        Route::delete('/admin/users/{id}', [AdminController::class, 'deleteUser'])->name('admin.users.delete');
+    });
+
+    // Partners Management
+    Route::middleware('permission:partners.view')->group(function () {
+        Route::get('/admin/partners', [AdminController::class, 'partners'])->name('admin.partners');
+    });
+    Route::middleware('permission:partners.manage')->group(function () {
+        Route::get('/admin/partners/{id}/assign-deals', [AdminController::class, 'assignDealsToPartnerForm'])->name('admin.partners.assign-deals');
+        Route::post('/admin/partners/{id}/assign-deals', [AdminController::class, 'assignDealsToPartner'])->name('admin.partners.assign-deals.store');
+        Route::put('/admin/users/{id}/partner/approve', [AdminController::class, 'approvePartnerRequest'])->name('admin.users.partner.approve');
+        Route::put('/admin/users/{id}/partner/reject', [AdminController::class, 'rejectPartnerRequest'])->name('admin.users.partner.reject');
+    });
 
     // Payments Management
-    Route::get('/admin/payments', [AdminController::class, 'payments'])->name('admin.payments');
-    Route::get('/admin/payments/{id}', [AdminController::class, 'viewPayment'])->name('admin.payments.view');
+    Route::middleware('permission:payments.view')->group(function () {
+        Route::get('/admin/payments', [AdminController::class, 'payments'])->name('admin.payments');
+        Route::get('/admin/payments/{id}', [AdminController::class, 'viewPayment'])->name('admin.payments.view');
+    });
 
-    // Media Management
-    Route::get('/admin/media', [AdminController::class, 'media'])->name('admin.media');
-    Route::post('/admin/media/upload', [AdminController::class, 'uploadMedia'])->name('admin.media.upload');
-    Route::delete('/admin/media/{id}', [AdminController::class, 'deleteMedia'])->name('admin.media.delete');
+    // Media & general settings
+    Route::middleware('permission:settings.system')->group(function () {
+        Route::get('/admin/media', [AdminController::class, 'media'])->name('admin.media');
+        Route::post('/admin/media/upload', [AdminController::class, 'uploadMedia'])->name('admin.media.upload');
+        Route::delete('/admin/media/{id}', [AdminController::class, 'deleteMedia'])->name('admin.media.delete');
+        Route::get('/admin/settings/general', [AdminController::class, 'generalSettings'])->name('admin.settings.general');
+        Route::put('/admin/settings/general', [AdminController::class, 'updateGeneralSettings'])->name('admin.settings.general.update');
+        Route::get('/admin/settings/security', [AdminController::class, 'securitySettings'])->name('admin.settings.security');
+        Route::put('/admin/settings/security', [AdminController::class, 'updateSecuritySettings'])->name('admin.settings.security.update');
+        Route::get('/admin/system-settings', [AdminController::class, 'systemSettings'])->name('admin.system.settings');
+        Route::put('/admin/system-settings', [AdminController::class, 'updateSystemSettings'])->name('admin.system.settings.update');
+    });
 
-    // Settings Management
-    Route::get('/admin/settings/general', [AdminController::class, 'generalSettings'])->name('admin.settings.general');
-    Route::put('/admin/settings/general', [AdminController::class, 'updateGeneralSettings'])->name('admin.settings.general.update');
-    Route::get('/admin/settings/security', [AdminController::class, 'securitySettings'])->name('admin.settings.security');
-    Route::put('/admin/settings/security', [AdminController::class, 'updateSecuritySettings'])->name('admin.settings.security.update');
+    // CMS pages
+    Route::middleware('permission:settings.content')->group(function () {
+        Route::get('/admin/manage/content/{page}', [AdminController::class, 'manageContent'])->name('admin.manage.content');
+        Route::put('/admin/manage/content/{page}', [AdminController::class, 'updateContent'])->name('admin.manage.content.update');
+    });
 
-    // Profile Management
+    // Home SEO
+    Route::middleware('permission:settings.seo')->group(function () {
+        Route::get('/admin/home-seo', [AdminController::class, 'homeSeoSettings'])->name('admin.home.seo');
+        Route::put('/admin/home-seo', [AdminController::class, 'updateHomeSeoSettings'])->name('admin.home.seo.update');
+    });
+
+    // Profile Management (all admins and partners)
     Route::get('/admin/profile', [AdminController::class, 'profile'])->name('admin.profile');
     Route::get('/admin/profile/edit', [AdminController::class, 'editProfile'])->name('admin.profile.edit');
     Route::put('/admin/profile', [AdminController::class, 'updateProfile'])->name('admin.profile.update');
 
-    // My Bookings
-    Route::get('/admin/my-bookings', [AdminController::class, 'myBookings'])->name('admin.my-bookings');
-
-
-    #############################################################
-
     // Categories Management
-    Route::get('/categories', [CategoriesController::class, 'categories'])->name('admin.categories');
-    Route::post('/admin/categories/store', [CategoriesController::class, 'store'])->name('admin.categories.store');
-    Route::get('/admin/categories/{id}/edit', [CategoriesController::class, 'edit'])->name('admin.categories.edit');
-    Route::put('/admin/categories/{id}', [CategoriesController::class, 'update'])->name('admin.categories.update');
-    Route::delete('/admin/categories/{id}', [CategoriesController::class, 'delete'])->name('admin.categories.delete');
+    Route::middleware('permission:categories.manage')->group(function () {
+        Route::get('/categories', [CategoriesController::class, 'categories'])->name('admin.categories');
+        Route::post('/admin/categories/store', [CategoriesController::class, 'store'])->name('admin.categories.store');
+        Route::get('/admin/categories/{id}/edit', [CategoriesController::class, 'edit'])->name('admin.categories.edit');
+        Route::put('/admin/categories/{id}', [CategoriesController::class, 'update'])->name('admin.categories.update');
+        Route::delete('/admin/categories/{id}', [CategoriesController::class, 'delete'])->name('admin.categories.delete');
+    });
 
     // Features Management
-    Route::get('/admin/features', [FeatureController::class, 'index'])->name('admin.features');
-    Route::post('/admin/features/store', [FeatureController::class, 'store'])->name('admin.features.store');
-    Route::put('/admin/features/{id}', [FeatureController::class, 'update'])->name('admin.features.update');
-    Route::delete('/admin/features/{id}', [FeatureController::class, 'destroy'])->name('admin.features.delete');
-    Route::put('/admin/features/{id}/toggle-status', [FeatureController::class, 'toggleStatus'])->name('admin.features.toggle-status');
-
-    // manage deal (create and edit) - specific routes first
-
-
-    // hotels management
-
-    // room management
-    Route::post('/admin/hotels/{hotel_id}/rooms', [DealsController::class, 'storeRoom'])->name('admin.rooms.store');
-    Route::get('/admin/hotels/{hotel_id}/rooms/{room_id}/edit', [DealsController::class, 'editRoom'])->name('admin.rooms.edit');
-    Route::put('/admin/hotels/{hotel_id}/rooms/{room_id}', [DealsController::class, 'updateRoom'])->name('admin.rooms.update');
-    Route::delete('/admin/hotels/{hotel_id}/rooms/{room_id}', [DealsController::class, 'deleteRoom'])->name('admin.rooms.delete');
-
-
-    // Tours Management
-    Route::get('/admin/activities', [DealsController::class, 'activities'])->name('admin.activities');
-    Route::get('/admin/activities/create', [DealsController::class, 'createActivity'])->name('admin.activities.create');
-    Route::post('/admin/activities/store', [DealsController::class, 'storeActivity'])->name('admin.activities.store');
-    Route::get('/admin/activities/{id}/edit', [DealsController::class, 'editActivity'])->name('admin.activities.edit');
-    Route::put('/admin/activities/{id}', [DealsController::class, 'updateActivity'])->name('admin.activities.update');
-    Route::delete('/admin/activities/{id}', [DealsController::class, 'deleteActivity'])->name('admin.activities.delete');
-
-    // Tour Management
-    Route::get('/admin/activities/{id}/manage', [DealsController::class, 'manageActivity'])->name('admin.activities.manage');
-
-    // packages
-    Route::get('/admin/packages', [DealsController::class, 'packages'])->name('admin.packages');
-    Route::get('/admin/packages/create', [DealsController::class, 'createPackage'])->name('admin.packages.create');
-    Route::post('/admin/packages/store', [DealsController::class, 'storePackage'])->name('admin.packages.store');
-    Route::get('/admin/packages/{id}/edit', [DealsController::class, 'editPackage'])->name('admin.packages.edit');
-    Route::put('/admin/packages/{id}', [DealsController::class, 'updatePackage'])->name('admin.packages.update');
-    Route::delete('/admin/packages/{id}', [DealsController::class, 'deletePackage'])->name('admin.packages.delete');
-
-    // Package Management
-    Route::get('/admin/packages/{id}/manage', [DealsController::class, 'managePackage'])->name('admin.packages.manage');
-
-    // Tour Itinerary CRUD
-
-    // Nearby Deals Management
-    Route::get('/admin/hotels/{hotelId}/get-deals-by-type/{type}', [DealsController::class, 'getDealsByType'])->name('admin.hotels.get-deals-by-type');
-    Route::post('/admin/hotels/{hotelId}/add-nearby', [DealsController::class, 'addNearbyDeals'])->name('admin.hotels.add-nearby');
-    Route::delete('/admin/hotels/{hotelId}/remove-nearby/{nearId}', [DealsController::class, 'removeNearbyDeal'])->name('admin.hotels.remove-nearby');
-
-
-    // settings management
-    Route::get('/admin/manage/content/{page}', [AdminController::class, 'manageContent'])->name('admin.manage.content');
-    Route::put('/admin/manage/content/{page}', [AdminController::class, 'updateContent'])->name('admin.manage.content.update');
+    Route::middleware('permission:features.manage')->group(function () {
+        Route::get('/admin/features', [FeatureController::class, 'index'])->name('admin.features');
+        Route::post('/admin/features/store', [FeatureController::class, 'store'])->name('admin.features.store');
+        Route::put('/admin/features/{id}', [FeatureController::class, 'update'])->name('admin.features.update');
+        Route::delete('/admin/features/{id}', [FeatureController::class, 'destroy'])->name('admin.features.delete');
+        Route::put('/admin/features/{id}/toggle-status', [FeatureController::class, 'toggleStatus'])->name('admin.features.toggle-status');
+    });
 
     // Contact messages management
-    Route::get('/admin/contact-messages', [AdminController::class, 'contactMessages'])->name('admin.contact.messages');
-    Route::get('/admin/contact-messages/{id}', [AdminController::class, 'viewContactMessage'])->name('admin.contact.message.view');
-    Route::post('/admin/contact-messages/{id}/status', [AdminController::class, 'updateMessageStatus'])->name('admin.contact.message.status');
-    Route::delete('/admin/contact-messages/{id}', [AdminController::class, 'deleteContactMessage'])->name('admin.contact.message.delete');
-
-    // System settings management
-    Route::get('/admin/system-settings', [AdminController::class, 'systemSettings'])->name('admin.system.settings');
-    Route::put('/admin/system-settings', [AdminController::class, 'updateSystemSettings'])->name('admin.system.settings.update');
-
-    // Home page SEO
-    Route::get('/admin/home-seo', [AdminController::class, 'homeSeoSettings'])->name('admin.home.seo');
-    Route::put('/admin/home-seo', [AdminController::class, 'updateHomeSeoSettings'])->name('admin.home.seo.update');
+    Route::middleware('permission:contact.view')->group(function () {
+        Route::get('/admin/contact-messages', [AdminController::class, 'contactMessages'])->name('admin.contact.messages');
+        Route::get('/admin/contact-messages/{id}', [AdminController::class, 'viewContactMessage'])->name('admin.contact.message.view');
+    });
+    Route::middleware('permission:contact.manage')->group(function () {
+        Route::post('/admin/contact-messages/{id}/status', [AdminController::class, 'updateMessageStatus'])->name('admin.contact.message.status');
+        Route::delete('/admin/contact-messages/{id}', [AdminController::class, 'deleteContactMessage'])->name('admin.contact.message.delete');
+    });
 });

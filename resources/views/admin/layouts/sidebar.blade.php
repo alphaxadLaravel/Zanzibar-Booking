@@ -24,130 +24,144 @@
             $sidebarUser = Auth::user();
             $sidebarRole = optional($sidebarUser->role)->name;
             $sidebarIsPartner = $sidebarRole === 'Partner';
+            $sidebarIsSuperAdmin = $sidebarRole === 'Super Admin';
+
+            $adminDealNav = [
+                ['type' => 'hotel', 'label' => 'Hotels', 'icon' => 'mdi-city-variant-outline'],
+                ['type' => 'package', 'label' => 'Packages', 'icon' => 'mdi-map-marker-radius'],
+                ['type' => 'activity', 'label' => 'Activities', 'icon' => 'mdi-run-fast'],
+                ['type' => 'car', 'label' => 'Cars', 'icon' => 'mdi-car'],
+                ['type' => 'apartment', 'label' => 'Apartments', 'icon' => 'mdi-home-city'],
+            ];
+            $visibleDealNav = collect($adminDealNav)->filter(
+                fn (array $item) => $sidebarUser->hasPermission(\App\Support\DealPermissions::slug($item['type'], 'view'))
+            );
+            $canViewBlog = $sidebarUser->hasAnyPermission(['blog.view', 'blog.create', 'blog.edit', 'blog.delete']);
+            $showAllServices = $visibleDealNav->isNotEmpty() || $canViewBlog;
+
+            $canViewSettingsMenu = $sidebarUser->hasAnyPermission(['settings.system', 'settings.seo', 'settings.content']);
         @endphp
         <ul class="side-nav">
             <li class="side-nav-title">{{ $sidebarIsPartner ? 'PARTNER' : 'ADMIN' }}</li>
 
+            @if($sidebarIsPartner || $sidebarUser->hasPermission('dashboard'))
             <li class="side-nav-item">
                 <a href="{{ route('dashboard') }}" class="side-nav-link">
                     <span class="menu-icon"><i class="mdi mdi-view-dashboard"></i></span>
                     <span class="menu-text">Dashboard</span>
                 </a>
             </li>
+            @endif
 
             @if($sidebarIsPartner)
                 <li class="side-nav-title">My Deals</li>
+                @foreach($adminDealNav as $dealItem)
                 <li class="side-nav-item">
-                    <a href="{{ route('admin.deal', 'hotel') }}" class="side-nav-link">
-                        <span class="menu-icon"><i class="mdi mdi-city-variant-outline"></i></span>
-                        <span class="menu-text">Hotels</span>
+                    <a href="{{ route('admin.deal', $dealItem['type']) }}" class="side-nav-link">
+                        <span class="menu-icon"><i class="mdi {{ $dealItem['icon'] }}"></i></span>
+                        <span class="menu-text">{{ $dealItem['label'] }}</span>
                     </a>
                 </li>
-                <li class="side-nav-item">
-                    <a href="{{ route('admin.deal', 'apartment') }}" class="side-nav-link">
-                        <span class="menu-icon"><i class="mdi mdi-home-city"></i></span>
-                        <span class="menu-text">Apartments</span>
-                    </a>
-                </li>
-                <li class="side-nav-item">
-                    <a href="{{ route('admin.deal', 'package') }}" class="side-nav-link">
-                        <span class="menu-icon"><i class="mdi mdi-map-marker-radius"></i></span>
-                        <span class="menu-text">Packages</span>
-                    </a>
-                </li>
-                <li class="side-nav-item">
-                    <a href="{{ route('admin.deal', 'activity') }}" class="side-nav-link">
-                        <span class="menu-icon"><i class="mdi mdi-run-fast"></i></span>
-                        <span class="menu-text">Activities</span>
-                    </a>
-                </li>
-                <li class="side-nav-item">
-                    <a href="{{ route('admin.deal', 'car') }}" class="side-nav-link">
-                        <span class="menu-icon"><i class="mdi mdi-car"></i></span>
-                        <span class="menu-text">Cars</span>
-                    </a>
-                </li>
+                @endforeach
             @else
+                @if($showAllServices)
                 <li class="side-nav-title">All Services</li>
 
+                @foreach($visibleDealNav as $dealItem)
                 <li class="side-nav-item">
-                    <a href="{{ route('admin.deal', 'hotel') }}" class="side-nav-link">
-                        <span class="menu-icon"><i class="mdi mdi-city-variant-outline"></i></span>
-                        <span class="menu-text">Hotels</span>
+                    <a href="{{ route('admin.deal', $dealItem['type']) }}" class="side-nav-link">
+                        <span class="menu-icon"><i class="mdi {{ $dealItem['icon'] }}"></i></span>
+                        <span class="menu-text">{{ $dealItem['label'] }}</span>
                     </a>
                 </li>
-                <li class="side-nav-item">
-                    <a href="{{ route('admin.deal', 'package') }}" class="side-nav-link">
-                        <span class="menu-icon"><i class="mdi mdi-map-marker-radius"></i></span>
-                        <span class="menu-text">Packages</span>
-                    </a>
-                </li>
-                <li class="side-nav-item">
-                    <a href="{{ route('admin.deal', 'activity') }}" class="side-nav-link">
-                        <span class="menu-icon"><i class="mdi mdi-map-marker-radius"></i></span>
-                        <span class="menu-text">Activities</span>
-                    </a>
-                </li>
-                <li class="side-nav-item">
-                    <a href="{{ route('admin.deal', 'car') }}" class="side-nav-link">
-                        <span class="menu-icon"><i class="mdi mdi-car"></i></span>
-                        <span class="menu-text">Cars</span>
-                    </a>
-                </li>
-                <li class="side-nav-item">
-                    <a href="{{ route('admin.deal', 'apartment') }}" class="side-nav-link">
-                        <span class="menu-icon"><i class="mdi mdi-home-city"></i></span>
-                        <span class="menu-text">Apartments</span>
-                    </a>
-                </li>
+                @endforeach
+
+                @if($canViewBlog)
                 <li class="side-nav-item">
                     <a href="{{ route('admin.blog') }}" class="side-nav-link">
                         <span class="menu-icon"><i class="mdi mdi-post-outline"></i></span>
                         <span class="menu-text">Blog</span>
                     </a>
                 </li>
+                @endif
+                @endif
 
+                @if($sidebarUser->hasAnyPermission(['bookings.view', 'bookings.manage', 'users.view', 'users.manage', 'partners.view', 'partners.manage', 'payments.view']))
                 <li class="side-nav-title">Manage</li>
+                @endif
+
+                @if($sidebarUser->hasAnyPermission(['bookings.view', 'bookings.manage']))
                 <li class="side-nav-item">
                     <a href="{{ route('admin.bookings') }}" class="side-nav-link">
                         <span class="menu-icon"><i class="mdi mdi-calendar-check"></i></span>
                         <span class="menu-text">Bookings</span>
                     </a>
                 </li>
+                @endif
+
+                @if($sidebarUser->hasAnyPermission(['users.view', 'users.manage']))
                 <li class="side-nav-item">
                     <a href="{{ route('admin.users') }}" class="side-nav-link">
                         <span class="menu-icon"><i class="mdi mdi-account-group"></i></span>
                         <span class="menu-text">Users</span>
                     </a>
                 </li>
+                @endif
+
+                @if($sidebarUser->hasAnyPermission(['partners.view', 'partners.manage']))
                 <li class="side-nav-item">
                     <a href="{{ route('admin.partners') }}" class="side-nav-link">
                         <span class="menu-icon"><i class="mdi mdi-handshake-outline"></i></span>
                         <span class="menu-text">Partners</span>
                     </a>
                 </li>
+                @endif
+
+                @if($sidebarUser->hasPermission('payments.view'))
                 <li class="side-nav-item">
                     <a href="{{ route('admin.payments') }}" class="side-nav-link">
                         <span class="menu-icon"><i class="mdi mdi-cash-multiple"></i></span>
                         <span class="menu-text">Payments</span>
                     </a>
                 </li>
+                @endif
 
+                @if($sidebarIsSuperAdmin)
+                <li class="side-nav-item">
+                    <a href="{{ route('admin.admins.index') }}" class="side-nav-link">
+                        <span class="menu-icon"><i class="mdi mdi-shield-account"></i></span>
+                        <span class="menu-text">Admins</span>
+                    </a>
+                </li>
+                @endif
+
+                @if($sidebarUser->hasAnyPermission(['categories.manage', 'features.manage']))
                 <li class="side-nav-title">Settings</li>
+                @endif
+
+                @if($sidebarUser->hasPermission('categories.manage'))
                 <li class="side-nav-item">
                     <a href="{{ route('admin.categories') }}" class="side-nav-link">
                         <span class="menu-icon"><i class="mdi mdi-shape-outline"></i></span>
                         <span class="menu-text">Categories</span>
                     </a>
                 </li>
+                @endif
+
+                @if($sidebarUser->hasPermission('features.manage'))
                 <li class="side-nav-item">
                     <a href="{{ route('admin.features') }}" class="side-nav-link">
                         <span class="menu-icon"><i class="mdi mdi-star-outline"></i></span>
                         <span class="menu-text">Features</span>
                     </a>
                 </li>
+                @endif
 
+                @if($sidebarUser->hasAnyPermission(['settings.system', 'settings.seo', 'settings.content', 'contact.view', 'contact.manage', 'bookings.view']))
                 <li class="side-nav-title">Account</li>
+                @endif
+
+                @if($canViewSettingsMenu)
                 <li class="side-nav-item">
                     <a data-bs-toggle="collapse" href="#sidebarSettings" aria-expanded="false"
                         aria-controls="sidebarSettings" class="side-nav-link">
@@ -157,28 +171,42 @@
                     </a>
                     <div class="collapse" id="sidebarSettings">
                         <ul class="sub-menu">
+                            @permission('settings.system')
                             <li class="side-nav-item"><a href="{{ route('admin.system.settings') }}" class="side-nav-link">System Settings</a></li>
+                            @endpermission
+                            @permission('settings.seo')
                             <li class="side-nav-item"><a href="{{ route('admin.home.seo') }}" class="side-nav-link">Home Page SEO</a></li>
+                            @endpermission
+                            @permission('settings.content')
                             <li class="side-nav-item"><a href="{{ route('admin.manage.content', 'about-us') }}" class="side-nav-link">About Us</a></li>
                             <li class="side-nav-item"><a href="{{ route('admin.manage.content', 'become-a-partner') }}" class="side-nav-link">Become a Partner</a></li>
                             <li class="side-nav-item"><a href="{{ route('admin.manage.content', 'our-commitment') }}" class="side-nav-link">Our Commitment</a></li>
                             <li class="side-nav-item"><a href="{{ route('admin.manage.content', 'terms-conditions') }}" class="side-nav-link">Terms & Conditions</a></li>
                             <li class="side-nav-item"><a href="{{ route('admin.manage.content', 'privacy-policy') }}" class="side-nav-link">Privacy Policy</a></li>
+                            @endpermission
                         </ul>
                     </div>
                 </li>
+                @endif
+
+                @if($sidebarUser->hasAnyPermission(['contact.view', 'contact.manage']))
                 <li class="side-nav-item">
                     <a href="{{ route('admin.contact.messages') }}" class="side-nav-link">
                         <span class="menu-icon"><i class="mdi mdi-email"></i></span>
                         <span class="menu-text">Contact Messages</span>
                     </a>
                 </li>
+                @endif
+
+                @if($sidebarUser->hasAnyPermission(['bookings.view', 'bookings.manage']))
                 <li class="side-nav-item">
                     <a href="{{ route('admin.my-bookings') }}" class="side-nav-link">
                         <span class="menu-icon"><i class="mdi mdi-book-open-variant"></i></span>
                         <span class="menu-text">My Bookings</span>
                     </a>
                 </li>
+                @endif
+
                 <li class="side-nav-item">
                     <a data-bs-toggle="collapse" href="#sidebarProfile" aria-expanded="false" aria-controls="sidebarProfile"
                         class="side-nav-link">

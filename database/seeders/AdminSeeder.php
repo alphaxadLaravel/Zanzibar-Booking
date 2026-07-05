@@ -14,21 +14,21 @@ class AdminSeeder extends Seeder
      */
     public function run(): void
     {
-        // Get the Admin role
-        $adminRole = Role::where('name', 'Admin')->first();
+        $superAdminRole = Role::where('name', 'Super Admin')->first();
 
-        if ($adminRole) {
-            User::firstOrCreate(
+        if ($superAdminRole) {
+            User::updateOrCreate(
                 ['email' => 'admin@zanzibarbookings.com'],
                 [
-                    'firstname' => 'Admin',
-                    'lastname' => 'User',
+                    'firstname' => 'Super',
+                    'lastname' => 'Admin',
                     'email' => 'admin@zanzibarbookings.com',
                     'phone' => '+1234567890',
                     'password' => Hash::make('password'),
                     'status' => true,
-                    'role_id' => $adminRole->id,
-                    'email_verified_at' => now(), // Admin email is verified by default
+                    'role_id' => $superAdminRole->id,
+                    'email_verified_at' => now(),
+                    'is_suspended' => false,
                 ]
             );
         }

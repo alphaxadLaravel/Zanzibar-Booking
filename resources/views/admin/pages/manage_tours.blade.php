@@ -53,6 +53,19 @@
                                         <span class="ms-1">{{ $tour->tours->max_people ?? 'N/A' }}</span>
                                     </span>
                                 </div>
+                                @if($tour->tours?->is_group_package)
+                                <div class="col-auto">
+                                    <span class="badge bg-info text-white">
+                                        Group Package
+                                    </span>
+                                </div>
+                                <div class="col-auto">
+                                    <span class="badge bg-light text-dark border">
+                                        <strong>Max Group:</strong>
+                                        <span class="ms-1">{{ $tour->tours->group_max_capacity ?? 'N/A' }}</span>
+                                    </span>
+                                </div>
+                                @endif
                                 <div class="col-auto">
                                     <span class="badge bg-light text-dark border">
                                         <strong>Base Price:</strong>
@@ -69,13 +82,31 @@
                             </small>
                         </div>
                         @endif
+                        @if($tour->tours?->is_group_package)
+                            @php $groupStats = app(\App\Services\GroupPackageCapacityService::class)->statsFor($tour->tours); @endphp
+                            <div class="mt-3 p-3 border rounded bg-light">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <strong>Group Package Progress</strong>
+                                    <span class="badge bg-info">{{ $groupStats['booked'] }}/{{ $groupStats['capacity'] }} paid</span>
+                                </div>
+                                <div class="progress mb-2" style="height:10px;">
+                                    <div class="progress-bar bg-info" style="width: {{ $groupStats['percent'] }}%;"></div>
+                                </div>
+                                <div class="small text-muted">
+                                    @if($tour->tours->group_booking_deadline)
+                                        Book by {{ $tour->tours->group_booking_deadline->format('M d, Y') }} |
+                                    @endif
+                                    {{ $groupStats['remaining'] }} spot(s) remaining
+                                </div>
+                            </div>
+                        @endif
                     </div>
                     <div class="d-flex align-items-start" style="flex: 0 0 auto; gap: 0.5rem;">
                         <button type="button" class="btn btn-outline-danger btn-sm"
                             onclick="deleteTour('{{ $hashids->encode($tour->id) }}')">
                             <i class="ti ti-trash"></i> Delete Tour
                         </button>
-                        <a href="{{ route('view-tour', $hashids->encode($tour->id)) }}" target="_blank" class="btn btn-outline-info btn-sm">
+                        <a href="{{ $tour->type === 'package' ? route('view-package', $hashids->encode($tour->id)) : ($tour->type === 'activity' ? route('view-activity', $hashids->encode($tour->id)) : route('view-tour', $hashids->encode($tour->id))) }}" target="_blank" class="btn btn-outline-info btn-sm">
                             <i class="ti ti-eye"></i> Preview Tour
                         </a>
                     </div>
@@ -83,6 +114,79 @@
             </div>
         </div>
     </div>
+
+    @if($tour->tours?->is_group_package)
+    <div class="row mt-2">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Group Bookings (Paid)</h5>
+                    <span class="badge bg-info">{{ $groupBookings->sum('participants') }} participant(s)</span>
+                </div>
+                <div class="card-body p-0">
+                    @if($groupBookings->isNotEmpty())
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Guest</th>
+                                    <th>Contact</th>
+                                    <th>Adults</th>
+                                    <th>Children</th>
+                                    <th>Total</th>
+                                    <th>Amount</th>
+                                    <th>Booked</th>
+                                    <th>Booking</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($groupBookings as $index => $booking)
+                                <tr>
+                                    <td>{{ $index + 1 }}</td>
+                                    <td>{{ $booking['name'] }}</td>
+                                    <td>
+                                        @if($booking['email'])
+                                            <div class="small">{{ $booking['email'] }}</div>
+                                        @endif
+                                        @if($booking['phone'])
+                                            <div class="small text-muted">{{ $booking['phone'] }}</div>
+                                        @endif
+                                    </td>
+                                    <td>{{ $booking['adults'] }}</td>
+                                    <td>{{ $booking['children'] }}</td>
+                                    <td>{{ $booking['participants'] }}</td>
+                                    <td>${{ number_format($booking['total_price'], 2) }}</td>
+                                    <td>
+                                        <span class="text-nowrap">{{ $booking['booked_at']?->format('M d, Y') }}</span>
+                                        <small class="text-muted d-block">{{ $booking['booked_at']?->format('h:i A') }}</small>
+                                    </td>
+                                    <td>
+                                        @if($booking['booking_code'] && $booking['booking_id'])
+                                            <a href="{{ route('admin.bookings.view', $hashids->encode($booking['booking_id'])) }}"
+                                                class="btn btn-sm btn-outline-primary">
+                                                {{ $booking['booking_code'] }}
+                                            </a>
+                                        @else
+                                            <span class="text-muted">—</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    @else
+                    <div class="text-center py-4 text-muted">
+                        <i class="ti ti-users" style="font-size: 2rem;"></i>
+                        <p class="mb-0 mt-2">No paid bookings yet for this group package.</p>
+                    </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 
     <!-- Itinerary Management -->
     <div class="row mt-2">

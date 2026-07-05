@@ -66,7 +66,7 @@
                 </div>
 
                 <div class="mt-4">
-                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="submit" class="btn btn-primary" data-loading-text="Saving...">Save</button>
                     <a href="{{ route('admin.users') }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
             </form>

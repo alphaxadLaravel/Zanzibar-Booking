@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\AdminAccountCreated;
 use App\Mail\PartnerRegistration;
 use App\Mail\PartnerAccepted;
 use App\Mail\PartnerRejected;
@@ -15,7 +16,9 @@ use App\Models\Car;
 use App\Models\Pages;
 use App\Models\Payment;
 use App\Models\User;
+use App\Models\Permission;
 use App\Models\Role;
+use App\Support\PermissionDependencies;
 use App\Models\ContactMessage;
 use App\Models\System;
 use App\Models\SiteVisit;
@@ -45,6 +48,10 @@ class AdminController extends Controller
         $authUser = Auth::user();
         $roleName = optional($authUser->role)->name;
         $isPartner = $roleName === 'Partner';
+
+        if (!$isPartner && !$authUser->isSuperAdmin() && !$authUser->hasPermission('dashboard')) {
+            return redirect($authUser->adminLandingUrl());
+        }
 
         if ($isPartner && $authUser) {
             $stats = [
@@ -428,13 +435,15 @@ class AdminController extends Controller
     // Users Management
     public function users()
     {
+        $excludedRoleIds = Role::whereIn('name', ['Super Admin', 'Admin'])->pluck('id');
+
         $users = User::with('role')
-            ->where('role_id', '!=', 1)
+            ->whereNotIn('role_id', $excludedRoleIds)
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
         $hashids = $this->getHashids();
-        $baseQuery = User::query()->where('role_id', '!=', 1);
+        $baseQuery = User::query()->whereNotIn('role_id', $excludedRoleIds);
         $userStats = [
             'total' => (clone $baseQuery)->count(),
             'active' => (clone $baseQuery)->where('status', 1)->count(),
@@ -448,7 +457,11 @@ class AdminController extends Controller
     public function createUser(Request $request)
     {
         $this->ensureAdminOrSuperAdmin();
-        $roles = Role::where('name', '!=', 'Super Admin')->orderBy('name')->get();
+        $rolesQuery = Role::where('name', '!=', 'Super Admin');
+        if (!Auth::user()->isSuperAdmin()) {
+            $rolesQuery->where('name', '!=', 'Admin');
+        }
+        $roles = $rolesQuery->orderBy('name')->get();
         $prefillPartner = $request->boolean('partner');
 
         return view('admin.pages.users.create', compact('roles', 'prefillPartner'));
@@ -471,6 +484,9 @@ class AdminController extends Controller
         $role = Role::findOrFail($request->role_id);
         if ($role->name === 'Super Admin') {
             return redirect()->back()->withInput()->with('error', 'Cannot assign Super Admin from this form.');
+        }
+        if ($role->name === 'Admin' && !Auth::user()->isSuperAdmin()) {
+            return redirect()->back()->withInput()->with('error', 'Only the Super Admin can create admin accounts. Use the Admins section.');
         }
 
         $user = User::create([
@@ -618,6 +634,266 @@ class AdminController extends Controller
         }
     }
 
+    protected function permissionGroups(): array
+    {
+        return config('permissions.groups', []);
+    }
+
+    protected function assignablePermissions()
+    {
+        $groupOrder = array_keys(config('permissions.groups', []));
+
+        return Permission::query()
+            ->where('slug', '!=', 'admins.manage')
+            ->get()
+            ->sortBy(function (Permission $permission) use ($groupOrder) {
+                $index = array_search($permission->group, $groupOrder, true);
+
+                return $index === false ? 999 : $index;
+            })
+            ->groupBy('group');
+    }
+
+    protected function permissionFormSections(): array
+    {
+        $permissionsByGroup = $this->assignablePermissions();
+        $sections = [];
+
+        foreach (config('permissions.layout', []) as $index => $section) {
+            $modules = [];
+
+            foreach ($section['groups'] as $groupName) {
+                $permissions = $permissionsByGroup->get($groupName, collect());
+
+                if ($permissions->isEmpty()) {
+                    continue;
+                }
+
+                $modules[] = [
+                    'key' => 'module_' . $index . '_' . md5($groupName),
+                    'group' => $groupName,
+                    'label' => str_contains($groupName, ' · ')
+                        ? trim(explode(' · ', $groupName, 2)[1])
+                        : $groupName,
+                    'icon' => $section['module_icons'][$groupName] ?? 'mdi-shield-check-outline',
+                    'permissions' => $permissions,
+                ];
+            }
+
+            if (empty($modules)) {
+                continue;
+            }
+
+            $sections[] = [
+                'key' => 'section_' . $index,
+                'title' => $section['title'],
+                'icon' => $section['icon'] ?? 'mdi-folder-outline',
+                'description' => $section['description'] ?? null,
+                'modules' => $modules,
+            ];
+        }
+
+        return $sections;
+    }
+
+    public function admins()
+    {
+        $adminRole = Role::where('name', 'Admin')->firstOrFail();
+
+        $admins = User::with(['role', 'permissions'])
+            ->where('role_id', $adminRole->id)
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
+
+        $hashids = $this->getHashids();
+
+        return view('admin.pages.admins.index', compact('admins', 'hashids'));
+    }
+
+    public function createAdmin()
+    {
+        $permissionSections = $this->permissionFormSections();
+
+        return view('admin.pages.admins.create', compact('permissionSections'));
+    }
+
+    public function storeAdmin(Request $request)
+    {
+        $request->validate([
+            'firstname' => 'required|string|max:255',
+            'lastname' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email',
+            'phone' => 'nullable|string|max:30',
+            'password' => 'required|string|min:6|confirmed',
+            'status' => 'required|boolean',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'integer|exists:permissions,id',
+        ]);
+
+        $adminRole = Role::where('name', 'Admin')->firstOrFail();
+        $plainPassword = $request->password;
+
+        $user = User::create([
+            'firstname' => $request->firstname,
+            'lastname' => $request->lastname,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'password' => Hash::make($plainPassword),
+            'role_id' => $adminRole->id,
+            'status' => (int) $request->status,
+            'is_suspended' => false,
+            'email_verified_at' => now(),
+        ]);
+
+        $permissionIds = $this->resolvePermissionIds($request->input('permissions', []));
+        $user->permissions()->sync($permissionIds);
+
+        try {
+            Mail::to($user->email)->send(new AdminAccountCreated($user, $plainPassword));
+        } catch (\Throwable $e) {
+            Log::warning('Admin welcome email failed', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+        }
+
+        return redirect()->route('admin.admins.index')->with('success', 'Admin account created successfully. Login credentials were sent to their email.');
+    }
+
+    public function editAdmin(string $id)
+    {
+        $hashids = $this->getHashids();
+        $decodedIds = $hashids->decode($id);
+
+        if (empty($decodedIds)) {
+            return redirect()->route('admin.admins.index')->with('error', 'Invalid admin ID.');
+        }
+
+        $admin = User::with(['role', 'permissions'])->findOrFail($decodedIds[0]);
+
+        if (optional($admin->role)->name !== 'Admin') {
+            return redirect()->route('admin.admins.index')->with('error', 'Selected user is not an admin.');
+        }
+
+        $permissionSections = $this->permissionFormSections();
+
+        return view('admin.pages.admins.edit', compact('admin', 'hashids', 'permissionSections'));
+    }
+
+    public function updateAdmin(Request $request, string $id)
+    {
+        $request->validate([
+            'firstname' => 'required|string|max:255',
+            'lastname' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'phone' => 'nullable|string|max:30',
+            'status' => 'required|boolean',
+            'is_suspended' => 'nullable|boolean',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'integer|exists:permissions,id',
+        ]);
+
+        $hashids = $this->getHashids();
+        $decodedIds = $hashids->decode($id);
+
+        if (empty($decodedIds)) {
+            return redirect()->route('admin.admins.index')->with('error', 'Invalid admin ID.');
+        }
+
+        $admin = User::with('role')->findOrFail($decodedIds[0]);
+
+        if (optional($admin->role)->name !== 'Admin') {
+            return redirect()->route('admin.admins.index')->with('error', 'Selected user is not an admin.');
+        }
+
+        if ($admin->id === Auth::id()) {
+            return redirect()->back()->with('error', 'You cannot edit your own admin permissions here.');
+        }
+
+        $data = $request->only(['firstname', 'lastname', 'email', 'phone', 'status']);
+        $data['is_suspended'] = $request->boolean('is_suspended');
+
+        $admin->update($data);
+
+        $permissionIds = $this->resolvePermissionIds($request->input('permissions', []));
+        $admin->permissions()->sync($permissionIds);
+
+        return redirect()->route('admin.admins.index')->with('success', 'Admin account updated successfully.');
+    }
+
+    public function updateAdminPassword(Request $request, string $id)
+    {
+        $request->validate([
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        $hashids = $this->getHashids();
+        $decodedIds = $hashids->decode($id);
+
+        if (empty($decodedIds)) {
+            return redirect()->route('admin.admins.index')->with('error', 'Invalid admin ID.');
+        }
+
+        $admin = User::with('role')->findOrFail($decodedIds[0]);
+
+        if (optional($admin->role)->name !== 'Admin') {
+            return redirect()->route('admin.admins.index')->with('error', 'Selected user is not an admin.');
+        }
+
+        $admin->update([
+            'password' => Hash::make($request->password),
+        ]);
+
+        return redirect()
+            ->route('admin.admins.edit', $hashids->encode($admin->id))
+            ->with('success', 'Password updated successfully.');
+    }
+
+    public function deactivateAdmin(string $id)
+    {
+        $hashids = $this->getHashids();
+        $decodedIds = $hashids->decode($id);
+
+        if (empty($decodedIds)) {
+            return redirect()->route('admin.admins.index')->with('error', 'Invalid admin ID.');
+        }
+
+        $admin = User::with('role')->findOrFail($decodedIds[0]);
+
+        if (optional($admin->role)->name !== 'Admin') {
+            return redirect()->route('admin.admins.index')->with('error', 'Selected user is not an admin.');
+        }
+
+        if ($admin->id === Auth::id()) {
+            return redirect()->route('admin.admins.index')->with('error', 'You cannot deactivate your own account.');
+        }
+
+        $admin->update([
+            'is_suspended' => true,
+            'status' => 0,
+        ]);
+        $admin->permissions()->sync([]);
+
+        return redirect()->route('admin.admins.index')->with('success', 'Admin access revoked. The account was kept for record keeping.');
+    }
+
+    protected function filterAssignablePermissionIds(array $permissionIds): array
+    {
+        if (empty($permissionIds)) {
+            return [];
+        }
+
+        return Permission::query()
+            ->whereIn('id', $permissionIds)
+            ->where('slug', '!=', 'admins.manage')
+            ->pluck('id')
+            ->all();
+    }
+
+    protected function resolvePermissionIds(array $permissionIds): array
+    {
+        return PermissionDependencies::expandIds(
+            $this->filterAssignablePermissionIds($permissionIds)
+        );
+    }
+
     public function editUser($id)
     {
         $hashids = $this->getHashids();
@@ -629,9 +905,16 @@ class AdminController extends Controller
         
         $userId = $decodedIds[0];
         $user = User::with('role')->findOrFail($userId);
-        
-        // Get all roles except Super Admin
-        $roles = Role::where('name', '!=', 'Super Admin')->get();
+
+        if (optional($user->role)->name === 'Super Admin' && !Auth::user()->isSuperAdmin()) {
+            return redirect()->route('admin.users')->with('error', 'You cannot edit the Super Admin account.');
+        }
+
+        $rolesQuery = Role::where('name', '!=', 'Super Admin');
+        if (!Auth::user()->isSuperAdmin()) {
+            $rolesQuery->where('name', '!=', 'Admin');
+        }
+        $roles = $rolesQuery->get();
         
         return view('admin.pages.users.edit', compact('user', 'roles', 'hashids'));
     }
@@ -672,6 +955,14 @@ class AdminController extends Controller
         
         $userId = $decodedIds[0];
         $user = User::findOrFail($userId);
+
+        $newRole = Role::findOrFail($request->role_id);
+        if ($newRole->name === 'Admin' && !Auth::user()->isSuperAdmin()) {
+            return redirect()->back()->with('error', 'Only the Super Admin can assign the Admin role.');
+        }
+        if (optional($user->role)->name === 'Super Admin' && !Auth::user()->isSuperAdmin()) {
+            return redirect()->back()->with('error', 'You cannot modify the Super Admin account.');
+        }
         
         // Check if role is being changed to Partner
         $oldRoleId = $user->role_id;
@@ -718,6 +1009,10 @@ class AdminController extends Controller
         
         $userId = $decodedIds[0];
         $user = User::findOrFail($userId);
+
+        if (in_array(optional($user->role)->name, ['Super Admin', 'Admin'], true)) {
+            return redirect()->route('admin.users')->with('error', 'Admin accounts are managed from the Admins section.');
+        }
         
         // Don't allow deleting the current user
         if ($user->id === Auth::id()) {

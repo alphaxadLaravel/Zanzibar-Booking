@@ -159,6 +159,52 @@
                 </div>
                 @endif
 
+                @if($type == 'package')
+                <div class="col-12">
+                    <hr>
+                    <h6 class="mb-3">Group Package Settings</h6>
+                </div>
+                <div class="col-md-12">
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="is_group_package" value="1"
+                            id="is_group_package"
+                            {{ old('is_group_package', $typeSpecificData['tour']->is_group_package ?? false) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="is_group_package">
+                            Enable Group Package Mode
+                        </label>
+                        <small class="d-block text-muted">Paid online bookings only. Progress is tracked by confirmed (paid) participants.</small>
+                    </div>
+                </div>
+                <div id="group-package-fields" class="row g-3" style="display: none;">
+                    <div class="col-md-4">
+                        <label class="form-label">Max Group Capacity <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" name="group_max_capacity"
+                            value="{{ old('group_max_capacity', $typeSpecificData['tour']->group_max_capacity ?? '') }}"
+                            min="1" placeholder="e.g. 20">
+                        @error('group_max_capacity')
+                        <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Booking Deadline <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" name="group_booking_deadline"
+                            value="{{ old('group_booking_deadline', optional($typeSpecificData['tour']->group_booking_deadline ?? null)->format('Y-m-d')) }}">
+                        @error('group_booking_deadline')
+                        <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Departure Date</label>
+                        <input type="date" class="form-control" name="group_departure_date"
+                            value="{{ old('group_departure_date', optional($typeSpecificData['tour']->group_departure_date ?? null)->format('Y-m-d')) }}">
+                        <small class="text-muted">Optional fixed trip date shown to customers.</small>
+                        @error('group_departure_date')
+                        <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                @endif
+
                 @if($type == 'car')
                 <div class="col-md-3">
                     <label class="form-label">Car Capacity <span class="text-danger">*</span></label>
@@ -642,6 +688,22 @@
 <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
 <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 <script>
+    (function () {
+        const groupToggle = document.getElementById('is_group_package');
+        const groupFields = document.getElementById('group-package-fields');
+
+        if (!groupToggle || !groupFields) {
+            return;
+        }
+
+        function syncGroupFields() {
+            groupFields.style.display = groupToggle.checked ? 'flex' : 'none';
+        }
+
+        groupToggle.addEventListener('change', syncGroupFields);
+        syncGroupFields();
+    })();
+
     // Cover photo preview
     document.getElementById('cover-photo-input').addEventListener('change', function(e) {
         const preview = document.getElementById('cover-photo-preview');
