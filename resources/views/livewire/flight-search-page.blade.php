@@ -302,7 +302,7 @@
                                     <button type="submit" class="btn btn-primary btn-search-flights w-100"
                                             wire:loading.attr="disabled" wire:target="searchFlights">
                                         <span wire:loading.remove wire:target="searchFlights">
-                                            <i class="fas fa-search mr-2"></i>Search Flights
+                                            <i class="fas fa-search mr-2"></i>{{ $tripType === 'round_trip' ? 'Search only' : 'Search Flight' }}
                                         </span>
                                         <span wire:loading wire:target="searchFlights">
                                             <span class="spinner-border spinner-border-sm"></span>
@@ -473,22 +473,10 @@
                                             wire:click="showFlightDetails('{{ $flight['id'] }}')">
                                         Details
                                     </button>
-                                    <form action="{{ route('flights.affiliate') }}" method="POST" target="_blank" rel="noopener noreferrer" class="d-inline mb-2 mb-md-0">
-                                        @csrf
-                                        <input type="hidden" name="flight_id" value="{{ $flight['id'] }}">
-                                        <input type="hidden" name="affiliate_url" value="{{ $flight['affiliate_url'] }}">
-                                        <input type="hidden" name="affiliate_name" value="{{ $flight['affiliate_name'] ?? 'TravelPayouts' }}">
-                                        <input type="hidden" name="airline" value="{{ $flight['airline'] ?? '' }}">
-                                        <input type="hidden" name="flight_number" value="{{ $flight['flight_number'] ?? '' }}">
-                                        <input type="hidden" name="origin" value="{{ $flight['departure']['airport'] ?? $origin }}">
-                                        <input type="hidden" name="destination" value="{{ $flight['arrival']['airport'] ?? $destination }}">
-                                        <input type="hidden" name="price" value="{{ $flight['price'] ?? '' }}">
-                                        <input type="hidden" name="currency" value="{{ $flight['currency'] ?? 'USD' }}">
-                                        @if($lastSearchId ?? session('last_flight_search_id'))
-                                            <input type="hidden" name="flight_search_id" value="{{ $lastSearchId ?? session('last_flight_search_id') }}">
-                                        @endif
-                                        <button type="submit" class="btn btn-success btn-sm">Book</button>
-                                    </form>
+                                    <a href="{{ route('flights.checkout', ['offerId' => $flight['id']]) }}"
+                                       class="btn btn-success btn-sm mb-2 mb-md-0">
+                                        Book
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -598,7 +586,7 @@
                             </div>
                             <div class="flight-detail-info-item">
                                 <div class="flight-detail-info-item__label">Book via</div>
-                                <div class="flight-detail-info-item__value">{{ $selectedFlight['affiliate_name'] ?? 'TravelPayouts' }}</div>
+                                <div class="flight-detail-info-item__value">{{ $selectedFlight['affiliate_name'] ?? 'Duffel' }}</div>
                             </div>
                             <div class="flight-detail-info-item">
                                 <div class="flight-detail-info-item__label">Fare validity</div>
@@ -606,7 +594,7 @@
                                     @if($priceExpiresLabel)
                                         Until {{ $priceExpiresLabel }}
                                     @else
-                                        Confirmed on partner site
+                                        Confirmed at checkout
                                     @endif
                                 </div>
                             </div>
@@ -615,81 +603,48 @@
                         @if(!empty($raw))
                             <h6 class="font-weight-bold mb-2">Additional details</h6>
                             <div class="flight-detail-info-grid mb-3">
-                                @if(!empty($raw['departure_at']))
+                                @if(!empty($raw['id']))
                                     <div class="flight-detail-info-item">
-                                        <div class="flight-detail-info-item__label">Departure</div>
-                                        <div class="flight-detail-info-item__value">{{ $raw['departure_at'] }}</div>
+                                        <div class="flight-detail-info-item__label">Offer ID</div>
+                                        <div class="flight-detail-info-item__value">{{ $raw['id'] }}</div>
                                     </div>
                                 @endif
-                                @if(!empty($raw['arrival_at']))
+                                @if(!empty($raw['owner']['name']))
                                     <div class="flight-detail-info-item">
-                                        <div class="flight-detail-info-item__label">Arrival</div>
-                                        <div class="flight-detail-info-item__value">{{ $raw['arrival_at'] }}</div>
+                                        <div class="flight-detail-info-item__label">Seller</div>
+                                        <div class="flight-detail-info-item__value">{{ $raw['owner']['name'] }}</div>
                                     </div>
                                 @endif
-                                @if(isset($raw['duration']) || isset($raw['duration_to']))
+                                @if(isset($raw['tax_amount']))
                                     <div class="flight-detail-info-item">
-                                        <div class="flight-detail-info-item__label">Duration (min)</div>
-                                        <div class="flight-detail-info-item__value">{{ $raw['duration'] ?? $raw['duration_to'] }}</div>
+                                        <div class="flight-detail-info-item__label">Taxes</div>
+                                        <div class="flight-detail-info-item__value">{{ $raw['total_currency'] ?? '' }} {{ $raw['tax_amount'] }}</div>
                                     </div>
                                 @endif
-                                @if(!empty($raw['airline']))
+                                @if(!empty($raw['expires_at']))
                                     <div class="flight-detail-info-item">
-                                        <div class="flight-detail-info-item__label">Airline code</div>
-                                        <div class="flight-detail-info-item__value">{{ strtoupper($raw['airline']) }}</div>
+                                        <div class="flight-detail-info-item__label">Offer expires</div>
+                                        <div class="flight-detail-info-item__value">{{ $raw['expires_at'] }}</div>
                                     </div>
                                 @endif
-                                @if(!empty($raw['flight_number']))
+                                @if(!empty($raw['total_emissions_kg']))
                                     <div class="flight-detail-info-item">
-                                        <div class="flight-detail-info-item__label">Flight number</div>
-                                        <div class="flight-detail-info-item__value">{{ $raw['flight_number'] }}</div>
-                                    </div>
-                                @endif
-                                @if(isset($raw['transfers']) || isset($raw['return_transfers']))
-                                    <div class="flight-detail-info-item">
-                                        <div class="flight-detail-info-item__label">Transfers</div>
-                                        <div class="flight-detail-info-item__value">{{ $raw['transfers'] ?? $raw['return_transfers'] }}</div>
-                                    </div>
-                                @endif
-                                @if(!empty($raw['origin_airport']) || !empty($raw['origin']))
-                                    <div class="flight-detail-info-item">
-                                        <div class="flight-detail-info-item__label">Origin</div>
-                                        <div class="flight-detail-info-item__value">{{ strtoupper($raw['origin_airport'] ?? $raw['origin']) }}</div>
-                                    </div>
-                                @endif
-                                @if(!empty($raw['destination_airport']) || !empty($raw['destination']))
-                                    <div class="flight-detail-info-item">
-                                        <div class="flight-detail-info-item__label">Destination</div>
-                                        <div class="flight-detail-info-item__value">{{ strtoupper($raw['destination_airport'] ?? $raw['destination']) }}</div>
+                                        <div class="flight-detail-info-item__label">CO₂ estimate</div>
+                                        <div class="flight-detail-info-item__value">{{ $raw['total_emissions_kg'] }} kg</div>
                                     </div>
                                 @endif
                             </div>
                         @endif
 
                         <div class="alert alert-light border small mt-3 mb-0">
-                            Flights shown here are fares found for your selected date. Exact seat count and final availability are confirmed on our partner site when you continue to book.
+                            Live fares from Duffel. Prices are held for a limited time — continue to checkout to confirm availability and complete your booking.
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" wire:click="closeFlightDetails">Close</button>
-                        <form action="{{ route('flights.affiliate') }}" method="POST" target="_blank" rel="noopener noreferrer" class="d-inline mb-0">
-                            @csrf
-                            <input type="hidden" name="flight_id" value="{{ $selectedFlight['id'] }}">
-                            <input type="hidden" name="affiliate_url" value="{{ $selectedFlight['affiliate_url'] }}">
-                            <input type="hidden" name="affiliate_name" value="{{ $selectedFlight['affiliate_name'] ?? 'TravelPayouts' }}">
-                            <input type="hidden" name="airline" value="{{ $selectedFlight['airline'] ?? '' }}">
-                            <input type="hidden" name="flight_number" value="{{ $selectedFlight['flight_number'] ?? '' }}">
-                            <input type="hidden" name="origin" value="{{ $selectedFlight['departure']['airport'] ?? $origin }}">
-                            <input type="hidden" name="destination" value="{{ $selectedFlight['arrival']['airport'] ?? $destination }}">
-                            <input type="hidden" name="price" value="{{ $selectedFlight['price'] ?? '' }}">
-                            <input type="hidden" name="currency" value="{{ $selectedFlight['currency'] ?? 'USD' }}">
-                            @if($lastSearchId ?? session('last_flight_search_id'))
-                                <input type="hidden" name="flight_search_id" value="{{ $lastSearchId ?? session('last_flight_search_id') }}">
-                            @endif
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-external-link-alt mr-1"></i> Continue to Book
-                            </button>
-                        </form>
+                        <a href="{{ route('flights.checkout', ['offerId' => $selectedFlight['id']]) }}" class="btn btn-success">
+                            Continue to Book
+                        </a>
                     </div>
                 </div>
             </div>

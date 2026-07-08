@@ -32,7 +32,7 @@ class FlightSearchCriteria
             infants: max(0, (int) ($data['infants'] ?? 0)),
             cabin: strtoupper($data['travelClass'] ?? $data['cabin'] ?? 'ECONOMY'),
             currency: strtoupper($data['currency'] ?? 'USD'),
-            max: (int) ($data['max'] ?? 50),
+            max: (int) ($data['max'] ?? config('flights.defaults.max_results', 50)),
             nonStop: (bool) ($data['nonStop'] ?? $data['non_stop'] ?? false),
         );
     }
@@ -52,7 +52,7 @@ class FlightSearchCriteria
             $this->currency,
             $this->max,
             $this->nonStop,
-            'travelpayouts',
+            'duffel',
         ]));
     }
 

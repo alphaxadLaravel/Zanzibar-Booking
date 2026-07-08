@@ -190,22 +190,14 @@ class FlightSearchPage extends Component
                 'destination' => $flight['arrival']['airport'] ?? $this->destination,
                 'price' => $flight['price'] ?? null,
                 'currency' => $flight['currency'] ?? 'USD',
-                'affiliate_name' => $flight['affiliate_name'] ?? 'TravelPayouts',
-                'affiliate_url' => $flight['affiliate_url'],
+                'affiliate_name' => $flight['affiliate_name'] ?? 'Duffel',
+                'affiliate_url' => route('flights.checkout', ['offerId' => $flight['id']]),
             ]);
-        } catch (\RuntimeException $e) {
-            $this->dispatch('notify', type: 'warning', message: $e->getMessage());
-
-            return null;
         } catch (\Throwable $e) {
-            $this->dispatch('notify', type: 'error', message: 'Unable to track booking click. Please try again.');
-
-            return null;
+            // Don't block checkout if analytics logging fails.
         }
 
-        $this->js('window.open('.json_encode($flight['affiliate_url']).', "_blank", "noopener,noreferrer")');
-
-        return null;
+        return redirect()->route('flights.checkout', ['offerId' => $flight['id']]);
     }
 
     public function showFlightDetails(string $flightId): void

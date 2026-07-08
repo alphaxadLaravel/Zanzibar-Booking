@@ -212,8 +212,19 @@ class PaymentController extends Controller
             Log::info('Payment status updated to PENDING', [
                 'payment_id' => $payment->id,
                 'tracking_id' => $trackingid,
-                'booking_id' => $payment->booking_id
+                'booking_id' => $payment->booking_id,
+                'flight_booking_id' => $payment->flight_booking_id,
             ]);
+
+            if ($payment->flight_booking_id) {
+                $flightBooking = \App\Models\FlightBooking::find($payment->flight_booking_id);
+
+                if ($flightBooking) {
+                    return redirect()
+                        ->route('flights.confirmation', ['bookingReference' => $flightBooking->booking_reference])
+                        ->with('info', 'Payment received. We are confirming your flight ticket.');
+                }
+            }
 
             // Get booking for display
             $booking = Booking::with(['deal'])->find($payment->booking_id);
@@ -303,6 +314,10 @@ class PaymentController extends Controller
             ]);
 
             $payment = Payment::where('trackingid', $trackingid)->first();
+
+            if (! $payment) {
+                $payment = Payment::where('transactionid', $merchant_reference)->first();
+            }
             
             if (!$payment) {
                 Log::error('Payment record not found for tracking ID', [
@@ -324,6 +339,23 @@ class PaymentController extends Controller
 
             // Update booking payment status if payment is confirmed
             if ($status === 'COMPLETED') {
+                if ($payment->flight_booking_id) {
+                    $flightBooking = \App\Models\FlightBooking::find($payment->flight_booking_id);
+
+                    if ($flightBooking && $flightBooking->status !== 'confirmed') {
+                        try {
+                            app(\App\Services\Flights\FlightBookingService::class)->fulfillAfterPayment($flightBooking);
+                        } catch (\Throwable $e) {
+                            Log::error('Duffel order failed after flight payment', [
+                                'flight_booking_id' => $flightBooking->id,
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
+                    }
+
+                    return 'success';
+                }
+
                 $booking = Booking::find($payment->booking_id);
                 if ($booking) {
                     $booking->payment_status = true;

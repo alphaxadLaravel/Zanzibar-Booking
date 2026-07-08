@@ -3,7 +3,6 @@
 namespace App\Services\Flights;
 
 use App\DTOs\FlightSearchCriteria;
-use App\Services\Flights\Providers\TravelPayoutsProvider;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
@@ -67,9 +66,13 @@ class FlightSearchService
             ->format('Y-m-d');
 
         $perRoute = (int) config('flights.featured.per_route', 2);
-        $routes = config('flights.featured_routes', []);
+        $routes = array_slice(
+            config('flights.featured_routes', []),
+            0,
+            (int) config('flights.featured.max_routes', 8)
+        );
         $bundleTtl = (int) config('flights.featured.cache_ttl', 1800);
-        $cacheKey = 'flights.featured.v2.' . md5($departureDate . '|' . $perRoute . '|' . json_encode($routes));
+        $cacheKey = 'flights.featured.v3.' . md5($departureDate . '|' . $perRoute . '|' . json_encode($routes));
 
         $cached = Cache::get($cacheKey);
         if (is_array($cached) && ! empty($cached)) {
@@ -119,10 +122,7 @@ class FlightSearchService
 
         if (! empty($uncachedCriteria)) {
             $provider = $this->providers->driver();
-
-            $fetched = $provider instanceof TravelPayoutsProvider
-                ? $provider->searchParallel($uncachedCriteria)
-                : $this->searchSequential($uncachedCriteria);
+            $fetched = $provider->searchParallel($uncachedCriteria);
 
             foreach ($fetched as $routeKey => $offers) {
                 $arrays = array_map(fn ($offer) => $offer->toArray(), $offers);
@@ -140,13 +140,6 @@ class FlightSearchService
 
             foreach ($routeFlights as $flight) {
                 $flight['route_label'] = $origin . ' → ' . $destination;
-                $flight['id'] = md5(
-                    ($flight['id'] ?? '')
-                    . $origin
-                    . $destination
-                    . ($flight['flight_number'] ?? '')
-                    . ($flight['departure']['datetime'] ?? '')
-                );
                 $flights[] = $flight;
             }
         }

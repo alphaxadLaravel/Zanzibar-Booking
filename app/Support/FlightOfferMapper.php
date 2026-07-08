@@ -63,8 +63,7 @@ class FlightOfferMapper
     }
 
     /**
-     * Derive bookability from TravelPayouts offer data.
-     * Note: this API does not expose seat counts or sold-out inventory.
+     * Derive bookability from a flight offer payload.
      *
      * @return array{status: string, label: string, expires_at: ?string, found_at: ?string}
      */
@@ -104,5 +103,128 @@ class FlightOfferMapper
         }
 
         return date('D, d M Y H:i', strtotime($expiresAt)) . ' UTC';
+    }
+
+    /**
+     * @return array{status: string, label: string, expires_at: ?string, found_at: ?string}
+     */
+    public static function resolveDuffelAvailability(array $offer): array
+    {
+        $price = (float) ($offer['total_amount'] ?? 0);
+        $expiresAt = $offer['expires_at'] ?? null;
+
+        if ($price <= 0) {
+            return [
+                'status' => 'unavailable',
+                'label' => 'Not available',
+                'expires_at' => $expiresAt,
+                'found_at' => null,
+            ];
+        }
+
+        if ($expiresAt && strtotime($expiresAt) !== false && strtotime($expiresAt) <= time()) {
+            return [
+                'status' => 'unavailable',
+                'label' => 'Fare expired',
+                'expires_at' => $expiresAt,
+                'found_at' => null,
+            ];
+        }
+
+        $label = 'Available for this date';
+
+        if ($expiresAt && strtotime($expiresAt) !== false && strtotime($expiresAt) > time()) {
+            $label = 'Available — book soon';
+        }
+
+        return [
+            'status' => 'available',
+            'label' => $label,
+            'expires_at' => $expiresAt,
+            'found_at' => null,
+        ];
+    }
+
+    public static function parseIsoDuration(?string $duration): int
+    {
+        if (! $duration) {
+            return 0;
+        }
+
+        preg_match('/(\d+)H/i', $duration, $hours);
+        preg_match('/(\d+)M/i', $duration, $minutes);
+
+        return ((int) ($hours[1] ?? 0) * 60) + (int) ($minutes[1] ?? 0);
+    }
+
+    public static function mapDuffelOfferToArray(array $offer): array
+    {
+        $slice = $offer['slices'][0] ?? [];
+        $segments = $slice['segments'] ?? [];
+        $firstSegment = $segments[0] ?? [];
+        $lastSegment = $segments[array_key_last($segments)] ?? $firstSegment;
+
+        $airlineCode = strtoupper($firstSegment['marketing_carrier']['iata_code'] ?? 'XX');
+        $operatingCarrier = $firstSegment['operating_carrier']['name'] ?? null;
+        $marketingCarrier = $firstSegment['marketing_carrier']['name'] ?? self::airlineName($airlineCode);
+
+        return [
+            'id' => $offer['id'] ?? null,
+            'flight_number' => trim($airlineCode . ($firstSegment['marketing_carrier_flight_number'] ?? '')),
+            'airline' => $operatingCarrier ?: $marketingCarrier,
+            'marketing_airline' => $marketingCarrier,
+            'operating_airline' => $operatingCarrier,
+            'airline_code' => $airlineCode,
+            'airline_logo' => $firstSegment['marketing_carrier']['logo_symbol_url']
+                ?? $firstSegment['operating_carrier']['logo_symbol_url']
+                ?? self::airlineLogoUrl($airlineCode),
+            'owner_name' => $offer['owner']['name'] ?? $marketingCarrier,
+            'departure' => self::segment(
+                $firstSegment['origin']['iata_code'] ?? '',
+                $firstSegment['departing_at'] ?? ''
+            ),
+            'arrival' => self::segment(
+                $lastSegment['destination']['iata_code'] ?? '',
+                $lastSegment['arriving_at'] ?? ''
+            ),
+            'duration' => self::formatMinutes(self::parseIsoDuration($slice['duration'] ?? null)),
+            'stops' => max(0, count($segments) - 1),
+            'cabin_class' => strtoupper($slice['segments'][0]['passengers'][0]['cabin_class'] ?? 'economy'),
+            'price' => (float) ($offer['total_amount'] ?? 0),
+            'tax_amount' => (float) ($offer['tax_amount'] ?? 0),
+            'currency' => strtoupper($offer['total_currency'] ?? 'USD'),
+            'baggage' => self::resolveBaggageLabel($offer),
+            'refundable' => self::resolveRefundableLabel($offer),
+            'affiliate_name' => 'Duffel',
+            'affiliate_url' => route('flights.checkout', ['offerId' => $offer['id'] ?? '']),
+            'availability_label' => self::resolveDuffelAvailability($offer)['label'],
+            'price_expires_at' => $offer['expires_at'] ?? null,
+            'offer_data' => $offer,
+        ];
+    }
+
+    public static function resolveBaggageLabel(array $offer): string
+    {
+        foreach ($offer['passengers'] ?? [] as $passenger) {
+            foreach ($passenger['baggages'] ?? [] as $bag) {
+                $quantity = (int) ($bag['quantity'] ?? 0);
+                if ($quantity > 0) {
+                    return $quantity . ' ' . str_replace('_', ' ', $bag['type'] ?? 'bag') . '(s)';
+                }
+            }
+        }
+
+        return 'Check fare details';
+    }
+
+    public static function resolveRefundableLabel(array $offer): string
+    {
+        $refund = $offer['conditions']['refund_before_departure'] ?? null;
+
+        if (is_array($refund)) {
+            return ($refund['allowed'] ?? false) ? 'Refundable' : 'Non-refundable';
+        }
+
+        return 'Varies by fare';
     }
 }

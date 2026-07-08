@@ -3,12 +3,12 @@
 namespace App\Services\Flights;
 
 use App\Contracts\Flights\FlightProviderInterface;
-use App\Services\Flights\Providers\TravelPayoutsProvider;
+use App\Services\Flights\Providers\DuffelProvider;
 
 class FlightProviderManager
 {
     public function driver(): FlightProviderInterface
     {
-        return app(TravelPayoutsProvider::class);
+        return app(DuffelProvider::class);
     }
 }

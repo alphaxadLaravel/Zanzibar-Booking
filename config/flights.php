@@ -10,13 +10,15 @@ return [
         'travel_class' => 'ECONOMY',
     ],
 
-    'travelpayouts' => [
-        'token' => env('TRAVELPAYOUTS_TOKEN'),
-        'marker' => env('TRAVELPAYOUTS_MARKER'),
-        'search_url' => env('TRAVELPAYOUTS_SEARCH_URL', 'https://api.travelpayouts.com/aviasales/v3/prices_for_dates'),
-        'autocomplete_url' => env('TRAVELPAYOUTS_AUTOCOMPLETE_URL', 'https://autocomplete.travelpayouts.com/places2'),
-        'affiliate_base_url' => env('TRAVELPAYOUTS_AFFILIATE_URL', 'https://www.aviasales.com'),
-        'locale' => env('TRAVELPAYOUTS_LOCALE', 'en'),
+    'duffel' => [
+        'access_token' => env('DUFFEL_ACCESS_TOKEN'),
+        'api_url' => env('DUFFEL_API_URL', 'https://api.duffel.com'),
+        'api_version' => env('DUFFEL_API_VERSION', 'v2'),
+        'supplier_timeout' => (int) env('DUFFEL_SUPPLIER_TIMEOUT', 15000),
+        'featured_supplier_timeout' => (int) env('DUFFEL_FEATURED_SUPPLIER_TIMEOUT', 8000),
+        'order_type' => env('DUFFEL_ORDER_TYPE', 'instant'),
+        'payment_type' => env('DUFFEL_PAYMENT_TYPE', 'balance'),
+        'create_orders' => filter_var(env('DUFFEL_CREATE_ORDERS', false), FILTER_VALIDATE_BOOL),
     ],
 
     'airports' => [
@@ -88,33 +90,25 @@ return [
     | Preload featured flights on page load (Tanzania, Africa, and international).
     */
     'featured' => [
-        'per_route' => (int) env('FLIGHT_FEATURED_PER_ROUTE', 2),
+        'per_route' => (int) env('FLIGHT_FEATURED_PER_ROUTE', 3),
         'days_ahead' => (int) env('FLIGHT_FEATURED_DAYS_AHEAD', 7),
         'cache_ttl' => (int) env('FLIGHT_FEATURED_CACHE_TTL', 1800),
+        'max_routes' => (int) env('FLIGHT_FEATURED_MAX_ROUTES', 8),
     ],
 
     /*
-    | Priority routes preloaded when users land on /flights (kept small for speed).
-    | Users can search any route via the form.
+    | Priority routes preloaded when users land on /flights.
+    | Duffel searches are slower than cached affiliate APIs, so featured routes are capped.
     */
     'featured_routes' => [
-        // Tanzania domestic
         ['ZNZ', 'DAR'], ['DAR', 'ZNZ'],
         ['ZNZ', 'JRO'], ['JRO', 'ZNZ'],
         ['DAR', 'JRO'], ['JRO', 'DAR'],
-        ['ZNZ', 'MWZ'], ['DAR', 'MWZ'],
-
-        // East Africa
         ['ZNZ', 'NBO'], ['NBO', 'ZNZ'],
-        ['DAR', 'NBO'], ['ZNZ', 'ADD'], ['ADD', 'ZNZ'],
-        ['ZNZ', 'JNB'], ['JNB', 'ZNZ'],
-        ['DAR', 'EBB'], ['EBB', 'ZNZ'],
-
-        // International hubs
         ['ZNZ', 'DXB'], ['DXB', 'ZNZ'],
-        ['DAR', 'DOH'], ['ZNZ', 'IST'], ['IST', 'ZNZ'],
+        ['ZNZ', 'ADD'], ['ADD', 'ZNZ'],
+        ['ZNZ', 'IST'], ['IST', 'ZNZ'],
         ['ZNZ', 'LHR'], ['LHR', 'ZNZ'],
-        ['DAR', 'AMS'], ['ZNZ', 'CDG'],
     ],
 
 ];
