@@ -477,6 +477,17 @@
         </div>
     </div>
 </section>
+
+{{-- Guest Reviews (Trustindex) --}}
+<section class="guest-reviews py-40">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-20 section-header-row">
+            <h2 class="section-title mb-0">What Our Guests Say</h2>
+        </div>
+        <script defer async src='https://cdn.trustindex.io/loader.js?a20261976cee183aaa9666e7cf7'></script>
+    </div>
+</section>
+
 <section class="car-type">
     <div class="container py-40">
         <div class="d-flex justify-content-between align-items-center mb-20 section-header-row">
