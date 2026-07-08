@@ -81,6 +81,7 @@ Route::get('/view/car/{id}', [WebsiteController::class, 'viewCar'])->name('view-
 // Flight routes
 Route::get('/flights', [App\Http\Controllers\FlightController::class, 'index'])->name('flights.index');
 Route::get('/flights/search-locations', [App\Http\Controllers\FlightController::class, 'searchLocations'])->name('flights.search-locations');
+Route::post('/flights/affiliate', [App\Http\Controllers\FlightController::class, 'affiliateRedirect'])->name('flights.affiliate');
 Route::get('/flights/{flightId}', [App\Http\Controllers\FlightController::class, 'show'])->name('flights.show');
 Route::get('/flights/{flightId}/book', [App\Http\Controllers\FlightController::class, 'bookingForm'])->name('flights.booking.form');
 Route::post('/flights/book', [App\Http\Controllers\FlightController::class, 'processBooking'])->name('flights.booking.process');
@@ -388,5 +389,16 @@ Route::middleware(['auth', 'admin.panel'])->group(function () {
         Route::put('/admin/reviews/{id}/approve', [AdminController::class, 'approveReview'])->name('admin.reviews.approve');
         Route::put('/admin/reviews/{id}/decline', [AdminController::class, 'declineReview'])->name('admin.reviews.decline');
         Route::delete('/admin/reviews/{id}', [AdminController::class, 'deleteReview'])->name('admin.reviews.delete');
+    });
+
+    // Flight analytics
+    Route::middleware('permission:flights.view')->group(function () {
+        Route::get('/admin/flights/analytics', [App\Http\Controllers\Admin\FlightAnalyticsController::class, 'index'])->name('admin.flights.analytics');
+        Route::get('/admin/flights/searches/{search}', [App\Http\Controllers\Admin\FlightAnalyticsController::class, 'showSearch'])->name('admin.flights.searches.show');
+        Route::get('/admin/flights/export/{type}', [App\Http\Controllers\Admin\FlightAnalyticsController::class, 'export'])->name('admin.flights.export');
+    });
+    Route::middleware('permission:flights.manage')->group(function () {
+        Route::delete('/admin/flights/searches/bulk', [App\Http\Controllers\Admin\FlightAnalyticsController::class, 'bulkDeleteSearches'])->name('admin.flights.searches.bulk-delete');
+        Route::delete('/admin/flights/clicks/bulk', [App\Http\Controllers\Admin\FlightAnalyticsController::class, 'bulkDeleteClicks'])->name('admin.flights.clicks.bulk-delete');
     });
 });

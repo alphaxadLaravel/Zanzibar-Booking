@@ -86,7 +86,7 @@
                 @endif
                 @endif
 
-                @if($sidebarUser->hasAnyPermission(['bookings.view', 'bookings.manage', 'users.view', 'users.manage', 'partners.view', 'partners.manage', 'payments.view', 'reviews.view', 'reviews.manage']))
+                @if($sidebarUser->hasAnyPermission(['bookings.view', 'bookings.manage', 'users.view', 'users.manage', 'partners.view', 'partners.manage', 'payments.view', 'reviews.view', 'reviews.manage', 'flights.view', 'flights.manage']))
                 <li class="side-nav-title">Manage</li>
                 @endif
 
@@ -131,6 +131,15 @@
                     <a href="{{ route('admin.reviews') }}" class="side-nav-link">
                         <span class="menu-icon"><i class="mdi mdi-star-outline"></i></span>
                         <span class="menu-text">Reviews</span>
+                    </a>
+                </li>
+                @endif
+
+                @if($sidebarUser->hasAnyPermission(['flights.view', 'flights.manage']))
+                <li class="side-nav-item">
+                    <a href="{{ route('admin.flights.analytics') }}" class="side-nav-link">
+                        <span class="menu-icon"><i class="mdi mdi-airplane"></i></span>
+                        <span class="menu-text">Flight Analytics</span>
                     </a>
                 </li>
                 @endif

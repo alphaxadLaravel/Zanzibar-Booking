@@ -7,7 +7,6 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "amadeus4dev/amadeus-php": "^0.3.0",
         "devrabiul/laravel-geo-genius": "^1.5",
         "knox/pesapal": "^2.2",
         "laravel/framework": "^12.0",

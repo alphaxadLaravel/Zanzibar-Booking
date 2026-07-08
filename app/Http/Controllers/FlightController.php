@@ -2,439 +2,112 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Http\Requests\FlightAffiliateClickRequest;
+use App\Services\Flights\AffiliateTrackingService;
 use App\Services\FlightService;
-use App\Models\FlightBooking;
-use App\Models\Payment;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Knox\Pesapal\Facades\Pesapal;
+use Illuminate\Http\Request;
 
 class FlightController extends Controller
 {
-    protected $flightService;
-
-    public function __construct(FlightService $flightService)
-    {
-        $this->flightService = $flightService;
-    }
+    public function __construct(
+        protected FlightService $flightService,
+        protected AffiliateTrackingService $tracking,
+    ) {}
 
     /**
-     * Display flights page with search
+     * Display flights page with Livewire search.
      */
-    public function index(Request $request)
+    public function index()
     {
-        $flights = [];
-        $destinations = $this->getPopularDestinations();
-        $airlines = [];
-        $error = null;
-
-        // If search parameters are provided
-        if ($request->has('origin') && $request->has('destination') && $request->has('departureDate') && 
-            !empty($request->input('origin')) && !empty($request->input('destination')) && !empty($request->input('departureDate'))) {
-            try {
-                $flights = $this->flightService->searchFlights([
-                    'origin' => $request->input('origin', 'ZNZ'),
-                    'destination' => $request->input('destination'),
-                    'departureDate' => $request->input('departureDate'),
-                    'returnDate' => $request->input('returnDate'),
-                    'adults' => $request->input('adults', 1),
-                    'children' => $request->input('children', 0),
-                    'infants' => $request->input('infants', 0),
-                    'travelClass' => $request->input('travelClass', 'ECONOMY'),
-                    'nonStop' => $request->input('nonStop', false),
-                    'currency' => 'USD',
-                    'max' => 50
-                ]);
-
-                // Ensure flights is an array
-                if (!is_array($flights)) {
-                    $flights = [];
-                }
-
-                // Extract unique airlines from search results
-                if (!empty($flights)) {
-                    $airlines = collect($flights)->pluck('airline')->unique()->filter()->values()->toArray();
-                }
-
-                // Store search results in session for booking
-                session(['flight_search_results' => $flights]);
-                
-            } catch (\Exception $e) {
-                $error = $e->getMessage();
-                Log::error('Flight search error: ' . $e->getMessage(), [
-                    'request' => $request->all(),
-                    'trace' => $e->getTraceAsString()
-                ]);
-                $flights = [];
-            }
-        }
-
-        // If no airlines from results, use popular airlines
-        if (empty($airlines)) {
-            $airlines = array_values($this->getPopularAirlines());
-        }
-
-        return view('website.pages.flights', compact('flights', 'destinations', 'airlines', 'error'));
+        return view('website.pages.flights');
     }
 
     /**
-     * Show flight details
-     */
-    public function show($flightId, Request $request)
-    {
-        try {
-            // Get flight offer from session (stored during search)
-            $flights = session('flight_search_results', []);
-            
-            $flight = collect($flights)->firstWhere('id', $flightId);
-            
-            if (!$flight) {
-                return redirect()->route('flights.index')->with('error', 'Flight not found. Please search again.');
-            }
-
-            return view('website.pages.flight-details', compact('flight'));
-
-        } catch (\Exception $e) {
-            return redirect()->route('flights.index')->with('error', $e->getMessage());
-        }
-    }
-
-    /**
-     * Show booking form
-     */
-    public function bookingForm($flightId)
-    {
-        try {
-            // Get flight offer from session
-            $flights = session('flight_search_results', []);
-            $flight = collect($flights)->firstWhere('id', $flightId);
-            
-            if (!$flight) {
-                return redirect()->route('flights.index')->with('error', 'Flight not found. Please search again.');
-            }
-
-            return view('website.pages.flight-booking', compact('flight'));
-
-        } catch (\Exception $e) {
-            return redirect()->route('flights.index')->with('error', $e->getMessage());
-        }
-    }
-
-    /**
-     * Process flight booking
-     */
-    public function processBooking(Request $request)
-    {
-        $validated = $request->validate([
-            'flight_id' => 'required|string',
-            'contact_email' => 'required|email',
-            'contact_phone' => 'required|string',
-            'adults' => 'required|integer|min:1|max:9',
-            'children' => 'nullable|integer|min:0|max:9',
-            'infants' => 'nullable|integer|min:0|max:9',
-            'passengers' => 'required|array|min:1',
-            'passengers.*.first_name' => 'required|string|max:100',
-            'passengers.*.last_name' => 'required|string|max:100',
-            'passengers.*.date_of_birth' => 'required|date|before:today',
-            'passengers.*.type' => 'required|in:adult,child,infant',
-            'passengers.*.gender' => 'nullable|in:M,F',
-            'passengers.*.passport_number' => 'nullable|string|max:50',
-            'passengers.*.nationality' => 'nullable|string|max:100',
-        ]);
-
-        try {
-            DB::beginTransaction();
-
-            // Get flight offer from session
-            $flights = session('flight_search_results', []);
-            $flight = collect($flights)->firstWhere('id', $request->flight_id);
-            
-            if (!$flight) {
-                throw new \Exception('Flight not found. Please search again.');
-            }
-
-            // Create booking
-            $booking = $this->flightService->createBooking([
-                'user_id' => auth()->id(),
-                'flight_offer' => $flight['offer_data'],
-                'contact_email' => $validated['contact_email'],
-                'contact_phone' => $validated['contact_phone'],
-                'adults' => $validated['adults'],
-                'children' => $validated['children'] ?? 0,
-                'infants' => $validated['infants'] ?? 0,
-                'passengers' => $validated['passengers'],
-                'travel_class' => $flight['cabin_class'],
-            ]);
-
-            // Create payment record
-            $payment = Payment::create([
-                'user_id' => auth()->id(),
-                'amount' => $booking->total_price,
-                'currency' => $booking->currency,
-                'status' => 'pending',
-                'payment_method' => 'pesapal',
-            ]);
-
-            // Link payment to booking
-            $booking->update(['payment_id' => $payment->id]);
-
-            DB::commit();
-
-            // Redirect to payment
-            return redirect()->route('flights.payment', $booking->booking_reference);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Flight booking error: ' . $e->getMessage());
-            return back()->withInput()->with('error', $e->getMessage());
-        }
-    }
-
-    /**
-     * Show payment page
-     */
-    public function payment($bookingReference)
-    {
-        $booking = FlightBooking::where('booking_reference', $bookingReference)->firstOrFail();
-
-        // Check if already paid
-        if ($booking->status === 'confirmed') {
-            return redirect()->route('flights.confirmation', $bookingReference);
-        }
-
-        return view('website.pages.flight-payment', compact('booking'));
-    }
-
-    /**
-     * Initialize Pesapal payment
-     */
-    public function initializePayment($bookingReference)
-    {
-        try {
-            $booking = FlightBooking::where('booking_reference', $bookingReference)->firstOrFail();
-
-            // Prepare Pesapal order
-            $order = [
-                'id' => $booking->booking_reference,
-                'currency' => $booking->currency,
-                'amount' => $booking->total_price,
-                'description' => "Flight Booking - {$booking->flight_number} ({$booking->origin_code} to {$booking->destination_code})",
-                'callback_url' => route('flights.payment.callback'),
-                'notification_id' => config('pesapal.ipn_id'),
-                'billing_address' => [
-                    'email_address' => $booking->contact_email,
-                    'phone_number' => $booking->contact_phone,
-                    'country_code' => 'TZ',
-                    'first_name' => $booking->passengers->first()->first_name ?? 'Customer',
-                    'last_name' => $booking->passengers->first()->last_name ?? '',
-                ]
-            ];
-
-            // Submit order to Pesapal
-            $response = Pesapal::submitOrder($order);
-
-            if ($response && isset($response['redirect_url'])) {
-                // Store order tracking ID
-                $booking->payment->update([
-                    'transaction_id' => $response['order_tracking_id']
-                ]);
-
-                // Redirect to Pesapal
-                return redirect($response['redirect_url']);
-            }
-
-            throw new \Exception('Failed to initialize payment');
-
-        } catch (\Exception $e) {
-            Log::error('Payment initialization error: ' . $e->getMessage());
-            return back()->with('error', 'Payment initialization failed. Please try again.');
-        }
-    }
-
-    /**
-     * Handle Pesapal payment callback
-     */
-    public function paymentCallback(Request $request)
-    {
-        try {
-            $orderTrackingId = $request->input('OrderTrackingId');
-            
-            if (!$orderTrackingId) {
-                throw new \Exception('Invalid payment callback');
-            }
-
-            // Get transaction status from Pesapal
-            $transactionStatus = Pesapal::getTransactionStatus($orderTrackingId);
-
-            // Find payment by tracking ID
-            $payment = Payment::where('transaction_id', $orderTrackingId)->firstOrFail();
-            $booking = FlightBooking::where('payment_id', $payment->id)->firstOrFail();
-
-            if ($transactionStatus['payment_status_description'] === 'Completed') {
-                // Update payment status
-                $payment->update([
-                    'status' => 'completed',
-                    'payment_date' => now(),
-                ]);
-
-                // Confirm booking with Amadeus
-                $confirmed = $this->flightService->confirmBookingWithAmadeus($booking);
-
-                if ($confirmed) {
-                    // Send confirmation email
-                    // Mail::to($booking->contact_email)->send(new FlightBookingConfirmation($booking));
-                    
-                    return redirect()->route('flights.confirmation', $booking->booking_reference);
-                } else {
-                    // Payment received but booking failed - needs manual processing
-                    return redirect()->route('flights.confirmation', $booking->booking_reference)
-                        ->with('warning', 'Payment received. Your booking is being processed and you will receive confirmation shortly.');
-                }
-            } else {
-                // Payment failed
-                $payment->update(['status' => 'failed']);
-                
-                return redirect()->route('flights.payment', $booking->booking_reference)
-                    ->with('error', 'Payment failed. Please try again.');
-            }
-
-        } catch (\Exception $e) {
-            Log::error('Payment callback error: ' . $e->getMessage());
-            return redirect()->route('flights.index')->with('error', 'Payment processing error. Please contact support.');
-        }
-    }
-
-    /**
-     * Show booking confirmation
-     */
-    public function confirmation($bookingReference)
-    {
-        $booking = FlightBooking::with('passengers', 'payment')
-            ->where('booking_reference', $bookingReference)
-            ->firstOrFail();
-
-        return view('website.pages.flight-confirmation', compact('booking'));
-    }
-
-    /**
-     * Get user's flight bookings
-     */
-    public function myBookings()
-    {
-        $bookings = FlightBooking::with('passengers', 'payment')
-            ->where('user_id', auth()->id())
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
-
-        return view('website.pages.my-flight-bookings', compact('bookings'));
-    }
-
-    /**
-     * Get popular destinations - Tanzania and East Africa
-     */
-    protected function getPopularDestinations(): array
-    {
-        return [
-            // Tanzania Airports
-            'ZNZ' => 'Zanzibar - Abeid Amani Karume International',
-            'DAR' => 'Dar es Salaam - Julius Nyerere International',
-            'JRO' => 'Kilimanjaro International',
-            'MWZ' => 'Mwanza Airport',
-            'TBO' => 'Tabora Airport',
-            'DOD' => 'Dodoma Airport',
-            'ARK' => 'Arusha Airport',
-            
-            // Kenya
-            'NBO' => 'Nairobi - Jomo Kenyatta International',
-            'MBA' => 'Mombasa - Moi International',
-            'KIS' => 'Kisumu Airport',
-            'ELD' => 'Eldoret International',
-            
-            // Uganda
-            'EBB' => 'Kampala - Entebbe International',
-            
-            // Rwanda
-            'KGL' => 'Kigali International',
-            
-            // Burundi
-            'BJM' => 'Bujumbura International',
-            
-            // Ethiopia
-            'ADD' => 'Addis Ababa - Bole International',
-            
-            // South Sudan
-            'JUB' => 'Juba International',
-            
-            // Somalia
-            'MGQ' => 'Mogadishu - Aden Adde International',
-            
-            // Djibouti
-            'JIB' => 'Djibouti - Ambouli International',
-            
-            // Popular International Hubs
-            'DXB' => 'Dubai International',
-            'DOH' => 'Doha - Hamad International',
-            'IST' => 'Istanbul Airport',
-            'AMS' => 'Amsterdam - Schiphol',
-            'LHR' => 'London - Heathrow',
-            'JNB' => 'Johannesburg - O.R. Tambo',
-            'CPT' => 'Cape Town International',
-            'CAI' => 'Cairo International',
-            'KRT' => 'Khartoum International',
-        ];
-    }
-
-    /**
-     * Get popular airlines
-     */
-    protected function getPopularAirlines(): array
-    {
-        return config('amadeus.tanzania_airlines', [
-            'TC' => 'Air Tanzania',
-            'PW' => 'Precision Air',
-            'ET' => 'Ethiopian Airlines',
-            'KQ' => 'Kenya Airways',
-            'EK' => 'Emirates',
-            'QR' => 'Qatar Airways',
-            'TK' => 'Turkish Airlines',
-        ]);
-    }
-
-    /**
-     * Search for airports and cities (AJAX endpoint)
+     * Airport / city autocomplete for search fields.
      */
     public function searchLocations(Request $request)
     {
         $request->validate([
-            'keyword' => 'required|string|min:2|max:100',
-            'countryCode' => 'nullable|string|size:2',
-            'subTypes' => 'nullable|array',
-            'limit' => 'nullable|integer|min:1|max:20',
-            'view' => 'nullable|string|in:FULL,LIGHT',
+            'keyword' => ['required', 'string', 'min:2', 'max:50'],
         ]);
 
+        $locations = $this->flightService->searchLocations(
+            $request->input('keyword'),
+            $request->input('countryCode'),
+            $request->input('subTypes', ['AIRPORT', 'CITY']),
+            (int) $request->input('limit', 10),
+            $request->input('view', 'FULL')
+        );
+
+        return response()->json($locations);
+    }
+
+    /**
+     * Track affiliate click and redirect (non-Livewire fallback).
+     */
+    public function affiliateRedirect(FlightAffiliateClickRequest $request)
+    {
+        $data = $request->validated();
+
         try {
-            $keyword = $request->input('keyword');
-            $countryCode = $request->input('countryCode');
-            $subTypes = $request->input('subTypes', ['AIRPORT', 'CITY']);
-            $limit = $request->input('limit', 10);
-            $view = $request->input('view', 'FULL');
-
-            $locations = $this->flightService->searchLocations($keyword, $countryCode, $subTypes, $limit, $view);
-
-            return response()->json([
-                'success' => true,
-                'data' => $locations
+            $this->tracking->logClick([
+                'flight_search_id' => $data['flight_search_id'] ?? session('last_flight_search_id'),
+                'airline' => $data['airline'] ?? null,
+                'flight_number' => $data['flight_number'] ?? null,
+                'origin' => $data['origin'],
+                'destination' => $data['destination'],
+                'price' => $data['price'] ?? null,
+                'currency' => $data['currency'] ?? 'USD',
+                'affiliate_name' => $data['affiliate_name'],
+                'affiliate_url' => $data['affiliate_url'],
             ]);
-
-        } catch (\Exception $e) {
-            Log::error('Location search error: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Unable to search locations. Please try again.',
-                'data' => []
-            ], 500);
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
         }
+
+        return redirect()->away($data['affiliate_url']);
+    }
+
+    /**
+     * Legacy routes now redirect to affiliate search flow.
+     */
+    public function show($flightId)
+    {
+        return redirect()->route('flights.index')->with('error', 'Please use Book Flight on the search results page.');
+    }
+
+    public function bookingForm($flightId)
+    {
+        return redirect()->route('flights.index')->with('error', 'Bookings are completed on our partner website.');
+    }
+
+    public function processBooking(Request $request)
+    {
+        return redirect()->route('flights.index')->with('error', 'Direct bookings are no longer available. Use Book Flight to continue on our partner site.');
+    }
+
+    public function payment($bookingReference)
+    {
+        return redirect()->route('flights.index')->with('error', 'Flight payments are handled by our affiliate partners.');
+    }
+
+    public function initializePayment($bookingReference)
+    {
+        return redirect()->route('flights.index');
+    }
+
+    public function paymentCallback(Request $request)
+    {
+        return redirect()->route('flights.index');
+    }
+
+    public function confirmation($bookingReference)
+    {
+        return redirect()->route('flights.index');
+    }
+
+    public function myBookings()
+    {
+        return redirect()->route('flights.index')->with('info', 'Flight bookings are completed on our partner website.');
     }
 }

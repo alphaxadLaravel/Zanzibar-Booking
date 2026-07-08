@@ -4,11 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class FlightSearch extends Model
 {
     protected $fillable = [
         'user_id',
+        'trip_type',
         'origin_code',
         'origin_name',
         'destination_code',
@@ -22,6 +24,10 @@ class FlightSearch extends Model
         'results_count',
         'session_id',
         'ip_address',
+        'country',
+        'device',
+        'browser',
+        'operating_system',
     ];
 
     protected $casts = [
@@ -35,6 +41,11 @@ class FlightSearch extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function clicks(): HasMany
+    {
+        return $this->hasMany(FlightClick::class);
     }
 
     /**

@@ -147,6 +147,10 @@ return [
             'reviews.view' => 'View deal reviews',
             'reviews.manage' => 'Approve and decline deal reviews',
         ],
+        'Manage · Flights' => [
+            'flights.view' => 'View flight search analytics',
+            'flights.manage' => 'Manage and delete flight analytics',
+        ],
         'Settings · Categories' => [
             'categories.manage' => 'Manage categories',
         ],
