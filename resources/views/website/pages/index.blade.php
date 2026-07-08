@@ -485,6 +485,10 @@
             <h2 class="section-title mb-0">What Our Guests Say</h2>
         </div>
         <script defer async src='https://cdn.trustindex.io/loader.js?a20261976cee183aaa9666e7cf7'></script>
+
+        <div class="mt-5 pt-4">
+            <script defer async src='https://cdn.trustindex.io/loader.js?1e5b48e769e21874032678ce8f5'></script>
+        </div>
     </div>
 </section>
 
