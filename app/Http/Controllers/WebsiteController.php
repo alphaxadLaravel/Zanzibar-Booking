@@ -793,7 +793,12 @@ class WebsiteController extends Controller
             ->with(['category', 'photos', 'tours', 'features', 'tourIncludes.feature'])
             ->firstOrFail();
 
-        return view('website.pages.view_activity', compact('activity', 'hashids'));
+        $paginatedReviews = $activity->approvedReviews()
+            ->with('user')
+            ->orderByDesc('created_at')
+            ->paginate(5);
+
+        return view('website.pages.view_activity', compact('activity', 'hashids', 'paginatedReviews'));
     }
 
     // viewPackage
@@ -818,7 +823,12 @@ class WebsiteController extends Controller
             $groupPackageStats = app(\App\Services\GroupPackageCapacityService::class)->statsFor($package->tours);
         }
 
-        return view('website.pages.view_package', compact('package', 'hashids', 'groupPackageStats'));
+        $paginatedReviews = $package->approvedReviews()
+            ->with('user')
+            ->orderByDesc('created_at')
+            ->paginate(5);
+
+        return view('website.pages.view_package', compact('package', 'hashids', 'groupPackageStats', 'paginatedReviews'));
     }
 
     /**
@@ -1016,16 +1026,17 @@ class WebsiteController extends Controller
         ]);
 
         try {
-            $review = DealReviews::create([
+            DealReviews::create([
                 'deal_id' => $dealId,
-                'user_id' => 1, // Set to 1 as requested
+                'user_id' => Auth::id() ?? 1,
                 'review_title' => $request->review_title,
                 'review_content' => $request->review_content,
                 'rating' => $request->rating,
-                'is_approved' => true
+                'is_approved' => false,
+                'status' => DealReviews::STATUS_PENDING,
             ]);
 
-            return redirect()->back()->with('success', 'Review submitted successfully!');
+            return redirect()->back()->with('success', 'Thank you! Your review has been submitted and is awaiting approval.');
         } catch (\Exception $e) {
             Log::error('Review submission failed: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Failed to submit review. Please try again.');

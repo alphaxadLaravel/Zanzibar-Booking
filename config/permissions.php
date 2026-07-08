@@ -53,12 +53,14 @@ return [
                 'Manage · Users',
                 'Manage · Partners',
                 'Manage · Payments',
+                'Manage · Reviews',
             ],
             'module_icons' => [
                 'Manage · Bookings' => 'mdi-calendar-check',
                 'Manage · Users' => 'mdi-account-group',
                 'Manage · Partners' => 'mdi-handshake-outline',
                 'Manage · Payments' => 'mdi-cash-multiple',
+                'Manage · Reviews' => 'mdi-star-outline',
             ],
         ],
         [
@@ -105,6 +107,7 @@ return [
         'Manage · Users' => 'Sidebar: Manage → Users',
         'Manage · Partners' => 'Sidebar: Manage → Partners',
         'Manage · Payments' => 'Sidebar: Manage → Payments',
+        'Manage · Reviews' => 'Sidebar: Manage → Reviews',
         'Settings · Categories' => 'Sidebar: Settings → Categories',
         'Settings · Features' => 'Sidebar: Settings → Features',
         'Settings · System' => 'Sidebar: Account → Settings → System, General & Media',
@@ -139,6 +142,10 @@ return [
         ],
         'Manage · Payments' => [
             'payments.view' => 'View payments',
+        ],
+        'Manage · Reviews' => [
+            'reviews.view' => 'View deal reviews',
+            'reviews.manage' => 'Approve and decline deal reviews',
         ],
         'Settings · Categories' => [
             'categories.manage' => 'Manage categories',

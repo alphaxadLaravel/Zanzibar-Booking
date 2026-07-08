@@ -8,22 +8,26 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class DealReviews extends Model
 {
     protected $table = 'deal_reviews';
-    
+
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_APPROVED = 'approved';
+    public const STATUS_DECLINED = 'declined';
+
     protected $fillable = [
         'deal_id',
         'user_id',
         'review_title',
         'review_content',
         'rating',
-        'is_approved'
+        'is_approved',
+        'status',
     ];
 
     protected $casts = [
         'rating' => 'integer',
-        'is_approved' => 'boolean'
+        'is_approved' => 'boolean',
     ];
 
-    // Relationships
     public function deal(): BelongsTo
     {
         return $this->belongsTo(Deal::class);
@@ -34,10 +38,19 @@ class DealReviews extends Model
         return $this->belongsTo(User::class);
     }
 
-    // Scopes
     public function scopeApproved($query)
     {
-        return $query->where('is_approved', true);
+        return $query->where('status', self::STATUS_APPROVED);
+    }
+
+    public function scopePending($query)
+    {
+        return $query->where('status', self::STATUS_PENDING);
+    }
+
+    public function scopeDeclined($query)
+    {
+        return $query->where('status', self::STATUS_DECLINED);
     }
 
     public function scopeByRating($query, $rating)
@@ -50,13 +63,27 @@ class DealReviews extends Model
         return $query->orderBy('created_at', 'desc')->limit($limit);
     }
 
-    // Accessor for formatted date
+    public function approve(): void
+    {
+        $this->update([
+            'status' => self::STATUS_APPROVED,
+            'is_approved' => true,
+        ]);
+    }
+
+    public function decline(): void
+    {
+        $this->update([
+            'status' => self::STATUS_DECLINED,
+            'is_approved' => false,
+        ]);
+    }
+
     public function getFormattedDateAttribute()
     {
         return $this->created_at->diffForHumans();
     }
 
-    // Accessor for star rating display
     public function getStarRatingAttribute()
     {
         $stars = '';
@@ -67,15 +94,25 @@ class DealReviews extends Model
                 $stars .= '<i class="fa fa-star text-muted"></i>';
             }
         }
+
         return $stars;
     }
 
-    // Accessor for reviewer name from user relationship
     public function getReviewerNameAttribute()
     {
         if ($this->user) {
             return $this->user->full_name ?: 'Anonymous User';
         }
+
         return 'Anonymous';
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return match ($this->status) {
+            self::STATUS_APPROVED => 'Approved',
+            self::STATUS_DECLINED => 'Declined',
+            default => 'Pending',
+        };
     }
 }

@@ -23,6 +23,7 @@ class PermissionDependencies
             'users.manage' => 'users.view',
             'partners.manage' => 'partners.view',
             'contact.manage' => 'contact.view',
+            'reviews.manage' => 'reviews.view',
         ];
 
         if (isset($manageRequiresView[$slug])) {

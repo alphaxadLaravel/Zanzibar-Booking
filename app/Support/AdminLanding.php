@@ -27,6 +27,7 @@ class AdminLanding
             'users.view' => fn () => route('admin.users'),
             'partners.view' => fn () => route('admin.partners'),
             'payments.view' => fn () => route('admin.payments'),
+            'reviews.view' => fn () => route('admin.reviews'),
             'categories.manage' => fn () => route('admin.categories'),
             'features.manage' => fn () => route('admin.features'),
             'settings.system' => fn () => route('admin.system.settings'),

@@ -379,4 +379,14 @@ Route::middleware(['auth', 'admin.panel'])->group(function () {
         Route::post('/admin/contact-messages/{id}/status', [AdminController::class, 'updateMessageStatus'])->name('admin.contact.message.status');
         Route::delete('/admin/contact-messages/{id}', [AdminController::class, 'deleteContactMessage'])->name('admin.contact.message.delete');
     });
+
+    // Deal reviews management
+    Route::middleware('permission:reviews.view')->group(function () {
+        Route::get('/admin/reviews', [AdminController::class, 'reviews'])->name('admin.reviews');
+    });
+    Route::middleware('permission:reviews.manage')->group(function () {
+        Route::put('/admin/reviews/{id}/approve', [AdminController::class, 'approveReview'])->name('admin.reviews.approve');
+        Route::put('/admin/reviews/{id}/decline', [AdminController::class, 'declineReview'])->name('admin.reviews.decline');
+        Route::delete('/admin/reviews/{id}', [AdminController::class, 'deleteReview'])->name('admin.reviews.delete');
+    });
 });

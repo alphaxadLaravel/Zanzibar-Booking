@@ -86,7 +86,7 @@
                 @endif
                 @endif
 
-                @if($sidebarUser->hasAnyPermission(['bookings.view', 'bookings.manage', 'users.view', 'users.manage', 'partners.view', 'partners.manage', 'payments.view']))
+                @if($sidebarUser->hasAnyPermission(['bookings.view', 'bookings.manage', 'users.view', 'users.manage', 'partners.view', 'partners.manage', 'payments.view', 'reviews.view', 'reviews.manage']))
                 <li class="side-nav-title">Manage</li>
                 @endif
 
@@ -122,6 +122,15 @@
                     <a href="{{ route('admin.payments') }}" class="side-nav-link">
                         <span class="menu-icon"><i class="mdi mdi-cash-multiple"></i></span>
                         <span class="menu-text">Payments</span>
+                    </a>
+                </li>
+                @endif
+
+                @if($sidebarUser->hasAnyPermission(['reviews.view', 'reviews.manage']))
+                <li class="side-nav-item">
+                    <a href="{{ route('admin.reviews') }}" class="side-nav-link">
+                        <span class="menu-icon"><i class="mdi mdi-star-outline"></i></span>
+                        <span class="menu-text">Reviews</span>
                     </a>
                 </li>
                 @endif

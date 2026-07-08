@@ -20,6 +20,7 @@ use App\Models\Permission;
 use App\Models\Role;
 use App\Support\PermissionDependencies;
 use App\Models\ContactMessage;
+use App\Models\DealReviews;
 use App\Models\System;
 use App\Models\SiteVisit;
 use Illuminate\Support\Facades\Auth;
@@ -1331,5 +1332,68 @@ class AdminController extends Controller
         $settings->save();
 
         return redirect()->back()->with('success', 'Home page SEO settings updated successfully!');
+    }
+
+    public function reviews(Request $request)
+    {
+        $status = $request->get('status', 'all');
+        $hashids = $this->getHashids();
+
+        $query = DealReviews::with(['deal', 'user'])->orderByDesc('created_at');
+
+        if ($status === DealReviews::STATUS_PENDING) {
+            $query->pending();
+        } elseif ($status === DealReviews::STATUS_APPROVED) {
+            $query->approved();
+        } elseif ($status === DealReviews::STATUS_DECLINED) {
+            $query->declined();
+        }
+
+        $reviews = $query->paginate(20)->withQueryString();
+
+        $counts = [
+            'all' => DealReviews::count(),
+            'pending' => DealReviews::pending()->count(),
+            'approved' => DealReviews::approved()->count(),
+            'declined' => DealReviews::declined()->count(),
+        ];
+
+        return view('admin.pages.reviews.index', compact('reviews', 'hashids', 'status', 'counts'));
+    }
+
+    public function approveReview($id)
+    {
+        $review = $this->findReviewByHash($id);
+        $review->approve();
+
+        return redirect()->back()->with('success', 'Review approved and is now visible on the website.');
+    }
+
+    public function declineReview($id)
+    {
+        $review = $this->findReviewByHash($id);
+        $review->decline();
+
+        return redirect()->back()->with('success', 'Review declined and hidden from the website.');
+    }
+
+    public function deleteReview($id)
+    {
+        $review = $this->findReviewByHash($id);
+        $review->delete();
+
+        return redirect()->back()->with('success', 'Review deleted successfully.');
+    }
+
+    protected function findReviewByHash(string $id): DealReviews
+    {
+        $hashids = $this->getHashids();
+        $decodedIds = $hashids->decode($id);
+
+        if (empty($decodedIds)) {
+            abort(404, 'Review not found');
+        }
+
+        return DealReviews::findOrFail($decodedIds[0]);
     }
 }
