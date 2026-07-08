@@ -15,7 +15,7 @@
     </div>
 
     <div class="p-3">
-        @foreach($permissionSections as $sectionIndex => $section)
+        @forelse($permissionSections as $sectionIndex => $section)
             @if($sectionIndex > 0)
                 <hr class="my-4">
             @endif
@@ -69,7 +69,14 @@
                     @endforeach
                 </div>
             </div>
-        @endforeach
+        @empty
+            <div class="alert alert-warning mb-0">
+                No permissions found in the database. On the server run:
+                <code>php artisan config:clear</code> then
+                <code>php artisan permissions:sync</code> or
+                <code>php artisan db:seed --class=PermissionSeeder --force</code>
+            </div>
+        @endforelse
     </div>
 </div>
 

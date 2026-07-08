@@ -694,6 +694,31 @@ class AdminController extends Controller
             ];
         }
 
+        if (!empty($sections)) {
+            return $sections;
+        }
+
+        // Fallback: show permissions grouped by DB group when layout groups do not match.
+        foreach ($permissionsByGroup as $groupName => $permissions) {
+            if ($permissions->isEmpty()) {
+                continue;
+            }
+
+            $sections[] = [
+                'key' => 'fallback_' . md5((string) $groupName),
+                'title' => $groupName ?: 'Permissions',
+                'icon' => 'mdi-shield-check-outline',
+                'description' => null,
+                'modules' => [[
+                    'key' => 'fallback_module_' . md5((string) $groupName),
+                    'group' => $groupName,
+                    'label' => $groupName ?: 'Permissions',
+                    'icon' => 'mdi-shield-check-outline',
+                    'permissions' => $permissions,
+                ]],
+            ];
+        }
+
         return $sections;
     }
 
