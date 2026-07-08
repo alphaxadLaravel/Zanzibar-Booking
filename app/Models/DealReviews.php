@@ -109,10 +109,19 @@ class DealReviews extends Model
 
     public function getStatusLabelAttribute(): string
     {
-        return match ($this->status) {
+        return match ($this->moderation_status) {
             self::STATUS_APPROVED => 'Approved',
             self::STATUS_DECLINED => 'Declined',
             default => 'Pending',
         };
+    }
+
+    public function getModerationStatusAttribute(): string
+    {
+        if (!empty($this->status)) {
+            return $this->status;
+        }
+
+        return $this->is_approved ? self::STATUS_APPROVED : self::STATUS_PENDING;
     }
 }

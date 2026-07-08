@@ -1336,29 +1336,13 @@ class AdminController extends Controller
 
     public function reviews(Request $request)
     {
-        $status = $request->get('status', 'all');
         $hashids = $this->getHashids();
 
-        $query = DealReviews::with(['deal', 'user'])->orderByDesc('created_at');
+        $reviews = DealReviews::with(['deal', 'user'])
+            ->orderByDesc('created_at')
+            ->paginate(20);
 
-        if ($status === DealReviews::STATUS_PENDING) {
-            $query->pending();
-        } elseif ($status === DealReviews::STATUS_APPROVED) {
-            $query->approved();
-        } elseif ($status === DealReviews::STATUS_DECLINED) {
-            $query->declined();
-        }
-
-        $reviews = $query->paginate(20)->withQueryString();
-
-        $counts = [
-            'all' => DealReviews::count(),
-            'pending' => DealReviews::pending()->count(),
-            'approved' => DealReviews::approved()->count(),
-            'declined' => DealReviews::declined()->count(),
-        ];
-
-        return view('admin.pages.reviews.index', compact('reviews', 'hashids', 'status', 'counts'));
+        return view('admin.pages.reviews.index', compact('reviews', 'hashids'));
     }
 
     public function approveReview($id)
