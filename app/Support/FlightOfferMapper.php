@@ -157,6 +157,50 @@ class FlightOfferMapper
         return ((int) ($hours[1] ?? 0) * 60) + (int) ($minutes[1] ?? 0);
     }
 
+    public static function applyMarkup(float $supplierTotal): float
+    {
+        if ($supplierTotal <= 0) {
+            return 0;
+        }
+
+        $percent = (float) config('flights.markup.percent', 0);
+        $fixed = (float) config('flights.markup.fixed', 0);
+
+        return round($supplierTotal * (1 + $percent / 100) + $fixed, 2);
+    }
+
+    /**
+     * @return array{
+     *     supplier_total: float,
+     *     base_amount: float,
+     *     tax_amount: float,
+     *     markup: float,
+     *     price: float,
+     *     currency: string
+     * }
+     */
+    public static function resolvePricing(array $offer): array
+    {
+        $supplierTotal = (float) ($offer['total_amount'] ?? 0);
+        $taxAmount = (float) ($offer['tax_amount'] ?? 0);
+        $baseAmount = (float) ($offer['base_amount'] ?? max(0, $supplierTotal - $taxAmount));
+        $sellingTotal = self::applyMarkup($supplierTotal);
+
+        return [
+            'supplier_total' => $supplierTotal,
+            'base_amount' => $baseAmount,
+            'tax_amount' => $taxAmount,
+            'markup' => round(max(0, $sellingTotal - $supplierTotal), 2),
+            'price' => $sellingTotal,
+            'currency' => strtoupper($offer['total_currency'] ?? 'USD'),
+        ];
+    }
+
+    public static function formatPrice(float $amount, int $decimals = 2): string
+    {
+        return number_format($amount, $decimals);
+    }
+
     public static function mapDuffelOfferToArray(array $offer): array
     {
         $slice = $offer['slices'][0] ?? [];
@@ -167,6 +211,8 @@ class FlightOfferMapper
         $airlineCode = strtoupper($firstSegment['marketing_carrier']['iata_code'] ?? 'XX');
         $operatingCarrier = $firstSegment['operating_carrier']['name'] ?? null;
         $marketingCarrier = $firstSegment['marketing_carrier']['name'] ?? self::airlineName($airlineCode);
+
+        $pricing = self::resolvePricing($offer);
 
         return [
             'id' => $offer['id'] ?? null,
@@ -190,9 +236,12 @@ class FlightOfferMapper
             'duration' => self::formatMinutes(self::parseIsoDuration($slice['duration'] ?? null)),
             'stops' => max(0, count($segments) - 1),
             'cabin_class' => strtoupper($slice['segments'][0]['passengers'][0]['cabin_class'] ?? 'economy'),
-            'price' => (float) ($offer['total_amount'] ?? 0),
-            'tax_amount' => (float) ($offer['tax_amount'] ?? 0),
-            'currency' => strtoupper($offer['total_currency'] ?? 'USD'),
+            'supplier_total' => $pricing['supplier_total'],
+            'base_amount' => $pricing['base_amount'],
+            'tax_amount' => $pricing['tax_amount'],
+            'markup' => $pricing['markup'],
+            'price' => $pricing['price'],
+            'currency' => $pricing['currency'],
             'baggage' => self::resolveBaggageLabel($offer),
             'refundable' => self::resolveRefundableLabel($offer),
             'affiliate_name' => 'Duffel',

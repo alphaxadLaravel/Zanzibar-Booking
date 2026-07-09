@@ -468,7 +468,7 @@
                                 </div>
 
                                 <div class="col-md-4 col-12 d-flex flex-wrap align-items-center justify-content-md-end flight-row__book flight-row__actions">
-                                    <div class="flight-row__price mr-2 mb-2 mb-md-0">{{ $flight['currency'] }} {{ number_format($flight['price'], 0) }}</div>
+                                    <div class="flight-row__price mr-2 mb-2 mb-md-0">{{ $flight['currency'] }} {{ \App\Support\FlightOfferMapper::formatPrice($flight['price']) }}</div>
                                     <button type="button" class="btn btn-outline-primary btn-sm mr-1 mb-2 mb-md-0"
                                             wire:click="showFlightDetails('{{ $flight['id'] }}')">
                                         Details
@@ -525,8 +525,8 @@
                             </div>
                             <div class="ml-auto text-right">
                                 <span class="badge badge-success mb-2">{{ $selectedFlight['availability_label'] ?? 'Available for this date' }}</span>
-                                <div class="h4 text-primary mb-0">{{ $selectedFlight['currency'] }} {{ number_format($selectedFlight['price'], 0) }}</div>
-                                <div class="small text-muted">per passenger</div>
+                                <div class="h4 text-primary mb-0">{{ $selectedFlight['currency'] }} {{ \App\Support\FlightOfferMapper::formatPrice($selectedFlight['price']) }}</div>
+                                <div class="small text-muted">total for all passengers</div>
                             </div>
                         </div>
 
@@ -615,10 +615,14 @@
                                         <div class="flight-detail-info-item__value">{{ $raw['owner']['name'] }}</div>
                                     </div>
                                 @endif
-                                @if(isset($raw['tax_amount']))
+                                @if(isset($raw['base_amount']) || isset($raw['tax_amount']))
                                     <div class="flight-detail-info-item">
-                                        <div class="flight-detail-info-item__label">Taxes</div>
-                                        <div class="flight-detail-info-item__value">{{ $raw['total_currency'] ?? '' }} {{ $raw['tax_amount'] }}</div>
+                                        <div class="flight-detail-info-item__label">Base fare</div>
+                                        <div class="flight-detail-info-item__value">{{ $raw['total_currency'] ?? '' }} {{ $raw['base_amount'] ?? '—' }}</div>
+                                    </div>
+                                    <div class="flight-detail-info-item">
+                                        <div class="flight-detail-info-item__label">Taxes & fees</div>
+                                        <div class="flight-detail-info-item__value">{{ $raw['total_currency'] ?? '' }} {{ $raw['tax_amount'] ?? '—' }}</div>
                                     </div>
                                 @endif
                                 @if(!empty($raw['expires_at']))

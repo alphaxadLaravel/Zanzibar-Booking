@@ -97,6 +97,15 @@ return [
     ],
 
     /*
+    | Markup added on top of Duffel supplier total (what you charge the customer).
+    | Duffel is still paid the supplier fare from your balance; the difference is your margin.
+    */
+    'markup' => [
+        'percent' => (float) env('FLIGHT_MARKUP_PERCENT', 0),
+        'fixed' => (float) env('FLIGHT_MARKUP_FIXED', 0),
+    ],
+
+    /*
     | Priority routes preloaded when users land on /flights.
     | Duffel searches are slower than cached affiliate APIs, so featured routes are capped.
     */

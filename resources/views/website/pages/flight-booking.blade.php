@@ -241,7 +241,7 @@
                         </div>
                         <div class="text-md-right">
                             <span class="badge badge-success mb-2">{{ $flight['availability_label'] ?? 'Available' }}</span>
-                            <div class="flight-checkout__price">{{ $flight['currency'] }} {{ number_format($flight['price'], 0) }}</div>
+                            <div class="flight-checkout__price">{{ $flight['currency'] }} {{ \App\Support\FlightOfferMapper::formatPrice($flight['price']) }}</div>
                             <div class="small text-muted">total for {{ $totalPassengers }} passenger{{ $totalPassengers > 1 ? 's' : '' }}</div>
                         </div>
                     </div>
@@ -348,13 +348,25 @@
                     </div>
 
                     <div class="flight-checkout__summary-row">
-                        <span>Fare</span>
-                        <strong>{{ $flight['currency'] }} {{ number_format($flight['price'], 2) }}</strong>
+                        <span>Base fare</span>
+                        <strong>{{ $flight['currency'] }} {{ \App\Support\FlightOfferMapper::formatPrice($flight['base_amount'] ?? max(0, $flight['price'] - ($flight['tax_amount'] ?? 0))) }}</strong>
                     </div>
                     @if(!empty($flight['tax_amount']))
                     <div class="flight-checkout__summary-row">
-                        <span>Taxes included</span>
-                        <strong>{{ $flight['currency'] }} {{ number_format($flight['tax_amount'], 2) }}</strong>
+                        <span>Taxes & fees</span>
+                        <strong>{{ $flight['currency'] }} {{ \App\Support\FlightOfferMapper::formatPrice($flight['tax_amount']) }}</strong>
+                    </div>
+                    @endif
+                    @if(!empty($flight['markup']) && (float) $flight['markup'] > 0)
+                    <div class="flight-checkout__summary-row">
+                        <span>Service fee</span>
+                        <strong>{{ $flight['currency'] }} {{ \App\Support\FlightOfferMapper::formatPrice($flight['markup']) }}</strong>
+                    </div>
+                    @endif
+                    @if(!empty($flight['supplier_total']) && empty($flight['markup']))
+                    <div class="flight-checkout__summary-row small text-muted">
+                        <span>Airline total (before fees)</span>
+                        <span>{{ $flight['currency'] }} {{ \App\Support\FlightOfferMapper::formatPrice($flight['supplier_total']) }}</span>
                     </div>
                     @endif
                     <div class="flight-checkout__summary-row">
@@ -364,7 +376,7 @@
                     <hr>
                     <div class="flight-checkout__summary-total d-flex justify-content-between align-items-center">
                         <span>Total</span>
-                        <strong>{{ $flight['currency'] }} {{ number_format($flight['price'], 2) }}</strong>
+                        <strong>{{ $flight['currency'] }} {{ \App\Support\FlightOfferMapper::formatPrice($flight['price']) }}</strong>
                     </div>
 
                     @if($expiresLabel)

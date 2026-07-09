@@ -42,11 +42,16 @@ class FlightBookingService
                 'adults' => $validated['adults'],
                 'children' => (int) ($validated['children'] ?? 0),
                 'infants' => (int) ($validated['infants'] ?? 0),
-                'base_price' => $mapped['price'],
-                'taxes' => $offer['tax_amount'] ?? 0,
+                'base_price' => $mapped['base_amount'],
+                'taxes' => $mapped['tax_amount'],
                 'total_price' => $mapped['price'],
                 'currency' => $mapped['currency'],
                 'flight_offer' => array_merge($offer, [
+                    '_pricing' => [
+                        'supplier_total' => $mapped['supplier_total'],
+                        'markup' => $mapped['markup'],
+                        'customer_total' => $mapped['price'],
+                    ],
                     '_checkout' => [
                         'passengers' => $validated['passengers'],
                         'contact_email' => $validated['contact_email'],

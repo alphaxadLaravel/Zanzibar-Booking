@@ -149,8 +149,9 @@ class DuffelProvider implements FlightProviderInterface
         }
 
         $stops = max(0, count($segments) - 1);
-        $price = (float) ($item['total_amount'] ?? 0);
-        $currency = strtoupper($item['total_currency'] ?? $criteria->currency);
+        $pricing = FlightOfferMapper::resolvePricing($item);
+        $price = $pricing['price'];
+        $currency = $pricing['currency'];
         $offerId = (string) ($item['id'] ?? md5($airlineCode . $flightNumber . $departureAt . $index));
 
         $logo = $firstSegment['marketing_carrier']['logo_symbol_url']
