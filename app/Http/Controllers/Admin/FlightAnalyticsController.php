@@ -3,10 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\FlightBooking;
 use App\Models\FlightClick;
 use App\Models\FlightSearch;
-use App\Repositories\FlightClickRepository;
-use App\Repositories\FlightSearchRepository;
 use App\Services\Flights\FlightAnalyticsExportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,61 +13,39 @@ use Illuminate\Support\Facades\DB;
 class FlightAnalyticsController extends Controller
 {
     public function __construct(
-        protected FlightSearchRepository $searches,
-        protected FlightClickRepository $clicks,
         protected FlightAnalyticsExportService $exportService,
     ) {}
 
-    public function index(Request $request)
+    public function index()
     {
-        $filters = $this->filtersFromRequest($request);
+        $stats = [
+            'total_searches' => FlightSearch::count(),
+            'today_searches' => FlightSearch::whereDate('created_at', today())->count(),
+            'total_bookings' => FlightBooking::count(),
+            'confirmed_bookings' => FlightBooking::where('status', 'confirmed')->count(),
+            'pending_bookings' => FlightBooking::where('status', 'pending')->count(),
+            'today_bookings' => FlightBooking::whereDate('created_at', today())->count(),
+        ];
 
-        $stats = $this->clicks->dashboardStats($filters);
-        $searches = $this->searches->paginate($filters, 15);
-        $clickRows = $this->clicks->paginate($filters, 15);
+        $searches = FlightSearch::query()
+            ->with('user')
+            ->latest()
+            ->paginate(20, ['*'], 'searches_page');
 
-        $dailySearches = $this->clicks->dailySeries('flight_searches', 'created_at', $filters)->pluck('total', 'day');
-        $dailyClicks = $this->clicks->dailySeries('flight_clicks', 'clicked_at', $filters)->pluck('total', 'day');
-        $topAirlines = $this->clicks->topGrouped('airline', $filters);
-        $topDestinations = $this->searches->query($filters)
-            ->select('destination_code', DB::raw('COUNT(*) as total'))
-            ->groupBy('destination_code')
-            ->orderByDesc('total')
-            ->limit(10)
-            ->get();
-        $topOrigins = $this->searches->query($filters)
-            ->select('origin_code', DB::raw('COUNT(*) as total'))
-            ->groupBy('origin_code')
-            ->orderByDesc('total')
-            ->limit(10)
-            ->get();
-        $monthlyTrends = $this->clicks->monthlyTrends($filters);
+        $bookings = FlightBooking::query()
+            ->with('user')
+            ->latest()
+            ->paginate(20, ['*'], 'bookings_page');
 
-        $countries = FlightSearch::query()
-            ->whereNotNull('country')
-            ->distinct()
-            ->orderBy('country')
-            ->pluck('country');
-
-        $airlines = FlightClick::query()
-            ->whereNotNull('airline')
-            ->distinct()
-            ->orderBy('airline')
-            ->pluck('airline');
+        $dailySearches = $this->dailySearchChart(30);
+        $topRoutes = $this->topRoutes(8);
 
         return view('admin.pages.flights.analytics', compact(
             'stats',
             'searches',
-            'clickRows',
+            'bookings',
             'dailySearches',
-            'dailyClicks',
-            'topAirlines',
-            'topOrigins',
-            'topDestinations',
-            'monthlyTrends',
-            'countries',
-            'airlines',
-            'filters',
+            'topRoutes',
         ));
     }
 
@@ -81,7 +58,10 @@ class FlightAnalyticsController extends Controller
 
     public function export(Request $request, string $type)
     {
-        $filters = $this->filtersFromRequest($request);
+        $filters = [
+            'sort' => 'created_at',
+            'direction' => 'desc',
+        ];
         $dataset = $request->input('dataset', 'searches');
 
         return $this->exportService->export($type, $dataset, $filters);
@@ -94,7 +74,7 @@ class FlightAnalyticsController extends Controller
             'ids.*' => ['integer', 'exists:flight_searches,id'],
         ]);
 
-        $count = $this->searches->deleteByIds($request->input('ids'));
+        $count = FlightSearch::whereIn('id', $request->input('ids'))->delete();
 
         return back()->with('success', "{$count} search record(s) deleted.");
     }
@@ -106,24 +86,52 @@ class FlightAnalyticsController extends Controller
             'ids.*' => ['integer', 'exists:flight_clicks,id'],
         ]);
 
-        $count = $this->clicks->deleteByIds($request->input('ids'));
+        $count = FlightClick::whereIn('id', $request->input('ids'))->delete();
 
         return back()->with('success', "{$count} click record(s) deleted.");
     }
 
-    protected function filtersFromRequest(Request $request): array
+    /**
+     * @return array{labels: array<int, string>, values: array<int, int>}
+     */
+    protected function dailySearchChart(int $days = 30): array
     {
+        $start = now()->subDays($days - 1)->startOfDay();
+
+        $raw = FlightSearch::query()
+            ->select(DB::raw('DATE(created_at) as day'), DB::raw('COUNT(*) as total'))
+            ->where('created_at', '>=', $start)
+            ->groupBy('day')
+            ->orderBy('day')
+            ->pluck('total', 'day');
+
+        $labels = [];
+        $values = [];
+
+        for ($i = 0; $i < $days; $i++) {
+            $date = $start->copy()->addDays($i);
+            $labels[] = $date->format('M d');
+            $values[] = (int) ($raw[$date->toDateString()] ?? 0);
+        }
+
+        return compact('labels', 'values');
+    }
+
+    /**
+     * @return array{labels: array<int, string>, values: array<int, int>}
+     */
+    protected function topRoutes(int $limit = 8): array
+    {
+        $rows = FlightSearch::query()
+            ->select('origin_code', 'destination_code', DB::raw('COUNT(*) as total'))
+            ->groupBy('origin_code', 'destination_code')
+            ->orderByDesc('total')
+            ->limit($limit)
+            ->get();
+
         return [
-            'search' => $request->input('search'),
-            'date_from' => $request->input('date_from'),
-            'date_to' => $request->input('date_to'),
-            'country' => $request->input('country'),
-            'airline' => $request->input('airline'),
-            'origin' => $request->input('origin'),
-            'destination' => $request->input('destination'),
-            'user_type' => $request->input('user_type'),
-            'sort' => $request->input('sort', 'created_at'),
-            'direction' => $request->input('direction', 'desc'),
+            'labels' => $rows->map(fn ($row) => $row->origin_code . ' → ' . $row->destination_code)->all(),
+            'values' => $rows->pluck('total')->map(fn ($v) => (int) $v)->all(),
         ];
     }
 }
