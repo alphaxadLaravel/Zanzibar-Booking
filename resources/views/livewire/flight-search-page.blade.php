@@ -615,16 +615,6 @@
                                         <div class="flight-detail-info-item__value">{{ $raw['owner']['name'] }}</div>
                                     </div>
                                 @endif
-                                @if(isset($raw['base_amount']) || isset($raw['tax_amount']))
-                                    <div class="flight-detail-info-item">
-                                        <div class="flight-detail-info-item__label">Base fare</div>
-                                        <div class="flight-detail-info-item__value">{{ $raw['total_currency'] ?? '' }} {{ $raw['base_amount'] ?? '—' }}</div>
-                                    </div>
-                                    <div class="flight-detail-info-item">
-                                        <div class="flight-detail-info-item__label">Taxes & fees</div>
-                                        <div class="flight-detail-info-item__value">{{ $raw['total_currency'] ?? '' }} {{ $raw['tax_amount'] ?? '—' }}</div>
-                                    </div>
-                                @endif
                                 @if(!empty($raw['expires_at']))
                                     <div class="flight-detail-info-item">
                                         <div class="flight-detail-info-item__label">Offer expires</div>

@@ -27,13 +27,22 @@ class FlightAnalyticsController extends Controller
             'today_bookings' => FlightBooking::whereDate('created_at', today())->count(),
         ];
 
+        $revenue = [
+            'customer_paid' => (float) FlightBooking::sum('total_price'),
+            'duffel_cost' => (float) FlightBooking::sum(DB::raw('COALESCE(supplier_cost, 0)')),
+            'zanzibar_margin' => (float) FlightBooking::sum(DB::raw('COALESCE(markup_amount, 0)')),
+            'confirmed_customer_paid' => (float) FlightBooking::where('status', 'confirmed')->sum('total_price'),
+            'confirmed_duffel_cost' => (float) FlightBooking::where('status', 'confirmed')->sum(DB::raw('COALESCE(supplier_cost, 0)')),
+            'confirmed_margin' => (float) FlightBooking::where('status', 'confirmed')->sum(DB::raw('COALESCE(markup_amount, 0)')),
+        ];
+
         $searches = FlightSearch::query()
             ->with('user')
             ->latest()
             ->paginate(20, ['*'], 'searches_page');
 
         $bookings = FlightBooking::query()
-            ->with('user')
+            ->with(['user', 'payment'])
             ->latest()
             ->paginate(20, ['*'], 'bookings_page');
 
@@ -42,6 +51,7 @@ class FlightAnalyticsController extends Controller
 
         return view('admin.pages.flights.analytics', compact(
             'stats',
+            'revenue',
             'searches',
             'bookings',
             'dailySearches',

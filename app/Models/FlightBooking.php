@@ -31,6 +31,8 @@ class FlightBooking extends Model
         'infants',
         'base_price',
         'taxes',
+        'supplier_cost',
+        'markup_amount',
         'total_price',
         'currency',
         'flight_offer',
@@ -51,8 +53,30 @@ class FlightBooking extends Model
         'cancelled_at' => 'datetime',
         'base_price' => 'decimal:2',
         'taxes' => 'decimal:2',
+        'supplier_cost' => 'decimal:2',
+        'markup_amount' => 'decimal:2',
         'total_price' => 'decimal:2',
     ];
+
+    /**
+     * Money split for admin reporting.
+     *
+     * @return array{customer_paid: float, duffel_cost: float, zanzibar_margin: float, currency: string}
+     */
+    public function paymentDistribution(): array
+    {
+        $pricing = $this->flight_offer['_pricing'] ?? [];
+        $customerPaid = (float) ($this->total_price ?? $pricing['customer_total'] ?? 0);
+        $duffelCost = (float) ($this->supplier_cost ?? $pricing['supplier_total'] ?? 0);
+        $margin = (float) ($this->markup_amount ?? $pricing['markup'] ?? max(0, $customerPaid - $duffelCost));
+
+        return [
+            'customer_paid' => $customerPaid,
+            'duffel_cost' => $duffelCost,
+            'zanzibar_margin' => $margin,
+            'currency' => strtoupper($this->currency ?? 'USD'),
+        ];
+    }
 
     /**
      * Generate a unique booking reference

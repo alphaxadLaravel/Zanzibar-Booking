@@ -47,6 +47,33 @@
     .status-pill--confirmed { background: #e8f5e9; color: #2e7d32; }
     .status-pill--pending { background: #fff8e1; color: #f57c00; }
     .status-pill--cancelled { background: #ffebee; color: #c62828; }
+    .money-split {
+        font-size: 12px;
+        line-height: 1.45;
+        min-width: 160px;
+    }
+    .money-split .row-line {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+    }
+    .money-split .margin {
+        color: #2e7d32;
+        font-weight: 600;
+    }
+    .money-split .duffel {
+        color: #495057;
+    }
+    .revenue-card {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        background: #fff;
+        padding: 18px 20px;
+        height: 100%;
+    }
+    .revenue-card .label { color: #6c757d; font-size: 13px; margin-bottom: 6px; }
+    .revenue-card .value { font-size: 22px; font-weight: 600; color: #1a2b42; }
+    .revenue-card .hint { font-size: 12px; color: #868e96; margin-top: 4px; }
 </style>
 @endpush
 
@@ -101,6 +128,30 @@
             <div class="flight-stat-card">
                 <div class="label">Bookings today</div>
                 <div class="value">{{ number_format($stats['today_bookings']) }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="revenue-card">
+                <div class="label">Customer paid (confirmed)</div>
+                <div class="value">USD {{ number_format($revenue['confirmed_customer_paid'], 2) }}</div>
+                <div class="hint">Collected via Pesapal · all bookings USD {{ number_format($revenue['customer_paid'], 2) }}</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="revenue-card">
+                <div class="label">Paid to Duffel (confirmed)</div>
+                <div class="value">USD {{ number_format($revenue['confirmed_duffel_cost'], 2) }}</div>
+                <div class="hint">Airline fare from Duffel balance · all bookings USD {{ number_format($revenue['duffel_cost'], 2) }}</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="revenue-card">
+                <div class="label">Zanzibar Bookings margin</div>
+                <div class="value text-success">USD {{ number_format($revenue['confirmed_margin'], 2) }}</div>
+                <div class="hint">Your markup kept after Duffel settlement · all bookings USD {{ number_format($revenue['zanzibar_margin'], 2) }}</div>
             </div>
         </div>
     </div>
@@ -203,8 +254,7 @@
                             <th>Route</th>
                             <th>Airline</th>
                             <th>Departure</th>
-                            <th>Passengers</th>
-                            <th>Total</th>
+                            <th>Payment split</th>
                             <th>Status</th>
                             <th>Contact</th>
                             <th>Booked</th>
@@ -218,10 +268,16 @@
                                 'cancelled' => 'status-pill--cancelled',
                                 default => 'status-pill--pending',
                             };
-                            $passengerTotal = $booking->adults + $booking->children + $booking->infants;
+                            $split = $booking->paymentDistribution();
+                            $currency = $split['currency'];
                         @endphp
                         <tr>
-                            <td><strong>{{ $booking->booking_reference }}</strong></td>
+                            <td>
+                                <strong>{{ $booking->booking_reference }}</strong>
+                                @if($booking->payment)
+                                    <div class="small text-muted">Pesapal: {{ $booking->payment->status }}</div>
+                                @endif
+                            </td>
                             <td>
                                 <span class="route-badge">{{ $booking->origin_code }} → {{ $booking->destination_code }}</span>
                             </td>
@@ -230,8 +286,22 @@
                                 <div class="small text-muted">{{ $booking->flight_number }}</div>
                             </td>
                             <td>{{ $booking->departure_datetime?->format('d M Y H:i') ?? '—' }}</td>
-                            <td>{{ $passengerTotal }}</td>
-                            <td><strong>{{ $booking->currency }} {{ number_format((float) $booking->total_price, 2) }}</strong></td>
+                            <td>
+                                <div class="money-split">
+                                    <div class="row-line">
+                                        <span>Customer paid</span>
+                                        <strong>{{ $currency }} {{ number_format($split['customer_paid'], 2) }}</strong>
+                                    </div>
+                                    <div class="row-line duffel">
+                                        <span>→ Duffel</span>
+                                        <span>{{ $currency }} {{ number_format($split['duffel_cost'], 2) }}</span>
+                                    </div>
+                                    <div class="row-line margin">
+                                        <span>→ Zanzibar</span>
+                                        <span>{{ $currency }} {{ number_format($split['zanzibar_margin'], 2) }}</span>
+                                    </div>
+                                </div>
+                            </td>
                             <td><span class="status-pill {{ $statusClass }}">{{ $booking->status }}</span></td>
                             <td>
                                 <div class="small">{{ $booking->contact_email }}</div>
@@ -244,7 +314,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="9" class="text-center text-muted py-4">No flight bookings yet.</td>
+                            <td colspan="8" class="text-center text-muted py-4">No flight bookings yet.</td>
                         </tr>
                         @endforelse
                     </tbody>

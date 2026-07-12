@@ -44,6 +44,8 @@ class FlightBookingService
                 'infants' => (int) ($validated['infants'] ?? 0),
                 'base_price' => $mapped['base_amount'],
                 'taxes' => $mapped['tax_amount'],
+                'supplier_cost' => $mapped['supplier_total'],
+                'markup_amount' => $mapped['markup'],
                 'total_price' => $mapped['price'],
                 'currency' => $mapped['currency'],
                 'flight_offer' => array_merge($offer, [
@@ -51,6 +53,8 @@ class FlightBookingService
                         'supplier_total' => $mapped['supplier_total'],
                         'markup' => $mapped['markup'],
                         'customer_total' => $mapped['price'],
+                        'base_amount' => $mapped['base_amount'],
+                        'tax_amount' => $mapped['tax_amount'],
                     ],
                     '_checkout' => [
                         'passengers' => $validated['passengers'],
@@ -82,7 +86,8 @@ class FlightBookingService
     }
 
     /**
-     * After Pesapal payment, refresh offer and create the Duffel order.
+     * After Pesapal payment, pay Duffel the supplier fare and confirm the ticket.
+     * Customer total (with markup) stays as charged via Pesapal.
      */
     public function fulfillAfterPayment(FlightBooking $booking): FlightBooking
     {
@@ -92,6 +97,7 @@ class FlightBookingService
 
         $offerData = $booking->flight_offer ?? [];
         $checkout = $offerData['_checkout'] ?? null;
+        $pricing = $offerData['_pricing'] ?? null;
         $offerId = $offerData['id'] ?? null;
 
         if (! $checkout || ! $offerId) {
@@ -99,7 +105,11 @@ class FlightBookingService
         }
 
         $offer = $this->duffelApi->getOffer($offerId);
+        $supplierCost = (float) ($offer['total_amount'] ?? $booking->supplier_cost ?? 0);
+        $customerTotal = (float) $booking->total_price;
+        $markup = round(max(0, $customerTotal - $supplierCost), 2);
 
+        // Duffel is paid only the airline/supplier fare from balance.
         $duffelOrder = $this->duffelApi->createOrder(
             $offer,
             $checkout['passengers'],
@@ -107,11 +117,27 @@ class FlightBookingService
             $checkout['contact_phone'],
         );
 
+        $actualSupplierCost = (float) ($duffelOrder['total_amount'] ?? $supplierCost);
+        $actualMarkup = round(max(0, $customerTotal - $actualSupplierCost), 2);
+
         $booking->update([
             'status' => 'confirmed',
-            'total_price' => $duffelOrder['total_amount'] ?? $booking->total_price,
+            // Keep what the customer paid via Pesapal — do not overwrite with Duffel cost.
+            'total_price' => $customerTotal,
+            'supplier_cost' => $actualSupplierCost,
+            'markup_amount' => $actualMarkup,
+            'base_price' => (float) ($offer['base_amount'] ?? $booking->base_price),
+            'taxes' => (float) ($offer['tax_amount'] ?? $booking->taxes),
             'currency' => strtoupper($duffelOrder['total_currency'] ?? $booking->currency),
-            'flight_offer' => $offer,
+            'flight_offer' => array_merge($offer, [
+                '_pricing' => array_merge($pricing ?? [], [
+                    'supplier_total' => $actualSupplierCost,
+                    'markup' => $actualMarkup,
+                    'customer_total' => $customerTotal,
+                    'duffel_order_total' => $actualSupplierCost,
+                ]),
+                '_checkout' => $checkout,
+            ]),
             'amadeus_order_id' => $duffelOrder['id'] ?? null,
             'amadeus_response' => $duffelOrder,
             'confirmed_at' => now(),
@@ -120,6 +146,9 @@ class FlightBookingService
         Log::info('Duffel flight order created after payment', [
             'flight_booking_id' => $booking->id,
             'duffel_order_id' => $duffelOrder['id'] ?? null,
+            'customer_paid' => $customerTotal,
+            'duffel_paid' => $actualSupplierCost,
+            'zanzibar_margin' => $actualMarkup,
         ]);
 
         return $booking->fresh();

@@ -217,12 +217,19 @@ class PaymentController extends Controller
             ]);
 
             if ($payment->flight_booking_id) {
+                // Confirm with Pesapal and create Duffel order if payment completed.
+                $this->checkPaymentStatus($trackingid, $ref, 'CHANGE');
+
                 $flightBooking = \App\Models\FlightBooking::find($payment->flight_booking_id);
 
                 if ($flightBooking) {
+                    $message = $flightBooking->status === 'confirmed'
+                        ? 'Payment received. Your flight ticket is confirmed.'
+                        : 'Payment received. We are confirming your flight ticket.';
+
                     return redirect()
                         ->route('flights.confirmation', ['bookingReference' => $flightBooking->booking_reference])
-                        ->with('info', 'Payment received. We are confirming your flight ticket.');
+                        ->with($flightBooking->status === 'confirmed' ? 'success' : 'info', $message);
                 }
             }
 

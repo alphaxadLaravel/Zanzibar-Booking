@@ -348,34 +348,17 @@
                     </div>
 
                     <div class="flight-checkout__summary-row">
-                        <span>Base fare</span>
-                        <strong>{{ $flight['currency'] }} {{ \App\Support\FlightOfferMapper::formatPrice($flight['base_amount'] ?? max(0, $flight['price'] - ($flight['tax_amount'] ?? 0))) }}</strong>
+                        <span>Flight fare</span>
+                        <strong>{{ $flight['currency'] }} {{ \App\Support\FlightOfferMapper::formatPrice($flight['price']) }}</strong>
                     </div>
-                    @if(!empty($flight['tax_amount']))
-                    <div class="flight-checkout__summary-row">
-                        <span>Taxes & fees</span>
-                        <strong>{{ $flight['currency'] }} {{ \App\Support\FlightOfferMapper::formatPrice($flight['tax_amount']) }}</strong>
-                    </div>
-                    @endif
-                    @if(!empty($flight['markup']) && (float) $flight['markup'] > 0)
-                    <div class="flight-checkout__summary-row">
-                        <span>Service fee</span>
-                        <strong>{{ $flight['currency'] }} {{ \App\Support\FlightOfferMapper::formatPrice($flight['markup']) }}</strong>
-                    </div>
-                    @endif
-                    @if(!empty($flight['supplier_total']) && empty($flight['markup']))
-                    <div class="flight-checkout__summary-row small text-muted">
-                        <span>Airline total (before fees)</span>
-                        <span>{{ $flight['currency'] }} {{ \App\Support\FlightOfferMapper::formatPrice($flight['supplier_total']) }}</span>
-                    </div>
-                    @endif
                     <div class="flight-checkout__summary-row">
                         <span>Passengers</span>
                         <strong>{{ $totalPassengers }}</strong>
                     </div>
+                    <div class="small text-muted mb-2">Taxes and booking fees included</div>
                     <hr>
                     <div class="flight-checkout__summary-total d-flex justify-content-between align-items-center">
-                        <span>Total</span>
+                        <span>Total to pay</span>
                         <strong>{{ $flight['currency'] }} {{ \App\Support\FlightOfferMapper::formatPrice($flight['price']) }}</strong>
                     </div>
 
