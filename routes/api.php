@@ -40,6 +40,7 @@ Route::prefix('v1')->group(function () {
     // Public catalog
     Route::get('home', [CatalogController::class, 'home']);
     Route::get('deals', [CatalogController::class, 'deals']);
+    Route::get('deals/filters', [CatalogController::class, 'dealFilters']);
     Route::get('deals/{id}', [CatalogController::class, 'showDeal'])->name('api.v1.deals.show');
     Route::get('categories', [CatalogController::class, 'categories']);
     Route::get('system', [CatalogController::class, 'system']);

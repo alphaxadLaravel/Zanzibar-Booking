@@ -5,7 +5,7 @@ The app calls: `https://www.zanzibarbookings.com/api/v1/...`
 ## 1. Upload these Laravel files (latest)
 
 - `bootstrap/app.php` (must register `api: routes/api.php`)
-- `routes/api.php`
+- `routes/api.php` (includes `deals/filters`)
 - `app/Http/Controllers/Api/` (entire folder)
 - `app/Http/Resources/` (`DealResource.php`, `RoomResource.php`, …)
 - `app/Services/FlightService.php` (featured flights helper)
@@ -32,12 +32,14 @@ You must see routes like `api/v1/home`, `api/v1/ping`, `api/v1/flights/featured`
 ## 3. Verify in a browser / curl
 
 1. `https://www.zanzibarbookings.com/api/v1/ping` → `{"ok":true,...}`
-2. `https://www.zanzibarbookings.com/api/v1/home` → JSON with `featured`, `modules`, and `hero.video` / `hero.poster`
-3. `https://www.zanzibarbookings.com/api/v1/deals/{id}` → photos, rooms (+images), features, includes/excludes, policies, reviews, **`nearby_deals`** (plain text, no HTML)
-4. `https://www.zanzibarbookings.com/api/v1/flights/airports` → airport dropdown options
-5. `https://www.zanzibarbookings.com/api/v1/flights/featured` → popular routes (may take a few seconds)
-6. `https://www.zanzibarbookings.com/api/v1/blogs` and `/blogs/{id}` → blog list + article (also `blogs` on `/home`)
-7. `https://www.zanzibarbookings.com/api/v1/pages` and `/pages/{slug}` → About, Commitment, Terms, Privacy, Partner (plain text)
+2. `https://www.zanzibarbookings.com/api/v1/home` → JSON with `modules`, `types` (Hotel/Tour/Car type cards), `blogs`, and `hero.video` / `hero.poster`
+3. `https://www.zanzibarbookings.com/api/v1/deals/filters?type=hotel` → `{ categories, locations }` (same as website listing filters)
+4. `https://www.zanzibarbookings.com/api/v1/categories?type=hotel` → categories with `id`, `name`/`category`, `image`
+5. `https://www.zanzibarbookings.com/api/v1/deals/{id}` → photos, rooms (+images), features, includes/excludes, policies, reviews, **`nearby_deals`** (plain text, no HTML)
+6. `https://www.zanzibarbookings.com/api/v1/flights/airports` → airport dropdown options
+7. `https://www.zanzibarbookings.com/api/v1/flights/featured` → popular routes (may take a few seconds)
+8. `https://www.zanzibarbookings.com/api/v1/blogs` and `/blogs/{id}` → blog list + article (also `blogs` on `/home`)
+9. `https://www.zanzibarbookings.com/api/v1/pages` and `/pages/{slug}` → About, Commitment, Terms, Privacy, Partner (plain text)
 
 If `ping` works but another route fails, check `storage/logs/laravel.log`.
 

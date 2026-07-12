@@ -53,6 +53,59 @@ class CatalogController extends Controller
                 ['key' => 'blog', 'label' => 'Blog', 'route' => 'blog'],
             ];
 
+            $fallbackImage = asset('images/banner.jpg');
+            $mapCategory = function (Category $c) use ($fallbackImage) {
+                $imagePath = $c->image ? ltrim((string) $c->image, '/') : null;
+
+                return [
+                    'id' => $c->id,
+                    'hashid' => HashidsHelper::encode((int) $c->id),
+                    'name' => $c->category ?? $c->name ?? 'Category',
+                    'type' => $c->type === 'resort' ? 'hotel' : $c->type,
+                    'image' => $imagePath ? asset('storage/' . $imagePath) : $fallbackImage,
+                ];
+            };
+
+            // Mirror website index: Hotel Types / Tour Types / Car Types
+            $types = [
+                [
+                    'key' => 'property',
+                    'title' => 'Hotel Types',
+                    'subtitle' => 'Stays, packages, and activities',
+                    'items' => Category::query()
+                        ->whereIn('type', ['hotel', 'apartment', 'package', 'activity', 'resort'])
+                        ->orderBy('category')
+                        ->limit(8)
+                        ->get()
+                        ->map($mapCategory)
+                        ->values(),
+                ],
+                [
+                    'key' => 'tour',
+                    'title' => 'Tour Types',
+                    'subtitle' => 'Explore island experiences',
+                    'items' => Category::query()
+                        ->where('type', 'tour')
+                        ->orderBy('category')
+                        ->limit(8)
+                        ->get()
+                        ->map($mapCategory)
+                        ->values(),
+                ],
+                [
+                    'key' => 'car',
+                    'title' => 'Car Types',
+                    'subtitle' => 'Get around Zanzibar',
+                    'items' => Category::query()
+                        ->where('type', 'car')
+                        ->orderBy('category')
+                        ->limit(8)
+                        ->get()
+                        ->map($mapCategory)
+                        ->values(),
+                ],
+            ];
+
             $blogs = Blog::query()
                 ->where('status', 1)
                 ->with(['user', 'category'])
@@ -91,6 +144,7 @@ class CatalogController extends Controller
                 'modules' => $modules,
                 'featured' => DealResource::collection($featured),
                 'by_type' => $byType,
+                'types' => $types,
                 'blogs' => $blogs,
                 'hero' => [
                     'video' => asset('images/zanzibar.mp4'),
@@ -230,23 +284,76 @@ class CatalogController extends Controller
             ->get();
     }
 
-    public function categories(Request $request)
+    public function dealFilters(Request $request)
     {
         $request->validate([
             'type' => 'nullable|in:hotel,apartment,tour,activity,package,car',
         ]);
 
-        $query = Category::query();
+        $type = $request->query('type');
 
-        if ($type = $request->query('type')) {
-            $query->where('type', $type);
+        // Match website listing filters (AllDealsListing / SearchResults).
+        $categoryQuery = Category::query()->orderBy('category');
+        if ($type) {
+            // Hotel listing also surfaces resort categories used on the home type cards.
+            $categoryQuery->whereIn(
+                'type',
+                $type === 'hotel' ? ['hotel', 'resort'] : [$type]
+            );
+        } else {
+            $categoryQuery->whereIn('type', ['hotel', 'apartment', 'tour', 'car', 'activity', 'package', 'resort']);
         }
 
-        $categories = $query->orderBy('name')->get()->map(fn ($c) => [
+        $categories = $categoryQuery->get()->map(fn (Category $c) => [
             'id' => $c->id,
-            'hashid' => HashidsHelper::encode($c->id),
-            'name' => $c->name,
-            'type' => $c->type,
+            'hashid' => HashidsHelper::encode((int) $c->id),
+            'name' => $c->category ?? 'Category',
+            'type' => $c->type === 'resort' ? 'hotel' : $c->type,
+            'image' => $c->image ? asset('storage/' . ltrim((string) $c->image, '/')) : asset('images/banner.jpg'),
+        ])->values();
+
+        $locationQuery = Deal::query()->active()->whereNotNull('location');
+        if ($type) {
+            $locationQuery->where('type', $type);
+        }
+
+        $locations = $locationQuery
+            ->distinct()
+            ->orderBy('location')
+            ->pluck('location')
+            ->filter(fn ($v) => filled($v))
+            ->values();
+
+        return response()->json([
+            'data' => [
+                'categories' => $categories,
+                'locations' => $locations,
+            ],
+        ]);
+    }
+
+    public function categories(Request $request)
+    {
+        $request->validate([
+            'type' => 'nullable|in:hotel,apartment,tour,activity,package,car,resort',
+        ]);
+
+        $query = Category::query()->orderBy('category');
+
+        if ($type = $request->query('type')) {
+            if ($type === 'hotel') {
+                $query->whereIn('type', ['hotel', 'resort']);
+            } else {
+                $query->where('type', $type);
+            }
+        }
+
+        $categories = $query->get()->map(fn ($c) => [
+            'id' => $c->id,
+            'hashid' => HashidsHelper::encode((int) $c->id),
+            'name' => $c->category ?? 'Category',
+            'type' => $c->type === 'resort' ? 'hotel' : $c->type,
+            'image' => $c->image ? asset('storage/' . ltrim((string) $c->image, '/')) : asset('images/banner.jpg'),
         ]);
 
         return response()->json(['data' => $categories]);
