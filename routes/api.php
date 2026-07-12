@@ -19,6 +19,19 @@ Route::prefix('v1')->group(function () {
         ]);
     });
 
+    Route::get('flights/airports', function () {
+        return response()->json([
+            'data' => config('flights.airport_options', []),
+            'flat' => collect(config('flights.airport_options', []))
+                ->flatMap(fn ($group, $region) => collect($group)->map(fn ($label, $code) => [
+                    'code' => $code,
+                    'label' => $label,
+                    'region' => $region,
+                ]))
+                ->values(),
+        ]);
+    });
+
     // Auth
     Route::post('auth/register', [AuthController::class, 'register']);
     Route::post('auth/login', [AuthController::class, 'login']);
@@ -34,8 +47,10 @@ Route::prefix('v1')->group(function () {
     Route::get('rooms/{roomId}/calendar', [CatalogController::class, 'roomCalendar']);
 
     // CMS
+    Route::get('pages', [ContentController::class, 'pages']);
     Route::get('pages/{slug}', [ContentController::class, 'page']);
     Route::get('blogs', [ContentController::class, 'blogs']);
+    Route::get('blogs/{id}', [ContentController::class, 'showBlog']);
     Route::post('contact', [ContentController::class, 'contact']);
 
     // Booking lookup (public)
@@ -43,6 +58,7 @@ Route::prefix('v1')->group(function () {
 
     // Flights search (public)
     Route::get('flights/locations', [FlightApiController::class, 'locations']);
+    Route::get('flights/featured', [FlightApiController::class, 'featured']);
     Route::post('flights/search', [FlightApiController::class, 'search']);
 
     // Pesapal mobile callback (public, no CSRF)

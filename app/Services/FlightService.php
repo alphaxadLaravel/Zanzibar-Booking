@@ -20,6 +20,14 @@ class FlightService
         return $this->searchService->search($criteria);
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function searchFeaturedFlights(?string $departureDate = null): array
+    {
+        return $this->searchService->searchFeaturedFlights($departureDate);
+    }
+
     public function searchLocations(
         string $keyword,
         ?string $countryCode = null,

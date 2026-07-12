@@ -2,18 +2,16 @@
 
 The app calls: `https://www.zanzibarbookings.com/api/v1/...`
 
-Right now production returns **HTTP 500** for `/api/v1/home` (empty body). Fix server first, then the app will load data.
-
-## 1. Upload these Laravel files
+## 1. Upload these Laravel files (latest)
 
 - `bootstrap/app.php` (must register `api: routes/api.php`)
 - `routes/api.php`
 - `app/Http/Controllers/Api/` (entire folder)
-- `app/Http/Resources/` (entire folder)
+- `app/Http/Resources/` (`DealResource.php`, `RoomResource.php`, …)
+- `app/Services/FlightService.php` (featured flights helper)
 - `app/Support/HashidsHelper.php`
 - `app/Models/User.php` (with `HasApiTokens`)
-- `config/cors.php`
-- `config/sanctum.php`
+- `config/cors.php`, `config/sanctum.php`, `config/flights.php`
 - Sanctum migration under `database/migrations/`
 
 ## 2. On the server (SSH or Hostinger terminal)
@@ -29,14 +27,19 @@ php artisan cache:clear
 php artisan route:list --path=api/v1
 ```
 
-You must see routes like `api/v1/home`, `api/v1/ping`.
+You must see routes like `api/v1/home`, `api/v1/ping`, `api/v1/flights/featured`, `api/v1/flights/airports`.
 
 ## 3. Verify in a browser / curl
 
 1. `https://www.zanzibarbookings.com/api/v1/ping` → `{"ok":true,...}`
-2. `https://www.zanzibarbookings.com/api/v1/home` → JSON with `featured` / `modules`
+2. `https://www.zanzibarbookings.com/api/v1/home` → JSON with `featured`, `modules`, and `hero.video` / `hero.poster`
+3. `https://www.zanzibarbookings.com/api/v1/deals/{id}` → photos, rooms (+images), features, includes/excludes, policies, reviews, **`nearby_deals`** (plain text, no HTML)
+4. `https://www.zanzibarbookings.com/api/v1/flights/airports` → airport dropdown options
+5. `https://www.zanzibarbookings.com/api/v1/flights/featured` → popular routes (may take a few seconds)
+6. `https://www.zanzibarbookings.com/api/v1/blogs` and `/blogs/{id}` → blog list + article (also `blogs` on `/home`)
+7. `https://www.zanzibarbookings.com/api/v1/pages` and `/pages/{slug}` → About, Commitment, Terms, Privacy, Partner (plain text)
 
-If `ping` works but `home` fails, check `storage/logs/laravel.log` for the exact error.
+If `ping` works but another route fails, check `storage/logs/laravel.log`.
 
 ## 4. Common Hostinger causes of empty 500
 

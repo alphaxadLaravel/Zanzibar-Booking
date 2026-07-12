@@ -4,13 +4,17 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DealResource;
+use App\Models\Blog;
 use App\Models\Category;
 use App\Models\Deal;
+use App\Models\Near;
 use App\Models\Room;
 use App\Models\System;
 use App\Services\RoomPriceService;
 use App\Support\HashidsHelper;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class CatalogController extends Controller
 {
@@ -46,7 +50,37 @@ class CatalogController extends Controller
                 ['key' => 'package', 'label' => 'Packages', 'route' => 'packages'],
                 ['key' => 'car', 'label' => 'Cars', 'route' => 'cars'],
                 ['key' => 'flight', 'label' => 'Flights', 'route' => 'flights'],
+                ['key' => 'blog', 'label' => 'Blog', 'route' => 'blog'],
             ];
+
+            $blogs = Blog::query()
+                ->where('status', 1)
+                ->with(['user', 'category'])
+                ->latest()
+                ->take(6)
+                ->get()
+                ->map(function (Blog $b) {
+                    $coverPath = $b->cover_photo ?? null;
+                    $excerptSource = $b->preview_text ?: ($b->description ?? '');
+                    $author = $b->user
+                        ? trim(($b->user->firstname ?? '') . ' ' . ($b->user->lastname ?? ''))
+                        : 'Zanzibar Bookings';
+
+                    return [
+                        'id' => $b->id,
+                        'hashid' => HashidsHelper::encode((int) $b->id),
+                        'title' => $b->title,
+                        'excerpt' => trim(html_entity_decode(
+                            strip_tags(Str::limit(strip_tags((string) $excerptSource), 140)),
+                            ENT_QUOTES | ENT_HTML5,
+                            'UTF-8'
+                        )),
+                        'cover' => $coverPath ? asset('storage/' . ltrim($coverPath, '/')) : null,
+                        'author' => $author !== '' ? $author : 'Zanzibar Bookings',
+                        'category' => $b->category?->category ?? $b->category?->name,
+                        'created_at' => optional($b->created_at)?->toIso8601String(),
+                    ];
+                });
 
             return response()->json([
                 'brand' => [
@@ -57,6 +91,11 @@ class CatalogController extends Controller
                 'modules' => $modules,
                 'featured' => DealResource::collection($featured),
                 'by_type' => $byType,
+                'blogs' => $blogs,
+                'hero' => [
+                    'video' => asset('images/zanzibar.mp4'),
+                    'poster' => asset('images/banner.jpg'),
+                ],
             ]);
         } catch (\Throwable $e) {
             \Log::error('API home failed', [
@@ -139,16 +178,56 @@ class CatalogController extends Controller
                 'category',
                 'photos',
                 'features',
-                'rooms.photos',
+                'rooms' => fn ($q) => $q->where('status', 1)->with('photos'),
                 'tours',
                 'car',
                 'itineraries',
-                'tourIncludes',
+                'tourIncludes.feature',
+                'nearbyLocations',
                 'reviews' => fn ($q) => $q->where('status', 'approved')->with('user')->latest()->limit(20),
             ])
             ->findOrFail($dealId);
 
-        return new DealResource($deal);
+        $nearby = $this->resolveNearbyDeals($deal);
+        $payload = (new DealResource($deal))->resolve();
+        $payload['nearby_deals'] = DealResource::collection($nearby)->resolve();
+
+        return response()->json(['data' => $payload]);
+    }
+
+    /**
+     * Nearby deals from the `nears` table (same as website), with type fallbacks.
+     */
+    protected function resolveNearbyDeals(Deal $deal): Collection
+    {
+        $linked = Near::query()
+            ->where('deal_id', $deal->id)
+            ->with(['nearDeal' => fn ($q) => $q->active()->with(['category', 'photos'])])
+            ->get()
+            ->map(fn (Near $near) => $near->nearDeal)
+            ->filter()
+            ->unique('id')
+            ->values();
+
+        if ($linked->isNotEmpty()) {
+            return $linked->take(8)->values();
+        }
+
+        $fallbackTypes = match ($deal->type) {
+            'hotel', 'apartment' => ['hotel', 'apartment'],
+            'car' => ['car'],
+            'tour', 'activity', 'package' => ['tour', 'activity', 'package'],
+            default => [$deal->type],
+        };
+
+        return Deal::query()
+            ->active()
+            ->whereIn('type', $fallbackTypes)
+            ->where('id', '!=', $deal->id)
+            ->with(['category', 'photos'])
+            ->inRandomOrder()
+            ->take(6)
+            ->get();
     }
 
     public function categories(Request $request)

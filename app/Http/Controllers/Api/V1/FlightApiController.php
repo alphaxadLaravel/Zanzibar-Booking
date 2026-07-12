@@ -38,6 +38,34 @@ class FlightApiController extends Controller
         return response()->json(['data' => $locations]);
     }
 
+    public function featured(Request $request)
+    {
+        $request->validate([
+            'departureDate' => ['nullable', 'date', 'after_or_equal:today'],
+        ]);
+
+        try {
+            $flights = $this->flightService->searchFeaturedFlights(
+                $request->query('departureDate')
+            );
+
+            return response()->json([
+                'data' => $flights,
+                'meta' => [
+                    'count' => count($flights),
+                    'browse_mode' => true,
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('API featured flights failed', ['error' => $e->getMessage()]);
+
+            return response()->json([
+                'data' => [],
+                'message' => $e->getMessage(),
+            ], 200);
+        }
+    }
+
     public function search(Request $request)
     {
         $validated = $request->validate([
