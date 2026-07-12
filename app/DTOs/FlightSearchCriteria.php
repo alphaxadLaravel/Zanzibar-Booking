@@ -39,7 +39,7 @@ class FlightSearchCriteria
 
     public function cacheKey(): string
     {
-        return 'flight_search:' . md5(json_encode([
+        return 'flight_search:v2:' . md5(json_encode([
             $this->tripType,
             $this->origin,
             $this->destination,

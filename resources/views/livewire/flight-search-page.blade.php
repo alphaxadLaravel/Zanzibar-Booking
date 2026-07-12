@@ -124,6 +124,13 @@
         .flight-row:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .flight-row__logo { max-height: 22px; max-width: 64px; }
         .flight-row__time { font-size: 14px; font-weight: 600; line-height: 1.2; }
+        .flight-row__schedule {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a2b42;
+            line-height: 1.3;
+            white-space: nowrap;
+        }
         .flight-row__code { font-size: 11px; color: #6c757d; }
         .flight-row__mid {
             font-size: 10px;
@@ -479,21 +486,18 @@
                                 </div>
 
                                 <div class="col-md-5 col-8 mb-2 mb-md-0 px-md-1">
+                                    <div class="flight-row__schedule mb-1">
+                                        {{ \App\Support\FlightOfferMapper::formatTimeRange($flight['departure']['time'] ?? null, $flight['arrival']['time'] ?? null) }}
+                                    </div>
                                     <div class="d-flex align-items-center justify-content-between">
-                                        <div>
-                                            <div class="flight-row__time">{{ $flight['departure']['time'] }}</div>
-                                            <div class="flight-row__code">{{ $flight['departure']['airport'] }}</div>
-                                        </div>
+                                        <div class="flight-row__code">{{ $flight['departure']['airport'] }}</div>
                                         <div class="flight-row__mid px-1">
                                             <div>{{ $flight['duration'] }}</div>
                                             <span class="badge badge-{{ $flight['stops'] === 0 ? 'success' : 'light' }} badge-pill" style="font-size:9px;">
                                                 {{ $flight['stops'] === 0 ? 'Direct' : $flight['stops'] . ' stop' }}
                                             </span>
                                         </div>
-                                        <div class="text-right">
-                                            <div class="flight-row__time">{{ $flight['arrival']['time'] }}</div>
-                                            <div class="flight-row__code">{{ $flight['arrival']['airport'] }}</div>
-                                        </div>
+                                        <div class="flight-row__code text-right">{{ $flight['arrival']['airport'] }}</div>
                                     </div>
                                     <div class="d-flex flex-wrap align-items-center mt-1" style="gap:4px;">
                                         <span class="badge badge-success flight-availability-badge">Available</span>
@@ -567,9 +571,12 @@
                         </div>
 
                         <div class="flight-detail-route">
+                            <div class="text-center font-weight-bold mb-3" style="font-size:18px;color:#1a2b42;">
+                                {{ \App\Support\FlightOfferMapper::formatTimeRange($selectedFlight['departure']['time'] ?? null, $selectedFlight['arrival']['time'] ?? null) }}
+                            </div>
                             <div class="d-flex align-items-center justify-content-between flex-wrap flight-detail-route__inner">
                                 <div class="flight-detail-route__leg mb-2 mb-md-0">
-                                    <div class="flight-detail-route__time">{{ $selectedFlight['departure']['time'] ?? '--:--' }}</div>
+                                    <div class="flight-detail-route__time">{{ $selectedFlight['departure']['time'] ?? '—' }}</div>
                                     <div class="flight-detail-route__place">
                                         {{ $selectedFlight['departure']['city'] ?? '' }}
                                         <span class="font-weight-bold">({{ $selectedFlight['departure']['airport'] ?? '' }})</span>
@@ -588,7 +595,7 @@
                                     </span>
                                 </div>
                                 <div class="flight-detail-route__leg text-md-right">
-                                    <div class="flight-detail-route__time">{{ $selectedFlight['arrival']['time'] ?? '--:--' }}</div>
+                                    <div class="flight-detail-route__time">{{ $selectedFlight['arrival']['time'] ?? '—' }}</div>
                                     <div class="flight-detail-route__place">
                                         {{ $selectedFlight['arrival']['city'] ?? '' }}
                                         <span class="font-weight-bold">({{ $selectedFlight['arrival']['airport'] ?? '' }})</span>

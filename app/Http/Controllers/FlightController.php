@@ -74,6 +74,20 @@ class FlightController extends Controller
         try {
             $offer = $this->duffelApi->getOffer($offerId);
             $flight = FlightOfferMapper::mapDuffelOfferToArray($offer);
+
+            if (
+                empty($flight['departure']['airport'])
+                || empty($flight['arrival']['airport'])
+                || empty($flight['departure']['time'])
+                || empty($flight['arrival']['time'])
+                || ($flight['departure']['time'] ?? '') === '--:--'
+                || ($flight['arrival']['time'] ?? '') === '--:--'
+            ) {
+                return redirect()
+                    ->route('flights.index')
+                    ->with('error', 'This flight schedule is incomplete. Please search again and choose another flight.');
+            }
+
             $searchCriteria = session('flight_search_criteria', []);
 
             $passengerCounts = [

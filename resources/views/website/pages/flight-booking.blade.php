@@ -243,10 +243,14 @@
                             <span class="badge badge-success mb-2">{{ $flight['availability_label'] ?? 'Available' }}</span>
                             <div class="flight-checkout__price">{{ $flight['currency'] }} {{ \App\Support\FlightOfferMapper::formatPrice($flight['price']) }}</div>
                             <div class="small text-muted">total for {{ $totalPassengers }} passenger{{ $totalPassengers > 1 ? 's' : '' }}</div>
+                            <div class="small text-muted mt-1">Times shown in local airport time</div>
                         </div>
                     </div>
 
                     <div class="flight-checkout__route mt-4">
+                        <div class="text-center font-weight-bold mb-3" style="font-size:20px;color:#1a2b42;">
+                            {{ \App\Support\FlightOfferMapper::formatTimeRange($flight['departure']['time'] ?? null, $flight['arrival']['time'] ?? null) }}
+                        </div>
                         <div class="flight-checkout__route-leg">
                             <div class="flight-checkout__route-time">{{ $flight['departure']['time'] }}</div>
                             <div class="flight-checkout__route-place">{{ $flight['departure']['city'] }} ({{ $flight['departure']['airport'] }})</div>

@@ -159,7 +159,7 @@
                         </div>
 
                         <div class="flight-checkout__summary-row"><span>Reference</span><strong>{{ $booking->booking_reference }}</strong></div>
-                        <div class="flight-checkout__summary-row"><span>Departure</span><strong>{{ optional($booking->departure_datetime)->format('d M Y H:i') }}</strong></div>
+                        <div class="flight-checkout__summary-row"><span>Departure</span><strong>{{ optional($booking->departure_datetime)->format('d M Y g:i A') }}</strong></div>
                         <div class="flight-checkout__summary-row"><span>Passengers</span><strong>{{ $booking->adults + $booking->children + $booking->infants }}</strong></div>
                         <hr>
                         <div class="flight-checkout__summary-total d-flex justify-content-between">

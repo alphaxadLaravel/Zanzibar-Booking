@@ -72,7 +72,7 @@ class FlightSearchService
             (int) config('flights.featured.max_routes', 8)
         );
         $bundleTtl = (int) config('flights.featured.cache_ttl', 1800);
-        $cacheKey = 'flights.featured.v3.' . md5($departureDate . '|' . $perRoute . '|' . json_encode($routes));
+        $cacheKey = 'flights.featured.v5.' . md5($departureDate . '|' . $perRoute . '|' . json_encode($routes));
 
         $cached = Cache::get($cacheKey);
         if (is_array($cached) && ! empty($cached)) {
@@ -139,7 +139,9 @@ class FlightSearchService
             $routeFlights = $cachedByRoute[$routeKey] ?? [];
 
             foreach ($routeFlights as $flight) {
-                $flight['route_label'] = $origin . ' → ' . $destination;
+                $from = $flight['departure']['airport'] ?? $origin;
+                $to = $flight['arrival']['airport'] ?? $destination;
+                $flight['route_label'] = $from . ' → ' . $to;
                 $flights[] = $flight;
             }
         }

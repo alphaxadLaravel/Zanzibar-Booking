@@ -6,17 +6,95 @@ use App\DTOs\FlightOffer;
 
 class FlightOfferMapper
 {
-    public static function segment(string $airport, string $datetime): array
+    /**
+     * Build a display segment from Duffel place + schedule datetime.
+     * Times are shown as the airline local schedule (not converted to server timezone).
+     *
+     * @param  array<string, mixed>|null  $place  Duffel origin/destination place object
+     */
+    public static function segmentFromDuffel(?array $place, ?string $datetime): array
     {
-        $timestamp = strtotime($datetime) ?: time();
+        $airport = strtoupper((string) ($place['iata_code'] ?? ''));
+        $city = trim((string) ($place['city_name'] ?? $place['city']['name'] ?? ''));
+        $airportName = trim((string) ($place['name'] ?? ''));
+
+        if ($city === '') {
+            $city = $airport !== '' ? self::airportCity($airport) : 'Unknown';
+        }
+
+        $schedule = self::parseScheduleDatetime((string) $datetime);
 
         return [
-            'airport' => strtoupper($airport),
-            'city' => self::airportCity($airport),
-            'time' => date('H:i', $timestamp),
-            'date' => date('Y-m-d', $timestamp),
-            'datetime' => date('c', $timestamp),
+            'airport' => $airport,
+            'city' => $city,
+            'airport_name' => $airportName !== '' ? $airportName : null,
+            'time' => $schedule['time'],
+            'date' => $schedule['date'],
+            'datetime' => $schedule['datetime'],
+            'raw_datetime' => $datetime,
         ];
+    }
+
+    /**
+     * @deprecated Prefer segmentFromDuffel() so city/airport come from Duffel.
+     */
+    public static function segment(string $airport, string $datetime): array
+    {
+        return self::segmentFromDuffel(
+            ['iata_code' => $airport],
+            $datetime
+        );
+    }
+
+    /**
+     * Parse Duffel schedule datetimes without shifting to the server timezone.
+     * Duffel times are airport-local (e.g. 2026-07-15T08:30:00 or with offset).
+     *
+     * @return array{date: string, time: string, datetime: string}
+     */
+    public static function parseScheduleDatetime(string $datetime): array
+    {
+        $datetime = trim($datetime);
+
+        if ($datetime !== '' && preg_match('/^(\d{4}-\d{2}-\d{2})[T ](\d{2}):(\d{2})(?::\d{2})?/', $datetime, $m)) {
+            $hour24 = (int) $m[2];
+            $minute = $m[3];
+            $suffix = $hour24 >= 12 ? 'PM' : 'AM';
+            $hour12 = $hour24 % 12;
+            if ($hour12 === 0) {
+                $hour12 = 12;
+            }
+
+            return [
+                'date' => $m[1],
+                'time' => $hour12 . ':' . $minute . ' ' . $suffix,
+                'time_24' => $m[2] . ':' . $minute,
+                // Keep original string for booking storage / Carbon casting.
+                'datetime' => $datetime,
+            ];
+        }
+
+        return [
+            'date' => '—',
+            'time' => '--:--',
+            'time_24' => '--:--',
+            'datetime' => $datetime,
+        ];
+    }
+
+    /**
+     * Display range like "7:50 AM - 9:00 AM".
+     */
+    public static function formatTimeRange(?string $departTime, ?string $arriveTime): string
+    {
+        $departTime = trim((string) $departTime);
+        $arriveTime = trim((string) $arriveTime);
+
+        if ($departTime === '' || $departTime === '--:--' || $arriveTime === '' || $arriveTime === '--:--') {
+            return 'Schedule unavailable';
+        }
+
+        return $departTime . ' - ' . $arriveTime;
     }
 
     public static function airlineName(string $code): string
@@ -225,17 +303,19 @@ class FlightOfferMapper
                 ?? $firstSegment['operating_carrier']['logo_symbol_url']
                 ?? self::airlineLogoUrl($airlineCode),
             'owner_name' => $offer['owner']['name'] ?? $marketingCarrier,
-            'departure' => self::segment(
-                $firstSegment['origin']['iata_code'] ?? '',
-                $firstSegment['departing_at'] ?? ''
+            'departure' => self::segmentFromDuffel(
+                $firstSegment['origin'] ?? null,
+                $firstSegment['departing_at'] ?? null
             ),
-            'arrival' => self::segment(
-                $lastSegment['destination']['iata_code'] ?? '',
-                $lastSegment['arriving_at'] ?? ''
+            'arrival' => self::segmentFromDuffel(
+                $lastSegment['destination'] ?? null,
+                $lastSegment['arriving_at'] ?? null
             ),
             'duration' => self::formatMinutes(self::parseIsoDuration($slice['duration'] ?? null)),
             'stops' => max(0, count($segments) - 1),
-            'cabin_class' => strtoupper($slice['segments'][0]['passengers'][0]['cabin_class'] ?? 'economy'),
+            'cabin_class' => strtoupper($firstSegment['passengers'][0]['cabin_class'] ?? 'economy'),
+            'segments_count' => count($segments),
+            'schedule_source' => 'duffel',
             'supplier_total' => $pricing['supplier_total'],
             'base_amount' => $pricing['base_amount'],
             'tax_amount' => $pricing['tax_amount'],

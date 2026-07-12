@@ -113,7 +113,11 @@ class DuffelProvider implements FlightProviderInterface
                 continue;
             }
 
-            $offers[] = $this->mapOffer($item, $criteria, $availability, $index);
+            $mapped = $this->mapOffer($item, $criteria, $availability, $index);
+
+            if ($mapped) {
+                $offers[] = $mapped;
+            }
         }
 
         usort($offers, fn (FlightOffer $a, FlightOffer $b) => $a->price <=> $b->price);
@@ -125,12 +129,37 @@ class DuffelProvider implements FlightProviderInterface
         return $offers;
     }
 
-    protected function mapOffer(array $item, FlightSearchCriteria $criteria, array $availability, int $index): FlightOffer
+    protected function mapOffer(array $item, FlightSearchCriteria $criteria, array $availability, int $index): ?FlightOffer
     {
         $slice = $item['slices'][0] ?? null;
         $segments = $slice['segments'] ?? [];
+
+        if (empty($segments)) {
+            Log::warning('Duffel offer skipped: no segments', ['offer_id' => $item['id'] ?? null]);
+
+            return null;
+        }
+
         $firstSegment = $segments[0] ?? [];
         $lastSegment = $segments[array_key_last($segments)] ?? $firstSegment;
+
+        $departureAt = (string) ($firstSegment['departing_at'] ?? '');
+        $arrivalAt = (string) ($lastSegment['arriving_at'] ?? '');
+        $originCode = strtoupper((string) ($firstSegment['origin']['iata_code'] ?? ''));
+        $destinationCode = strtoupper((string) ($lastSegment['destination']['iata_code'] ?? ''));
+
+        // Never invent times/airports from search criteria — only show real Duffel schedule data.
+        if ($departureAt === '' || $arrivalAt === '' || $originCode === '' || $destinationCode === '') {
+            Log::warning('Duffel offer skipped: incomplete schedule', [
+                'offer_id' => $item['id'] ?? null,
+                'origin' => $originCode,
+                'destination' => $destinationCode,
+                'departing_at' => $departureAt,
+                'arriving_at' => $arrivalAt,
+            ]);
+
+            return null;
+        }
 
         $airlineCode = strtoupper($firstSegment['marketing_carrier']['iata_code'] ?? 'XX');
         $operatingCarrier = $firstSegment['operating_carrier']['name'] ?? null;
@@ -138,10 +167,8 @@ class DuffelProvider implements FlightProviderInterface
         $airlineName = $operatingCarrier ?: $marketingCarrier;
         $flightNumber = $this->formatFlightNumbers($segments, $airlineCode, $firstSegment);
 
-        $departureAt = $firstSegment['departing_at'] ?? $criteria->departureDate . 'T00:00:00Z';
-        $arrivalAt = $lastSegment['arriving_at'] ?? $departureAt;
-        $origin = strtoupper($firstSegment['origin']['iata_code'] ?? $criteria->origin);
-        $destination = strtoupper($lastSegment['destination']['iata_code'] ?? $criteria->destination);
+        $departure = FlightOfferMapper::segmentFromDuffel($firstSegment['origin'] ?? null, $departureAt);
+        $arrival = FlightOfferMapper::segmentFromDuffel($lastSegment['destination'] ?? null, $arrivalAt);
 
         $durationMinutes = FlightOfferMapper::parseIsoDuration($slice['duration'] ?? null);
         if ($durationMinutes <= 0) {
@@ -152,23 +179,29 @@ class DuffelProvider implements FlightProviderInterface
         $pricing = FlightOfferMapper::resolvePricing($item);
         $price = $pricing['price'];
         $currency = $pricing['currency'];
-        $offerId = (string) ($item['id'] ?? md5($airlineCode . $flightNumber . $departureAt . $index));
+        $offerId = (string) ($item['id'] ?? '');
+
+        if ($offerId === '' || ! str_starts_with($offerId, 'off_')) {
+            Log::warning('Duffel offer skipped: missing real offer id', ['index' => $index]);
+
+            return null;
+        }
 
         $logo = $firstSegment['marketing_carrier']['logo_symbol_url']
             ?? $firstSegment['operating_carrier']['logo_symbol_url']
             ?? FlightOfferMapper::airlineLogoUrl($airlineCode);
 
-        $offer = new FlightOffer(
+        return new FlightOffer(
             id: $offerId,
             flightNumber: $flightNumber,
             airline: $airlineName,
             airlineCode: $airlineCode,
             airlineLogo: $logo,
-            departure: FlightOfferMapper::segment($origin, $departureAt),
-            arrival: FlightOfferMapper::segment($destination, $arrivalAt),
+            departure: $departure,
+            arrival: $arrival,
             duration: FlightOfferMapper::formatMinutes($durationMinutes),
             stops: $stops,
-            cabinClass: strtoupper($criteria->cabin),
+            cabinClass: strtoupper($firstSegment['passengers'][0]['cabin_class'] ?? $criteria->cabin),
             baggage: $this->resolveBaggage($item),
             refundable: $this->resolveRefundable($item),
             price: $price,
@@ -181,8 +214,6 @@ class DuffelProvider implements FlightProviderInterface
             foundAt: null,
             raw: $item,
         );
-
-        return $offer;
     }
 
     /**
