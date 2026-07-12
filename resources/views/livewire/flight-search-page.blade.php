@@ -221,6 +221,34 @@
             font-weight: 500;
             line-height: 1.35;
         }
+        .flights-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 28px 16px 36px;
+            background: #fff;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+        }
+        .flights-loading__gif {
+            width: min(220px, 70vw);
+            height: auto;
+            display: block;
+            margin: 0 auto 12px;
+        }
+        .flights-loading__text {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a2b42;
+            margin: 0;
+        }
+        .flights-loading__hint {
+            font-size: 13px;
+            color: #6c757d;
+            margin-top: 4px;
+        }
         @media (max-width: 768px) {
             .flights-hero-media { max-height: 180px; }
             .flights-hero-bg { object-position: 20% center; }
@@ -363,14 +391,17 @@
                     <div class="alert alert-danger py-2 small mb-2">{{ $error }}</div>
                 @endif
 
-                @if(!$searched && !$loading && $browseMode)
-                    <div class="text-center py-3 text-muted small">Loading popular routes...</div>
-                @endif
-
-                @if($loading)
-                    <div class="text-center py-4">
-                        <div class="spinner-border spinner-border-sm text-primary"></div>
-                        <span class="text-muted small ml-2">{{ $browseMode ? 'Loading flights...' : 'Searching...' }}</span>
+                @if($loading || (! $searched && $browseMode && empty($flights)))
+                    <div class="flights-loading mb-3">
+                        <img src="{{ asset('images/flights/loading-plane.gif') }}"
+                             alt="Loading flights"
+                             class="flights-loading__gif"
+                             width="220"
+                             height="220">
+                        <p class="flights-loading__text">
+                            {{ $browseMode && ! $searched ? 'Loading popular routes...' : 'Searching flights...' }}
+                        </p>
+                        <div class="flights-loading__hint">Finding the best fares for you</div>
                     </div>
                 @endif
 
