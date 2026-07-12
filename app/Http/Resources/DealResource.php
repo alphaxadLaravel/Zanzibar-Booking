@@ -10,19 +10,27 @@ class DealResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $cover = $this->cover_photo
-            ?: optional($this->photos->first())->photo;
+        $cover = $this->cover_photo;
+        if (!$cover && $this->relationLoaded('photos')) {
+            $cover = optional($this->photos->first())->photo;
+        } elseif (!$cover) {
+            try {
+                $cover = optional($this->photos()->first())->photo;
+            } catch (\Throwable) {
+                $cover = null;
+            }
+        }
 
         return [
             'id' => $this->id,
-            'hashid' => HashidsHelper::encode($this->id),
+            'hashid' => HashidsHelper::encode((int) $this->id),
             'title' => $this->title,
             'type' => $this->type,
             'location' => $this->location,
             'lat' => $this->lat,
             'long' => $this->long,
             'map_location' => $this->map_location,
-            'base_price' => (float) $this->base_price,
+            'base_price' => (float) ($this->base_price ?? 0),
             'price_unit' => $this->priceUnit(),
             'ratings' => $this->ratings,
             'star_rating' => $this->star_rating,

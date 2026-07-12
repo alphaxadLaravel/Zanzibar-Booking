@@ -10,6 +10,15 @@ use App\Http\Controllers\Api\V1\PaymentApiController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
+    // Health check — no DB (use to verify deploy)
+    Route::get('ping', function () {
+        return response()->json([
+            'ok' => true,
+            'app' => config('app.name'),
+            'time' => now()->toIso8601String(),
+        ]);
+    });
+
     // Auth
     Route::post('auth/register', [AuthController::class, 'register']);
     Route::post('auth/login', [AuthController::class, 'login']);

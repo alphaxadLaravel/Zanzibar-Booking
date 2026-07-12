@@ -16,47 +16,60 @@ class CatalogController extends Controller
 {
     public function home()
     {
-        $featured = Deal::query()
-            ->active()
-            ->featured()
-            ->with(['category', 'photos'])
-            ->latest()
-            ->take(8)
-            ->get();
+        try {
+            $featured = Deal::query()
+                ->active()
+                ->featured()
+                ->with(['category', 'photos'])
+                ->latest()
+                ->take(8)
+                ->get();
 
-        $byType = [];
-        foreach (['hotel', 'apartment', 'activity', 'package', 'car', 'tour'] as $type) {
-            $byType[$type] = DealResource::collection(
-                Deal::query()
-                    ->active()
-                    ->where('type', $type)
-                    ->with(['category', 'photos'])
-                    ->latest()
-                    ->take(6)
-                    ->get()
-            );
+            $byType = [];
+            foreach (['hotel', 'apartment', 'activity', 'package', 'car', 'tour'] as $type) {
+                $byType[$type] = DealResource::collection(
+                    Deal::query()
+                        ->active()
+                        ->where('type', $type)
+                        ->with(['category', 'photos'])
+                        ->latest()
+                        ->take(6)
+                        ->get()
+                );
+            }
+
+            $modules = [
+                ['key' => 'hotel', 'label' => 'Hotels', 'route' => 'hotels'],
+                ['key' => 'apartment', 'label' => 'Apartments', 'route' => 'apartments'],
+                ['key' => 'tour', 'label' => 'Tours', 'route' => 'tours'],
+                ['key' => 'activity', 'label' => 'Activities', 'route' => 'activities'],
+                ['key' => 'package', 'label' => 'Packages', 'route' => 'packages'],
+                ['key' => 'car', 'label' => 'Cars', 'route' => 'cars'],
+                ['key' => 'flight', 'label' => 'Flights', 'route' => 'flights'],
+            ];
+
+            return response()->json([
+                'brand' => [
+                    'name' => 'Zanzibar Bookings',
+                    'logo' => asset('logo.png'),
+                    'primary_color' => '#1C8A7D',
+                ],
+                'modules' => $modules,
+                'featured' => DealResource::collection($featured),
+                'by_type' => $byType,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('API home failed', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return response()->json([
+                'message' => 'Home API failed',
+                'error' => config('app.debug') ? $e->getMessage() : 'Server error',
+            ], 500);
         }
-
-        $modules = [
-            ['key' => 'hotel', 'label' => 'Hotels', 'route' => 'hotels'],
-            ['key' => 'apartment', 'label' => 'Apartments', 'route' => 'apartments'],
-            ['key' => 'tour', 'label' => 'Tours', 'route' => 'tours'],
-            ['key' => 'activity', 'label' => 'Activities', 'route' => 'activities'],
-            ['key' => 'package', 'label' => 'Packages', 'route' => 'packages'],
-            ['key' => 'car', 'label' => 'Cars', 'route' => 'cars'],
-            ['key' => 'flight', 'label' => 'Flights', 'route' => 'flights'],
-        ];
-
-        return response()->json([
-            'brand' => [
-                'name' => 'Zanzibar Bookings',
-                'logo' => asset('logo.png'),
-                'primary_color' => '#1C8A7D',
-            ],
-            'modules' => $modules,
-            'featured' => DealResource::collection($featured),
-            'by_type' => $byType,
-        ]);
     }
 
     public function deals(Request $request)
