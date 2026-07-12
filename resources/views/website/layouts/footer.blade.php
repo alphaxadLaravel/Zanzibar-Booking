@@ -18,9 +18,11 @@
                             <li class="menu-item menu-item-4">
                                 <a href="{{ route('booking.lookup') }}">Look Up Booking</a>
                             </li>
-                            <li class="menu-item menu-item-5">
-                                <a href="{{ route('flights.retrieve') }}">Retrieve Flight Ticket</a>
-                            </li>
+                            @if (\Illuminate\Support\Facades\Route::has('flights.retrieve'))
+                                <li class="menu-item menu-item-5">
+                                    <a href="{{ route('flights.retrieve') }}">Retrieve Flight Ticket</a>
+                                </li>
+                            @endif
                         </ul>
                     </div>
                 </div>
