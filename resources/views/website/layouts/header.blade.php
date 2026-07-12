@@ -109,6 +109,12 @@
                             <li><a class="dropdown-item" href="{{ route('admin.my-bookings') }}">
                                 <i class="mdi mdi-calendar-check me-2"></i>My Bookings
                             </a></li>
+                            <li><a class="dropdown-item" href="{{ route('flights.my-bookings') }}">
+                                <i class="mdi mdi-airplane me-2"></i>My Flights
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ route('flights.retrieve') }}">
+                                <i class="mdi mdi-ticket-confirmation me-2"></i>Retrieve Flight Ticket
+                            </a></li>
                             <li><a class="dropdown-item" href="{{ route('booking.lookup') }}">
                                 <i class="mdi mdi-magnify me-2"></i>Look Up Booking
                             </a></li>

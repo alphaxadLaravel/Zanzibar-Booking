@@ -141,6 +141,28 @@ class DuffelApiService
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    public function getOrder(string $orderId): array
+    {
+        $response = Http::withHeaders($this->headers())
+            ->timeout(30)
+            ->get($this->baseUrl() . '/air/orders/' . urlencode($orderId));
+
+        if (! $response->successful()) {
+            Log::error('Duffel get order failed', [
+                'status' => $response->status(),
+                'order_id' => $orderId,
+                'body' => $response->body(),
+            ]);
+
+            throw new \RuntimeException($this->parseErrorMessage($response, 'Unable to retrieve your flight ticket details.'));
+        }
+
+        return $response->json('data') ?? [];
+    }
+
+    /**
      * @return array<int, array<string, mixed>>
      */
     public function searchPlaces(string $keyword, int $limit = 10): array

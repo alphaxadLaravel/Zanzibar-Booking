@@ -79,6 +79,51 @@ class FlightBooking extends Model
     }
 
     /**
+     * Ticket details for confirmation email / page.
+     *
+     * @return array{
+     *     airline_pnr: ?string,
+     *     duffel_order_id: ?string,
+     *     ticket_numbers: array<int, string>,
+     *     documents: array<int, array<string, mixed>>,
+     *     carrier_references: array<int, string>
+     * }
+     */
+    public function ticketDetails(): array
+    {
+        $order = $this->amadeus_response ?? [];
+        $ticketMeta = $this->flight_offer['_ticket'] ?? [];
+
+        $ticketNumbers = [];
+        foreach ($order['documents'] ?? [] as $document) {
+            $id = trim((string) ($document['unique_identifier'] ?? ''));
+            if ($id !== '') {
+                $ticketNumbers[] = $id;
+            }
+        }
+
+        $carrierReferences = [];
+        foreach ($order['booking_references'] ?? [] as $ref) {
+            $value = trim((string) ($ref['booking_reference'] ?? $ref['reference'] ?? ''));
+            if ($value !== '') {
+                $carrierReferences[] = $value;
+            }
+        }
+
+        $airlinePnr = $ticketMeta['airline_pnr']
+            ?? ($order['booking_reference'] ?? null)
+            ?? ($carrierReferences[0] ?? null);
+
+        return [
+            'airline_pnr' => $airlinePnr ? strtoupper((string) $airlinePnr) : null,
+            'duffel_order_id' => $this->amadeus_order_id ?? ($order['id'] ?? null),
+            'ticket_numbers' => array_values(array_unique($ticketNumbers)),
+            'documents' => $order['documents'] ?? [],
+            'carrier_references' => array_values(array_unique($carrierReferences)),
+        ];
+    }
+
+    /**
      * Generate a unique booking reference
      */
     public static function generateBookingReference(): string

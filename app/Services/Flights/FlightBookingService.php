@@ -2,11 +2,13 @@
 
 namespace App\Services\Flights;
 
+use App\Mail\FlightTicketConfirmation;
 use App\Models\FlightBooking;
 use App\Models\FlightPassenger;
 use App\Support\FlightOfferMapper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class FlightBookingService
 {
@@ -92,7 +94,7 @@ class FlightBookingService
     public function fulfillAfterPayment(FlightBooking $booking): FlightBooking
     {
         if ($booking->status === 'confirmed' && $booking->amadeus_order_id) {
-            return $booking;
+            return $booking->loadMissing('passengers');
         }
 
         $offerData = $booking->flight_offer ?? [];
@@ -107,9 +109,7 @@ class FlightBookingService
         $offer = $this->duffelApi->getOffer($offerId);
         $supplierCost = (float) ($offer['total_amount'] ?? $booking->supplier_cost ?? 0);
         $customerTotal = (float) $booking->total_price;
-        $markup = round(max(0, $customerTotal - $supplierCost), 2);
 
-        // Duffel is paid only the airline/supplier fare from balance.
         $duffelOrder = $this->duffelApi->createOrder(
             $offer,
             $checkout['passengers'],
@@ -117,12 +117,24 @@ class FlightBookingService
             $checkout['contact_phone'],
         );
 
+        // Refresh order so booking_reference / documents are present when available.
+        if (! empty($duffelOrder['id'])) {
+            try {
+                $duffelOrder = array_merge($duffelOrder, $this->duffelApi->getOrder($duffelOrder['id']));
+            } catch (\Throwable $e) {
+                Log::warning('Could not refresh Duffel order after create', [
+                    'order_id' => $duffelOrder['id'],
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
         $actualSupplierCost = (float) ($duffelOrder['total_amount'] ?? $supplierCost);
         $actualMarkup = round(max(0, $customerTotal - $actualSupplierCost), 2);
+        $airlinePnr = $duffelOrder['booking_reference'] ?? null;
 
         $booking->update([
             'status' => 'confirmed',
-            // Keep what the customer paid via Pesapal — do not overwrite with Duffel cost.
             'total_price' => $customerTotal,
             'supplier_cost' => $actualSupplierCost,
             'markup_amount' => $actualMarkup,
@@ -137,20 +149,62 @@ class FlightBookingService
                     'duffel_order_total' => $actualSupplierCost,
                 ]),
                 '_checkout' => $checkout,
+                '_ticket' => [
+                    'airline_pnr' => $airlinePnr,
+                    'duffel_order_id' => $duffelOrder['id'] ?? null,
+                    'documents' => $duffelOrder['documents'] ?? [],
+                    'issued_at' => now()->toIso8601String(),
+                    'ticket_email_sent' => false,
+                ],
             ]),
             'amadeus_order_id' => $duffelOrder['id'] ?? null,
             'amadeus_response' => $duffelOrder,
             'confirmed_at' => now(),
         ]);
 
+        $booking = $booking->fresh(['passengers']);
+        $this->sendTicketEmails($booking);
+
         Log::info('Duffel flight order created after payment', [
             'flight_booking_id' => $booking->id,
             'duffel_order_id' => $duffelOrder['id'] ?? null,
+            'airline_pnr' => $airlinePnr,
             'customer_paid' => $customerTotal,
             'duffel_paid' => $actualSupplierCost,
             'zanzibar_margin' => $actualMarkup,
         ]);
 
-        return $booking->fresh();
+        return $booking;
+    }
+
+    public function sendTicketEmails(FlightBooking $booking): void
+    {
+        $booking->loadMissing('passengers');
+        $ticket = $booking->ticketDetails();
+        $offer = $booking->flight_offer ?? [];
+
+        if (! empty($offer['_ticket']['ticket_email_sent'])) {
+            return;
+        }
+
+        try {
+            Mail::to($booking->contact_email)->send(new FlightTicketConfirmation($booking, $ticket, false));
+
+            $adminEmail = env('ADMIN_EMAIL', 'sales-reservations@zanzibarbookings.com');
+            if ($adminEmail) {
+                Mail::to($adminEmail)->send(new FlightTicketConfirmation($booking, $ticket, true));
+            }
+
+            $offer['_ticket'] = array_merge($offer['_ticket'] ?? [], [
+                'ticket_email_sent' => true,
+                'ticket_email_sent_at' => now()->toIso8601String(),
+            ]);
+            $booking->update(['flight_offer' => $offer]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to send flight ticket emails', [
+                'flight_booking_id' => $booking->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

@@ -230,24 +230,74 @@ class FlightController extends Controller
             return redirect()->route('flights.index')->with('error', 'Booking not found.');
         }
 
-        $flight = FlightOfferMapper::mapDuffelOfferToArray($booking->flight_offer ?? []);
+        // If payment completed but email not sent yet (e.g. fulfilled earlier), try once more.
+        if ($booking->status === 'confirmed' && empty(($booking->flight_offer['_ticket']['ticket_email_sent'] ?? false))) {
+            app(FlightBookingService::class)->sendTicketEmails($booking);
+            $booking->refresh()->load('passengers');
+        }
 
-        return view('website.pages.flight-booking', [
-            'flight' => $flight,
-            'offerId' => $booking->flight_offer['id'] ?? null,
-            'booking' => $booking,
-            'confirmed' => true,
-            'passengerCounts' => [
-                'adults' => $booking->adults,
-                'children' => $booking->children,
-                'infants' => $booking->infants,
-            ],
+        return view('website.pages.flight-confirmation', compact('booking'));
+    }
+
+    public function ticket($bookingReference)
+    {
+        $booking = FlightBooking::with('passengers')->where('booking_reference', $bookingReference)->first();
+
+        if (! $booking) {
+            return redirect()->route('flights.index')->with('error', 'Booking not found.');
+        }
+
+        return view('website.pages.flight-ticket-print', compact('booking'));
+    }
+
+    public function retrieveTicketForm()
+    {
+        return view('website.pages.flight-retrieve-ticket');
+    }
+
+    public function retrieveTicket(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => ['required', 'email', 'max:255'],
+            'booking_reference' => ['required', 'string', 'max:40'],
         ]);
+
+        $email = strtolower(trim($validated['email']));
+        $reference = strtoupper(trim($validated['booking_reference']));
+        $reference = preg_replace('/\s+/', '', $reference) ?? $reference;
+
+        $booking = FlightBooking::query()
+            ->whereRaw('LOWER(contact_email) = ?', [$email])
+            ->where(function ($query) use ($reference) {
+                $query->where('booking_reference', $reference)
+                    ->orWhere('amadeus_response->booking_reference', $reference)
+                    ->orWhere('flight_offer->_ticket->airline_pnr', $reference);
+            })
+            ->first();
+
+        if (! $booking) {
+            return back()
+                ->withInput()
+                ->with('error', 'No flight ticket found for that email and reference. Check your ticket email and try again.');
+        }
+
+        return redirect()
+            ->route('flights.confirmation', ['bookingReference' => $booking->booking_reference])
+            ->with('success', 'Ticket found. You can view or print it below.');
     }
 
     public function myBookings()
     {
-        return redirect()->route('flights.index')->with('info', 'View your saved flight requests by reference from our team.');
+        $bookings = FlightBooking::query()
+            ->with('passengers')
+            ->where(function ($query) {
+                $query->where('user_id', auth()->id())
+                    ->orWhereRaw('LOWER(contact_email) = ?', [strtolower((string) auth()->user()->email)]);
+            })
+            ->latest()
+            ->paginate(12);
+
+        return view('website.pages.flight-my-bookings', compact('bookings'));
     }
 
     protected function configurePesapal(): void
