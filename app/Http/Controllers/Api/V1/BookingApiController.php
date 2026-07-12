@@ -178,6 +178,34 @@ class BookingApiController extends Controller
         ]);
     }
 
+    /**
+     * Permanently delete an unpaid booking (and its pending payment rows).
+     * Paid bookings cannot be deleted.
+     */
+    public function destroy(Request $request, string $id)
+    {
+        $bookingId = HashidsHelper::resolveId($id) ?? (is_numeric($id) ? (int) $id : null);
+        $booking = Booking::where('user_id', $request->user()->id)->findOrFail($bookingId);
+
+        $isPaid = (bool) $booking->payment_status
+            || $booking->payments()->where('status', 'COMPLETED')->exists();
+
+        if ($isPaid) {
+            return response()->json([
+                'message' => 'Only unpaid bookings can be deleted.',
+            ], 422);
+        }
+
+        DB::transaction(function () use ($booking) {
+            $booking->payments()->delete();
+            $booking->delete();
+        });
+
+        return response()->json([
+            'message' => 'Booking deleted',
+        ]);
+    }
+
     public function lookup(Request $request)
     {
         $validated = $request->validate([

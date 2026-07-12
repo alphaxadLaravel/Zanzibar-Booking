@@ -42,10 +42,10 @@ class CatalogController extends Controller
                 );
             }
 
+            // Match website header menu order (no separate Tours item).
             $modules = [
                 ['key' => 'hotel', 'label' => 'Hotels', 'route' => 'hotels'],
                 ['key' => 'apartment', 'label' => 'Apartments', 'route' => 'apartments'],
-                ['key' => 'tour', 'label' => 'Tours', 'route' => 'tours'],
                 ['key' => 'activity', 'label' => 'Activities', 'route' => 'activities'],
                 ['key' => 'package', 'label' => 'Packages', 'route' => 'packages'],
                 ['key' => 'car', 'label' => 'Cars', 'route' => 'cars'],
@@ -66,7 +66,7 @@ class CatalogController extends Controller
                 ];
             };
 
-            // Mirror website index: Hotel Types / Package & Activity Types (same order & limits)
+            // Mirror WebsiteController::index exactly (same filters, orderBy id, limits).
             $propertyTypeItems = Category::query()
                 ->whereIn('type', ['hotel', 'apartment', 'package', 'activity', 'resort'])
                 ->orderBy('id')
@@ -79,31 +79,33 @@ class CatalogController extends Controller
                 ->where('type', 'tour')
                 ->orderBy('id')
                 ->limit(6)
-                ->get();
-            if ($tourTypeItems->isEmpty()) {
-                $tourTypeItems = Category::query()
-                    ->where('type', 'activity')
-                    ->orderBy('id')
-                    ->limit(6)
-                    ->get();
-            }
-            $tourTypeItems = $tourTypeItems->map($mapCategory)->values();
+                ->get()
+                ->map($mapCategory)
+                ->values();
+
+            $carTypeItems = Category::query()
+                ->where('type', 'car')
+                ->orderBy('id')
+                ->limit(6)
+                ->get()
+                ->map($mapCategory)
+                ->values();
 
             $types = [
                 [
                     'key' => 'property',
                     'title' => 'Hotel Types',
-                    'subtitle' => 'Stays, packages, and activities',
+                    'subtitle' => 'Stays across the island',
                     'items' => $propertyTypeItems,
                     'deals_title' => 'Hotels',
                     'deals_type' => 'hotel',
                     'deals' => DealResource::collection(
                         Deal::query()
                             ->active()
-                            ->where('type', 'hotel')
+                            ->whereIn('type', ['hotel', 'apartment'])
                             ->with(['category', 'photos'])
-                            ->latest()
-                            ->take(8)
+                            ->orderByDesc('id')
+                            ->take(6)
                             ->get()
                     )->resolve(),
                 ],
@@ -112,15 +114,32 @@ class CatalogController extends Controller
                     'title' => 'Package & Activity Types',
                     'subtitle' => 'Explore island experiences',
                     'items' => $tourTypeItems,
-                    'deals_title' => 'Activities',
+                    'deals_title' => 'Packages and Activities',
                     'deals_type' => 'activity',
                     'deals' => DealResource::collection(
                         Deal::query()
                             ->active()
-                            ->where('type', 'activity')
+                            ->whereIn('type', ['package', 'activity'])
                             ->with(['category', 'photos'])
-                            ->latest()
-                            ->take(8)
+                            ->orderByDesc('id')
+                            ->take(6)
+                            ->get()
+                    )->resolve(),
+                ],
+                [
+                    'key' => 'car',
+                    'title' => 'Car Types',
+                    'subtitle' => 'Find a great ride',
+                    'items' => $carTypeItems,
+                    'deals_title' => 'Cars',
+                    'deals_type' => 'car',
+                    'deals' => DealResource::collection(
+                        Deal::query()
+                            ->active()
+                            ->where('type', 'car')
+                            ->with(['category', 'photos'])
+                            ->orderByDesc('id')
+                            ->take(6)
                             ->get()
                     )->resolve(),
                 ],
@@ -312,8 +331,8 @@ class CatalogController extends Controller
 
         $type = $request->query('type');
 
-        // Match website listing filters (AllDealsListing / SearchResults).
-        $categoryQuery = Category::query()->orderBy('category');
+        // Same category order as homepage type cards / AllDealsListing (by id).
+        $categoryQuery = Category::query()->orderBy('id');
         if ($type) {
             // Hotel listing also surfaces resort categories used on the home type cards.
             $categoryQuery->whereIn(

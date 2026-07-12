@@ -32,13 +32,14 @@ Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 Route::post('/register', [LoginController::class, 'register'])->name('register');
 Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::post('/forgot-password', [LoginController::class, 'forgotPassword'])->name('forgot-password');
+Route::get('/reset-password/{token}', [LoginController::class, 'showResetForm'])->name('password.reset');
+Route::post('/reset-password', [LoginController::class, 'resetPassword'])->name('password.update');
 Route::post('/change-password', [LoginController::class, 'changePassword'])->name('change-password');
 
 // Email Verification Routes
 Route::get('/email/verify/{id}/{hash}', [LoginController::class, 'verifyEmail'])->name('verification.verify');
-Route::get('/email/verification-notice', function () {
-    return view('website.pages.verify-email');
-})->name('verification.notice');
+Route::get('/email/verification-notice', [LoginController::class, 'verificationNotice'])->name('verification.notice');
+Route::post('/email/resend-verification', [LoginController::class, 'resendVerification'])->middleware('auth')->name('verification.resend');
 
 // Newsletter Routes
 Route::post('/newsletter/subscribe', [WebsiteController::class, 'subscribeNewsletter'])->name('newsletter.subscribe');

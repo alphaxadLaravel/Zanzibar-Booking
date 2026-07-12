@@ -209,6 +209,7 @@ class AllDealsListing extends Component
         $deals = $query->paginate(6);
 
         $categories = Category::where('type', $this->dealType)
+            ->orderBy('id')
             ->get();
 
         $locations = Deal::where('type', $this->dealType)

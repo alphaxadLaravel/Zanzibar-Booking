@@ -182,6 +182,17 @@
                                 }, 300);
                             }
 
+                            function switchToLoginFromForgot() {
+                                var forgotModal = bootstrap.Modal.getInstance(document.getElementById('ForgotPassword'));
+                                if (forgotModal) {
+                                    forgotModal.hide();
+                                }
+                                setTimeout(function() {
+                                    var loginModal = new bootstrap.Modal(document.getElementById('exampleModal'));
+                                    loginModal.show();
+                                }, 300);
+                            }
+
                             function openChangePasswordModal() {
                                 var changePasswordModal = new bootstrap.Modal(document.getElementById('ChangePassword'));
                                 changePasswordModal.show();
@@ -197,6 +208,38 @@
                         <p class="signup-link">
                             Don't have an account?
                             <a href="#" onclick="switchToSignup()" class="text-primary fw-bold">Sign up</a>
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div class="modal fade" id="ForgotPassword" tabindex="-1" aria-labelledby="ForgotPasswordLabel" aria-hidden="true"
+        data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ForgotPasswordLabel">Forgot Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                        style="background:none; border:none;">
+                        <i class="mdi mdi-close" style="font-size: 1.5rem;"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted">Enter your account email and we’ll send a reset link.</p>
+                    <form id="forgotPasswordForm" action="{{ route('forgot-password') }}" method="POST" class="form">
+                        @csrf
+                        <div class="field-wrapper input mb-3">
+                            <label for="forgot-email">EMAIL</label>
+                            <input id="forgot-email" name="email" type="email" class="form-control" required
+                                placeholder="Email" />
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Send reset link</button>
+                        <p class="signup-link mt-3 mb-0">
+                            Remembered your password?
+                            <a href="#" onclick="switchToLoginFromForgot(); return false;" class="text-primary fw-bold">Sign In</a>
                         </p>
                     </form>
                 </div>

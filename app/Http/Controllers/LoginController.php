@@ -146,7 +146,10 @@ class LoginController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return redirect()->back()->with('error', 'Validation failed');
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['message' => 'Please enter a registered email address.'], 422);
+            }
+            return redirect()->back()->with('error', 'Please enter a registered email address.');
         }
 
         $status = Password::sendResetLink(
@@ -154,10 +157,78 @@ class LoginController extends Controller
         );
 
         if ($status === Password::RESET_LINK_SENT) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['message' => 'Password reset link sent to your email']);
+            }
             return redirect()->back()->with('success', 'Password reset link sent to your email');
         }
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['message' => 'Unable to send reset link'], 422);
+        }
         return redirect()->back()->with('error', 'Unable to send reset link');
+    }
+
+    public function showResetForm(Request $request, string $token)
+    {
+        return view('website.pages.reset-password', [
+            'token' => $token,
+            'email' => $request->query('email', ''),
+        ]);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'token' => 'required',
+            'email' => 'required|email|exists:users,email',
+            'password' => 'required|min:6|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function (User $user, string $password) {
+                $user->forceFill([
+                    'password' => Hash::make($password),
+                ])->save();
+            }
+        );
+
+        if ($status === Password::PASSWORD_RESET) {
+            return redirect()->route('index')->with('success', 'Password reset successful. You can sign in now.');
+        }
+
+        return redirect()->back()->with('error', __($status))->withInput();
+    }
+
+    public function verificationNotice()
+    {
+        return view('website.pages.verify-email');
+    }
+
+    public function resendVerification(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('index')->with('error', 'Please sign in first.');
+        }
+
+        if ($user->email_verified_at) {
+            return redirect()->route('index')->with('info', 'Email already verified.');
+        }
+
+        try {
+            Mail::to($user->email)->send(new UserRegistered($user));
+        } catch (\Throwable $e) {
+            Log::error('Web resend verification failed', ['error' => $e->getMessage()]);
+            return redirect()->back()->with('error', 'Could not send verification email.');
+        }
+
+        return redirect()->back()->with('success', 'Verification email sent. Check your inbox.');
     }
 
     /**

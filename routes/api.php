@@ -36,6 +36,8 @@ Route::prefix('v1')->group(function () {
     Route::post('auth/register', [AuthController::class, 'register']);
     Route::post('auth/login', [AuthController::class, 'login']);
     Route::post('auth/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('auth/reset-password', [AuthController::class, 'resetPassword']);
+    Route::post('auth/verify-email', [AuthController::class, 'verifyEmail']);
 
     // Public catalog
     Route::get('home', [CatalogController::class, 'home']);
@@ -70,6 +72,7 @@ Route::prefix('v1')->group(function () {
         Route::post('auth/logout', [AuthController::class, 'logout']);
         Route::get('auth/me', [AuthController::class, 'me']);
         Route::post('auth/change-password', [AuthController::class, 'changePassword']);
+        Route::post('auth/resend-verification', [AuthController::class, 'resendVerification']);
 
         Route::get('cart', [CartController::class, 'index']);
         Route::delete('cart', [CartController::class, 'clear']);
@@ -81,6 +84,7 @@ Route::prefix('v1')->group(function () {
         Route::get('bookings', [BookingApiController::class, 'index']);
         Route::get('bookings/{id}', [BookingApiController::class, 'show']);
         Route::post('bookings/{id}/cancel', [BookingApiController::class, 'cancel']);
+        Route::delete('bookings/{id}', [BookingApiController::class, 'destroy']);
 
         Route::post('payments/{bookingId}/pesapal', [PaymentApiController::class, 'initiatePesapal']);
         Route::get('payments/{bookingId}/offline', [PaymentApiController::class, 'offline']);

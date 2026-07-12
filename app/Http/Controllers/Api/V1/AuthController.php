@@ -113,6 +113,78 @@ class AuthController extends Controller
         return response()->json(['message' => 'Password reset link sent to your email.']);
     }
 
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required|string',
+            'email' => 'required|email|exists:users,email',
+            'password' => 'required|min:6|confirmed',
+        ]);
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function (User $user, string $password) {
+                $user->forceFill([
+                    'password' => Hash::make($password),
+                ])->save();
+            }
+        );
+
+        if ($status !== Password::PASSWORD_RESET) {
+            return response()->json(['message' => __($status)], 422);
+        }
+
+        return response()->json(['message' => 'Password has been reset. You can sign in now.']);
+    }
+
+    public function resendVerification(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->email_verified_at) {
+            return response()->json(['message' => 'Your email is already verified.']);
+        }
+
+        try {
+            Mail::to($user->email)->send(new UserRegistered($user));
+        } catch (\Throwable $e) {
+            Log::error('API resend verification failed', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Could not send verification email. Try again later.'], 500);
+        }
+
+        return response()->json(['message' => 'Verification email sent. Check your inbox.']);
+    }
+
+    public function verifyEmail(Request $request)
+    {
+        $validated = $request->validate([
+            'id' => 'required',
+            'hash' => 'required|string',
+        ]);
+
+        $userId = is_numeric($validated['id']) ? (int) $validated['id'] : null;
+        $user = User::findOrFail($userId);
+
+        if (!hash_equals((string) $validated['hash'], sha1($user->email))) {
+            return response()->json(['message' => 'Invalid verification link.'], 422);
+        }
+
+        if ($user->email_verified_at) {
+            return response()->json([
+                'message' => 'Email already verified.',
+                'user' => new UserResource($user->load('role')),
+            ]);
+        }
+
+        $user->email_verified_at = now();
+        $user->save();
+
+        return response()->json([
+            'message' => 'Email verified successfully.',
+            'user' => new UserResource($user->load('role')),
+        ]);
+    }
+
     public function changePassword(Request $request)
     {
         $validated = $request->validate([

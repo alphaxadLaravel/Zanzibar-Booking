@@ -33,7 +33,9 @@ class WebsiteController extends Controller
     public function index()
     {
         // Fetch categories for property types (hotels, apartments, packages, activities, resorts)
+        // Explicit id order so web + mobile API stay identical.
         $propertyCategories = Category::whereIn('type', ['hotel', 'apartment', 'package', 'activity', 'resort'])
+            ->orderBy('id')
             ->limit(6)
             ->get();
 
@@ -41,11 +43,13 @@ class WebsiteController extends Controller
         $featuredDeals = Deal::whereIn('type', ['hotel', 'apartment'])
             ->where('status', 1)
             ->with(['category', 'photos'])
+            ->orderByDesc('id')
             ->limit(6)
             ->get();
 
-        // Fetch package and activity categories
+        // Fetch package and activity categories (labeled "Package & Activity Types" on the homepage)
         $tourCategories = Category::where('type', 'tour')
+            ->orderBy('id')
             ->limit(6)
             ->get();
 
@@ -53,11 +57,13 @@ class WebsiteController extends Controller
         $featuredTours = Deal::whereIn('type', ['package', 'activity'])
             ->where('status', 1)
             ->with(['category', 'photos', 'tours'])
+            ->orderByDesc('id')
             ->limit(6)
             ->get();
 
         // Fetch car categories
         $carCategories = Category::where('type', 'car')
+            ->orderBy('id')
             ->limit(6)
             ->get();
 
@@ -65,6 +71,7 @@ class WebsiteController extends Controller
         $featuredCars = Deal::where('type', 'car')
             ->where('status', 1)
             ->with(['category', 'photos', 'car'])
+            ->orderByDesc('id')
             ->limit(6)
             ->get();
 
