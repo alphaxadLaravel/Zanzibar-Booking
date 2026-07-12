@@ -66,43 +66,63 @@ class CatalogController extends Controller
                 ];
             };
 
-            // Mirror website index: Hotel Types / Tour Types / Car Types
+            // Mirror website index: Hotel Types / Package & Activity Types (same order & limits)
+            $propertyTypeItems = Category::query()
+                ->whereIn('type', ['hotel', 'apartment', 'package', 'activity', 'resort'])
+                ->orderBy('id')
+                ->limit(6)
+                ->get()
+                ->map($mapCategory)
+                ->values();
+
+            $tourTypeItems = Category::query()
+                ->where('type', 'tour')
+                ->orderBy('id')
+                ->limit(6)
+                ->get();
+            if ($tourTypeItems->isEmpty()) {
+                $tourTypeItems = Category::query()
+                    ->where('type', 'activity')
+                    ->orderBy('id')
+                    ->limit(6)
+                    ->get();
+            }
+            $tourTypeItems = $tourTypeItems->map($mapCategory)->values();
+
             $types = [
                 [
                     'key' => 'property',
                     'title' => 'Hotel Types',
                     'subtitle' => 'Stays, packages, and activities',
-                    'items' => Category::query()
-                        ->whereIn('type', ['hotel', 'apartment', 'package', 'activity', 'resort'])
-                        ->orderBy('category')
-                        ->limit(8)
-                        ->get()
-                        ->map($mapCategory)
-                        ->values(),
+                    'items' => $propertyTypeItems,
+                    'deals_title' => 'Hotels',
+                    'deals_type' => 'hotel',
+                    'deals' => DealResource::collection(
+                        Deal::query()
+                            ->active()
+                            ->where('type', 'hotel')
+                            ->with(['category', 'photos'])
+                            ->latest()
+                            ->take(8)
+                            ->get()
+                    )->resolve(),
                 ],
                 [
                     'key' => 'tour',
-                    'title' => 'Tour Types',
+                    'title' => 'Package & Activity Types',
                     'subtitle' => 'Explore island experiences',
-                    'items' => Category::query()
-                        ->where('type', 'tour')
-                        ->orderBy('category')
-                        ->limit(8)
-                        ->get()
-                        ->map($mapCategory)
-                        ->values(),
-                ],
-                [
-                    'key' => 'car',
-                    'title' => 'Car Types',
-                    'subtitle' => 'Get around Zanzibar',
-                    'items' => Category::query()
-                        ->where('type', 'car')
-                        ->orderBy('category')
-                        ->limit(8)
-                        ->get()
-                        ->map($mapCategory)
-                        ->values(),
+                    'items' => $tourTypeItems,
+                    'deals_title' => 'Activities',
+                    'deals_type' => 'activity',
+                    'deals' => DealResource::collection(
+                        Deal::query()
+                            ->active()
+                            ->where('type', 'activity')
+                            ->with(['category', 'photos'])
+                            ->latest()
+                            ->take(8)
+                            ->get()
+                    )->resolve(),
                 ],
             ];
 
@@ -338,7 +358,7 @@ class CatalogController extends Controller
             'type' => 'nullable|in:hotel,apartment,tour,activity,package,car,resort',
         ]);
 
-        $query = Category::query()->orderBy('category');
+        $query = Category::query()->orderBy('id');
 
         if ($type = $request->query('type')) {
             if ($type === 'hotel') {

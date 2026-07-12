@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\Deal;
 use App\Models\FlightBooking;
 use App\Models\Payment;
 use App\Models\System;
@@ -104,6 +105,7 @@ class PaymentApiController extends Controller
                     'hashid' => HashidsHelper::encode($booking->id),
                     'booking_code' => $booking->booking_code,
                     'total_amount' => (float) $booking->total_amount,
+                    'items' => $this->bookingSummaryItems($booking),
                 ],
             ]);
         } catch (\Throwable $e) {
@@ -125,6 +127,7 @@ class PaymentApiController extends Controller
                 'booking_code' => $booking->booking_code,
                 'total_amount' => (float) $booking->total_amount,
                 'status' => $booking->status,
+                'items' => $this->bookingSummaryItems($booking),
             ],
             'instructions' => [
                 'title' => 'Bank / Offline Payment',
@@ -229,6 +232,40 @@ HTML;
 </body>
 </html>
 HTML;
+    }
+
+    /** Build a pay-summary list from stored booking_items (enrich older bookings). */
+    protected function bookingSummaryItems(Booking $booking): array
+    {
+        $raw = is_array($booking->booking_items) ? $booking->booking_items : [];
+        $dealIds = collect($raw)->pluck('deal_id')->filter()->unique()->values()->all();
+        $deals = $dealIds === []
+            ? collect()
+            : Deal::query()->whereIn('id', $dealIds)->get()->keyBy('id');
+
+        return collect($raw)->map(function ($item) use ($deals) {
+            $item = is_array($item) ? $item : (array) $item;
+            $deal = isset($item['deal_id']) ? $deals->get($item['deal_id']) : null;
+            $cover = $item['cover_photo'] ?? null;
+            if (!$cover && $deal?->cover_photo) {
+                $cover = str_starts_with((string) $deal->cover_photo, 'http')
+                    ? $deal->cover_photo
+                    : asset('storage/' . ltrim((string) $deal->cover_photo, '/'));
+            }
+
+            return [
+                'title' => $item['title'] ?? $deal?->title ?? ucfirst((string) ($item['type'] ?? 'Item')),
+                'type' => $item['type'] ?? null,
+                'location' => $item['location'] ?? $deal?->location,
+                'cover_photo' => $cover,
+                'room_name' => $item['room_name'] ?? null,
+                'check_in' => $item['check_in'] ?? null,
+                'check_out' => $item['check_out'] ?? null,
+                'adults' => $item['adults'] ?? null,
+                'children' => $item['children'] ?? null,
+                'total_price' => (float) ($item['total_price'] ?? 0),
+            ];
+        })->values()->all();
     }
 
     protected function configurePesapal(): void

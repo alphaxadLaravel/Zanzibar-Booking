@@ -83,11 +83,20 @@ class BookingApiController extends Controller
             $bookedItems = [];
             $totalAmount = 0;
             foreach ($cartItems as $cartItem) {
+                $deal = $cartItem->deal;
                 $bookedItems[] = [
                     'deal_id' => $cartItem->deal_id,
                     'room_id' => $cartItem->room_id,
                     'number_rooms' => ($cartItem->type === 'hotel') ? $cartItem->number_rooms : null,
                     'type' => $cartItem->type,
+                    'title' => $deal?->title ?? ucfirst((string) $cartItem->type),
+                    'location' => $deal?->location,
+                    'cover_photo' => $deal?->cover_photo
+                        ? (str_starts_with((string) $deal->cover_photo, 'http')
+                            ? $deal->cover_photo
+                            : asset('storage/' . ltrim((string) $deal->cover_photo, '/')))
+                        : null,
+                    'room_name' => $cartItem->room?->title ?? $cartItem->room?->name,
                     'check_in' => $cartItem->check_in,
                     'check_out' => $cartItem->check_out,
                     'total_price' => $cartItem->total_price,

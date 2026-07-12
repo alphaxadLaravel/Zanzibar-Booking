@@ -39,6 +39,7 @@ class RoomResource extends JsonResource
             'name' => $this->title ?? $this->name,
             'title' => $this->title ?? $this->name,
             'description' => $this->plainText($this->description),
+            'description_html' => $this->description,
             'people' => $this->people,
             'beds' => $this->beds,
             'capacity' => $this->people ?? $this->capacity,
