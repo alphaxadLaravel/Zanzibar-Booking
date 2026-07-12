@@ -393,11 +393,6 @@
                 <button type="button" class="btn btn-outline-secondary btn-reset ml-md-auto mb-2 mb-md-0" wire:click="resetSearch">
                     <i class="fas fa-undo mr-1"></i> Reset
                 </button>
-                @if (\Illuminate\Support\Facades\Route::has('flights.retrieve'))
-                    <a href="{{ route('flights.retrieve') }}" class="btn btn-outline-primary btn-reset ml-2 mb-2 mb-md-0">
-                        <i class="fas fa-ticket-alt mr-1"></i> My ticket
-                    </a>
-                @endif
             </div>
         </div>
     </section>
