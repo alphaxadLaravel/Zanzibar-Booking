@@ -516,10 +516,18 @@
                                             wire:click="showFlightDetails('{{ $flight['id'] }}')">
                                         Details
                                     </button>
-                                    <a href="{{ route('flights.checkout', ['offerId' => $flight['id']]) }}"
-                                       class="btn btn-success btn-sm mb-2 mb-md-0">
-                                        Book
-                                    </a>
+                                    @auth
+                                        <a href="{{ route('flights.checkout', ['offerId' => $flight['id']]) }}"
+                                           class="btn btn-success btn-sm mb-2 mb-md-0">
+                                            Book
+                                        </a>
+                                    @else
+                                        <button type="button"
+                                                class="btn btn-success btn-sm mb-2 mb-md-0"
+                                                data-require-login-link="{{ route('flights.checkout', ['offerId' => $flight['id']]) }}">
+                                            Sign in to Book
+                                        </button>
+                                    @endauth
                                 </div>
                             </div>
                         </div>
@@ -682,9 +690,17 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" wire:click="closeFlightDetails">Close</button>
-                        <a href="{{ route('flights.checkout', ['offerId' => $selectedFlight['id']]) }}" class="btn btn-success">
-                            Continue to Book
-                        </a>
+                        @auth
+                            <a href="{{ route('flights.checkout', ['offerId' => $selectedFlight['id']]) }}" class="btn btn-success">
+                                Continue to Book
+                            </a>
+                        @else
+                            <button type="button"
+                                    class="btn btn-success"
+                                    data-require-login-link="{{ route('flights.checkout', ['offerId' => $selectedFlight['id']]) }}">
+                                Sign in to Book
+                            </button>
+                        @endauth
                     </div>
                 </div>
             </div>

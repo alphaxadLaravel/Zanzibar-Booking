@@ -43,15 +43,15 @@ class LoginController extends Controller
             $request->session()->regenerate();
 
             $redirect = $request->input('redirect');
-            if ($redirect && \Illuminate\Support\Str::startsWith($redirect, url('/'))) {
+            if ($redirect && Str::startsWith($redirect, url('/'))) {
                 return redirect($redirect)->with('success', 'Logged In successful');
             }
 
-            if ($user->canAccessAdminPanel()) {
-                return redirect($user->adminLandingUrl())->with('success', 'Logged In successful');
-            }
+            $default = $user->canAccessAdminPanel()
+                ? $user->adminLandingUrl()
+                : route('index');
 
-            return redirect()->back()->with('success', 'Logged In successful');
+            return redirect()->intended($default)->with('success', 'Logged In successful');
         }
 
         return redirect()->back()->with('error', 'Invalid email or password');
@@ -109,7 +109,13 @@ class LoginController extends Controller
         // Auto-login after registration
         Auth::login($user);
 
-        return redirect()->back()->with('success', 'Registration successful! Please check your email to verify your account.');
+        $redirect = $request->input('redirect');
+        if ($redirect && Str::startsWith($redirect, url('/'))) {
+            return redirect($redirect)->with('success', 'Registration successful! Please check your email to verify your account.');
+        }
+
+        return redirect()->intended(route('index'))
+            ->with('success', 'Registration successful! Please check your email to verify your account.');
     }
 
     /**

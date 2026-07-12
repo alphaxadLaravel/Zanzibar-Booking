@@ -16,6 +16,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'payment/*',
         ]);
 
+        // After auth gate, send guests to login with return URL so they resume booking
+        $middleware->redirectGuestsTo(fn () => route('login', [
+            'redirect' => url()->full(),
+        ]));
+
         // Register custom middleware aliases
         $middleware->alias([
             'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
@@ -34,6 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\EnsureUserNotSuspended::class,
         ]);
     })
+
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();

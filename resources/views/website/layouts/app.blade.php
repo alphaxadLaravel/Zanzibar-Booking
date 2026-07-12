@@ -219,6 +219,7 @@
                 <div class="modal-body">
                     <form id="signupForm" action="{{ route('register') }}" method="POST" class="form">
                         @csrf
+                        <input type="hidden" name="redirect" id="signupRedirect" value="">
                         <input type="hidden" name="isfr" value="1" />
                         <div class="row">
                             <div class="col-lg-6">
@@ -464,19 +465,55 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            function setAuthRedirect(url) {
+                var loginRedirect = document.getElementById('loginRedirect');
+                var signupRedirect = document.getElementById('signupRedirect');
+                if (loginRedirect) loginRedirect.value = url || '';
+                if (signupRedirect) signupRedirect.value = url || '';
+            }
+
+            function openLoginModal(redirectUrl) {
+                if (redirectUrl) setAuthRedirect(redirectUrl);
+                var loginModalEl = document.getElementById('exampleModal');
+                if (!loginModalEl || typeof bootstrap === 'undefined') return;
+                bootstrap.Modal.getOrCreateInstance(loginModalEl).show();
+            }
+
             var redirectInput = document.getElementById('loginRedirect');
             if (redirectInput) {
                 var p = new URLSearchParams(window.location.search);
                 var r = p.get('redirect');
-                if (r) redirectInput.value = r;
+                if (r) {
+                    setAuthRedirect(r);
+                    // Guest hit a protected booking URL — open sign-in
+                    if (!window.isLoggedIn) {
+                        setTimeout(function() { openLoginModal(r); }, 200);
+                    }
+                }
             }
+
+            document.addEventListener('click', function(e) {
+                var trigger = e.target.closest('[data-require-login-link]');
+                if (!trigger || window.isLoggedIn) return;
+                e.preventDefault();
+                e.stopPropagation();
+                var redirectUrl = trigger.getAttribute('data-require-login-link') || window.location.href;
+                var parentModal = trigger.closest('.modal');
+                if (parentModal && parentModal.id !== 'exampleModal' && typeof bootstrap !== 'undefined') {
+                    var openModal = bootstrap.Modal.getInstance(parentModal);
+                    if (openModal) openModal.hide();
+                    setTimeout(function() { openLoginModal(redirectUrl); }, 150);
+                    return;
+                }
+                openLoginModal(redirectUrl);
+            });
+
             document.addEventListener('submit', function(e) {
                 var form = e.target;
                 if (form.getAttribute('data-require-login') === '1' && !window.isLoggedIn) {
                     e.preventDefault();
                     e.stopImmediatePropagation();
-                    var redirectInput = document.getElementById('loginRedirect');
-                    if (redirectInput) redirectInput.value = window.location.href;
+                    setAuthRedirect(window.location.href);
                     var loginModalEl = document.getElementById('exampleModal');
                     if (loginModalEl && typeof bootstrap !== 'undefined') {
                         var parentModal = form.closest('.modal');
