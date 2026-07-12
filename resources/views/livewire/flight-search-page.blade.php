@@ -233,10 +233,15 @@
             border-radius: 6px;
         }
         .flights-loading__gif {
-            width: min(220px, 70vw);
+            width: min(200px, 55vw);
             height: auto;
             display: block;
-            margin: 0 auto 12px;
+            margin: 0 auto 14px;
+            animation: flights-plane-float 2.4s ease-in-out infinite;
+        }
+        @keyframes flights-plane-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
         }
         .flights-loading__text {
             font-size: 15px;
@@ -393,11 +398,11 @@
 
                 @if($loading || (! $searched && $browseMode && empty($flights)))
                     <div class="flights-loading mb-3">
-                        <img src="{{ asset('images/flights/loading-plane.gif') }}"
+                        <img src="{{ asset('images/flights/loading-plane.png') }}"
                              alt="Loading flights"
                              class="flights-loading__gif"
-                             width="220"
-                             height="220">
+                             width="200"
+                             height="200">
                         <p class="flights-loading__text">
                             {{ $browseMode && ! $searched ? 'Loading popular routes...' : 'Searching flights...' }}
                         </p>
