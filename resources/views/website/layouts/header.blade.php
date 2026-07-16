@@ -122,6 +122,16 @@
                             <li><a class="dropdown-item" href="{{ route('booking.lookup') }}">
                                 <i class="mdi mdi-magnify me-2"></i>Look Up Booking
                             </a></li>
+                            @if(!Auth::user()->email_verified_at)
+                                <li>
+                                    <form method="POST" action="{{ route('verification.resend') }}">
+                                        @csrf
+                                        <button type="submit" class="dropdown-item">
+                                            <i class="mdi mdi-email-check-outline me-2"></i>Resend verification email
+                                        </button>
+                                    </form>
+                                </li>
+                            @endif
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item text-danger" href="{{ route('logout') }}">
                                 <i class="mdi mdi-logout me-2"></i>Logout

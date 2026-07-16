@@ -19,6 +19,9 @@ class EnsureEmailIsVerified
         'home',
         'email/verify/*',
         'logout',
+        'forgot-password',
+        'reset-password',
+        'reset-password/*',
     ];
 
     /**

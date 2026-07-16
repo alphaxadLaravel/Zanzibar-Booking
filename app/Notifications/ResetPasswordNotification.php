@@ -4,8 +4,9 @@ namespace App\Notifications;
 
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Support\Facades\URL;
 
-class CustomResetPasswordNotification extends ResetPassword
+class ResetPasswordNotification extends ResetPassword
 {
     /**
      * The password reset token.
@@ -30,17 +31,16 @@ class CustomResetPasswordNotification extends ResetPassword
      */
     public function toMail($notifiable): MailMessage
     {
-        $resetUrl = url(route('password.reset', [
+        $resetUrl = URL::route('password.reset', [
             'token' => $this->token,
             'email' => $notifiable->getEmailForPasswordReset(),
-        ], false));
+        ]);
 
         return (new MailMessage)
             ->subject('Reset Password - Zanzibar Bookings')
             ->view('emails.reset-password', [
                 'resetUrl' => $resetUrl,
-                'user' => $notifiable
+                'user' => $notifiable,
             ]);
     }
 }
-

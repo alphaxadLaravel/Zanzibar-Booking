@@ -26,11 +26,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Normalize app URL: if APP_URL ends with /public, all route()/url() will generate without it.
-        // On production, prefer setting APP_URL to the site root (e.g. https://www.zanzibarbookings.com).
-        $appUrl = rtrim(config('app.url'), '/');
-        if ($appUrl !== '' && str_ends_with($appUrl, '/public')) {
-            URL::forceRootUrl(preg_replace('#/public$#', '', $appUrl));
+        // Force all generated URLs (reset password, verification, etc.) to use APP_URL.
+        // On production set APP_URL=https://www.zanzibarbookings.com (no /public suffix).
+        $appUrl = rtrim((string) config('app.url'), '/');
+        if ($appUrl !== '') {
+            if (str_ends_with($appUrl, '/public')) {
+                $appUrl = preg_replace('#/public$#', '', $appUrl);
+            }
+            URL::forceRootUrl($appUrl);
+            if (str_starts_with($appUrl, 'https://')) {
+                URL::forceScheme('https');
+            }
         }
 
         // Set custom pagination view
