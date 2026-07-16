@@ -1,6 +1,6 @@
 @extends('website.layouts.app')
 
-@section('content')
+@section('pages')
 <section class="container py-5" style="max-width: 560px;">
     <h1 class="h3 mb-2">Verify your email</h1>
     <p class="text-muted mb-4">
@@ -20,7 +20,7 @@
         @if(!Auth::user()->email_verified_at)
             <form method="POST" action="{{ route('verification.resend') }}">
                 @csrf
-                <button type="submit" class="btn btn-primary">Resend verification email</button>
+                <button type="submit" class="btn btn-primary" data-loading-text="Sending...">Resend verification email</button>
             </form>
         @endif
     @else

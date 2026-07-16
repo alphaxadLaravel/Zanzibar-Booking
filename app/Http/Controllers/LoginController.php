@@ -225,10 +225,10 @@ class LoginController extends Controller
             Mail::to($user->email)->send(new UserRegistered($user));
         } catch (\Throwable $e) {
             Log::error('Web resend verification failed', ['error' => $e->getMessage()]);
-            return redirect()->back()->with('error', 'Could not send verification email.');
+            return redirect()->route('verification.notice')->with('error', 'Could not send verification email.');
         }
 
-        return redirect()->back()->with('success', 'Verification email sent. Check your inbox.');
+        return redirect()->route('verification.notice')->with('success', 'Verification email sent. Check your inbox.');
     }
 
     /**

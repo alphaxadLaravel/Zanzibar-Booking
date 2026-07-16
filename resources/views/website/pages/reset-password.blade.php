@@ -1,6 +1,6 @@
 @extends('website.layouts.app')
 
-@section('content')
+@section('pages')
 <section class="container py-5" style="max-width: 520px;">
     <h1 class="h3 mb-2">Reset password</h1>
     <p class="text-muted mb-4">Choose a new password for your Zanzibar Bookings account.</p>
@@ -30,7 +30,7 @@
             <label class="form-label" for="password_confirmation">Confirm password</label>
             <input id="password_confirmation" type="password" name="password_confirmation" class="form-control" required minlength="6">
         </div>
-        <button type="submit" class="btn btn-primary w-100">Update password</button>
+        <button type="submit" class="btn btn-primary w-100" data-loading-text="Updating...">Update password</button>
     </form>
 </section>
 @endsection

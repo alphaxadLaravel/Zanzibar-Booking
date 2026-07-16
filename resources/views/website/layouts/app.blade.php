@@ -236,7 +236,7 @@
                             <input id="forgot-email" name="email" type="email" class="form-control" required
                                 placeholder="Email" />
                         </div>
-                        <button type="submit" class="btn btn-primary w-100">Send reset link</button>
+                        <button type="submit" class="btn btn-primary w-100" data-loading-text="Sending...">Send reset link</button>
                         <p class="signup-link mt-3 mb-0">
                             Remembered your password?
                             <a href="#" onclick="switchToLoginFromForgot(); return false;" class="text-primary fw-bold">Sign In</a>

@@ -126,7 +126,7 @@
                                 <li>
                                     <form method="POST" action="{{ route('verification.resend') }}">
                                         @csrf
-                                        <button type="submit" class="dropdown-item">
+                                        <button type="submit" class="dropdown-item" data-loading-text="Sending...">
                                             <i class="mdi mdi-email-check-outline me-2"></i>Resend verification email
                                         </button>
                                     </form>
