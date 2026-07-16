@@ -18,6 +18,8 @@ class EnsureEmailIsVerified
         'register',
         'home',
         'email/verify/*',
+        'email/verification-notice',
+        'email/resend-verification',
         'logout',
         'forgot-password',
         'reset-password',
