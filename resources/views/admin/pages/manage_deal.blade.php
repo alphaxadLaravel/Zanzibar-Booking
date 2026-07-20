@@ -491,23 +491,20 @@
                     <div class="border rounded p-3" style="min-height: 120px; background: #f8f9fa;">
                         <input type="file" class="form-control mb-2" id="other-images-input"
                             accept="image/*,.heic,.heif,.webp,.avif" multiple>
-                        <div class="d-flex flex-wrap gap-2" id="other-images-preview">
+                        <div id="other-images-preview" class="deal-photo-grid">
                             @if(isset($deal) && $deal->photos->count() > 0)
                             @foreach($deal->photos as $photo)
-                            <div class="deal-photo-item position-relative" data-photo-id="{{ $photo->id }}">
-                                <img src="{{ Storage::url($photo->photo) }}" alt="Deal Photo"
-                                    style="width:100px; height:75px; object-fit:cover; border-radius:4px;">
+                            <div class="deal-photo-item position-relative" data-photo-id="{{ $photo->id }}" data-state="saved">
+                                <img src="{{ Storage::url($photo->photo) }}" alt="Deal Photo">
                                 <button type="button" class="btn btn-sm btn-danger deal-photo-delete"
-                                    data-photo-id="{{ $photo->id }}"
-                                    style="position:absolute; top:2px; right:2px; width:22px; height:22px; padding:0; line-height:1; font-size:14px;"
-                                    title="Remove photo">&times;</button>
+                                    data-photo-id="{{ $photo->id }}" title="Remove photo">&times;</button>
                             </div>
                             @endforeach
                             @endif
                         </div>
                         <div id="photo-upload-status" class="text-muted small mt-2"></div>
                     </div>
-                    <small class="text-muted">Select as many images as you need — each photo uploads individually (jpg, png, webp, heic, and more).</small>
+                    <small class="text-muted">Select multiple images to preview them here. All photos upload when you save the deal.</small>
                     @error('other_images')
                     <div class="text-danger">{{ $message }}</div>
                     @enderror
@@ -692,6 +689,56 @@
 </div>
 
 @push('scripts')
+<style>
+    .deal-photo-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 10px;
+    }
+
+    .deal-photo-item {
+        position: relative;
+        aspect-ratio: 4 / 3;
+        border-radius: 6px;
+        overflow: hidden;
+        border: 2px solid #dee2e6;
+        background: #fff;
+    }
+
+    .deal-photo-item[data-state="queued"] {
+        border-color: #ffc107;
+    }
+
+    .deal-photo-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .deal-photo-item .deal-photo-delete,
+    .deal-photo-item .deal-photo-remove-queued {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        width: 22px;
+        height: 22px;
+        padding: 0;
+        line-height: 1;
+        font-size: 14px;
+    }
+
+    .deal-photo-item .photo-order {
+        position: absolute;
+        bottom: 4px;
+        left: 4px;
+        background: rgba(0, 0, 0, 0.65);
+        color: #fff;
+        font-size: 10px;
+        padding: 2px 6px;
+        border-radius: 4px;
+    }
+</style>
 <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
 <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 <script>
@@ -730,7 +777,7 @@
         }
     });
 
-    // Deal photo uploads — one file per request to bypass PHP max_file_uploads limit
+    // Deal photos — preview on pick, upload all on submit (parallel for speed)
     (function () {
         const dealId = @json($deal->id ?? null);
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -738,6 +785,7 @@
         const preview = document.getElementById('other-images-preview');
         const statusEl = document.getElementById('photo-upload-status');
         const pendingFiles = [];
+        let previewOrder = preview ? preview.querySelectorAll('.deal-photo-item').length : 0;
 
         function setStatus(message, isError) {
             if (!statusEl) return;
@@ -746,43 +794,70 @@
             statusEl.classList.toggle('text-muted', !isError);
         }
 
-        function createPreviewItem(file, state) {
-            const item = document.createElement('div');
-            item.className = 'deal-photo-item position-relative';
-            item.dataset.state = state;
-
-            const img = document.createElement('img');
-            img.style.width = '100px';
-            img.style.height = '75px';
-            img.style.objectFit = 'cover';
-            img.style.borderRadius = '4px';
-            img.alt = file.name;
-
-            const badge = document.createElement('span');
-            badge.className = 'badge position-absolute bottom-0 start-0 m-1';
-            badge.style.fontSize = '10px';
-            badge.textContent = state === 'uploading' ? 'Uploading...' : (state === 'queued' ? 'Queued' : 'Done');
-
-            if (state === 'uploading' || state === 'queued') {
-                badge.classList.add('bg-warning', 'text-dark');
-                const reader = new FileReader();
-                reader.onload = function (ev) {
-                    img.src = ev.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
-
-            item.appendChild(img);
-            item.appendChild(badge);
-            preview.appendChild(item);
-
-            return item;
+        function refreshPreviewOrder() {
+            preview.querySelectorAll('.deal-photo-item').forEach(function (item, index) {
+                let order = item.querySelector('.photo-order');
+                if (!order) {
+                    order = document.createElement('span');
+                    order.className = 'photo-order';
+                    item.appendChild(order);
+                }
+                order.textContent = index + 1;
+            });
+            previewOrder = preview.querySelectorAll('.deal-photo-item').length;
         }
 
-        async function uploadPhoto(dealIdToUse, file) {
-            const item = createPreviewItem(file, 'uploading');
+        function createQueuedPreview(file) {
+            previewOrder++;
+            const item = document.createElement('div');
+            item.className = 'deal-photo-item';
+            item.dataset.state = 'queued';
+
+            const img = document.createElement('img');
+            img.alt = file.name;
+
+            const order = document.createElement('span');
+            order.className = 'photo-order';
+            order.textContent = previewOrder;
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'btn btn-sm btn-warning deal-photo-remove-queued';
+            removeBtn.title = 'Remove from selection';
+            removeBtn.innerHTML = '&times;';
+
+            const reader = new FileReader();
+            reader.onload = function (ev) {
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+
+            item.appendChild(img);
+            item.appendChild(order);
+            item.appendChild(removeBtn);
+            preview.appendChild(item);
+
+            const entry = { file: file, element: item };
+            pendingFiles.push(entry);
+
+            removeBtn.addEventListener('click', function () {
+                const idx = pendingFiles.indexOf(entry);
+                if (idx !== -1) pendingFiles.splice(idx, 1);
+                item.remove();
+                refreshPreviewOrder();
+                setStatus(pendingFiles.length
+                    ? pendingFiles.length + ' photo(s) ready — will upload when you save.'
+                    : '');
+            });
+
+            return entry;
+        }
+
+        async function uploadPhotoEntry(dealIdToUse, entry) {
+            entry.element.dataset.state = 'uploading';
+
             const formData = new FormData();
-            formData.append('photo', file);
+            formData.append('photo', entry.file);
             formData.append('_token', csrfToken);
 
             const response = await fetch(`/admin/manage-deal/${dealIdToUse}/photos`, {
@@ -800,61 +875,37 @@
             });
 
             if (!response.ok || !data.success) {
-                item.remove();
-                throw new Error(data.message || `Failed to upload ${file.name}`);
+                entry.element.dataset.state = 'queued';
+                throw new Error(data.message || 'Failed to upload ' + entry.file.name);
             }
 
-            item.dataset.photoId = data.photo.id;
-            item.dataset.state = 'done';
-            const badgeEl = item.querySelector('.badge');
-            badgeEl.className = 'badge bg-success position-absolute bottom-0 start-0 m-1';
-            badgeEl.style.fontSize = '10px';
-            badgeEl.textContent = 'Done';
-            item.querySelector('img').src = data.photo.url;
+            entry.element.dataset.photoId = data.photo.id;
+            entry.element.dataset.state = 'saved';
+            entry.element.querySelector('img').src = data.photo.url;
 
-            const deleteBtn = document.createElement('button');
-            deleteBtn.type = 'button';
-            deleteBtn.className = 'btn btn-sm btn-danger deal-photo-delete';
-            deleteBtn.dataset.photoId = data.photo.id;
-            deleteBtn.title = 'Remove photo';
-            deleteBtn.innerHTML = '&times;';
-            deleteBtn.style.cssText = 'position:absolute; top:2px; right:2px; width:22px; height:22px; padding:0; line-height:1; font-size:14px;';
-            item.appendChild(deleteBtn);
+            const removeBtn = entry.element.querySelector('.deal-photo-remove-queued');
+            if (removeBtn) {
+                removeBtn.className = 'btn btn-sm btn-danger deal-photo-delete';
+                removeBtn.classList.remove('deal-photo-remove-queued');
+                removeBtn.dataset.photoId = data.photo.id;
+                removeBtn.title = 'Remove photo';
+            }
 
             return data.photo;
         }
 
         if (photoInput) {
-            photoInput.addEventListener('change', async function (e) {
+            photoInput.addEventListener('change', function (e) {
                 const files = Array.from(e.target.files || []);
                 e.target.value = '';
 
                 if (!files.length) return;
 
-                if (dealId) {
-                    let uploaded = 0;
-                    setStatus(`Uploading 0/${files.length} photos...`);
+                files.forEach(function (file) {
+                    createQueuedPreview(file);
+                });
 
-                    for (const file of files) {
-                        try {
-                            await uploadPhoto(dealId, file);
-                            uploaded++;
-                            setStatus(`Uploaded ${uploaded}/${files.length} photos.`);
-                        } catch (err) {
-                            setStatus(err.message || 'Photo upload failed.', true);
-                        }
-                    }
-
-                    if (uploaded === files.length) {
-                        setStatus(`All ${uploaded} photos uploaded successfully.`);
-                    }
-                } else {
-                    files.forEach(function (file) {
-                        pendingFiles.push(file);
-                        createPreviewItem(file, 'queued');
-                    });
-                    setStatus(`${pendingFiles.length} photo(s) queued — they will upload when you save the deal.`);
-                }
+                setStatus(pendingFiles.length + ' photo(s) ready — will upload when you save.');
             });
         }
 
@@ -890,35 +941,44 @@
                 }
 
                 item.remove();
+                refreshPreviewOrder();
             } catch (err) {
                 btn.disabled = false;
                 setStatus(err.message || 'Failed to delete photo.', true);
             }
         });
 
-        window.uploadPendingDealPhotos = async function (dealIdToUse) {
+        window.uploadPendingDealPhotos = async function (dealIdToUse, onProgress) {
             if (!pendingFiles.length) return;
 
-            let uploaded = 0;
-            setStatus(`Uploading 0/${pendingFiles.length} queued photos...`);
+            const total = pendingFiles.length;
+            let completed = 0;
+            const queue = pendingFiles.slice();
+            const concurrency = 5;
 
-            while (pendingFiles.length) {
-                const file = pendingFiles.shift();
-                const queuedItem = preview.querySelector('[data-state="queued"]');
-                if (queuedItem) queuedItem.remove();
-
-                try {
-                    await uploadPhoto(dealIdToUse, file);
-                    uploaded++;
-                    setStatus(`Uploaded ${uploaded}/${uploaded + pendingFiles.length} queued photos...`);
-                } catch (err) {
-                    setStatus(err.message || 'Photo upload failed.', true);
-                    throw err;
+            async function worker() {
+                while (queue.length) {
+                    const entry = queue.shift();
+                    await uploadPhotoEntry(dealIdToUse, entry);
+                    completed++;
+                    if (typeof onProgress === 'function') {
+                        onProgress(completed, total);
+                    }
                 }
             }
 
-            setStatus(`All ${uploaded} photos uploaded successfully.`);
+            const workers = Array.from(
+                { length: Math.min(concurrency, total) },
+                function () { return worker(); }
+            );
+
+            await Promise.all(workers);
+
+            pendingFiles.length = 0;
+            setStatus('All ' + total + ' photos uploaded successfully.');
         };
+
+        refreshPreviewOrder();
     })();
 
     // On form submit, update textarea values with Quill HTML and upload queued photos
@@ -938,7 +998,6 @@
 
         const form = this;
         const formData = new FormData(form);
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
         try {
             const response = await fetch(form.action, {
@@ -966,7 +1025,10 @@
             }
 
             if (typeof window.uploadPendingDealPhotos === 'function') {
-                await window.uploadPendingDealPhotos(data.deal_id);
+                btnLoading.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Uploading photos...';
+                await window.uploadPendingDealPhotos(data.deal_id, function (done, total) {
+                    btnLoading.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Uploading photos ' + done + '/' + total + '...';
+                });
             }
 
             window.location.href = data.redirect;
