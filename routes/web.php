@@ -375,6 +375,7 @@ Route::middleware(['auth', 'admin.panel'])->group(function () {
     // Features Management
     Route::middleware('permission:features.manage')->group(function () {
         Route::get('/admin/features', [FeatureController::class, 'index'])->name('admin.features');
+        Route::get('/admin/features/check-name', [FeatureController::class, 'checkName'])->name('admin.features.check-name');
         Route::post('/admin/features/store', [FeatureController::class, 'store'])->name('admin.features.store');
         Route::put('/admin/features/{id}', [FeatureController::class, 'update'])->name('admin.features.update');
         Route::delete('/admin/features/{id}', [FeatureController::class, 'destroy'])->name('admin.features.delete');

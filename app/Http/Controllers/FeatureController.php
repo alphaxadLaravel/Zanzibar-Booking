@@ -8,23 +8,63 @@ use Illuminate\Support\Facades\Validator;
 
 class FeatureController extends Controller
 {
+    protected function featuresQuery(Request $request)
+    {
+        $search = trim((string) $request->get('search', ''));
+
+        $query = Features::query()
+            ->orderByDesc('status')
+            ->orderBy('name');
+
+        if ($search !== '') {
+            $query->where(function ($builder) use ($search) {
+                $builder->where('name', 'like', '%' . $search . '%')
+                    ->orWhere('type', 'like', '%' . $search . '%');
+            });
+        }
+
+        return $query;
+    }
+
     /**
      * Display a listing of features
      */
-    public function index()
+    public function index(Request $request)
     {
-        $features = Features::orderByDesc('status')->orderBy('name')->get();
-        $existingFeatures = $features->map(function ($feature) {
-            return [
+        $features = $this->featuresQuery($request)->paginate(20)->withQueryString();
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'html' => view('admin.partials.features_list', compact('features'))->render(),
+                'total' => $features->total(),
+                'from' => $features->firstItem() ?? 0,
+                'to' => $features->lastItem() ?? 0,
+            ]);
+        }
+
+        return view('admin.pages.features', compact('features'));
+    }
+
+    public function checkName(Request $request)
+    {
+        $name = trim((string) $request->get('name', ''));
+        if ($name === '') {
+            return response()->json(['exists' => false, 'feature' => null]);
+        }
+
+        $feature = Features::query()
+            ->whereRaw('LOWER(name) = ?', [strtolower($name)])
+            ->first();
+
+        return response()->json([
+            'exists' => (bool) $feature,
+            'feature' => $feature ? [
                 'id' => $feature->id,
                 'name' => $feature->name,
                 'type' => $feature->type,
-            ];
-        })->values();
-
-        return view('admin.pages.features', compact('features', 'existingFeatures'));
+            ] : null,
+        ]);
     }
-
 
     /**
      * Store a newly created feature
@@ -54,7 +94,6 @@ class FeatureController extends Controller
         return redirect()->route('admin.features')
             ->with('success', 'Feature created successfully!');
     }
-
 
     /**
      * Update the specified feature

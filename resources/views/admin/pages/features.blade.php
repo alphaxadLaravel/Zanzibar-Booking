@@ -25,10 +25,6 @@ Features | {{env('APP_NAME')}}
         display: none !important;
     }
 
-    #features-table tbody tr.feature-row-hidden {
-        display: none;
-    }
-
     .feature-row-highlight {
         animation: featureHighlight 2s ease;
     }
@@ -36,6 +32,11 @@ Features | {{env('APP_NAME')}}
     @keyframes featureHighlight {
         0%, 100% { background-color: transparent; }
         30% { background-color: rgba(255, 193, 7, 0.35); }
+    }
+
+    #features-list-container.is-loading {
+        opacity: 0.55;
+        pointer-events: none;
     }
 </style>
 @endpush
@@ -58,175 +59,23 @@ Features | {{env('APP_NAME')}}
                         <div class="input-group">
                             <span class="input-group-text"><i class="mdi mdi-magnify"></i></span>
                             <input type="text" id="features-search" class="form-control"
-                                placeholder="Search features by name or type...">
+                                placeholder="Search all features by name or type..."
+                                value="{{ request('search') }}" autocomplete="off">
                         </div>
                     </div>
                     <div class="col-md-6">
                         <small class="text-muted" id="features-search-count">
-                            Showing {{ $features->count() }} of {{ $features->count() }} features
+                            @if($features->total())
+                                Showing {{ $features->firstItem() }}–{{ $features->lastItem() }} of {{ $features->total() }} features
+                            @else
+                                Showing 0 of 0 features
+                            @endif
                         </small>
                     </div>
                 </div>
             </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover mb-0" id="features-table">
-                        <thead>
-                            <tr>
-                                <th class="px-3 py-2">#</th>
-                                <th class="px-3 py-2">Feature Name</th>
-                                <th class="px-3 py-2">Type</th>
-                                <th class="px-3 py-2">Icon</th>
-                                <th class="px-3 py-2">Status</th>
-                                <th class="px-3 py-2">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($features as $index => $feature)
-                            <tr data-feature-id="{{ $feature->id }}"
-                                data-feature-name="{{ strtolower($feature->name) }}"
-                                data-feature-type="{{ strtolower($feature->type) }}">
-                                <td class="px-3 py-2">{{ $index + 1 }}</td>
-                                <td class="px-3 py-2">
-                                    <span class="fw-medium">{{ $feature->name }}</span>
-                                </td>
-                                <td class="px-3 py-2">{{ ucfirst($feature->type) }}</td>
-                                <td class="px-3 py-2">
-                                    <i class="mdi {{ $feature->icon }} fs-2 text-dark"></i>
-                                </td>
-                                <td class="px-3 py-2">
-                                    @if($feature->status)
-                                    <span class="badge bg-success">Active</span>
-                                    @else
-                                    <span class="badge bg-secondary">Inactive</span>
-                                    @endif
-                                </td>
-                                <td class="px-3 py-2">
-                                    <div class="d-flex gap-2">
-                                        <button type="button" class="btn btn-sm btn-outline-primary"
-                                            data-bs-toggle="modal" data-bs-target="#editFeatureModal{{ $feature->id }}">
-                                            <i class="mdi mdi-pencil"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-outline-danger"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#deleteFeatureModal{{ $feature->id }}">
-                                            <i class="mdi mdi-delete"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-
-                            <div class="modal fade" id="editFeatureModal{{ $feature->id }}" tabindex="-1"
-                                aria-labelledby="editFeatureModal{{ $feature->id }}Label" aria-hidden="true">
-                                <div class="modal-dialog modal-lg">
-                                    <div class="modal-content">
-                                        <form action="{{ route('admin.features.update', $feature->id) }}" method="POST">
-                                            @csrf
-                                            @method('PUT')
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="editFeatureModal{{ $feature->id }}Label">
-                                                    Edit Feature</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                    aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <div class="mb-3">
-                                                    <label for="edit_name{{ $feature->id }}" class="form-label">Feature
-                                                        Name <span class="text-danger">*</span></label>
-                                                    <input type="text"
-                                                        class="form-control @error('name') is-invalid @enderror"
-                                                        id="edit_name{{ $feature->id }}" name="name"
-                                                        value="{{ $feature->name }}" required>
-                                                    @error('name')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-
-                                                <div class="mb-3">
-                                                    <label for="edit_type{{ $feature->id }}" class="form-label">Type
-                                                        <span class="text-danger">*</span></label>
-                                                    <select class="form-control @error('type') is-invalid @enderror"
-                                                        id="edit_type{{ $feature->id }}" name="type" required>
-                                                        <option value="">Select Type</option>
-                                                        <option value="hotel" {{ $feature->type == 'hotel' ? 'selected' : '' }}>Hotel</option>
-                                                        <option value="include" {{ $feature->type == 'include' ? 'selected' : '' }}>Include</option>
-                                                        <option value="exclude" {{ $feature->type == 'exclude' ? 'selected' : '' }}>Exclude</option>
-                                                        <option value="car" {{ $feature->type == 'car' ? 'selected' : '' }}>Car</option>
-                                                        <option value="apartment" {{ $feature->type == 'apartment' ? 'selected' : '' }}>Apartment</option>
-                                                        <option value="tour" {{ $feature->type == 'tour' ? 'selected' : '' }}>Tour</option>
-                                                    </select>
-                                                    @error('type')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-
-                                                <div class="mb-3">
-                                                    <label class="form-label">Icon <span class="text-danger">*</span></label>
-                                                    @include('admin.components.feature_icon_picker', [
-                                                        'pickerId' => 'edit_' . $feature->id,
-                                                        'inputId' => 'edit_icon_' . $feature->id,
-                                                        'selected' => $feature->icon,
-                                                    ])
-                                                    @error('icon')
-                                                    <div class="text-danger small mt-1">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="submit" class="btn btn-primary"
-                                                    data-loading-text="Updating...">Update Feature</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="modal fade" id="deleteFeatureModal{{ $feature->id }}" tabindex="-1"
-                                aria-labelledby="deleteFeatureModal{{ $feature->id }}Label" aria-hidden="true">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <form action="{{ route('admin.features.delete', $feature->id) }}" method="POST">
-                                            @csrf
-                                            @method('DELETE')
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="deleteFeatureModal{{ $feature->id }}Label">
-                                                    Delete Feature</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                    aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <div class="text-center">
-                                                    <i class="mdi mdi-alert-circle-outline fs-1 text-warning mb-3"></i>
-                                                    <h5>Are you sure?</h5>
-                                                    <p class="text-muted">You are about to delete the feature
-                                                        <strong>"{{ $feature->name }}"</strong>. This action cannot be
-                                                        undone.
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="submit" class="btn btn-danger"
-                                                    data-loading-text="Deleting...">
-                                                    <i class="mdi mdi-delete me-1"></i> Delete Feature
-                                                </button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                            @empty
-                            <tr id="features-empty-row">
-                                <td colspan="6" class="px-3 py-4 text-center text-muted">
-                                    <i class="mdi mdi-information-outline fs-1 d-block mb-2"></i>
-                                    No features found. <button type="button" class="btn btn-link p-0"
-                                        data-bs-toggle="modal" data-bs-target="#createFeatureModal">Create your first
-                                        feature</button>
-                                </td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+            <div class="card-body p-0" id="features-list-container">
+                @include('admin.partials.features_list')
             </div>
         </div>
     </div>
@@ -297,131 +146,204 @@ Features | {{env('APP_NAME')}}
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const existingFeatures = @json($existingFeatures);
-
+    const featuresUrl = @json(route('admin.features'));
+    const checkNameUrl = @json(route('admin.features.check-name'));
     const searchInput = document.getElementById('features-search');
     const searchCount = document.getElementById('features-search-count');
-    const tableRows = Array.from(document.querySelectorAll('#features-table tbody tr[data-feature-id]'));
-    const totalFeatures = tableRows.length;
+    const listContainer = document.getElementById('features-list-container');
+    const createNameInput = document.getElementById('create_name');
+    const duplicateWarning = document.getElementById('create-feature-duplicate-warning');
+    const createSubmitBtn = document.getElementById('createFeatureSubmit');
+    let searchTimer = null;
+    let duplicateTimer = null;
 
-    function filterFeaturesTable() {
-        const query = (searchInput?.value || '').trim().toLowerCase();
-        let visible = 0;
+    function initFeatureIconPickers(scope) {
+        (scope || document).querySelectorAll('.feature-icon-picker').forEach(function (picker) {
+            if (picker.dataset.initialized === '1') return;
+            picker.dataset.initialized = '1';
 
-        tableRows.forEach(function (row) {
-            const name = row.dataset.featureName || '';
-            const type = row.dataset.featureType || '';
-            const match = !query || name.includes(query) || type.includes(query);
-            row.classList.toggle('feature-row-hidden', !match);
-            if (match) visible++;
+            const search = picker.querySelector('.feature-icon-search');
+            const options = picker.querySelectorAll('.feature-icon-option');
+
+            search?.addEventListener('input', function () {
+                const query = this.value.trim().toLowerCase();
+                options.forEach(function (btn) {
+                    const icon = (btn.dataset.icon || '').toLowerCase();
+                    btn.classList.toggle('d-none', query && !icon.includes(query));
+                });
+            });
+
+            options.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    const inputId = btn.dataset.inputId;
+                    const input = document.getElementById(inputId);
+                    const preview = document.getElementById(inputId + '_preview');
+                    const label = document.getElementById(inputId + '_label');
+                    const icon = btn.dataset.icon;
+
+                    if (input) input.value = icon;
+                    if (preview) preview.className = 'mdi ' + icon + ' fs-3';
+                    if (label) label.textContent = icon;
+
+                    picker.querySelectorAll('.feature-icon-option').forEach(function (other) {
+                        other.classList.remove('btn-primary');
+                        other.classList.add('btn-outline-secondary');
+                    });
+                    btn.classList.remove('btn-outline-secondary');
+                    btn.classList.add('btn-primary');
+                });
+            });
         });
+    }
 
-        if (searchCount) {
-            searchCount.textContent = 'Showing ' + visible + ' of ' + totalFeatures + ' features';
+    function updateSearchCount(from, to, total) {
+        if (!searchCount) return;
+        if (!total) {
+            searchCount.textContent = 'Showing 0 of 0 features';
+            return;
         }
+        searchCount.textContent = 'Showing ' + from + '–' + to + ' of ' + total + ' features';
     }
 
-    if (searchInput) {
-        searchInput.addEventListener('input', filterFeaturesTable);
+    function loadFeatures(page) {
+        const search = (searchInput?.value || '').trim();
+        const url = new URL(featuresUrl, window.location.origin);
+        url.searchParams.set('page', page || 1);
+        if (search) {
+            url.searchParams.set('search', search);
+        } else {
+            url.searchParams.delete('search');
+        }
+
+        if (listContainer) listContainer.classList.add('is-loading');
+
+        return fetch(url.toString(), {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+            credentials: 'same-origin',
+        })
+        .then(function (response) { return response.json(); })
+        .then(function (data) {
+            if (listContainer) {
+                listContainer.innerHTML = data.html;
+                listContainer.classList.remove('is-loading');
+            }
+            updateSearchCount(data.from, data.to, data.total);
+            initFeatureIconPickers(listContainer);
+            bindPaginationLinks();
+
+            const displayUrl = new URL(window.location.href);
+            if (search) {
+                displayUrl.searchParams.set('search', search);
+            } else {
+                displayUrl.searchParams.delete('search');
+            }
+            if (page > 1) {
+                displayUrl.searchParams.set('page', page);
+            } else {
+                displayUrl.searchParams.delete('page');
+            }
+            window.history.replaceState({}, '', displayUrl.toString());
+        })
+        .catch(function () {
+            if (listContainer) listContainer.classList.remove('is-loading');
+        });
     }
 
-    function findDuplicateFeature(name) {
-        const normalized = (name || '').trim().toLowerCase();
-        if (!normalized) return null;
+    function bindPaginationLinks() {
+        if (!listContainer) return;
 
-        return existingFeatures.find(function (feature) {
-            return feature.name.toLowerCase() === normalized;
-        }) || null;
+        listContainer.querySelectorAll('#features-pagination a').forEach(function (link) {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                const url = new URL(link.href);
+                const page = url.searchParams.get('page') || 1;
+                loadFeatures(page);
+            });
+        });
     }
 
-    function scrollToFeatureRow(featureId) {
+    function highlightFeatureRow(featureId) {
         const row = document.querySelector('tr[data-feature-id="' + featureId + '"]');
-        if (!row) return;
+        if (!row) return false;
 
-        row.classList.remove('feature-row-hidden');
         row.scrollIntoView({ behavior: 'smooth', block: 'center' });
         row.classList.add('feature-row-highlight');
         setTimeout(function () {
             row.classList.remove('feature-row-highlight');
         }, 2000);
-        filterFeaturesTable();
+        return true;
     }
-
-    const createNameInput = document.getElementById('create_name');
-    const createTypeSelect = document.getElementById('create_type');
-    const duplicateWarning = document.getElementById('create-feature-duplicate-warning');
-    const createSubmitBtn = document.getElementById('createFeatureSubmit');
 
     function updateDuplicateWarning() {
         if (!duplicateWarning || !createNameInput) return;
 
-        const duplicate = findDuplicateFeature(createNameInput.value);
-
-        if (!duplicate) {
+        const name = createNameInput.value.trim();
+        if (!name) {
             duplicateWarning.classList.add('d-none');
             duplicateWarning.innerHTML = '';
             if (createSubmitBtn) createSubmitBtn.disabled = false;
             return;
         }
 
-        duplicateWarning.classList.remove('d-none');
-        duplicateWarning.innerHTML =
-            '<i class="mdi mdi-alert me-1"></i> Feature <strong>' + duplicate.name + '</strong> already exists' +
-            (duplicate.type ? ' (' + duplicate.type + ')' : '') + '. ' +
-            '<button type="button" class="btn btn-link btn-sm p-0 align-baseline" data-view-feature="' + duplicate.id + '">View in list</button>';
+        clearTimeout(duplicateTimer);
+        duplicateTimer = setTimeout(function () {
+            fetch(checkNameUrl + '?name=' + encodeURIComponent(name), {
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin',
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (!data.exists || !data.feature) {
+                    duplicateWarning.classList.add('d-none');
+                    duplicateWarning.innerHTML = '';
+                    if (createSubmitBtn) createSubmitBtn.disabled = false;
+                    return;
+                }
 
-        duplicateWarning.querySelector('[data-view-feature]')?.addEventListener('click', function () {
-            const modal = bootstrap.Modal.getInstance(document.getElementById('createFeatureModal'));
-            if (modal) modal.hide();
-            scrollToFeatureRow(duplicate.id);
+                const duplicate = data.feature;
+                duplicateWarning.classList.remove('d-none');
+                duplicateWarning.innerHTML =
+                    '<i class="mdi mdi-alert me-1"></i> Feature <strong>' + duplicate.name + '</strong> already exists' +
+                    (duplicate.type ? ' (' + duplicate.type + ')' : '') + '. ' +
+                    '<button type="button" class="btn btn-link btn-sm p-0 align-baseline" id="view-duplicate-feature">View in list</button>';
+
+                document.getElementById('view-duplicate-feature')?.addEventListener('click', function () {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('createFeatureModal'));
+                    if (modal) modal.hide();
+
+                    if (searchInput) searchInput.value = duplicate.name;
+                    loadFeatures(1).then(function () {
+                        if (!highlightFeatureRow(duplicate.id)) {
+                            loadFeatures(1);
+                        }
+                    });
+                });
+
+                if (createSubmitBtn) createSubmitBtn.disabled = true;
+            });
+        }, 300);
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(function () {
+                loadFeatures(1);
+            }, 350);
         });
-
-        if (createSubmitBtn) {
-            createSubmitBtn.disabled = !!duplicate;
-        }
     }
 
     createNameInput?.addEventListener('input', updateDuplicateWarning);
-    createTypeSelect?.addEventListener('change', updateDuplicateWarning);
 
-    document.querySelectorAll('.feature-icon-picker').forEach(function (picker) {
-        const search = picker.querySelector('.feature-icon-search');
-        const options = picker.querySelectorAll('.feature-icon-option');
-
-        search?.addEventListener('input', function () {
-            const query = this.value.trim().toLowerCase();
-            options.forEach(function (btn) {
-                const icon = (btn.dataset.icon || '').toLowerCase();
-                btn.classList.toggle('d-none', query && !icon.includes(query));
-            });
-        });
-
-        options.forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                const inputId = btn.dataset.inputId;
-                const input = document.getElementById(inputId);
-                const preview = document.getElementById(inputId + '_preview');
-                const label = document.getElementById(inputId + '_label');
-                const icon = btn.dataset.icon;
-
-                if (input) input.value = icon;
-                if (preview) preview.className = 'mdi ' + icon + ' fs-3';
-                if (label) label.textContent = icon;
-
-                picker.querySelectorAll('.feature-icon-option').forEach(function (other) {
-                    other.classList.remove('btn-primary');
-                    other.classList.add('btn-outline-secondary');
-                });
-                btn.classList.remove('btn-outline-secondary');
-                btn.classList.add('btn-primary');
-            });
-        });
-    });
+    initFeatureIconPickers(document);
+    bindPaginationLinks();
 
     @if($errors->any() && old('name'))
         updateDuplicateWarning();
-        const createModal = new bootstrap.Modal(document.getElementById('createFeatureModal'));
-        createModal.show();
+        new bootstrap.Modal(document.getElementById('createFeatureModal')).show();
     @endif
 });
 </script>
