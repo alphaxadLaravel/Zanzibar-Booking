@@ -13,8 +13,16 @@ class FeatureController extends Controller
      */
     public function index()
     {
-        $features = Features::orderBy('created_at', 'desc')->get();
-        return view('admin.pages.features', compact('features'));
+        $features = Features::orderByDesc('status')->orderBy('name')->get();
+        $existingFeatures = $features->map(function ($feature) {
+            return [
+                'id' => $feature->id,
+                'name' => $feature->name,
+                'type' => $feature->type,
+            ];
+        })->values();
+
+        return view('admin.pages.features', compact('features', 'existingFeatures'));
     }
 
 

@@ -297,11 +297,7 @@ Features | {{env('APP_NAME')}}
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const existingFeatures = @json($features->map(fn ($f) => [
-        'id' => $f->id,
-        'name' => $f->name,
-        'type' => $f->type,
-    ])->values());
+    const existingFeatures = @json($existingFeatures);
 
     const searchInput = document.getElementById('features-search');
     const searchCount = document.getElementById('features-search-count');
