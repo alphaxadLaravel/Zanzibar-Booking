@@ -487,7 +487,10 @@
                     @enderror
                 </div>
                 <div class="col-md-12">
-                    <label class="form-label">Other Images</label>
+                    <label class="form-label d-flex justify-content-between align-items-center">
+                        <span>Other Images</span>
+                        <span class="badge bg-primary" id="photo-total-count">Total: {{ isset($deal) ? $deal->photos->count() : 0 }} photos</span>
+                    </label>
                     <div class="border rounded p-3" style="min-height: 120px; background: #f8f9fa;">
                         <input type="file" class="form-control mb-2" id="other-images-input"
                             accept="image/*,.heic,.heif,.webp,.avif" multiple>
@@ -504,7 +507,7 @@
                         </div>
                         <div id="photo-upload-status" class="text-muted small mt-2"></div>
                     </div>
-                    <small class="text-muted">Select multiple images to preview them here. All photos upload when you save the deal.</small>
+                    <small class="text-muted">Select photos to preview them here. On update, new photos replace the existing gallery when you save.</small>
                     @error('other_images')
                     <div class="text-danger">{{ $message }}</div>
                     @enderror
@@ -781,17 +784,33 @@
     (function () {
         const dealId = @json($deal->id ?? null);
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        const photoRoutes = {
+            upload: @json(route('admin.manage-deal.photos.store', ['id' => '__DEAL__'])),
+            deleteAll: @json(route('admin.manage-deal.photos.delete-all', ['id' => '__DEAL__'])),
+            deleteOne: @json(route('admin.manage-deal.photos.delete', ['id' => '__DEAL__', 'photoId' => '__PHOTO__'])),
+        };
         const photoInput = document.getElementById('other-images-input');
         const preview = document.getElementById('other-images-preview');
         const statusEl = document.getElementById('photo-upload-status');
+        const countEl = document.getElementById('photo-total-count');
         const pendingFiles = [];
-        let previewOrder = preview ? preview.querySelectorAll('.deal-photo-item').length : 0;
+        let replaceExisting = false;
+
+        function dealPhotoUrl(template, id, photoId) {
+            return template.replace('__DEAL__', id).replace('__PHOTO__', photoId);
+        }
 
         function setStatus(message, isError) {
             if (!statusEl) return;
             statusEl.textContent = message || '';
             statusEl.classList.toggle('text-danger', !!isError);
             statusEl.classList.toggle('text-muted', !isError);
+        }
+
+        function updatePhotoCount() {
+            if (!countEl || !preview) return;
+            const total = preview.querySelectorAll('.deal-photo-item').length;
+            countEl.textContent = 'Total: ' + total + ' photo' + (total === 1 ? '' : 's');
         }
 
         function refreshPreviewOrder() {
@@ -804,11 +823,16 @@
                 }
                 order.textContent = index + 1;
             });
-            previewOrder = preview.querySelectorAll('.deal-photo-item').length;
+            updatePhotoCount();
+        }
+
+        function clearExistingSavedPhotos() {
+            preview.querySelectorAll('.deal-photo-item[data-state="saved"]').forEach(function (item) {
+                item.remove();
+            });
         }
 
         function createQueuedPreview(file) {
-            previewOrder++;
             const item = document.createElement('div');
             item.className = 'deal-photo-item';
             item.dataset.state = 'queued';
@@ -818,7 +842,6 @@
 
             const order = document.createElement('span');
             order.className = 'photo-order';
-            order.textContent = previewOrder;
 
             const removeBtn = document.createElement('button');
             removeBtn.type = 'button';
@@ -850,6 +873,7 @@
                     : '');
             });
 
+            refreshPreviewOrder();
             return entry;
         }
 
@@ -860,7 +884,7 @@
             formData.append('photo', entry.file);
             formData.append('_token', csrfToken);
 
-            const response = await fetch(`/admin/manage-deal/${dealIdToUse}/photos`, {
+            const response = await fetch(dealPhotoUrl(photoRoutes.upload, dealIdToUse), {
                 method: 'POST',
                 body: formData,
                 headers: {
@@ -885,10 +909,7 @@
 
             const removeBtn = entry.element.querySelector('.deal-photo-remove-queued');
             if (removeBtn) {
-                removeBtn.className = 'btn btn-sm btn-danger deal-photo-delete';
-                removeBtn.classList.remove('deal-photo-remove-queued');
-                removeBtn.dataset.photoId = data.photo.id;
-                removeBtn.title = 'Remove photo';
+                removeBtn.remove();
             }
 
             return data.photo;
@@ -901,11 +922,21 @@
 
                 if (!files.length) return;
 
+                preview.querySelectorAll('.deal-photo-item[data-state="queued"]').forEach(function (item) {
+                    item.remove();
+                });
+                pendingFiles.length = 0;
+
+                if (dealId) {
+                    clearExistingSavedPhotos();
+                    replaceExisting = true;
+                }
+
                 files.forEach(function (file) {
                     createQueuedPreview(file);
                 });
 
-                setStatus(pendingFiles.length + ' photo(s) ready — will upload when you save.');
+                setStatus(pendingFiles.length + ' photo(s) ready — will replace gallery when you save.');
             });
         }
 
@@ -922,7 +953,7 @@
             btn.disabled = true;
 
             try {
-                const response = await fetch(`/admin/manage-deal/${dealId}/photos/${photoId}`, {
+                const response = await fetch(dealPhotoUrl(photoRoutes.deleteOne, dealId, photoId), {
                     method: 'DELETE',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
@@ -951,6 +982,26 @@
         window.uploadPendingDealPhotos = async function (dealIdToUse, onProgress) {
             if (!pendingFiles.length) return;
 
+            if (replaceExisting) {
+                const deleteResponse = await fetch(dealPhotoUrl(photoRoutes.deleteAll, dealIdToUse), {
+                    method: 'DELETE',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    credentials: 'same-origin',
+                });
+
+                const deleteData = await deleteResponse.json().catch(function () {
+                    return {};
+                });
+
+                if (!deleteResponse.ok || !deleteData.success) {
+                    throw new Error(deleteData.message || 'Failed to remove existing photos.');
+                }
+            }
+
             const total = pendingFiles.length;
             let completed = 0;
             const queue = pendingFiles.slice();
@@ -975,7 +1026,9 @@
             await Promise.all(workers);
 
             pendingFiles.length = 0;
+            replaceExisting = false;
             setStatus('All ' + total + ' photos uploaded successfully.');
+            updatePhotoCount();
         };
 
         refreshPreviewOrder();

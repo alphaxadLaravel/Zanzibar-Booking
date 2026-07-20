@@ -212,9 +212,12 @@ Route::middleware(['auth', 'admin.panel'])->group(function () {
     // deals — edit
     Route::middleware('permission.deal:edit,partner')->group(function () {
         Route::put('/admin/manage-deal/{id}/{type}/update', [DealsController::class, 'updateDeal'])->name('admin.manage-deal.update');
-        Route::post('/admin/manage-deal/{id}/photos', [DealsController::class, 'uploadDealPhoto'])->name('admin.manage-deal.photos.store');
-        Route::delete('/admin/manage-deal/{id}/photos/{photoId}', [DealsController::class, 'deleteDealPhoto'])->name('admin.manage-deal.photos.delete');
     });
+
+    // deal gallery photos (auth required; permissions checked in controller)
+    Route::post('/admin/manage-deal/{id}/photos', [DealsController::class, 'uploadDealPhoto'])->name('admin.manage-deal.photos.store');
+    Route::delete('/admin/manage-deal/{id}/photos/all', [DealsController::class, 'deleteAllDealPhotos'])->name('admin.manage-deal.photos.delete-all');
+    Route::delete('/admin/manage-deal/{id}/photos/{photoId}', [DealsController::class, 'deleteDealPhoto'])->name('admin.manage-deal.photos.delete');
 
     Route::middleware('permission.deal:edit,partner,activity')->group(function () {
         Route::get('/admin/activities/{id}/edit', [DealsController::class, 'editActivity'])->name('admin.activities.edit');

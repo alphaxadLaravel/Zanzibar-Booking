@@ -140,6 +140,24 @@ class DealsController extends Controller
         return response()->json(['success' => true]);
     }
 
+    public function deleteAllDealPhotos($id)
+    {
+        $deal = Deal::with('photos')->findOrFail($id);
+        $this->ensurePartnerOwnsDeal($deal);
+        $this->ensureDealTypePermission('edit', deal: $deal);
+
+        $deleted = $deal->photos->count();
+
+        foreach ($deal->photos as $photo) {
+            if (Storage::disk('public')->exists($photo->photo)) {
+                Storage::disk('public')->delete($photo->photo);
+            }
+            $photo->delete();
+        }
+
+        return response()->json(['success' => true, 'deleted' => $deleted]);
+    }
+
     protected function ensureDealTypePermission(string $action, ?string $type = null, ?Deal $deal = null): void
     {
         $user = Auth::user();
