@@ -44,6 +44,102 @@ class DealsController extends Controller
         }
     }
 
+    protected function dealPhotoValidationRules(): array
+    {
+        return [
+            'photo' => [
+                'required',
+                'file',
+                'max:20480',
+                function ($attribute, $value, $fail) {
+                    if (!$value instanceof \Illuminate\Http\UploadedFile || !$value->isValid()) {
+                        $fail('The uploaded file is invalid.');
+                        return;
+                    }
+
+                    $mime = strtolower((string) $value->getMimeType());
+                    $extension = strtolower((string) $value->getClientOriginalExtension());
+
+                    $allowedMimes = [
+                        'image/jpeg', 'image/jpg', 'image/pjpeg',
+                        'image/png', 'image/x-png',
+                        'image/gif', 'image/webp', 'image/bmp', 'image/x-ms-bmp',
+                        'image/svg+xml', 'image/tiff', 'image/tif',
+                        'image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence',
+                        'image/avif', 'image/x-icon', 'image/vnd.microsoft.icon',
+                    ];
+
+                    $allowedExtensions = [
+                        'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg',
+                        'tif', 'tiff', 'heic', 'heif', 'avif', 'ico',
+                    ];
+
+                    if (!in_array($mime, $allowedMimes, true) && !in_array($extension, $allowedExtensions, true)) {
+                        $fail('The file must be an image (jpg, png, gif, webp, heic, etc.).');
+                    }
+                },
+            ],
+        ];
+    }
+
+    protected function storeDealPhotoFile(\Illuminate\Http\UploadedFile $image, int $dealId): DealPhotos
+    {
+        $imagePath = $image->store('deals/photos', 'public');
+
+        return DealPhotos::create([
+            'deal_id' => $dealId,
+            'photo' => $imagePath,
+        ]);
+    }
+
+    public function uploadDealPhoto(Request $request, $id)
+    {
+        $deal = Deal::findOrFail($id);
+        $this->ensurePartnerOwnsDeal($deal);
+        $this->ensureDealTypePermission('edit', deal: $deal);
+
+        $request->validate($this->dealPhotoValidationRules());
+
+        try {
+            $photo = $this->storeDealPhotoFile($request->file('photo'), $deal->id);
+
+            return response()->json([
+                'success' => true,
+                'photo' => [
+                    'id' => $photo->id,
+                    'url' => Storage::url($photo->photo),
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Deal photo upload failed', [
+                'deal_id' => $deal->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to upload photo.',
+            ], 500);
+        }
+    }
+
+    public function deleteDealPhoto($id, $photoId)
+    {
+        $deal = Deal::findOrFail($id);
+        $this->ensurePartnerOwnsDeal($deal);
+        $this->ensureDealTypePermission('edit', deal: $deal);
+
+        $photo = DealPhotos::where('deal_id', $deal->id)->where('id', $photoId)->firstOrFail();
+
+        if (Storage::disk('public')->exists($photo->photo)) {
+            Storage::disk('public')->delete($photo->photo);
+        }
+
+        $photo->delete();
+
+        return response()->json(['success' => true]);
+    }
+
     protected function ensureDealTypePermission(string $action, ?string $type = null, ?Deal $deal = null): void
     {
         $user = Auth::user();
@@ -182,9 +278,9 @@ class DealsController extends Controller
             'lat' => 'nullable|numeric',
             'long' => 'nullable|numeric',
             'map_location' => 'nullable|string',
-            'cover_photo' => 'required|file|mimetypes:image/*',
+            'cover_photo' => 'required|file|mimetypes:image/*|max:20480',
             'other_images' => 'nullable|array',
-            'other_images.*' => 'file|mimetypes:image/*',
+            'other_images.*' => 'nullable|file|max:20480|mimetypes:image/*',
             'status' => 'nullable|in:publish,draft',
             'seo_title' => 'nullable|string|max:60',
             'seo_description' => 'nullable|string|max:160',
@@ -308,14 +404,12 @@ class DealsController extends Controller
                 }
             }
 
-            // Handle other images
+            // Handle other images (fallback for small batches; large uploads use AJAX endpoint)
             if ($request->hasFile('other_images')) {
                 foreach ($request->file('other_images') as $image) {
-                    $imagePath = $image->store('deals/photos', 'public');
-                    DealPhotos::create([
-                        'deal_id' => $deal->id,
-                        'photo' => $imagePath
-                    ]);
+                    if ($image && $image->isValid()) {
+                        $this->storeDealPhotoFile($image, $deal->id);
+                    }
                 }
             }
 
@@ -414,9 +508,26 @@ class DealsController extends Controller
 
             DB::commit();
 
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'deal_id' => $deal->id,
+                    'redirect' => route('admin.deal', $type),
+                    'message' => ucfirst($type) . ' created successfully!',
+                ]);
+            }
+
             return redirect()->route('admin.deal', $type)->with('success', ucfirst($type) . ' created successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create ' . ucfirst($type) . ': ' . $e->getMessage(),
+                ], 500);
+            }
+
             return redirect()->back()->with('error', 'Failed to create ' . ucfirst($type) . ': ' . $e->getMessage())->withInput();
         }
     }
@@ -506,9 +617,9 @@ class DealsController extends Controller
             'lat' => 'nullable|numeric',
             'long' => 'nullable|numeric',
             'map_location' => 'nullable|string',
-            'cover_photo' => 'nullable|file|mimetypes:image/*',
+            'cover_photo' => 'nullable|file|mimetypes:image/*|max:20480',
             'other_images' => 'nullable|array',
-            'other_images.*' => 'file|mimetypes:image/*',
+            'other_images.*' => 'nullable|file|max:20480|mimetypes:image/*',
             'status' => 'nullable|in:publish,draft',
             'seo_title' => 'nullable|string|max:60',
             'seo_description' => 'nullable|string|max:160',
@@ -643,23 +754,12 @@ class DealsController extends Controller
                 }
             }
 
-            // Handle other images
+            // Handle other images — append only (photos are uploaded individually via AJAX)
             if ($request->hasFile('other_images')) {
-                // Delete existing photos
-                foreach ($deal->photos as $photo) {
-                    if (Storage::disk('public')->exists($photo->photo)) {
-                        Storage::disk('public')->delete($photo->photo);
-                    }
-                    $photo->delete();
-                }
-
-                // Add new photos
                 foreach ($request->file('other_images') as $image) {
-                    $imagePath = $image->store('deals/photos', 'public');
-                    DealPhotos::create([
-                        'deal_id' => $deal->id,
-                        'photo' => $imagePath
-                    ]);
+                    if ($image && $image->isValid()) {
+                        $this->storeDealPhotoFile($image, $deal->id);
+                    }
                 }
             }
 
@@ -775,9 +875,26 @@ class DealsController extends Controller
 
             DB::commit();
 
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'deal_id' => $deal->id,
+                    'redirect' => route('admin.deal', $type),
+                    'message' => 'Deal updated successfully!',
+                ]);
+            }
+
             return redirect()->route('admin.deal', $type)->with('success', 'Deal updated successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update deal: ' . $e->getMessage(),
+                ], 500);
+            }
+
             return redirect()->back()->with('error', 'Failed to update deal: ' . $e->getMessage())->withInput();
         }
     }

@@ -489,24 +489,31 @@
                 <div class="col-md-12">
                     <label class="form-label">Other Images</label>
                     <div class="border rounded p-3" style="min-height: 120px; background: #f8f9fa;">
-                        <input type="file" class="form-control mb-2" name="other_images[]" id="other-images-input"
-                            accept="image/*" multiple>
+                        <input type="file" class="form-control mb-2" id="other-images-input"
+                            accept="image/*,.heic,.heif,.webp,.avif" multiple>
                         <div class="d-flex flex-wrap gap-2" id="other-images-preview">
                             @if(isset($deal) && $deal->photos->count() > 0)
                             @foreach($deal->photos as $photo)
-                            <img src="{{ Storage::url($photo->photo) }}" alt="Deal Photo"
-                                style="width:100px; height:75px; object-fit:cover; border-radius:4px;">
+                            <div class="deal-photo-item position-relative" data-photo-id="{{ $photo->id }}">
+                                <img src="{{ Storage::url($photo->photo) }}" alt="Deal Photo"
+                                    style="width:100px; height:75px; object-fit:cover; border-radius:4px;">
+                                <button type="button" class="btn btn-sm btn-danger deal-photo-delete"
+                                    data-photo-id="{{ $photo->id }}"
+                                    style="position:absolute; top:2px; right:2px; width:22px; height:22px; padding:0; line-height:1; font-size:14px;"
+                                    title="Remove photo">&times;</button>
+                            </div>
                             @endforeach
-                            @else
-                            @for ($i = 0; $i < 6; $i++) <img
-                                src="https://media.istockphoto.com/id/1147544807/vector/thumbnail-image-vector-graphic.jpg?s=612x612&w=0&k=20&c=rnCKVbdxqkjlcs3xH87-9gocETqpspHFXu5dIGB4wuM="
-                                alt="Image {{ $i + 1 }}"
-                                style="width:100px; height:75px; object-fit:cover; border-radius:4px;">
-                                @endfor
-                                @endif
+                            @endif
                         </div>
+                        <div id="photo-upload-status" class="text-muted small mt-2"></div>
                     </div>
-                    <small class="text-muted">You can drop or select multiple images.</small>
+                    <small class="text-muted">Select as many images as you need — each photo uploads individually (jpg, png, webp, heic, and more).</small>
+                    @error('other_images')
+                    <div class="text-danger">{{ $message }}</div>
+                    @enderror
+                    @error('other_images.*')
+                    <div class="text-danger">{{ $message }}</div>
+                    @enderror
                 </div>
                 <div class="col-md-12">
                     <label class="form-label">Video Link</label>
@@ -723,25 +730,251 @@
         }
     });
 
-    // Other images preview
-    document.getElementById('other-images-input').addEventListener('change', function(e) {
+    // Deal photo uploads — one file per request to bypass PHP max_file_uploads limit
+    (function () {
+        const dealId = @json($deal->id ?? null);
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        const photoInput = document.getElementById('other-images-input');
         const preview = document.getElementById('other-images-preview');
-        preview.innerHTML = '';
-        if (e.target.files) {
-            Array.from(e.target.files).forEach(file => {
+        const statusEl = document.getElementById('photo-upload-status');
+        const pendingFiles = [];
+
+        function setStatus(message, isError) {
+            if (!statusEl) return;
+            statusEl.textContent = message || '';
+            statusEl.classList.toggle('text-danger', !!isError);
+            statusEl.classList.toggle('text-muted', !isError);
+        }
+
+        function createPreviewItem(file, state) {
+            const item = document.createElement('div');
+            item.className = 'deal-photo-item position-relative';
+            item.dataset.state = state;
+
+            const img = document.createElement('img');
+            img.style.width = '100px';
+            img.style.height = '75px';
+            img.style.objectFit = 'cover';
+            img.style.borderRadius = '4px';
+            img.alt = file.name;
+
+            const badge = document.createElement('span');
+            badge.className = 'badge position-absolute bottom-0 start-0 m-1';
+            badge.style.fontSize = '10px';
+            badge.textContent = state === 'uploading' ? 'Uploading...' : (state === 'queued' ? 'Queued' : 'Done');
+
+            if (state === 'uploading' || state === 'queued') {
+                badge.classList.add('bg-warning', 'text-dark');
                 const reader = new FileReader();
-                reader.onload = function(ev) {
-                    const img = document.createElement('img');
+                reader.onload = function (ev) {
                     img.src = ev.target.result;
-                    img.style.width = '100px';
-                    img.style.height = '75px';
-                    img.style.objectFit = 'cover';
-                    img.style.borderRadius = '4px';
-                    img.classList.add('me-2');
-                    preview.appendChild(img);
-                }
+                };
                 reader.readAsDataURL(file);
+            }
+
+            item.appendChild(img);
+            item.appendChild(badge);
+            preview.appendChild(item);
+
+            return item;
+        }
+
+        async function uploadPhoto(dealIdToUse, file) {
+            const item = createPreviewItem(file, 'uploading');
+            const formData = new FormData();
+            formData.append('photo', file);
+            formData.append('_token', csrfToken);
+
+            const response = await fetch(`/admin/manage-deal/${dealIdToUse}/photos`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                },
+                credentials: 'same-origin',
             });
+
+            const data = await response.json().catch(function () {
+                return {};
+            });
+
+            if (!response.ok || !data.success) {
+                item.remove();
+                throw new Error(data.message || `Failed to upload ${file.name}`);
+            }
+
+            item.dataset.photoId = data.photo.id;
+            item.dataset.state = 'done';
+            const badgeEl = item.querySelector('.badge');
+            badgeEl.className = 'badge bg-success position-absolute bottom-0 start-0 m-1';
+            badgeEl.style.fontSize = '10px';
+            badgeEl.textContent = 'Done';
+            item.querySelector('img').src = data.photo.url;
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'btn btn-sm btn-danger deal-photo-delete';
+            deleteBtn.dataset.photoId = data.photo.id;
+            deleteBtn.title = 'Remove photo';
+            deleteBtn.innerHTML = '&times;';
+            deleteBtn.style.cssText = 'position:absolute; top:2px; right:2px; width:22px; height:22px; padding:0; line-height:1; font-size:14px;';
+            item.appendChild(deleteBtn);
+
+            return data.photo;
+        }
+
+        if (photoInput) {
+            photoInput.addEventListener('change', async function (e) {
+                const files = Array.from(e.target.files || []);
+                e.target.value = '';
+
+                if (!files.length) return;
+
+                if (dealId) {
+                    let uploaded = 0;
+                    setStatus(`Uploading 0/${files.length} photos...`);
+
+                    for (const file of files) {
+                        try {
+                            await uploadPhoto(dealId, file);
+                            uploaded++;
+                            setStatus(`Uploaded ${uploaded}/${files.length} photos.`);
+                        } catch (err) {
+                            setStatus(err.message || 'Photo upload failed.', true);
+                        }
+                    }
+
+                    if (uploaded === files.length) {
+                        setStatus(`All ${uploaded} photos uploaded successfully.`);
+                    }
+                } else {
+                    files.forEach(function (file) {
+                        pendingFiles.push(file);
+                        createPreviewItem(file, 'queued');
+                    });
+                    setStatus(`${pendingFiles.length} photo(s) queued — they will upload when you save the deal.`);
+                }
+            });
+        }
+
+        preview?.addEventListener('click', async function (e) {
+            const btn = e.target.closest('.deal-photo-delete');
+            if (!btn || !dealId) return;
+
+            const photoId = btn.dataset.photoId;
+            const item = btn.closest('.deal-photo-item');
+            if (!photoId || !item) return;
+
+            if (!confirm('Remove this photo?')) return;
+
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`/admin/manage-deal/${dealId}/photos/${photoId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    credentials: 'same-origin',
+                });
+
+                const data = await response.json().catch(function () {
+                    return {};
+                });
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Failed to delete photo.');
+                }
+
+                item.remove();
+            } catch (err) {
+                btn.disabled = false;
+                setStatus(err.message || 'Failed to delete photo.', true);
+            }
+        });
+
+        window.uploadPendingDealPhotos = async function (dealIdToUse) {
+            if (!pendingFiles.length) return;
+
+            let uploaded = 0;
+            setStatus(`Uploading 0/${pendingFiles.length} queued photos...`);
+
+            while (pendingFiles.length) {
+                const file = pendingFiles.shift();
+                const queuedItem = preview.querySelector('[data-state="queued"]');
+                if (queuedItem) queuedItem.remove();
+
+                try {
+                    await uploadPhoto(dealIdToUse, file);
+                    uploaded++;
+                    setStatus(`Uploaded ${uploaded}/${uploaded + pendingFiles.length} queued photos...`);
+                } catch (err) {
+                    setStatus(err.message || 'Photo upload failed.', true);
+                    throw err;
+                }
+            }
+
+            setStatus(`All ${uploaded} photos uploaded successfully.`);
+        };
+    })();
+
+    // On form submit, update textarea values with Quill HTML and upload queued photos
+    document.getElementById('dealForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        document.getElementById('description').value = descriptionQuill.root.innerHTML;
+        document.getElementById('policies').value = policiesQuill.root.innerHTML;
+
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = submitBtn.querySelector('.btn-text');
+        const btnLoading = submitBtn.querySelector('.btn-loading');
+
+        submitBtn.disabled = true;
+        btnText.classList.add('d-none');
+        btnLoading.classList.remove('d-none');
+
+        const form = this;
+        const formData = new FormData(form);
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                },
+                credentials: 'same-origin',
+            });
+
+            const data = await response.json().catch(function () {
+                return null;
+            });
+
+            if (!response.ok || !data || !data.success) {
+                let message = 'Failed to save deal.';
+                if (data && data.message) {
+                    message = data.message;
+                } else if (data && data.errors) {
+                    message = Object.values(data.errors).flat().join(' ');
+                }
+                throw new Error(message);
+            }
+
+            if (typeof window.uploadPendingDealPhotos === 'function') {
+                await window.uploadPendingDealPhotos(data.deal_id);
+            }
+
+            window.location.href = data.redirect;
+        } catch (err) {
+            submitBtn.disabled = false;
+            btnText.classList.remove('d-none');
+            btnLoading.classList.add('d-none');
+            alert(err.message || 'Failed to save deal.');
         }
     });
 
@@ -801,21 +1034,6 @@
     // Set initial content from textarea
     descriptionQuill.root.innerHTML = document.getElementById('description').value;
     policiesQuill.root.innerHTML = document.getElementById('policies').value;
-
-    // On form submit, update textarea values with Quill HTML and show loading
-    document.getElementById('dealForm').addEventListener('submit', function(e) {
-        document.getElementById('description').value = descriptionQuill.root.innerHTML;
-        document.getElementById('policies').value = policiesQuill.root.innerHTML;
-        
-        // Show loading state
-        const submitBtn = document.getElementById('submitBtn');
-        const btnText = submitBtn.querySelector('.btn-text');
-        const btnLoading = submitBtn.querySelector('.btn-loading');
-        
-        submitBtn.disabled = true;
-        btnText.classList.add('d-none');
-        btnLoading.classList.remove('d-none');
-    });
 
     // Google Maps Places Autocomplete and marker
     let map, marker, autocomplete;

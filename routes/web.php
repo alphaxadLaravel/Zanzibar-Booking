@@ -212,6 +212,8 @@ Route::middleware(['auth', 'admin.panel'])->group(function () {
     // deals — edit
     Route::middleware('permission.deal:edit,partner')->group(function () {
         Route::put('/admin/manage-deal/{id}/{type}/update', [DealsController::class, 'updateDeal'])->name('admin.manage-deal.update');
+        Route::post('/admin/manage-deal/{id}/photos', [DealsController::class, 'uploadDealPhoto'])->name('admin.manage-deal.photos.store');
+        Route::delete('/admin/manage-deal/{id}/photos/{photoId}', [DealsController::class, 'deleteDealPhoto'])->name('admin.manage-deal.photos.delete');
     });
 
     Route::middleware('permission.deal:edit,partner,activity')->group(function () {
