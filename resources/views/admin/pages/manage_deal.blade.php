@@ -785,9 +785,9 @@
         const dealId = @json($deal->id ?? null);
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
         const photoRoutes = {
-            upload: @json(route('admin.manage-deal.photos.store', ['id' => '__DEAL__'])),
-            deleteAll: @json(route('admin.manage-deal.photos.delete-all', ['id' => '__DEAL__'])),
-            deleteOne: @json(route('admin.manage-deal.photos.delete', ['id' => '__DEAL__', 'photoId' => '__PHOTO__'])),
+            upload: @json(url('/admin/manage-deal/__DEAL__/photos')),
+            deleteAll: @json(url('/admin/manage-deal/__DEAL__/photos/all')),
+            deleteOne: @json(url('/admin/manage-deal/__DEAL__/photos/__PHOTO__')),
         };
         const photoInput = document.getElementById('other-images-input');
         const preview = document.getElementById('other-images-preview');
