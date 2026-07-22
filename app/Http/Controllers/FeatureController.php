@@ -14,7 +14,7 @@ class FeatureController extends Controller
 
         $query = Features::query()
             ->orderByDesc('status')
-            ->orderBy('name');
+            ->orderByDesc('id');
 
         if ($search !== '') {
             $query->where(function ($builder) use ($search) {
@@ -88,7 +88,7 @@ class FeatureController extends Controller
             'name' => $request->name,
             'icon' => $request->icon,
             'type' => $request->type,
-            'status' => $request->has('status') ? 1 : 0
+            'status' => $request->boolean('status', true),
         ]);
 
         return redirect()->route('admin.features')
@@ -119,7 +119,7 @@ class FeatureController extends Controller
             'name' => $request->name,
             'icon' => $request->icon,
             'type' => $request->type,
-            'status' => $request->has('status') ? 1 : 0
+            'status' => $request->boolean('status', $feature->status),
         ]);
 
         return redirect()->route('admin.features')
@@ -141,10 +141,18 @@ class FeatureController extends Controller
     /**
      * Toggle feature status
      */
-    public function toggleStatus($id)
+    public function toggleStatus(Request $request, $id)
     {
         $feature = Features::findOrFail($id);
         $feature->update(['status' => !$feature->status]);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'status' => (bool) $feature->status,
+                'message' => $feature->status ? 'Feature activated.' : 'Feature deactivated.',
+            ]);
+        }
 
         $status = $feature->status ? 'activated' : 'deactivated';
         return redirect()->route('admin.features')

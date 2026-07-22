@@ -31,7 +31,17 @@
                     @endif
                 </td>
                 <td class="px-3 py-2">
-                    <div class="d-flex gap-2">
+                    <div class="d-flex gap-2 flex-wrap">
+                        <form action="{{ route('admin.features.toggle-status', $feature->id) }}" method="POST"
+                            class="feature-toggle-status-form">
+                            @csrf
+                            @method('PUT')
+                            <button type="submit"
+                                class="btn btn-sm {{ $feature->status ? 'btn-outline-warning' : 'btn-outline-success' }}"
+                                title="{{ $feature->status ? 'Deactivate' : 'Activate' }}">
+                                <i class="mdi {{ $feature->status ? 'mdi-eye-off-outline' : 'mdi-eye-outline' }}"></i>
+                            </button>
+                        </form>
                         <button type="button" class="btn btn-sm btn-outline-primary"
                             data-bs-toggle="modal" data-bs-target="#editFeatureModal{{ $feature->id }}">
                             <i class="mdi mdi-pencil"></i>
@@ -98,6 +108,13 @@
                             'inputId' => 'edit_icon_' . $feature->id,
                             'selected' => $feature->icon,
                         ])
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_status{{ $feature->id }}" class="form-label">Status</label>
+                        <select class="form-control" id="edit_status{{ $feature->id }}" name="status">
+                            <option value="1" {{ $feature->status ? 'selected' : '' }}>Active</option>
+                            <option value="0" {{ !$feature->status ? 'selected' : '' }}>Inactive</option>
+                        </select>
                     </div>
                 </div>
                 <div class="modal-footer">

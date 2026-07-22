@@ -131,6 +131,14 @@ Features | {{env('APP_NAME')}}
                         <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
                     </div>
+
+                    <div class="mb-3">
+                        <label for="create_status" class="form-label">Status</label>
+                        <select class="form-control" id="create_status" name="status">
+                            <option value="1" {{ old('status', '1') == '1' ? 'selected' : '' }}>Active</option>
+                            <option value="0" {{ old('status') === '0' ? 'selected' : '' }}>Inactive</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-primary" id="createFeatureSubmit"
@@ -233,6 +241,7 @@ document.addEventListener('DOMContentLoaded', function () {
             updateSearchCount(data.from, data.to, data.total);
             initFeatureIconPickers(listContainer);
             bindPaginationLinks();
+            bindToggleStatusForms();
 
             const displayUrl = new URL(window.location.href);
             if (search) {
@@ -261,6 +270,31 @@ document.addEventListener('DOMContentLoaded', function () {
                 const url = new URL(link.href);
                 const page = url.searchParams.get('page') || 1;
                 loadFeatures(page);
+            });
+        });
+    }
+
+    function bindToggleStatusForms() {
+        if (!listContainer) return;
+
+        listContainer.querySelectorAll('.feature-toggle-status-form').forEach(function (form) {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                fetch(form.action, {
+                    method: 'POST',
+                    body: new FormData(form),
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    },
+                    credentials: 'same-origin',
+                })
+                .then(function (response) { return response.json(); })
+                .then(function () {
+                    const currentPage = new URL(window.location.href).searchParams.get('page') || 1;
+                    loadFeatures(currentPage);
+                });
             });
         });
     }
@@ -340,6 +374,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     initFeatureIconPickers(document);
     bindPaginationLinks();
+    bindToggleStatusForms();
 
     @if($errors->any() && old('name'))
         updateDuplicateWarning();
