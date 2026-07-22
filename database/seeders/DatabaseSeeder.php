@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
             AdminSeeder::class,
             FeaturesSeeder::class,
+            PackagePriceFeaturesSeeder::class,
             // CategorySeeder::class,
             PageSeeder::class,
             SystemSeeder::class,
