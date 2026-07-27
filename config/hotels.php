@@ -9,7 +9,7 @@ return [
     'checkout_ttl' => (int) env('HOTEL_CHECKOUT_CACHE_TTL', 1800),
 
     'defaults' => [
-        'max_results' => (int) env('HOTEL_SEARCH_MAX_RESULTS', 50),
+        'max_results' => (int) env('HOTEL_SEARCH_MAX_RESULTS', 200),
         'currency' => env('HOTEL_DEFAULT_CURRENCY', 'USD'),
         'rooms' => 1,
         'adults' => 2,
@@ -41,6 +41,12 @@ return [
     | Hotelbeds destination codes (from Content API). Override via env if needed.
     */
     'destinations' => [
+        'TZ_ALL' => [
+            'code' => 'TZ_ALL',
+            'name' => 'Tanzania & Zanzibar',
+            'country' => 'Tanzania',
+            'codes' => ['ZNZ', 'DAR', 'JRO', 'MWZ', 'DOD'],
+        ],
         'ZNZ' => [
             'code' => env('HOTELBEDS_DEST_ZNZ', 'ZNZ'),
             'name' => 'Zanzibar',
@@ -69,8 +75,11 @@ return [
     ],
 
     'destination_options' => [
-        'Tanzania' => [
+        'Tanzania & Zanzibar' => [
+            'TZ_ALL' => 'All Tanzania & Zanzibar',
             'ZNZ' => 'Zanzibar',
+        ],
+        'Tanzania (Mainland)' => [
             'DAR' => 'Dar es Salaam',
             'JRO' => 'Kilimanjaro / Arusha',
             'MWZ' => 'Mwanza',

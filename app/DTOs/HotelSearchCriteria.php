@@ -33,7 +33,7 @@ class HotelSearchCriteria
         }
 
         return new self(
-            destination: strtoupper(trim($data['destination'] ?? 'ZNZ')),
+            destination: strtoupper(trim($data['destination'] ?? 'TZ_ALL')),
             checkIn: $data['checkIn'] ?? $data['check_in'] ?? '',
             checkOut: $data['checkOut'] ?? $data['check_out'] ?? '',
             rooms: max(1, (int) ($data['rooms'] ?? 1)),
@@ -68,6 +68,39 @@ class HotelSearchCriteria
             'name' => $this->destination,
             'country' => 'Tanzania',
         ]);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function destinationCodes(): array
+    {
+        $meta = $this->destinationMeta();
+        $codes = $meta['codes'] ?? null;
+
+        if (is_array($codes) && $codes !== []) {
+            return array_values(array_map(
+                fn (string $code) => strtoupper(trim($code)),
+                $codes
+            ));
+        }
+
+        return [strtoupper((string) ($meta['code'] ?? $this->destination))];
+    }
+
+    public function withDestination(string $destination, ?int $maxHotels = null): self
+    {
+        return new self(
+            destination: strtoupper(trim($destination)),
+            checkIn: $this->checkIn,
+            checkOut: $this->checkOut,
+            rooms: $this->rooms,
+            adults: $this->adults,
+            children: $this->children,
+            childAges: $this->childAges,
+            currency: $this->currency,
+            maxHotels: $maxHotels ?? $this->maxHotels,
+        );
     }
 
     public function toArray(): array

@@ -7,6 +7,7 @@ use App\DTOs\HotelOffer;
 use App\DTOs\HotelSearchCriteria;
 use App\Services\Hotels\HotelbedsApiService;
 use App\Support\HotelOfferMapper;
+use Illuminate\Support\Facades\Log;
 
 class HotelbedsProvider implements HotelProviderInterface
 {
@@ -24,6 +25,37 @@ class HotelbedsProvider implements HotelProviderInterface
      */
     public function search(HotelSearchCriteria $criteria): array
     {
+        $codes = $criteria->destinationCodes();
+
+        if (count($codes) <= 1) {
+            return $this->searchSingle($criteria);
+        }
+
+        $offers = [];
+        $perDestination = max(20, (int) ceil($criteria->maxHotels / count($codes)));
+
+        foreach ($codes as $code) {
+            try {
+                $subCriteria = $criteria->withDestination($code, $perDestination);
+                $offers = array_merge($offers, $this->searchSingle($subCriteria));
+            } catch (\Throwable $e) {
+                Log::warning('Hotelbeds search skipped destination', [
+                    'destination' => $code,
+                    'message' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        usort($offers, fn (HotelOffer $a, HotelOffer $b) => $a->price <=> $b->price);
+
+        return $offers;
+    }
+
+    /**
+     * @return HotelOffer[]
+     */
+    protected function searchSingle(HotelSearchCriteria $criteria): array
+    {
         $response = $this->api->searchAvailability($criteria);
         $destinationMeta = $criteria->destinationMeta();
         $offers = [];
@@ -39,7 +71,7 @@ class HotelbedsProvider implements HotelProviderInterface
 
         usort($offers, fn (HotelOffer $a, HotelOffer $b) => $a->price <=> $b->price);
 
-        return array_slice($offers, 0, $criteria->maxHotels);
+        return $offers;
     }
 
     public function checkRate(string $rateKey): array

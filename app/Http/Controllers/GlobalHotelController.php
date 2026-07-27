@@ -79,6 +79,10 @@ class GlobalHotelController extends Controller
 
     public function selectRate(Request $request)
     {
+        if (! $request->user()) {
+            return back()->with('error', 'Please sign in to continue booking.');
+        }
+
         $validated = $request->validate([
             'rate_key' => ['required', 'string', 'max:2000'],
         ]);

@@ -1,8 +1,8 @@
 @extends('website.layouts.app')
 
-@section('title', 'Hotel & Beds - Zanzibar Bookings')
+@section('title', 'Hotel & Beds - Tanzania & Zanzibar')
 @section('meta')
-<meta name="description" content="Browse and book live hotel availability across Zanzibar and Tanzania via Hotelbeds">
+<meta name="description" content="Browse and book live hotel availability across Tanzania and Zanzibar via Hotelbeds">
 @endsection
 
 @section('pages')

@@ -17,85 +17,75 @@
             .list-hotel__content { max-height: none !important; }
         }
         @media (max-width: 768px) {
-            .hero-bg-image { height: 320px !important; min-height: 320px; }
-            .search-center { position: absolute !important; top: 50% !important; left: 50% !important;
-                transform: translate(-50%, -50%) !important; width: 100% !important; padding: 0 10px !important; }
+            .hero-bg-image { height: 120px !important; min-height: 120px; }
+            .hb-search-block { margin-top: -18px; }
         }
         @media (min-width: 769px) {
-            .hero-bg-image { height: 160px !important; }
+            .hero-bg-image { height: 120px !important; }
+            .hb-search-block { margin-top: -22px; }
         }
+        .hb-search-card .form-control,
+        .hb-search-card .btn { height: 40px !important; font-size: 14px !important; }
+        .hb-search-card { padding: 10px 12px !important; }
+        .hb-filter-toolbar .form-control { height: 38px; font-size: 14px; max-width: 220px; }
     </style>
 
-    <section class="hero-slider" style="min-height: 160px; position: relative;">
+    <section class="hero-slider hb-hero" style="min-height: 120px; position: relative; margin-bottom: 0;">
         <div class="container-fluid no-gutters p-0">
             <div class="single-hero-image" style="position: relative;">
                 <img src="{{ asset('images/banner.jpg') }}" class="hero-bg-image"
-                    style="object-fit: cover; width: 100%; height: 160px;" alt="Hotel & Beds" />
-            </div>
-            <div class="search-center" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; padding: 0 15px; z-index: 10;">
-                <div class="container" style="max-width: 1350px; margin: 0 auto;">
-                    <div class="search-card p-3 rounded shadow" style="background: rgba(255,255,255,0.97); max-width: 1280px; margin: 0 auto;">
-                        <p class="text-center mb-3" style="font-size: 18px; font-weight: 600; color: #333;">
-                            Hotel &amp; Beds — Live availability across Tanzania
-                        </p>
-                        <form wire:submit.prevent="searchHotels">
-                            <div class="row g-2 align-items-end">
-                                <div class="col-6 col-md-2">
-                                    <label class="form-label small mb-1">Destination</label>
-                                    <select wire:model="destination" class="form-control" style="height: 45px;">
-                                        @foreach($destinationOptions as $group => $options)
-                                            <optgroup label="{{ $group }}">
-                                                @foreach($options as $code => $label)
-                                                    <option value="{{ $code }}">{{ $label }}</option>
-                                                @endforeach
-                                            </optgroup>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-6 col-md-2">
-                                    <label class="form-label small mb-1">Check-in</label>
-                                    <input type="date" wire:model="checkIn" class="form-control" style="height: 45px;" min="{{ date('Y-m-d') }}">
-                                </div>
-                                <div class="col-6 col-md-2">
-                                    <label class="form-label small mb-1">Check-out</label>
-                                    <input type="date" wire:model="checkOut" class="form-control" style="height: 45px;" min="{{ date('Y-m-d', strtotime('+1 day')) }}">
-                                </div>
-                                <div class="col-4 col-md-1">
-                                    <label class="form-label small mb-1">Rooms</label>
-                                    <input type="number" wire:model="rooms" min="1" max="5" class="form-control" style="height: 45px;">
-                                </div>
-                                <div class="col-4 col-md-1">
-                                    <label class="form-label small mb-1">Adults</label>
-                                    <input type="number" wire:model="adults" min="1" max="9" class="form-control" style="height: 45px;">
-                                </div>
-                                <div class="col-4 col-md-1">
-                                    <label class="form-label small mb-1">Children</label>
-                                    <input type="number" wire:model="children" min="0" max="6" class="form-control" style="height: 45px;">
-                                </div>
-                                <div class="col-12 col-md-2">
-                                    <label class="form-label small mb-1">Hotel name</label>
-                                    <input type="text" wire:model.live.debounce.300ms="searchName" class="form-control" placeholder="Filter by name..." style="height: 45px;">
-                                </div>
-                                <div class="col-6 col-md-1">
-                                    <button type="submit" class="btn btn-primary w-100" style="height: 45px; background: #003580; border: none; font-weight: 600;" wire:loading.attr="disabled" wire:target="searchHotels">
-                                        <span wire:loading.remove wire:target="searchHotels">Search</span>
-                                        <span wire:loading wire:target="searchHotels">…</span>
-                                    </button>
-                                </div>
-                                <div class="col-6 col-md-1">
-                                    <button type="button" class="btn btn-outline-secondary w-100" style="height: 45px;" wire:click="resetFilters">Reset</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+                    style="object-fit: cover; width: 100%; height: 120px;" alt="Hotel & Beds" />
             </div>
         </div>
     </section>
 
+    <div class="container hb-search-block" style="position: relative; z-index: 10; max-width: 1280px;">
+        <div class="search-card hb-search-card rounded shadow" style="background: #fff; border: 1px solid #e9ecef;">
+            <form wire:submit.prevent="searchHotels">
+                <div class="row g-2 align-items-center">
+                    <div class="col-6 col-md-2">
+                        <select wire:model="destination" class="form-control" title="Destination">
+                            @foreach($destinationOptions as $group => $options)
+                                <optgroup label="{{ $group }}">
+                                    @foreach($options as $code => $label)
+                                        <option value="{{ $code }}">{{ $label }}</option>
+                                    @endforeach
+                                </optgroup>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <input type="date" wire:model="checkIn" class="form-control" min="{{ date('Y-m-d') }}" title="Check-in">
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <input type="date" wire:model="checkOut" class="form-control" min="{{ date('Y-m-d', strtotime('+1 day')) }}" title="Check-out">
+                    </div>
+                    <div class="col-4 col-md-1">
+                        <input type="number" wire:model="rooms" min="1" max="5" class="form-control" placeholder="Rooms" title="Rooms">
+                    </div>
+                    <div class="col-4 col-md-1">
+                        <input type="number" wire:model="adults" min="1" max="9" class="form-control" placeholder="Adults" title="Adults">
+                    </div>
+                    <div class="col-4 col-md-1">
+                        <input type="number" wire:model="children" min="0" max="6" class="form-control" placeholder="Kids" title="Children">
+                    </div>
+                    <div class="col-12 col-md-3 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-grow-1" style="background: #003580; border: none; font-weight: 600;" wire:loading.attr="disabled" wire:target="searchHotels">
+                            <span wire:loading.remove wire:target="searchHotels"><i class="fas fa-search me-1"></i> Search</span>
+                            <span wire:loading wire:target="searchHotels">Searching…</span>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary px-3" wire:click="resetFilters" title="Reset filters">
+                            <i class="fas fa-refresh"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <section class="container-fluid">
         <div class="row">
-            <div class="col-lg-7 my-5">
+            <div class="col-lg-7 mt-4 mb-5">
                 <div class="list-hotel h-100 d-flex flex-column">
                     <div class="list-hotel__content flex-grow-1" tabindex="1">
                         @if($error)
@@ -105,31 +95,20 @@
                         @if($loading)
                             <div class="text-center py-5 text-muted">Loading hotels from Hotelbeds…</div>
                         @else
-                            <div class="results-count d-flex align-items-center justify-content-between mb-3">
+                            <div class="results-count d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 hb-filter-toolbar">
                                 <div>
                                     Found <b>{{ $hotels->total() }} Hotels</b>
                                     @if($searched)
                                         <span class="text-muted small">· {{ $checkIn }} to {{ $checkOut }}</span>
                                     @endif
                                 </div>
-                                <div class="sort">
-                                    <div class="dropdown">
-                                        <button class="btn btn-link dropdown" type="button" data-toggle="dropdown">
-                                            Sort <i class="fal fa-angle-down arrow"></i>
-                                        </button>
-                                        <div class="dropdown-menu sort-menu dropdown-menu-right">
-                                            <div class="sort-title"><h3>SORT BY</h3></div>
-                                            <div class="sort-item">
-                                                <label><input type="radio" name="sort" wire:click="updateSort('price_asc')" {{ $sortBy === 'price_asc' ? 'checked' : '' }}> Price: Low to High</label>
-                                            </div>
-                                            <div class="sort-item">
-                                                <label><input type="radio" name="sort" wire:click="updateSort('price_desc')" {{ $sortBy === 'price_desc' ? 'checked' : '' }}> Price: High to Low</label>
-                                            </div>
-                                            <div class="sort-item">
-                                                <label><input type="radio" name="sort" wire:click="updateSort('name_asc')" {{ $sortBy === 'name_asc' ? 'checked' : '' }}> Name A–Z</label>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <input type="text" wire:model.live.debounce.300ms="searchName" class="form-control form-control-sm" placeholder="Filter by name…">
+                                    <select wire:model.live="sortBy" class="form-select form-select-sm" style="width:auto; min-width:140px;">
+                                        <option value="price_asc">Price: low to high</option>
+                                        <option value="price_desc">Price: high to low</option>
+                                        <option value="name_asc">Name A–Z</option>
+                                    </select>
                                 </div>
                             </div>
 
@@ -195,10 +174,42 @@
                             </div>
 
                             @if($hotels->hasPages())
+                                @php
+                                    $currentPage = $hotels->currentPage();
+                                    $lastPage = $hotels->lastPage();
+                                    $pageStart = max(1, $currentPage - 2);
+                                    $pageEnd = min($lastPage, $currentPage + 2);
+                                @endphp
                                 <nav aria-label="Page navigation" class="mt-4">
-                                    <div class="d-flex justify-content-center">
-                                        {{ $hotels->links('pagination::bootstrap-4') }}
-                                    </div>
+                                    <ul class="pagination justify-content-center mb-0 flex-wrap">
+                                        <li class="page-item {{ $hotels->onFirstPage() ? 'disabled' : '' }}">
+                                            <button type="button" class="page-link" wire:click="previousPage" @disabled($hotels->onFirstPage())>‹</button>
+                                        </li>
+                                        @if($pageStart > 1)
+                                            <li class="page-item">
+                                                <button type="button" class="page-link" wire:click="gotoPage(1)">1</button>
+                                            </li>
+                                            @if($pageStart > 2)
+                                                <li class="page-item disabled"><span class="page-link">…</span></li>
+                                            @endif
+                                        @endif
+                                        @for($page = $pageStart; $page <= $pageEnd; $page++)
+                                            <li class="page-item {{ $page === $currentPage ? 'active' : '' }}">
+                                                <button type="button" class="page-link" wire:click="gotoPage({{ $page }})">{{ $page }}</button>
+                                            </li>
+                                        @endfor
+                                        @if($pageEnd < $lastPage)
+                                            @if($pageEnd < $lastPage - 1)
+                                                <li class="page-item disabled"><span class="page-link">…</span></li>
+                                            @endif
+                                            <li class="page-item">
+                                                <button type="button" class="page-link" wire:click="gotoPage({{ $lastPage }})">{{ $lastPage }}</button>
+                                            </li>
+                                        @endif
+                                        <li class="page-item {{ $hotels->hasMorePages() ? '' : 'disabled' }}">
+                                            <button type="button" class="page-link" wire:click="nextPage" @disabled(! $hotels->hasMorePages())>›</button>
+                                        </li>
+                                    </ul>
                                 </nav>
                             @endif
                         @endif
@@ -206,7 +217,7 @@
                 </div>
             </div>
 
-            <div class="col-lg-5 my-5 d-flex align-items-stretch">
+            <div class="col-lg-5 mt-4 mb-5 d-flex align-items-stretch">
                 <div class="w-100" style="min-height: 600px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); overflow: hidden;">
                     <div wire:ignore id="interactive-map-hotelbeds" style="width: 100%; height: 100%; border-radius: 12px;"></div>
                 </div>

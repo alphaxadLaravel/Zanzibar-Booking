@@ -8,7 +8,6 @@ use App\Services\Hotels\HotelSearchService;
 use App\Support\FlightOfferMapper;
 use App\Support\HotelOfferMapper;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Validator;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -19,7 +18,7 @@ class GlobalHotelSearchPage extends Component
 
     protected $paginationTheme = 'bootstrap';
 
-    public string $destination = 'ZNZ';
+    public string $destination = 'TZ_ALL';
 
     public string $checkIn = '';
 
@@ -50,7 +49,7 @@ class GlobalHotelSearchPage extends Component
         $this->checkOut = now()->addDays(9)->format('Y-m-d');
 
         if (request()->filled('destination')) {
-            $this->destination = strtoupper((string) request('destination', 'ZNZ'));
+            $this->destination = strtoupper((string) request('destination', 'TZ_ALL'));
         }
 
         if (request()->filled('checkIn')) {
@@ -112,7 +111,7 @@ class GlobalHotelSearchPage extends Component
                 'rooms' => $this->rooms,
                 'adults' => $this->adults,
                 'children' => $this->children,
-                'maxHotels' => (int) config('hotels.defaults.max_results', 50),
+                'maxHotels' => (int) config('hotels.defaults.max_results', 200),
             ]);
 
             $searchService = app(HotelSearchService::class);
@@ -128,7 +127,7 @@ class GlobalHotelSearchPage extends Component
 
     public function resetFilters(): void
     {
-        $this->destination = 'ZNZ';
+        $this->destination = 'TZ_ALL';
         $this->checkIn = now()->addDays(7)->format('Y-m-d');
         $this->checkOut = now()->addDays(9)->format('Y-m-d');
         $this->rooms = 1;
@@ -142,6 +141,11 @@ class GlobalHotelSearchPage extends Component
     public function updateSort(string $sortValue): void
     {
         $this->sortBy = $sortValue;
+        $this->resetPage();
+    }
+
+    public function updatedSortBy(): void
+    {
         $this->resetPage();
     }
 
@@ -173,7 +177,7 @@ class GlobalHotelSearchPage extends Component
     {
         $items = $this->filteredHotels();
         $perPage = 6;
-        $page = Paginator::resolveCurrentPage('page');
+        $page = $this->getPage();
 
         $slice = collect($items)->forPage($page, $perPage)->values();
         $codes = $slice->pluck('hotel_code')->filter()->all();
@@ -202,7 +206,10 @@ class GlobalHotelSearchPage extends Component
             count($items),
             $perPage,
             $page,
-            ['path' => request()->url(), 'pageName' => 'page']
+            [
+                'path' => request()->url(),
+                'pageName' => 'page',
+            ]
         );
     }
 
