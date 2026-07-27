@@ -4,7 +4,6 @@ namespace App\Livewire;
 
 use App\DTOs\HotelSearchCriteria;
 use App\Services\Hotels\HotelbedsContentService;
-use App\Services\Hotels\HotelbedsContentService;
 use App\Services\Hotels\HotelSearchService;
 use App\Support\FlightOfferMapper;
 use App\Support\HotelOfferMapper;
