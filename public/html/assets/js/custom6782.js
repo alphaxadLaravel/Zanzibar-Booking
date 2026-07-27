@@ -1417,7 +1417,11 @@
         // New Professional Hotel Booking Functions
         initHotelBookingForm: function () {
             var base = this;
-            
+            var form = $('.booking-form-single.hotel');
+            if (!form.length) {
+                return;
+            }
+
             // Initialize room search on page load
             base.initHotelRoomSearch();
             
@@ -1458,6 +1462,9 @@
         initHotelRoomSearch: function () {
             var base = this;
             var form = $('.booking-form-single.hotel');
+            if (!form.length) {
+                return;
+            }
             var roomHtml = $('.room-html', form);
             var loader = $('.gmz-loader', form);
             var action = '/room-search'; // Use room-search endpoint
@@ -1468,9 +1475,7 @@
             var checkOut = $('input[name="check_out"]', form).val();
             var adult = $('select[name="adult"]', form).val();
             var children = $('select[name="children"]', form).val();
-            
-            console.log('Room search params:', {checkIn: checkIn, checkOut: checkOut, adult: adult, children: children});
-            
+
             if (!checkIn || !checkOut) {
                 roomHtml.html('<div class="room-loading-placeholder"><div class="placeholder-text"><i class="fas fa-calendar-alt text-muted"></i><p>Please select dates to view available rooms</p></div></div>');
                 // Reset price display

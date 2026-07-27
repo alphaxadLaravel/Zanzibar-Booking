@@ -10,7 +10,6 @@
 <link rel="stylesheet" href="{{asset('vendors/flag-icon/css/flag-icon.css')}}" />
 <link rel="stylesheet" href="{{asset('html/assets/vendor/bootstrap-4.0.0/dist/css/bootstrap.min.css')}}" />
 <link rel="stylesheet" href="{{asset('html/assets/css/main6782.css?v=1.0.3.2')}}" />
-<link rel="stylesheet" href="{{asset('html/assets/scss/modern-cards6782.html?v=1.0.3.2')}}" />
 <link rel="stylesheet" href="{{asset('bot/styles.css')}}" />
 <style>
     :root {
