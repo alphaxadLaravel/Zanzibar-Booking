@@ -58,7 +58,14 @@
             margin-bottom: 15px;
             display: none;
         }
-        .hb-filter-toolbar .form-control { height: 38px; font-size: 14px; max-width: 220px; }
+        .hb-filter-toolbar .input-group { min-width: 200px; max-width: 260px; }
+        .hb-filter-toolbar .input-group .form-control { height: 38px; font-size: 14px; border-left: 0; }
+        .hb-filter-toolbar .input-group-text { height: 38px; font-size: 14px; background: #fff; }
+        @media (max-width: 767.98px) {
+            .hb-filter-toolbar { flex-wrap: wrap; gap: 12px; }
+            .hb-filter-toolbar > .d-flex { width: 100%; justify-content: space-between; }
+            .hb-filter-toolbar .input-group { flex: 1; min-width: 0; max-width: none; }
+        }
     </style>
 
     <section class="hero-slider" style="min-height: 160px; position: relative; margin-bottom: 0;">
@@ -83,6 +90,7 @@
                             <div class="row g-3" style="width: 100%; margin: 0;">
                                 <div class="col-12 col-md-3 d-flex flex-column" style="min-width: 0;">
                                     <select wire:model="destination" class="form-control flex-grow-1" title="Destination">
+                                        <option value="">All destinations</option>
                                         @foreach($destinationOptions as $group => $options)
                                             <optgroup label="{{ $group }}">
                                                 @foreach($options as $code => $label)
@@ -93,19 +101,34 @@
                                     </select>
                                 </div>
                                 <div class="col-6 col-md-2 d-flex flex-column" style="min-width: 0;">
-                                    <input type="date" wire:model="checkIn" class="form-control flex-grow-1" min="{{ date('Y-m-d') }}" title="Check-in">
+                                    <input type="date" wire:model="checkIn" class="form-control flex-grow-1" min="{{ date('Y-m-d') }}" title="Check-in (optional)">
                                 </div>
                                 <div class="col-6 col-md-2 d-flex flex-column" style="min-width: 0;">
-                                    <input type="date" wire:model="checkOut" class="form-control flex-grow-1" min="{{ date('Y-m-d', strtotime('+1 day')) }}" title="Check-out">
+                                    <input type="date" wire:model="checkOut" class="form-control flex-grow-1" min="{{ date('Y-m-d') }}" title="Check-out (optional)">
                                 </div>
                                 <div class="col-4 col-md-1 d-flex flex-column" style="min-width: 0;">
-                                    <input type="number" wire:model="rooms" min="1" max="5" class="form-control flex-grow-1" placeholder="Rooms" title="Rooms">
+                                    <select wire:model="rooms" class="form-control flex-grow-1" title="Rooms">
+                                        <option value="">Rooms</option>
+                                        @for($i = 1; $i <= 5; $i++)
+                                            <option value="{{ $i }}">{{ $i }} Room{{ $i > 1 ? 's' : '' }}</option>
+                                        @endfor
+                                    </select>
                                 </div>
                                 <div class="col-4 col-md-1 d-flex flex-column" style="min-width: 0;">
-                                    <input type="number" wire:model="adults" min="1" max="9" class="form-control flex-grow-1" placeholder="Adults" title="Adults">
+                                    <select wire:model="adults" class="form-control flex-grow-1" title="Adults">
+                                        <option value="">Adults</option>
+                                        @for($i = 1; $i <= 9; $i++)
+                                            <option value="{{ $i }}">{{ $i }} Adult{{ $i > 1 ? 's' : '' }}</option>
+                                        @endfor
+                                    </select>
                                 </div>
                                 <div class="col-4 col-md-1 d-flex flex-column" style="min-width: 0;">
-                                    <input type="number" wire:model="children" min="0" max="6" class="form-control flex-grow-1" placeholder="Kids" title="Children">
+                                    <select wire:model="children" class="form-control flex-grow-1" title="Children">
+                                        <option value="">Children</option>
+                                        @for($i = 0; $i <= 6; $i++)
+                                            <option value="{{ $i }}">{{ $i === 0 ? 'No children' : $i . ' Child' . ($i > 1 ? 'ren' : '') }}</option>
+                                        @endfor
+                                    </select>
                                 </div>
                                 <div class="col-12 col-md-2 d-flex gap-2 align-items-stretch" style="min-width: 0;">
                                     <button type="submit" class="btn btn-primary flex-grow-1 w-100" style="background: #003580; border: none; font-weight: 600;" wire:loading.attr="disabled" wire:target="searchHotels">
@@ -129,27 +152,81 @@
             <div class="col-lg-7 mt-4 mb-5">
                 <div class="list-hotel h-100 d-flex flex-column">
                     <div class="list-hotel__content flex-grow-1" tabindex="1">
+                        @if(session('error'))
+                            <div class="alert alert-danger">{{ session('error') }}</div>
+                        @endif
+
                         @if($error)
                             <div class="alert alert-danger">{{ $error }}</div>
                         @endif
 
                         @if($loading)
                             <div class="text-center py-5 text-muted">Loading hotels from Hotelbeds…</div>
+                        @elseif(! $searched)
+                            <div class="text-center py-5">
+                                <i class="fas fa-hotel fa-3x text-muted mb-3"></i>
+                                <h4>Browse Partner Hotels</h4>
+                                <p class="text-muted mb-0">
+                                    Choose filters above and click <strong>Search</strong>.<br>
+                                    Leave dates empty to browse hotels, or add dates to see live rates.
+                                </p>
+                            </div>
                         @else
-                            <div class="results-count d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 hb-filter-toolbar">
+                            <div class="results-count d-flex align-items-center justify-content-between hb-filter-toolbar">
                                 <div>
                                     Found <b>{{ $hotels->total() }} Hotels</b>
-                                    @if($searched)
+                                    @if($checkIn !== '' && $checkOut !== '')
                                         <span class="text-muted small">· {{ $checkIn }} to {{ $checkOut }}</span>
+                                    @elseif($browseMode)
+                                        <span class="text-muted small">· Directory browse</span>
                                     @endif
                                 </div>
-                                <div class="d-flex align-items-center gap-2 flex-wrap">
-                                    <input type="text" wire:model.live.debounce.300ms="searchName" class="form-control form-control-sm" placeholder="Filter by name…">
-                                    <select wire:model.live="sortBy" class="form-select form-select-sm" style="width:auto; min-width:140px;">
-                                        <option value="price_asc">Price: low to high</option>
-                                        <option value="price_desc">Price: high to low</option>
-                                        <option value="name_asc">Name A–Z</option>
-                                    </select>
+                                <div class="d-flex align-items-center">
+                                    <div class="input-group input-group-sm me-3">
+                                        <span class="input-group-text"><i class="fal fa-search"></i></span>
+                                        <input type="text" wire:model.live.debounce.300ms="searchName" class="form-control" placeholder="Filter by name…">
+                                    </div>
+                                    <div class="sort">
+                                        <div class="dropdown">
+                                            <button class="btn btn-link dropdown" type="button" id="dropdownMenuSortGlobal"
+                                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                Sort <i class="fal fa-angle-down arrow"></i>
+                                            </button>
+                                            <div class="dropdown-menu sort-menu dropdown-menu-right" aria-labelledby="dropdownMenuSortGlobal">
+                                                <div class="sort-title">
+                                                    <h3>SORT BY</h3>
+                                                </div>
+                                                @if(! $browseMode)
+                                                    <div class="sort-item">
+                                                        <span class="title">Price</span>
+                                                        <label>
+                                                            <input class="service-sort" type="radio" name="sort"
+                                                                wire:click="updateSort('price_asc')" value="price_asc" {{ $sortBy === 'price_asc' ? 'checked' : '' }}>
+                                                            Low to High
+                                                        </label>
+                                                        <label>
+                                                            <input class="service-sort" type="radio" name="sort"
+                                                                wire:click="updateSort('price_desc')" value="price_desc" {{ $sortBy === 'price_desc' ? 'checked' : '' }}>
+                                                            High to Low
+                                                        </label>
+                                                    </div>
+                                                @endif
+                                                <div class="sort-item">
+                                                    <span class="title">Name</span>
+                                                    <label>
+                                                        <input class="service-sort" type="radio" name="sort"
+                                                            wire:click="updateSort('name_asc')" value="name_asc" {{ $sortBy === 'name_asc' ? 'checked' : '' }}>
+                                                        A - Z
+                                                    </label>
+                                                    <label>
+                                                        <input class="service-sort" type="radio" name="sort"
+                                                            wire:click="updateSort('name_desc')" value="name_desc" {{ $sortBy === 'name_desc' ? 'checked' : '' }}>
+                                                        Z - A
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -188,8 +265,12 @@
                                                     </div>
                                                 </div>
                                                 <div class="hotel-item__price mb-3">
-                                                    <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600;">{{ $hotel['display_price'] }}</span>
-                                                    <span class="_unit" style="color:#2e8b57;font-size:1rem;">/ stay</span>
+                                                    @if(!empty($hotel['browse_only']) || empty($hotel['display_price']))
+                                                        <span class="text-muted" style="font-size: 0.95rem;">Add dates to see rates</span>
+                                                    @else
+                                                        <span class="_retail" style="color:#2e8b57;font-size:1.3rem;font-weight:600;">{{ $hotel['display_price'] }}</span>
+                                                        <span class="_unit" style="color:#2e8b57;font-size:1rem;">/ stay</span>
+                                                    @endif
                                                 </div>
                                                 @if(($hotel['rates_count'] ?? 1) > 1)
                                                     <p class="small text-muted mb-2">{{ $hotel['rates_count'] }} room options available</p>
@@ -207,7 +288,7 @@
                                         <div class="text-center py-5">
                                             <i class="fas fa-hotel fa-3x text-muted mb-3"></i>
                                             <h4>No Hotels Found</h4>
-                                            <p class="text-muted">Try different dates or another destination.</p>
+                                            <p class="text-muted">Try different filters or add stay dates for live availability.</p>
                                             <button class="btn btn-outline-primary" wire:click="resetFilters">Reset filters</button>
                                         </div>
                                     </div>

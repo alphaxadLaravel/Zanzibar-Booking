@@ -17,6 +17,7 @@ class HotelOffer
         public readonly string $checkIn,
         public readonly string $checkOut,
         public readonly string $roomName,
+        public readonly string $roomCode = '',
         public readonly string $boardName,
         public readonly ?string $categoryCode,
         public readonly float $supplierTotal,
@@ -47,6 +48,7 @@ class HotelOffer
             checkIn: (string) ($data['check_in'] ?? $data['checkIn'] ?? ''),
             checkOut: (string) ($data['check_out'] ?? $data['checkOut'] ?? ''),
             roomName: (string) ($data['room_name'] ?? $data['roomName'] ?? ''),
+            roomCode: strtoupper(trim((string) ($data['room_code'] ?? $data['roomCode'] ?? ''))),
             boardName: (string) ($data['board_name'] ?? $data['boardName'] ?? ''),
             categoryCode: isset($data['category_code']) || isset($data['categoryCode'])
                 ? (string) ($data['category_code'] ?? $data['categoryCode'])
@@ -80,6 +82,7 @@ class HotelOffer
             'check_in' => $this->checkIn,
             'check_out' => $this->checkOut,
             'room_name' => $this->roomName,
+            'room_code' => $this->roomCode,
             'board_name' => $this->boardName,
             'category_code' => $this->categoryCode,
             'supplier_total' => $this->supplierTotal,

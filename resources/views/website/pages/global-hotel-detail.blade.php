@@ -22,17 +22,19 @@
 </div>
 
 @php
-    $checkIn = $criteria['checkIn'] ?? $hotel['check_in'] ?? now()->addDays(7)->format('Y-m-d');
-    $checkOut = $criteria['checkOut'] ?? $hotel['check_out'] ?? now()->addDays(9)->format('Y-m-d');
+    $browseOnly = $browseOnly ?? false;
+    $checkIn = $criteria['checkIn'] ?? $hotel['check_in'] ?? '';
+    $checkOut = $criteria['checkOut'] ?? $hotel['check_out'] ?? '';
     $rooms = (int) ($criteria['rooms'] ?? 1);
     $adults = (int) ($criteria['adults'] ?? 2);
     $children = (int) ($criteria['children'] ?? 0);
     $location = $profile['address'] ?: ($profile['destination'] ?: ($hotel['destination_name'] ?? ''));
     $galleryImages = ! empty($profile['images']) ? $profile['images'] : [\App\Support\HotelOfferMapper::defaultHotelImage()];
-    $roomImage = $galleryImages[0];
     $mapLat = $profile['latitude'] ?? $hotel['latitude'] ?? null;
     $mapLng = $profile['longitude'] ?? $hotel['longitude'] ?? null;
-    $nights = max(1, \Carbon\Carbon::parse($checkIn)->diffInDays(\Carbon\Carbon::parse($checkOut)));
+    $nights = ($checkIn !== '' && $checkOut !== '')
+        ? max(1, \Carbon\Carbon::parse($checkIn)->diffInDays(\Carbon\Carbon::parse($checkOut)))
+        : 0;
 @endphp
 
 <style>
@@ -88,10 +90,15 @@
                                         <i class="mdi mdi-currency-usd" style="color: #218080; font-size: 1.2rem;"></i>
                                     </span>
                                     <div class="flex-grow-1" style="min-width:0;">
-                                        <div class="fw-bold text-dark" style="font-size: 1rem;">
-                                            {{ $currency }} {{ \App\Support\FlightOfferMapper::formatPrice($minPrice) }}
-                                        </div>
-                                        <div class="text-muted small">From / stay</div>
+                                        @if($browseOnly || ($minPrice ?? 0) <= 0)
+                                            <div class="fw-bold text-dark" style="font-size: 0.95rem;">Search dates for rates</div>
+                                            <div class="text-muted small">Live pricing on listing</div>
+                                        @else
+                                            <div class="fw-bold text-dark" style="font-size: 1rem;">
+                                                {{ $currency }} {{ \App\Support\FlightOfferMapper::formatPrice($minPrice) }}
+                                            </div>
+                                            <div class="text-muted small">From / stay</div>
+                                        @endif
                                     </div>
                                 </div>
                             </li>
@@ -103,10 +110,15 @@
                                         <i class="mdi mdi-calendar-range" style="color: #218080; font-size: 1.2rem;"></i>
                                     </span>
                                     <div class="flex-grow-1" style="min-width:0;">
-                                        <div class="fw-bold text-dark" style="font-size: 0.95rem;">
-                                            {{ \Carbon\Carbon::parse($checkIn)->format('M j') }} – {{ \Carbon\Carbon::parse($checkOut)->format('M j, Y') }}
-                                        </div>
-                                        <div class="text-muted small">{{ $rooms }} room · {{ $adults }} adult(s)</div>
+                                        @if($checkIn !== '' && $checkOut !== '')
+                                            <div class="fw-bold text-dark" style="font-size: 0.95rem;">
+                                                {{ \Carbon\Carbon::parse($checkIn)->format('M j') }} – {{ \Carbon\Carbon::parse($checkOut)->format('M j, Y') }}
+                                            </div>
+                                            <div class="text-muted small">{{ $rooms }} room · {{ $adults }} adult(s)</div>
+                                        @else
+                                            <div class="fw-bold text-dark" style="font-size: 0.95rem;">Dates not selected</div>
+                                            <div class="text-muted small">Search with dates on listing</div>
+                                        @endif
                                     </div>
                                 </div>
                             </li>
@@ -145,6 +157,10 @@
                             </section>
                         @endif
 
+                        @include('website.components.hotelbeds_nearby_locations', ['profile' => $profile])
+
+                        @include('website.components.hotelbeds_hotel_extras', ['profile' => $profile])
+
                         @if($mapLat && $mapLng)
                             <hr>
                             <section class="map">
@@ -164,6 +180,15 @@
         {{-- Rooms sidebar --}}
         <div class="col-lg-4 view-hotel-order-2">
             <div class="siderbar-single">
+                @if($browseOnly || count($rates) === 0)
+                    <h4 class="post-title bold mb-2">Book This Hotel</h4>
+                    <div class="alert alert-light border">
+                        <p class="mb-2">Select stay dates on the hotel listing to see available rooms and live rates.</p>
+                        <a href="{{ route('hotels.global.index') }}" class="btn btn-primary btn-sm w-100">
+                            Search with dates
+                        </a>
+                    </div>
+                @else
                 <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
                     <h4 class="post-title bold mb-0">Hotel Rooms To Book</h4>
                     <a href="{{ route('hotels.global.index', ['destination' => $criteria['destination'] ?? 'TZ_ALL', 'checkIn' => $checkIn, 'checkOut' => $checkOut, 'rooms' => $rooms, 'adults' => $adults, 'children' => $children]) }}"
@@ -178,6 +203,8 @@
                         $rateCurrency = strtoupper((string) ($rate['currency'] ?? $currency));
                         $rateTotal = (float) ($rate['price'] ?? 0);
                         $ratePerNight = $nights > 0 ? $rateTotal / $nights : $rateTotal;
+                        $rateImages = $rate['images'] ?? $galleryImages;
+                        $rateThumb = $rateImages[0] ?? \App\Support\HotelOfferMapper::defaultHotelImage();
                     @endphp
                     <div class="card mb-4 room-card rounded"
                         style="overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04); cursor: pointer;"
@@ -185,7 +212,7 @@
                         <div class="row g-0 align-items-center">
                             <div class="col-4 d-flex align-items-center justify-content-center" style="background: #f8f9fa;">
                                 <div class="rounded" style="width: 80px; height: 80px; overflow: hidden;">
-                                    <img src="{{ $roomImage }}" alt="{{ $rate['room_name'] ?? 'Room' }}"
+                                    <img src="{{ $rateThumb }}" alt="{{ $rate['room_name'] ?? 'Room' }}"
                                         class="rounded" style="width: 100%; height: 100%; object-fit: cover;">
                                 </div>
                             </div>
@@ -226,6 +253,7 @@
                         </div>
                     </div>
                 @endforeach
+                @endif
             </div>
 
             <div class="d-none d-lg-block">
@@ -233,11 +261,15 @@
             </div>
         </div>
 
-        {{-- Mobile: facilities + map --}}
+        {{-- Mobile: extras, facilities + map --}}
         <div class="col-12 col-lg-8 d-lg-none view-hotel-order-3 pb-4">
-            @if(!empty($profile['facilities']))
-                <div class="card">
-                    <div class="card-body">
+            <div class="card">
+                <div class="card-body">
+                    @include('website.components.hotelbeds_nearby_locations', ['profile' => $profile])
+
+                    @include('website.components.hotelbeds_hotel_extras', ['profile' => $profile])
+
+                    @if(!empty($profile['facilities']))
                         <hr>
                         <section class="feature">
                             <h4 class="section-title">Features &amp; Facilities</h4>
@@ -253,9 +285,9 @@
                                 </div>
                             </div>
                         </section>
-                    </div>
+                    @endif
                 </div>
-            @endif
+            </div>
         </div>
 
         @if($mapLat && $mapLng)
@@ -282,6 +314,7 @@
 </div>
 
 {{-- Partner room detail modals --}}
+@if(!($browseOnly ?? false) && count($rates) > 0)
 @foreach($rates as $rateIndex => $rate)
     @php
         $rateCurrency = strtoupper((string) ($rate['currency'] ?? $currency));
@@ -294,6 +327,8 @@
             $stayDates[] = $cursor->copy();
             $cursor->addDay();
         }
+        $rateImages = $rate['images'] ?? $galleryImages;
+        $rateImageSource = $rate['image_source'] ?? 'hotel';
     @endphp
     <div class="modal fade" id="partnerRoomModal{{ $rateIndex }}" tabindex="-1"
         aria-labelledby="partnerRoomModalLabel{{ $rateIndex }}" aria-hidden="true"
@@ -325,10 +360,10 @@
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <div class="room-image-gallery position-relative">
-                                @if(count($galleryImages) > 1)
+                                @if(count($rateImages) > 1)
                                     <div id="partnerRoomCarousel{{ $rateIndex }}" class="carousel carousel-fade" data-bs-ride="carousel">
                                         <div class="carousel-inner rounded" style="border-radius: 12px; overflow: hidden;">
-                                            @foreach($galleryImages as $imgIndex => $imageUrl)
+                                            @foreach($rateImages as $imgIndex => $imageUrl)
                                                 <div class="carousel-item {{ $imgIndex === 0 ? 'active' : '' }}">
                                                     <img src="{{ $imageUrl }}" class="d-block w-100" alt="Room photo"
                                                         style="height: 250px; object-fit: cover;">
@@ -346,7 +381,7 @@
                                             <span class="carousel-control-next-icon" style="width: 20px; height: 20px;"></span>
                                         </button>
                                         <div class="carousel-indicators" style="bottom: 10px; margin-bottom: 0;">
-                                            @foreach($galleryImages as $imgIndex => $imageUrl)
+                                            @foreach($rateImages as $imgIndex => $imageUrl)
                                                 <button type="button" data-bs-target="#partnerRoomCarousel{{ $rateIndex }}"
                                                     data-bs-slide-to="{{ $imgIndex }}" class="{{ $imgIndex === 0 ? 'active' : '' }}"
                                                     style="width: 8px; height: 8px; border-radius: 50%; border: none; background: rgba(255,255,255,0.5); margin: 0 3px;"
@@ -355,8 +390,17 @@
                                         </div>
                                     </div>
                                 @else
-                                    <img src="{{ $galleryImages[0] }}" class="d-block w-100 rounded" alt="Room photo"
+                                    <img src="{{ $rateImages[0] ?? \App\Support\HotelOfferMapper::defaultHotelImage() }}" class="d-block w-100 rounded" alt="Room photo"
                                         style="height: 250px; object-fit: cover;">
+                                @endif
+                                @if($rateImageSource !== 'room')
+                                    <div class="small text-muted mt-2">
+                                        @if($rateImageSource === 'generic_room')
+                                            Room photos are representative — hotel has not tagged images for this exact room type.
+                                        @else
+                                            Room photos not provided by partner for this rate — showing hotel images.
+                                        @endif
+                                    </div>
                                 @endif
                             </div>
 
@@ -440,6 +484,38 @@
                                     </div>
                                 </div>
 
+                                @php
+                                    $cancellationLines = \App\Support\HotelbedsExtrasMapper::formatCancellationPolicies(
+                                        $rate['cancellation_policies'] ?? [],
+                                        $rateCurrency
+                                    );
+                                    $rateComments = trim((string) ($rate['rate_comments'] ?? ''));
+                                @endphp
+
+                                @if($cancellationLines !== [] || $rateComments !== '')
+                                    <div class="mb-3">
+                                        <label class="form-label">Rate policies &amp; notes</label>
+                                        <div class="card card-body p-3 border small" style="font-size: 0.85rem; color: #555;">
+                                            @if($cancellationLines !== [])
+                                                <div class="mb-2">
+                                                    <strong class="d-block mb-1">Cancellation</strong>
+                                                    <ul class="mb-0 ps-3">
+                                                        @foreach($cancellationLines as $line)
+                                                            <li>{{ $line }}</li>
+                                                        @endforeach
+                                                    </ul>
+                                                </div>
+                                            @endif
+                                            @if($rateComments !== '')
+                                                <div>
+                                                    <strong class="d-block mb-1">Hotel notes</strong>
+                                                    <p class="mb-0">{{ $rateComments }}</p>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endif
+
                                 <div class="booking-summary mt-4 p-3"
                                     style="background: #f8f9fa; border-radius: 8px; border-left: 4px solid #ff5722;">
                                     <div class="d-flex justify-content-between align-items-center">
@@ -475,6 +551,7 @@
         </div>
     </div>
 @endforeach
+@endif
 @endsection
 
 @push('scripts')

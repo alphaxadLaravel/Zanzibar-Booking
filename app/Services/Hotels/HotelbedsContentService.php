@@ -43,7 +43,7 @@ class HotelbedsContentService
     {
         $code = (string) $hotelCode;
         $cacheTtl = (int) config('hotels.hotelbeds.content_cache_ttl', 86400);
-        $cacheKey = 'hotelbeds.profile.' . $code;
+        $cacheKey = 'hotelbeds.profile.v2.' . $code;
 
         return Cache::remember($cacheKey, $cacheTtl, function () use ($code) {
             try {
@@ -61,7 +61,15 @@ class HotelbedsContentService
                     'name' => 'Hotel',
                     'description' => '',
                     'images' => [HotelOfferMapper::defaultHotelImage()],
+                    'images_raw' => [],
                     'facilities' => [],
+                    'reviews' => [],
+                    'issues' => [],
+                    'interest_points' => [],
+                    'nearby_locations' => [],
+                    'phones' => [],
+                    'check_in_time' => null,
+                    'check_out_time' => null,
                     'address' => '',
                     'latitude' => null,
                     'longitude' => null,
@@ -164,6 +172,94 @@ class HotelbedsContentService
     public function syncAllowedDestinationCodes(): void
     {
         config(['hotels.allowed_destination_codes' => $this->tanzaniaDestinationCodes()]);
+    }
+
+    /**
+     * Static hotel directory (no live rates) from Content API.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function browseHotels(?string $destination, int $limit = 200): array
+    {
+        $destination = strtoupper(trim((string) $destination));
+        $cacheKey = 'hotelbeds.browse.v1.' . md5($destination . '.' . $limit);
+        $cacheTtl = 3600;
+
+        return Cache::remember($cacheKey, $cacheTtl, function () use ($destination, $limit) {
+            try {
+                if ($destination === '' || $destination === 'TZ_ALL') {
+                    return $this->mapBrowseHotels(
+                        $this->api->listHotels([
+                            'countryCode' => 'TZ',
+                            'from' => 1,
+                            'to' => min($limit, 1000),
+                        ])
+                    );
+                }
+
+                return $this->mapBrowseHotels(
+                    $this->api->listHotels([
+                        'destinationCode' => $destination,
+                        'from' => 1,
+                        'to' => min($limit, 1000),
+                    ])
+                );
+            } catch (\Throwable $e) {
+                Log::warning('Hotelbeds browse hotels failed', [
+                    'destination' => $destination,
+                    'error' => $e->getMessage(),
+                ]);
+
+                return [];
+            }
+        });
+    }
+
+    /**
+     * @param  array<string, mixed>  $response
+     * @return array<int, array<string, mixed>>
+     */
+    protected function mapBrowseHotels(array $response): array
+    {
+        $mapped = [];
+
+        foreach ($response['hotels'] ?? [] as $hotel) {
+            if (! is_array($hotel)) {
+                continue;
+            }
+
+            $code = (string) ($hotel['code'] ?? '');
+
+            if ($code === '') {
+                continue;
+            }
+
+            $destinationName = $hotel['destination']['name']['content']
+                ?? $hotel['destination']['name']
+                ?? $hotel['destination']['code']
+                ?? '';
+
+            if (is_array($destinationName)) {
+                $destinationName = $destinationName['content'] ?? '';
+            }
+
+            $latitude = $hotel['coordinates']['latitude'] ?? $hotel['latitude'] ?? null;
+            $longitude = $hotel['coordinates']['longitude'] ?? $hotel['longitude'] ?? null;
+
+            $mapped[] = [
+                'hotel_code' => $code,
+                'hotel_name' => trim((string) ($hotel['name']['content'] ?? $hotel['name'] ?? 'Hotel')) ?: 'Hotel',
+                'destination_name' => trim((string) $destinationName),
+                'category_code' => isset($hotel['categoryCode']) ? (string) $hotel['categoryCode'] : null,
+                'latitude' => $latitude !== null ? (string) $latitude : null,
+                'longitude' => $longitude !== null ? (string) $longitude : null,
+                'price' => 0,
+                'currency' => 'USD',
+                'browse_only' => true,
+            ];
+        }
+
+        return $mapped;
     }
 
     /**

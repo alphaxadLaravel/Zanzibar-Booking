@@ -106,9 +106,30 @@ class HotelbedsApiService
     public function getHotelDetails(int|string $hotelCode, string $language = 'ENG'): array
     {
         return $this->get(
-            '/hotel-content-api/1.0/hotels/' . urlencode((string) $hotelCode) . '/details?language=' . urlencode($language),
+            '/hotel-content-api/1.0/hotels/' . urlencode((string) $hotelCode) . '/details?' . http_build_query([
+                'language' => $language,
+                'fields' => 'all',
+            ]),
             'Unable to load hotel details.'
         );
+    }
+
+    /**
+     * @param  array<string, mixed>  $query
+     * @return array<string, mixed>
+     */
+    public function listHotels(array $query): array
+    {
+        $params = array_merge([
+            'fields' => 'code,name,categoryCode,destination,countryCode,coordinates,images',
+            'language' => 'ENG',
+            'from' => 1,
+            'to' => 200,
+        ], $query);
+
+        $path = '/hotel-content-api/1.0/hotels?' . http_build_query($params);
+
+        return $this->get($path, 'Unable to load hotels.');
     }
 
     /**

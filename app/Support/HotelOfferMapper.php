@@ -33,6 +33,7 @@ class HotelOfferMapper
         array $rate,
         HotelSearchCriteria $criteria,
         array $destinationMeta = [],
+        ?array $room = null,
     ): array {
         $supplierTotal = (float) ($rate['net'] ?? $rate['sellingRate'] ?? 0);
         $pricing = self::applyMarkup($supplierTotal);
@@ -53,7 +54,8 @@ class HotelOfferMapper
             'zone_name' => trim((string) ($hotel['zoneName'] ?? '')),
             'check_in' => $criteria->checkIn,
             'check_out' => $criteria->checkOut,
-            'room_name' => (string) ($rate['roomName'] ?? $rate['name'] ?? 'Room'),
+            'room_name' => (string) ($rate['roomName'] ?? $rate['name'] ?? $room['name'] ?? 'Room'),
+            'room_code' => strtoupper(trim((string) ($room['code'] ?? ''))),
             'board_name' => (string) ($rate['boardName'] ?? $rate['boardCode'] ?? ''),
             'category_code' => isset($hotel['categoryCode']) ? (string) $hotel['categoryCode'] : null,
             'supplier_total' => $pricing['supplier_total'],
@@ -61,6 +63,7 @@ class HotelOfferMapper
             'price' => $pricing['price'],
             'currency' => strtoupper((string) ($rate['currency'] ?? $criteria->currency)),
             'rate_type' => strtoupper((string) ($rate['rateType'] ?? 'BOOKABLE')),
+            'rate_comments' => trim((string) ($rate['rateComments'] ?? '')),
             'rooms' => $criteria->rooms,
             'adults' => $criteria->adults,
             'children' => $criteria->children,
@@ -127,15 +130,133 @@ class HotelOfferMapper
     }
 
     /**
+     * Hotel-level gallery (general photos, not room-specific).
+     *
      * @param  array<int, array<string, mixed>>  $images
      * @return array<int, string>
      */
-    public static function hotelbedsGalleryImages(array $images, int $limit = 15): array
+    public static function hotelGalleryImages(array $images, int $limit = 15): array
     {
         if ($images === []) {
             return [self::defaultHotelImage()];
         }
 
+        $general = array_values(array_filter(
+            $images,
+            fn (array $image) => self::imageTypeCode($image) === 'GEN' && ! empty($image['path'])
+        ));
+
+        if ($general !== []) {
+            return self::imagesToUrls($general, $limit);
+        }
+
+        return self::hotelbedsGalleryImages($images, $limit);
+    }
+
+    /**
+     * Room photos from Content API (HAB) matched to availability room code.
+     *
+     * @param  array<int, array<string, mixed>>  $images
+     * @return array{urls: array<int, string>, source: string}
+     */
+    public static function resolveRoomImages(array $images, ?string $roomCode, int $limit = 8): array
+    {
+        $roomCode = strtoupper(trim((string) $roomCode));
+        $matched = [];
+        $genericHab = [];
+
+        foreach ($images as $image) {
+            if (! is_array($image) || empty($image['path'])) {
+                continue;
+            }
+
+            if (self::imageTypeCode($image) !== 'HAB') {
+                continue;
+            }
+
+            $imageRoomCode = strtoupper(trim((string) ($image['roomCode'] ?? '')));
+
+            if ($imageRoomCode === '') {
+                $genericHab[] = $image;
+
+                continue;
+            }
+
+            if ($roomCode !== '' && self::roomCodesMatch($roomCode, $imageRoomCode)) {
+                $matched[] = $image;
+            }
+        }
+
+        if ($matched !== []) {
+            return ['urls' => self::imagesToUrls($matched, $limit), 'source' => 'room'];
+        }
+
+        if ($genericHab !== []) {
+            return ['urls' => self::imagesToUrls($genericHab, $limit), 'source' => 'generic_room'];
+        }
+
+        return [
+            'urls' => self::hotelGalleryImages($images, min($limit, 3)),
+            'source' => 'hotel',
+        ];
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $images
+     * @return array<int, string>
+     */
+    public static function roomImagesForCode(array $images, ?string $roomCode, int $limit = 8): array
+    {
+        return self::resolveRoomImages($images, $roomCode, $limit)['urls'];
+    }
+
+    public static function roomCodeFromRateKey(?string $rateKey): string
+    {
+        if ($rateKey === null || $rateKey === '') {
+            return '';
+        }
+
+        $parts = explode('|', $rateKey);
+        $candidate = strtoupper(trim((string) ($parts[5] ?? '')));
+
+        if (preg_match('/^[A-Z]{2,4}\.[A-Z0-9]{1,4}$/', $candidate)) {
+            return $candidate;
+        }
+
+        return '';
+    }
+
+    protected static function roomCodesMatch(string $availabilityCode, string $imageRoomCode): bool
+    {
+        if ($availabilityCode === $imageRoomCode) {
+            return true;
+        }
+
+        $availabilityType = explode('.', $availabilityCode)[0] ?? '';
+        $imageType = explode('.', $imageRoomCode)[0] ?? '';
+
+        return $availabilityType !== ''
+            && $availabilityType === $imageType;
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $images
+     */
+    protected static function imageTypeCode(array $image): string
+    {
+        return strtoupper(trim((string) (
+            $image['imageTypeCode']
+            ?? $image['type']['code']
+            ?? ''
+        )));
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $images
+     * @return array<int, string>
+     */
+    protected static function imagesToUrls(array $images, int $limit): array
+    {
         usort($images, function (array $a, array $b) {
             $orderA = (int) ($a['visualOrder'] ?? $a['order'] ?? 999);
             $orderB = (int) ($b['visualOrder'] ?? $b['order'] ?? 999);
@@ -158,6 +279,26 @@ class HotelOfferMapper
         }
 
         return $urls !== [] ? array_values(array_unique($urls)) : [self::defaultHotelImage()];
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $images
+     * @return array<int, string>
+     */
+    public static function hotelbedsGalleryImages(array $images, int $limit = 15): array
+    {
+        if ($images === []) {
+            return [self::defaultHotelImage()];
+        }
+
+        usort($images, function (array $a, array $b) {
+            $orderA = (int) ($a['visualOrder'] ?? $a['order'] ?? 999);
+            $orderB = (int) ($b['visualOrder'] ?? $b['order'] ?? 999);
+
+            return $orderA <=> $orderB;
+        });
+
+        return self::imagesToUrls($images, $limit);
     }
 
     public static function categoryStars(?string $categoryCode): ?int
@@ -218,7 +359,7 @@ class HotelOfferMapper
 
         foreach ($preferredTypes as $type) {
             foreach ($images as $image) {
-                if (($image['imageTypeCode'] ?? '') === $type && ! empty($image['path'])) {
+                if (self::imageTypeCode($image) === $type && ! empty($image['path'])) {
                     return self::hotelbedsImageUrl((string) $image['path']);
                 }
             }

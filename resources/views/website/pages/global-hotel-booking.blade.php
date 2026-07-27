@@ -17,6 +17,29 @@
                 <div class="fw-bold text-primary mt-2">
                     {{ $offer['currency'] ?? 'USD' }} {{ \App\Support\FlightOfferMapper::formatPrice((float) $offer['price']) }}
                 </div>
+                @php
+                    $checkoutCancellation = \App\Support\HotelbedsExtrasMapper::formatCancellationPolicies(
+                        $offer['cancellation_policies'] ?? [],
+                        strtoupper((string) ($offer['currency'] ?? 'USD'))
+                    );
+                    $checkoutComments = trim((string) ($offer['rate_comments'] ?? ''));
+                @endphp
+                @if($checkoutCancellation !== [] || $checkoutComments !== '')
+                    <div class="small mt-3 border-top pt-2">
+                        @if($checkoutCancellation !== [])
+                            <div class="fw-semibold mb-1">Cancellation policy</div>
+                            <ul class="mb-2 ps-3">
+                                @foreach($checkoutCancellation as $line)
+                                    <li>{{ $line }}</li>
+                                @endforeach
+                            </ul>
+                        @endif
+                        @if($checkoutComments !== '')
+                            <div class="fw-semibold mb-1">Hotel notes</div>
+                            <p class="mb-0">{{ $checkoutComments }}</p>
+                        @endif
+                    </div>
+                @endif
             </div>
 
             @if(session('error'))

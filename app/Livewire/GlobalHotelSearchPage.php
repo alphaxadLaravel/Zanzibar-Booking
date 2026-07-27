@@ -18,21 +18,21 @@ class GlobalHotelSearchPage extends Component
 
     protected $paginationTheme = 'bootstrap';
 
-    public string $destination = 'TZ_ALL';
+    public string $destination = '';
 
     public string $checkIn = '';
 
     public string $checkOut = '';
 
-    public int $rooms = 1;
+    public string $rooms = '';
 
-    public int $adults = 2;
+    public string $adults = '';
 
-    public int $children = 0;
+    public string $children = '';
 
     public string $searchName = '';
 
-    public string $sortBy = 'price_asc';
+    public string $sortBy = 'name_asc';
 
     /** @var array<int, array<string, mixed>> */
     public array $allHotels = [];
@@ -41,15 +41,14 @@ class GlobalHotelSearchPage extends Component
 
     public bool $loading = false;
 
+    public bool $browseMode = false;
+
     public ?string $error = null;
 
     public function mount(): void
     {
-        $this->checkIn = now()->addDays(7)->format('Y-m-d');
-        $this->checkOut = now()->addDays(9)->format('Y-m-d');
-
         if (request()->filled('destination')) {
-            $this->destination = strtoupper((string) request('destination', 'TZ_ALL'));
+            $this->destination = strtoupper((string) request('destination'));
         }
 
         if (request()->filled('checkIn')) {
@@ -60,11 +59,21 @@ class GlobalHotelSearchPage extends Component
             $this->checkOut = (string) request('checkOut');
         }
 
-        $this->rooms = max(1, (int) request('rooms', 1));
-        $this->adults = max(1, (int) request('adults', 2));
-        $this->children = max(0, (int) request('children', 0));
+        if (request()->filled('rooms')) {
+            $this->rooms = (string) request('rooms');
+        }
 
-        $this->searchHotels();
+        if (request()->filled('adults')) {
+            $this->adults = (string) request('adults');
+        }
+
+        if (request()->filled('children')) {
+            $this->children = (string) request('children');
+        }
+
+        if ($this->checkIn !== '' && $this->checkOut !== '') {
+            $this->searchHotels();
+        }
     }
 
     public function updatingSearchName(): void
@@ -79,13 +88,60 @@ class GlobalHotelSearchPage extends Component
         $this->searched = true;
         $this->resetPage();
 
+        $hasDates = $this->checkIn !== '' || $this->checkOut !== '';
+
+        if ($hasDates && ($this->checkIn === '' || $this->checkOut === '')) {
+            $this->error = 'Please select both check-in and check-out dates, or leave both empty to browse hotels.';
+            $this->loading = false;
+            $this->allHotels = [];
+
+            return;
+        }
+
+        if ($this->checkIn === '' && $this->checkOut === '') {
+            $this->searchBrowse();
+
+            return;
+        }
+
+        $this->searchAvailability();
+    }
+
+    protected function searchBrowse(): void
+    {
+        $this->browseMode = true;
+        $this->sortBy = $this->sortBy === 'price_asc' || $this->sortBy === 'price_desc' ? 'name_asc' : $this->sortBy;
+
+        try {
+            $destination = $this->destination !== '' ? $this->destination : 'TZ_ALL';
+            $this->allHotels = app(HotelbedsContentService::class)->browseHotels(
+                $destination,
+                (int) config('hotels.defaults.max_results', 200)
+            );
+        } catch (\Throwable $e) {
+            $this->error = $e->getMessage();
+            $this->allHotels = [];
+        }
+
+        $this->loading = false;
+    }
+
+    protected function searchAvailability(): void
+    {
+        $this->browseMode = false;
+
+        $rooms = max(1, (int) ($this->rooms !== '' ? $this->rooms : 1));
+        $adults = max(1, (int) ($this->adults !== '' ? $this->adults : 2));
+        $children = max(0, (int) ($this->children !== '' ? $this->children : 0));
+        $destination = $this->destination !== '' ? $this->destination : 'TZ_ALL';
+
         $validator = Validator::make([
-            'destination' => $this->destination,
+            'destination' => $destination,
             'checkIn' => $this->checkIn,
             'checkOut' => $this->checkOut,
-            'rooms' => $this->rooms,
-            'adults' => $this->adults,
-            'children' => $this->children,
+            'rooms' => $rooms,
+            'adults' => $adults,
+            'children' => $children,
         ], [
             'destination' => ['required', 'string', 'max:12'],
             'checkIn' => ['required', 'date', 'after_or_equal:today'],
@@ -105,18 +161,22 @@ class GlobalHotelSearchPage extends Component
 
         try {
             $criteria = HotelSearchCriteria::fromArray([
-                'destination' => $this->destination,
+                'destination' => $destination,
                 'checkIn' => $this->checkIn,
                 'checkOut' => $this->checkOut,
-                'rooms' => $this->rooms,
-                'adults' => $this->adults,
-                'children' => $this->children,
+                'rooms' => $rooms,
+                'adults' => $adults,
+                'children' => $children,
                 'maxHotels' => (int) config('hotels.defaults.max_results', 200),
             ]);
 
             $searchService = app(HotelSearchService::class);
             $offers = $searchService->search($criteria);
             $this->allHotels = $searchService->groupByHotel($offers);
+
+            if ($this->sortBy === 'name_asc' || $this->sortBy === 'name_desc') {
+                $this->sortBy = 'price_asc';
+            }
         } catch (\Throwable $e) {
             $this->error = $e->getMessage();
             $this->allHotels = [];
@@ -127,15 +187,19 @@ class GlobalHotelSearchPage extends Component
 
     public function resetFilters(): void
     {
-        $this->destination = 'TZ_ALL';
-        $this->checkIn = now()->addDays(7)->format('Y-m-d');
-        $this->checkOut = now()->addDays(9)->format('Y-m-d');
-        $this->rooms = 1;
-        $this->adults = 2;
-        $this->children = 0;
+        $this->destination = '';
+        $this->checkIn = '';
+        $this->checkOut = '';
+        $this->rooms = '';
+        $this->adults = '';
+        $this->children = '';
         $this->searchName = '';
-        $this->sortBy = 'price_asc';
-        $this->searchHotels();
+        $this->sortBy = 'name_asc';
+        $this->allHotels = [];
+        $this->searched = false;
+        $this->browseMode = false;
+        $this->error = null;
+        $this->resetPage();
     }
 
     public function updateSort(string $sortValue): void
@@ -163,12 +227,19 @@ class GlobalHotelSearchPage extends Component
             );
         }
 
-        $collection = match ($this->sortBy) {
-            'price_desc' => $collection->sortByDesc('price'),
-            'name_asc' => $collection->sortBy('hotel_name'),
-            'name_desc' => $collection->sortByDesc('hotel_name'),
-            default => $collection->sortBy('price'),
-        };
+        if ($this->browseMode) {
+            $collection = match ($this->sortBy) {
+                'name_desc' => $collection->sortByDesc('hotel_name'),
+                default => $collection->sortBy('hotel_name'),
+            };
+        } else {
+            $collection = match ($this->sortBy) {
+                'price_desc' => $collection->sortByDesc('price'),
+                'name_asc' => $collection->sortBy('hotel_name'),
+                'name_desc' => $collection->sortByDesc('hotel_name'),
+                default => $collection->sortBy('price'),
+            };
+        }
 
         return $collection->values()->all();
     }
@@ -187,13 +258,17 @@ class GlobalHotelSearchPage extends Component
             $code = (string) ($hotel['hotel_code'] ?? '');
             $currency = strtoupper((string) ($hotel['currency'] ?? 'USD'));
             $price = (float) ($hotel['price'] ?? 0);
+            $isBrowse = (bool) ($hotel['browse_only'] ?? $this->browseMode);
 
             $hotel['image_url'] = $images[$code] ?? HotelOfferMapper::defaultHotelImage();
             $hotel['star_rating'] = HotelOfferMapper::categoryStars($hotel['category_code'] ?? null) ?? 4;
             $hotel['view_route'] = route('hotels.global.show', ['hotelCode' => $code]);
-            $hotel['display_price'] = $currency . ' ' . FlightOfferMapper::formatPrice($price);
+            $hotel['display_price'] = $isBrowse || $price <= 0
+                ? null
+                : $currency . ' ' . FlightOfferMapper::formatPrice($price);
+            $hotel['browse_only'] = $isBrowse;
             $hotel['title'] = (string) ($hotel['hotel_name'] ?? 'Hotel');
-            $hotel['location'] = (string) ($hotel['destination_name'] ?? $this->destination);
+            $hotel['location'] = (string) ($hotel['destination_name'] ?? $this->destination ?: 'Tanzania');
             $hotel['lat'] = $hotel['latitude'] ?? null;
             $hotel['long'] = $hotel['longitude'] ?? null;
             $hotel['id'] = $code;

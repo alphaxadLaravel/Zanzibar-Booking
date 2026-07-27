@@ -8,6 +8,7 @@ use App\Services\CurrencyConverter;
 use App\Services\Hotels\HotelBookingService;
 use App\Services\Hotels\HotelbedsContentService;
 use App\Services\Hotels\HotelSearchService;
+use App\Support\HotelOfferMapper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Knox\Pesapal\Facades\Pesapal;
@@ -37,15 +38,37 @@ class GlobalHotelController extends Controller
             ->all();
 
         $criteria = session('hotel_search_criteria', []);
+        $profile = app(HotelbedsContentService::class)->profileForHotel($hotelCode);
+        $browseOnly = $rates === [];
 
-        if ($rates === []) {
-            return redirect()
-                ->route('hotels.global.index')
-                ->with('error', 'Hotel rates expired. Please search again.');
+        if ($browseOnly) {
+            $hotel = [
+                'hotel_code' => $hotelCode,
+                'hotel_name' => $profile['name'] ?? 'Hotel',
+                'destination_name' => $profile['destination'] ?? '',
+                'category_code' => $profile['category_code'] ?? null,
+                'latitude' => $profile['latitude'] ?? null,
+                'longitude' => $profile['longitude'] ?? null,
+                'currency' => 'USD',
+            ];
+            $minPrice = 0;
+            $currency = 'USD';
+            $starRating = \App\Support\HotelOfferMapper::categoryStars($profile['category_code'] ?? null) ?? 4;
+
+            return view('website.pages.global-hotel-detail', compact(
+                'hotel',
+                'rates',
+                'criteria',
+                'hotelCode',
+                'profile',
+                'minPrice',
+                'currency',
+                'starRating',
+                'browseOnly',
+            ));
         }
 
         $hotel = $rates[0];
-        $profile = app(HotelbedsContentService::class)->profileForHotel($hotelCode);
 
         if (empty($profile['latitude']) && ! empty($hotel['latitude'])) {
             $profile['latitude'] = (string) $hotel['latitude'];
@@ -65,6 +88,21 @@ class GlobalHotelController extends Controller
             $profile['category_code'] ?? $hotel['category_code'] ?? null
         ) ?? 4;
 
+        $rawImages = $profile['images_raw'] ?? [];
+        $rates = array_map(function (array $rate) use ($rawImages) {
+            $roomCode = $rate['room_code'] ?? HotelOfferMapper::roomCodeFromRateKey($rate['rate_key'] ?? '');
+
+            $resolved = HotelOfferMapper::resolveRoomImages(
+                $rawImages,
+                $roomCode !== '' ? $roomCode : null
+            );
+            $rate['room_code'] = $roomCode;
+            $rate['images'] = $resolved['urls'];
+            $rate['image_source'] = $resolved['source'];
+
+            return $rate;
+        }, $rates);
+
         return view('website.pages.global-hotel-detail', compact(
             'hotel',
             'rates',
@@ -74,7 +112,7 @@ class GlobalHotelController extends Controller
             'minPrice',
             'currency',
             'starRating',
-        ));
+        ) + ['browseOnly' => false]);
     }
 
     public function selectRate(Request $request)

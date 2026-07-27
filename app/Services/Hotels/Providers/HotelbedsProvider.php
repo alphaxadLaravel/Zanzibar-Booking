@@ -92,7 +92,7 @@ class HotelbedsProvider implements HotelProviderInterface
 
             foreach ($hotel['rooms'] ?? [] as $room) {
                 foreach ($room['rates'] ?? [] as $rate) {
-                    $mapped = HotelOfferMapper::mapRateToArray($hotel, $rate, $criteria, $destinationMeta);
+                    $mapped = HotelOfferMapper::mapRateToArray($hotel, $rate, $criteria, $destinationMeta, $room);
                     $offers[] = HotelOffer::fromArray($mapped);
                 }
             }
