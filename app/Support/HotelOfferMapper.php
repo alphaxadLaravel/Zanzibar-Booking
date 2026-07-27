@@ -64,6 +64,40 @@ class HotelOfferMapper
         ];
     }
 
+    /**
+     * @param  array<int, array<string, mixed>>  $images
+     * @return array<int, string>
+     */
+    public static function hotelbedsGalleryImages(array $images, int $limit = 15): array
+    {
+        if ($images === []) {
+            return [self::defaultHotelImage()];
+        }
+
+        usort($images, function (array $a, array $b) {
+            $orderA = (int) ($a['visualOrder'] ?? $a['order'] ?? 999);
+            $orderB = (int) ($b['visualOrder'] ?? $b['order'] ?? 999);
+
+            return $orderA <=> $orderB;
+        });
+
+        $urls = [];
+
+        foreach ($images as $image) {
+            $url = self::hotelbedsImageUrl((string) ($image['path'] ?? ''));
+
+            if ($url) {
+                $urls[] = $url;
+            }
+
+            if (count($urls) >= $limit) {
+                break;
+            }
+        }
+
+        return $urls !== [] ? array_values(array_unique($urls)) : [self::defaultHotelImage()];
+    }
+
     public static function categoryStars(?string $categoryCode): ?int
     {
         if (! $categoryCode) {

@@ -30,19 +30,51 @@ class GlobalHotelController extends Controller
 
     public function show(string $hotelCode)
     {
-        $rates = $this->searchService->ratesForHotel($hotelCode);
+        $rates = collect($this->searchService->ratesForHotel($hotelCode))
+            ->unique('rate_key')
+            ->sortBy('price')
+            ->values()
+            ->all();
+
         $criteria = session('hotel_search_criteria', []);
 
-        if (empty($rates)) {
+        if ($rates === []) {
             return redirect()
                 ->route('hotels.global.index')
                 ->with('error', 'Hotel rates expired. Please search again.');
         }
 
         $hotel = $rates[0];
-        $hotelImage = app(HotelbedsContentService::class)->imageForHotel($hotelCode);
+        $profile = app(HotelbedsContentService::class)->profileForHotel($hotelCode);
 
-        return view('website.pages.global-hotel-detail', compact('hotel', 'rates', 'criteria', 'hotelCode', 'hotelImage'));
+        if (empty($profile['latitude']) && ! empty($hotel['latitude'])) {
+            $profile['latitude'] = (string) $hotel['latitude'];
+        }
+
+        if (empty($profile['longitude']) && ! empty($hotel['longitude'])) {
+            $profile['longitude'] = (string) $hotel['longitude'];
+        }
+
+        if ($profile['name'] === 'Hotel' && ! empty($hotel['hotel_name'])) {
+            $profile['name'] = (string) $hotel['hotel_name'];
+        }
+
+        $minPrice = (float) collect($rates)->min('price');
+        $currency = strtoupper((string) ($hotel['currency'] ?? 'USD'));
+        $starRating = \App\Support\HotelOfferMapper::categoryStars(
+            $profile['category_code'] ?? $hotel['category_code'] ?? null
+        ) ?? 4;
+
+        return view('website.pages.global-hotel-detail', compact(
+            'hotel',
+            'rates',
+            'criteria',
+            'hotelCode',
+            'profile',
+            'minPrice',
+            'currency',
+            'starRating',
+        ));
     }
 
     public function selectRate(Request $request)
