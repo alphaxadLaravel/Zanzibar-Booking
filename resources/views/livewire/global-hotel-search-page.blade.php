@@ -17,71 +17,112 @@
             .list-hotel__content { max-height: none !important; }
         }
         @media (max-width: 768px) {
-            .hero-bg-image { height: 120px !important; min-height: 120px; }
-            .hb-search-block { margin-top: -18px; }
+            .hero-bg-image { height: 320px !important; min-height: 320px; }
+            .hb-search-center {
+                position: absolute !important;
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                width: 100% !important;
+                padding: 0 10px !important;
+            }
+            .hb-search-card { padding: 15px !important; }
+            .hb-search-title--mobile { display: block !important; }
+        }
+        @media (max-width: 576px) {
+            .hero-bg-image { height: 300px !important; min-height: 300px; }
+            .hb-search-card { padding: 10px !important; }
         }
         @media (min-width: 769px) {
-            .hero-bg-image { height: 120px !important; }
-            .hb-search-block { margin-top: -22px; }
+            .hero-bg-image { height: 160px !important; }
+            .hb-search-center { min-height: 100px !important; }
+        }
+        @media (min-width: 1024px) and (max-width: 1366px) {
+            .hero-bg-image { height: 140px !important; }
+            .hb-search-center { min-height: 80px !important; }
         }
         .hb-search-card .form-control,
-        .hb-search-card .btn { height: 40px !important; font-size: 14px !important; }
-        .hb-search-card { padding: 10px 12px !important; }
+        .hb-search-card .btn { height: 45px !important; font-size: 14px !important; }
+        .hb-search-card {
+            background: rgba(255,255,255,0.97);
+            width: 100%;
+            max-width: 1280px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .hb-search-title--mobile {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            text-align: center;
+            margin-bottom: 15px;
+            display: none;
+        }
         .hb-filter-toolbar .form-control { height: 38px; font-size: 14px; max-width: 220px; }
     </style>
 
-    <section class="hero-slider hb-hero" style="min-height: 120px; position: relative; margin-bottom: 0;">
+    <section class="hero-slider" style="min-height: 160px; position: relative; margin-bottom: 0;">
         <div class="container-fluid no-gutters p-0">
             <div class="single-hero-image" style="position: relative;">
                 <img src="{{ asset('images/banner.jpg') }}" class="hero-bg-image"
-                    style="object-fit: cover; width: 100%; height: 120px;" alt="Hotel & Beds" />
+                    style="object-fit: cover; width: 100%; height: 160px; background-repeat: no-repeat;" alt="Hotel & Beds" />
+            </div>
+            <div class="hb-search-center" style="
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 100%;
+                padding: 0 15px;
+                z-index: 10;
+            ">
+                <div class="container" style="max-width: 1350px; margin: 0 auto;">
+                    <div class="search-card hb-search-card p-3 rounded shadow">
+                        <p class="hb-search-title--mobile">Find Hotels in Tanzania &amp; Zanzibar</p>
+                        <form wire:submit.prevent="searchHotels">
+                            <div class="row g-3" style="width: 100%; margin: 0;">
+                                <div class="col-12 col-md-3 d-flex flex-column" style="min-width: 0;">
+                                    <select wire:model="destination" class="form-control flex-grow-1" title="Destination">
+                                        @foreach($destinationOptions as $group => $options)
+                                            <optgroup label="{{ $group }}">
+                                                @foreach($options as $code => $label)
+                                                    <option value="{{ $code }}">{{ $label }}</option>
+                                                @endforeach
+                                            </optgroup>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-6 col-md-2 d-flex flex-column" style="min-width: 0;">
+                                    <input type="date" wire:model="checkIn" class="form-control flex-grow-1" min="{{ date('Y-m-d') }}" title="Check-in">
+                                </div>
+                                <div class="col-6 col-md-2 d-flex flex-column" style="min-width: 0;">
+                                    <input type="date" wire:model="checkOut" class="form-control flex-grow-1" min="{{ date('Y-m-d', strtotime('+1 day')) }}" title="Check-out">
+                                </div>
+                                <div class="col-4 col-md-1 d-flex flex-column" style="min-width: 0;">
+                                    <input type="number" wire:model="rooms" min="1" max="5" class="form-control flex-grow-1" placeholder="Rooms" title="Rooms">
+                                </div>
+                                <div class="col-4 col-md-1 d-flex flex-column" style="min-width: 0;">
+                                    <input type="number" wire:model="adults" min="1" max="9" class="form-control flex-grow-1" placeholder="Adults" title="Adults">
+                                </div>
+                                <div class="col-4 col-md-1 d-flex flex-column" style="min-width: 0;">
+                                    <input type="number" wire:model="children" min="0" max="6" class="form-control flex-grow-1" placeholder="Kids" title="Children">
+                                </div>
+                                <div class="col-12 col-md-2 d-flex gap-2 align-items-stretch" style="min-width: 0;">
+                                    <button type="submit" class="btn btn-primary flex-grow-1 w-100" style="background: #003580; border: none; font-weight: 600;" wire:loading.attr="disabled" wire:target="searchHotels">
+                                        <span wire:loading.remove wire:target="searchHotels"><i class="fas fa-search me-1"></i> Search</span>
+                                        <span wire:loading wire:target="searchHotels">Searching…</span>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary px-3" wire:click="resetFilters" title="Reset filters">
+                                        <i class="fas fa-refresh"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
-
-    <div class="container hb-search-block" style="position: relative; z-index: 10; max-width: 1280px;">
-        <div class="search-card hb-search-card rounded shadow" style="background: #fff; border: 1px solid #e9ecef;">
-            <form wire:submit.prevent="searchHotels">
-                <div class="row g-2 align-items-center">
-                    <div class="col-6 col-md-2">
-                        <select wire:model="destination" class="form-control" title="Destination">
-                            @foreach($destinationOptions as $group => $options)
-                                <optgroup label="{{ $group }}">
-                                    @foreach($options as $code => $label)
-                                        <option value="{{ $code }}">{{ $label }}</option>
-                                    @endforeach
-                                </optgroup>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-6 col-md-2">
-                        <input type="date" wire:model="checkIn" class="form-control" min="{{ date('Y-m-d') }}" title="Check-in">
-                    </div>
-                    <div class="col-6 col-md-2">
-                        <input type="date" wire:model="checkOut" class="form-control" min="{{ date('Y-m-d', strtotime('+1 day')) }}" title="Check-out">
-                    </div>
-                    <div class="col-4 col-md-1">
-                        <input type="number" wire:model="rooms" min="1" max="5" class="form-control" placeholder="Rooms" title="Rooms">
-                    </div>
-                    <div class="col-4 col-md-1">
-                        <input type="number" wire:model="adults" min="1" max="9" class="form-control" placeholder="Adults" title="Adults">
-                    </div>
-                    <div class="col-4 col-md-1">
-                        <input type="number" wire:model="children" min="0" max="6" class="form-control" placeholder="Kids" title="Children">
-                    </div>
-                    <div class="col-12 col-md-3 d-flex gap-2">
-                        <button type="submit" class="btn btn-primary flex-grow-1" style="background: #003580; border: none; font-weight: 600;" wire:loading.attr="disabled" wire:target="searchHotels">
-                            <span wire:loading.remove wire:target="searchHotels"><i class="fas fa-search me-1"></i> Search</span>
-                            <span wire:loading wire:target="searchHotels">Searching…</span>
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary px-3" wire:click="resetFilters" title="Reset filters">
-                            <i class="fas fa-refresh"></i>
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <section class="container-fluid">
         <div class="row">

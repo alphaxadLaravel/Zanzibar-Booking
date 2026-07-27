@@ -45,7 +45,7 @@ return [
             'code' => 'TZ_ALL',
             'name' => 'Tanzania & Zanzibar',
             'country' => 'Tanzania',
-            'codes' => ['ZNZ', 'DAR', 'JRO', 'MWZ', 'DOD'],
+            'codes' => ['ZNZ', 'DAR'],
         ],
         'ZNZ' => [
             'code' => env('HOTELBEDS_DEST_ZNZ', 'ZNZ'),
@@ -57,33 +57,23 @@ return [
             'name' => 'Dar es Salaam',
             'country' => 'Tanzania',
         ],
-        'JRO' => [
-            'code' => env('HOTELBEDS_DEST_JRO', 'JRO'),
-            'name' => 'Kilimanjaro / Arusha',
-            'country' => 'Tanzania',
-        ],
-        'MWZ' => [
-            'code' => env('HOTELBEDS_DEST_MWZ', 'MWZ'),
-            'name' => 'Mwanza',
-            'country' => 'Tanzania',
-        ],
-        'DOD' => [
-            'code' => env('HOTELBEDS_DEST_DOD', 'DOD'),
-            'name' => 'Dodoma',
-            'country' => 'Tanzania',
-        ],
+    ],
+
+    /*
+    | Approximate bounds for Tanzania mainland + Zanzibar (lat/lng).
+    */
+    'tanzania_bounds' => [
+        'lat_min' => -12.5,
+        'lat_max' => -0.5,
+        'lng_min' => 29.0,
+        'lng_max' => 40.9,
     ],
 
     'destination_options' => [
         'Tanzania & Zanzibar' => [
             'TZ_ALL' => 'All Tanzania & Zanzibar',
             'ZNZ' => 'Zanzibar',
-        ],
-        'Tanzania (Mainland)' => [
             'DAR' => 'Dar es Salaam',
-            'JRO' => 'Kilimanjaro / Arusha',
-            'MWZ' => 'Mwanza',
-            'DOD' => 'Dodoma',
         ],
     ],
 

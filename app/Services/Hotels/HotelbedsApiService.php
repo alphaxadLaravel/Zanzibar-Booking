@@ -114,6 +114,25 @@ class HotelbedsApiService
     /**
      * @return array<string, mixed>
      */
+    public function getDestinations(string $countryCode = 'TZ', int $from = 1, int $to = 1000): array
+    {
+        $query = http_build_query([
+            'fields' => 'all',
+            'language' => 'ENG',
+            'countryCodes' => strtoupper($countryCode),
+            'from' => max(1, $from),
+            'to' => max($from, $to),
+        ]);
+
+        return $this->get(
+            '/hotel-content-api/1.0/locations/destinations?' . $query,
+            'Unable to load destinations.'
+        );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
     protected function get(string $path, string $fallbackMessage): array
     {
         $timeout = (int) config('hotels.hotelbeds.timeout', 30);

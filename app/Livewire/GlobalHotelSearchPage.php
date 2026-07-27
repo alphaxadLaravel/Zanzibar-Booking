@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\DTOs\HotelSearchCriteria;
 use App\Services\Hotels\HotelbedsContentService;
+use App\Services\Hotels\HotelbedsContentService;
 use App\Services\Hotels\HotelSearchService;
 use App\Support\FlightOfferMapper;
 use App\Support\HotelOfferMapper;
@@ -87,7 +88,7 @@ class GlobalHotelSearchPage extends Component
             'adults' => $this->adults,
             'children' => $this->children,
         ], [
-            'destination' => ['required', 'string', 'max:10'],
+            'destination' => ['required', 'string', 'max:12'],
             'checkIn' => ['required', 'date', 'after_or_equal:today'],
             'checkOut' => ['required', 'date', 'after:checkIn'],
             'rooms' => ['required', 'integer', 'min:1', 'max:5'],
@@ -215,8 +216,10 @@ class GlobalHotelSearchPage extends Component
 
     public function render()
     {
+        $contentService = app(HotelbedsContentService::class);
+
         return view('livewire.global-hotel-search-page', [
-            'destinationOptions' => config('hotels.destination_options', []),
+            'destinationOptions' => $contentService->destinationOptionsForSearch(),
             'hotels' => $this->searched && ! $this->loading ? $this->buildPaginator() : new LengthAwarePaginator([], 0, 6),
         ]);
     }

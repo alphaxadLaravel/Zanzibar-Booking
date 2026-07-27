@@ -32,19 +32,25 @@ class HotelOfferMapper
         array $hotel,
         array $rate,
         HotelSearchCriteria $criteria,
-        array $destinationMeta,
+        array $destinationMeta = [],
     ): array {
         $supplierTotal = (float) ($rate['net'] ?? $rate['sellingRate'] ?? 0);
         $pricing = self::applyMarkup($supplierTotal);
         $rateKey = (string) ($rate['rateKey'] ?? '');
+        $locationLabel = self::formatHotelLocation($hotel);
+        $destinationCode = strtoupper(trim((string) ($hotel['destinationCode'] ?? '')));
+        $destinationName = $locationLabel !== ''
+            ? $locationLabel
+            : (string) ($destinationMeta['name'] ?? $criteria->destination);
 
         return [
             'id' => md5($rateKey),
             'rate_key' => $rateKey,
             'hotel_code' => (string) ($hotel['code'] ?? ''),
             'hotel_name' => (string) ($hotel['name'] ?? 'Hotel'),
-            'destination_code' => (string) ($destinationMeta['code'] ?? $criteria->destination),
-            'destination_name' => (string) ($destinationMeta['name'] ?? $criteria->destination),
+            'destination_code' => $destinationCode !== '' ? $destinationCode : (string) ($destinationMeta['code'] ?? $criteria->destination),
+            'destination_name' => $destinationName,
+            'zone_name' => trim((string) ($hotel['zoneName'] ?? '')),
             'check_in' => $criteria->checkIn,
             'check_out' => $criteria->checkOut,
             'room_name' => (string) ($rate['roomName'] ?? $rate['name'] ?? 'Room'),
@@ -62,6 +68,62 @@ class HotelOfferMapper
             'latitude' => isset($hotel['latitude']) ? (string) $hotel['latitude'] : null,
             'longitude' => isset($hotel['longitude']) ? (string) $hotel['longitude'] : null,
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $hotel
+     */
+    public static function formatHotelLocation(array $hotel): string
+    {
+        $destination = trim((string) ($hotel['destinationName'] ?? ''));
+        $zone = trim((string) ($hotel['zoneName'] ?? ''));
+
+        if ($zone !== '' && $destination !== '' && strcasecmp($zone, $destination) !== 0) {
+            return $zone . ', ' . $destination;
+        }
+
+        return $destination !== '' ? $destination : $zone;
+    }
+
+    public static function isInTanzania(?string $lat, ?string $lng, ?string $destinationCode = null): bool
+    {
+        if ($lat !== null && $lng !== null && $lat !== '' && $lng !== '') {
+            $latF = (float) $lat;
+            $lngF = (float) $lng;
+
+            if ($latF === 0.0 && $lngF === 0.0) {
+                return self::isAllowedTanzaniaDestinationCode($destinationCode);
+            }
+
+            $bounds = config('hotels.tanzania_bounds', []);
+
+            return $latF >= (float) ($bounds['lat_min'] ?? -12.5)
+                && $latF <= (float) ($bounds['lat_max'] ?? -0.5)
+                && $lngF >= (float) ($bounds['lng_min'] ?? 29.0)
+                && $lngF <= (float) ($bounds['lng_max'] ?? 40.9);
+        }
+
+        return self::isAllowedTanzaniaDestinationCode($destinationCode);
+    }
+
+    public static function isAllowedTanzaniaDestinationCode(?string $code): bool
+    {
+        $code = strtoupper(trim((string) $code));
+
+        if ($code === '') {
+            return false;
+        }
+
+        $allowed = config('hotels.allowed_destination_codes');
+
+        if (! is_array($allowed) || $allowed === []) {
+            $allowed = collect(config('hotels.destinations', []))
+                ->reject(fn (array $meta, string $key) => $key === 'TZ_ALL')
+                ->keys()
+                ->all();
+        }
+
+        return in_array($code, array_map('strtoupper', $allowed), true);
     }
 
     /**

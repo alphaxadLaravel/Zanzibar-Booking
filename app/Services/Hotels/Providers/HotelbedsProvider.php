@@ -6,6 +6,7 @@ use App\Contracts\Hotels\HotelProviderInterface;
 use App\DTOs\HotelOffer;
 use App\DTOs\HotelSearchCriteria;
 use App\Services\Hotels\HotelbedsApiService;
+use App\Services\Hotels\HotelbedsContentService;
 use App\Support\HotelOfferMapper;
 use Illuminate\Support\Facades\Log;
 
@@ -13,6 +14,7 @@ class HotelbedsProvider implements HotelProviderInterface
 {
     public function __construct(
         protected HotelbedsApiService $api,
+        protected HotelbedsContentService $content,
     ) {}
 
     public function getName(): string
@@ -25,10 +27,15 @@ class HotelbedsProvider implements HotelProviderInterface
      */
     public function search(HotelSearchCriteria $criteria): array
     {
-        $codes = $criteria->destinationCodes();
+        $this->content->syncAllowedDestinationCodes();
+        $codes = $this->resolveSearchCodes($criteria);
 
         if (count($codes) <= 1) {
-            return $this->searchSingle($criteria);
+            $searchCriteria = count($codes) === 1
+                ? $criteria->withDestination($codes[0])
+                : $criteria;
+
+            return $this->searchSingle($searchCriteria);
         }
 
         $offers = [];
@@ -52,6 +59,20 @@ class HotelbedsProvider implements HotelProviderInterface
     }
 
     /**
+     * @return array<int, string>
+     */
+    protected function resolveSearchCodes(HotelSearchCriteria $criteria): array
+    {
+        if ($criteria->destination === 'TZ_ALL') {
+            $codes = $this->content->tanzaniaDestinationCodes();
+
+            return $codes !== [] ? $codes : $criteria->destinationCodes();
+        }
+
+        return [strtoupper($criteria->destination)];
+    }
+
+    /**
      * @return HotelOffer[]
      */
     protected function searchSingle(HotelSearchCriteria $criteria): array
@@ -61,6 +82,14 @@ class HotelbedsProvider implements HotelProviderInterface
         $offers = [];
 
         foreach ($response['hotels']['hotels'] ?? [] as $hotel) {
+            $lat = isset($hotel['latitude']) ? (string) $hotel['latitude'] : null;
+            $lng = isset($hotel['longitude']) ? (string) $hotel['longitude'] : null;
+            $destinationCode = (string) ($hotel['destinationCode'] ?? '');
+
+            if (! HotelOfferMapper::isInTanzania($lat, $lng, $destinationCode)) {
+                continue;
+            }
+
             foreach ($hotel['rooms'] ?? [] as $room) {
                 foreach ($room['rates'] ?? [] as $rate) {
                     $mapped = HotelOfferMapper::mapRateToArray($hotel, $rate, $criteria, $destinationMeta);
