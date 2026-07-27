@@ -36,7 +36,7 @@ class GlobalHotelSearchPage extends Component
     public string $sortBy = 'price_asc';
 
     /** @var array<int, array<string, mixed>> */
-    public array $hotels = [];
+    public array $allHotels = [];
 
     public bool $searched = false;
 
@@ -99,7 +99,7 @@ class GlobalHotelSearchPage extends Component
         if ($validator->fails()) {
             $this->error = $validator->errors()->first();
             $this->loading = false;
-            $this->hotels = [];
+            $this->allHotels = [];
 
             return;
         }
@@ -117,10 +117,10 @@ class GlobalHotelSearchPage extends Component
 
             $searchService = app(HotelSearchService::class);
             $offers = $searchService->search($criteria);
-            $this->hotels = $searchService->groupByHotel($offers);
+            $this->allHotels = $searchService->groupByHotel($offers);
         } catch (\Throwable $e) {
             $this->error = $e->getMessage();
-            $this->hotels = [];
+            $this->allHotels = [];
         }
 
         $this->loading = false;
@@ -150,7 +150,7 @@ class GlobalHotelSearchPage extends Component
      */
     protected function filteredHotels(): array
     {
-        $collection = collect($this->hotels);
+        $collection = collect($this->allHotels);
 
         if ($this->searchName !== '') {
             $needle = strtolower($this->searchName);
