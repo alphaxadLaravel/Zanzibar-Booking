@@ -101,6 +101,42 @@ class HotelbedsApiService
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    public function getHotelDetails(int|string $hotelCode, string $language = 'ENG'): array
+    {
+        return $this->get(
+            '/hotel-content-api/1.0/hotels/' . urlencode((string) $hotelCode) . '/details?language=' . urlencode($language),
+            'Unable to load hotel details.'
+        );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function get(string $path, string $fallbackMessage): array
+    {
+        $timeout = (int) config('hotels.hotelbeds.timeout', 30);
+
+        $response = Http::withHeaders($this->headers())
+            ->timeout($timeout)
+            ->retry(1, 300)
+            ->get($this->baseUrl() . $path);
+
+        if (! $response->successful()) {
+            Log::error('Hotelbeds API GET failed', [
+                'path' => $path,
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            throw new \RuntimeException($this->parseErrorMessage($response, $fallbackMessage));
+        }
+
+        return $response->json() ?? [];
+    }
+
+    /**
      * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */

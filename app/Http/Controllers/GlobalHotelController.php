@@ -6,6 +6,7 @@ use App\Models\Payment;
 use App\Models\SupplierHotelBooking;
 use App\Services\CurrencyConverter;
 use App\Services\Hotels\HotelBookingService;
+use App\Services\Hotels\HotelbedsContentService;
 use App\Services\Hotels\HotelSearchService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -39,8 +40,9 @@ class GlobalHotelController extends Controller
         }
 
         $hotel = $rates[0];
+        $hotelImage = app(HotelbedsContentService::class)->imageForHotel($hotelCode);
 
-        return view('website.pages.global-hotel-detail', compact('hotel', 'rates', 'criteria', 'hotelCode'));
+        return view('website.pages.global-hotel-detail', compact('hotel', 'rates', 'criteria', 'hotelCode', 'hotelImage'));
     }
 
     public function selectRate(Request $request)

@@ -12,6 +12,10 @@
 
     <div class="row">
         <div class="col-lg-8">
+            <div class="mb-4">
+                <img src="{{ $hotelImage }}" alt="{{ $hotel['hotel_name'] }}"
+                    style="width:100%;height:280px;object-fit:cover;border-radius:12px;" loading="lazy">
+            </div>
             <h1 class="h3 mb-1">{{ $hotel['hotel_name'] }}</h1>
             <p class="text-muted">
                 {{ $hotel['destination_name'] ?? '' }}

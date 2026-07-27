@@ -52,6 +52,9 @@
                             <li class="menu-item menu-item-1">
                                 <a href="{{ route('hotels') }}">Hotels</a>
                             </li>
+                            <li class="menu-item menu-item-5">
+                                <a href="{{ route('hotels.global.index') }}">Hotel &amp; Beds</a>
+                            </li>
                             <li class="menu-item menu-item-2">
                                 <a href="{{ route('tours') }}">Tours & Packages</a>
                             </li>

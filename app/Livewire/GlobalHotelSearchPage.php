@@ -3,26 +3,46 @@
 namespace App\Livewire;
 
 use App\DTOs\HotelSearchCriteria;
+use App\Services\Hotels\HotelbedsContentService;
 use App\Services\Hotels\HotelSearchService;
+use App\Support\FlightOfferMapper;
+use App\Support\HotelOfferMapper;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Validator;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class GlobalHotelSearchPage extends Component
 {
+    use WithPagination;
+
+    protected $paginationTheme = 'bootstrap';
+
     public string $destination = 'ZNZ';
+
     public string $checkIn = '';
+
     public string $checkOut = '';
+
     public int $rooms = 1;
+
     public int $adults = 2;
+
     public int $children = 0;
+
+    public string $searchName = '';
+
+    public string $sortBy = 'price_asc';
 
     /** @var array<int, array<string, mixed>> */
     public array $hotels = [];
 
     public bool $searched = false;
+
     public bool $loading = false;
+
     public ?string $error = null;
-    public string $sortBy = 'price_asc';
 
     public function mount(): void
     {
@@ -30,14 +50,27 @@ class GlobalHotelSearchPage extends Component
         $this->checkOut = now()->addDays(9)->format('Y-m-d');
 
         if (request()->filled('destination')) {
-            $this->destination = strtoupper(request('destination', 'ZNZ'));
-            $this->checkIn = request('checkIn', $this->checkIn);
-            $this->checkOut = request('checkOut', $this->checkOut);
-            $this->rooms = max(1, (int) request('rooms', 1));
-            $this->adults = max(1, (int) request('adults', 2));
-            $this->children = max(0, (int) request('children', 0));
-            $this->searchHotels();
+            $this->destination = strtoupper((string) request('destination', 'ZNZ'));
         }
+
+        if (request()->filled('checkIn')) {
+            $this->checkIn = (string) request('checkIn');
+        }
+
+        if (request()->filled('checkOut')) {
+            $this->checkOut = (string) request('checkOut');
+        }
+
+        $this->rooms = max(1, (int) request('rooms', 1));
+        $this->adults = max(1, (int) request('adults', 2));
+        $this->children = max(0, (int) request('children', 0));
+
+        $this->searchHotels();
+    }
+
+    public function updatingSearchName(): void
+    {
+        $this->resetPage();
     }
 
     public function searchHotels(): void
@@ -45,6 +78,7 @@ class GlobalHotelSearchPage extends Component
         $this->loading = true;
         $this->error = null;
         $this->searched = true;
+        $this->resetPage();
 
         $validator = Validator::make([
             'destination' => $this->destination,
@@ -78,12 +112,12 @@ class GlobalHotelSearchPage extends Component
                 'rooms' => $this->rooms,
                 'adults' => $this->adults,
                 'children' => $this->children,
+                'maxHotels' => (int) config('hotels.defaults.max_results', 50),
             ]);
 
             $searchService = app(HotelSearchService::class);
             $offers = $searchService->search($criteria);
             $this->hotels = $searchService->groupByHotel($offers);
-            $this->applySort();
         } catch (\Throwable $e) {
             $this->error = $e->getMessage();
             $this->hotels = [];
@@ -92,26 +126,91 @@ class GlobalHotelSearchPage extends Component
         $this->loading = false;
     }
 
-    public function updatedSortBy(): void
+    public function resetFilters(): void
     {
-        $this->applySort();
+        $this->destination = 'ZNZ';
+        $this->checkIn = now()->addDays(7)->format('Y-m-d');
+        $this->checkOut = now()->addDays(9)->format('Y-m-d');
+        $this->rooms = 1;
+        $this->adults = 2;
+        $this->children = 0;
+        $this->searchName = '';
+        $this->sortBy = 'price_asc';
+        $this->searchHotels();
     }
 
-    protected function applySort(): void
+    public function updateSort(string $sortValue): void
+    {
+        $this->sortBy = $sortValue;
+        $this->resetPage();
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    protected function filteredHotels(): array
     {
         $collection = collect($this->hotels);
 
-        $this->hotels = match ($this->sortBy) {
-            'price_desc' => $collection->sortByDesc('price')->values()->all(),
-            'name_asc' => $collection->sortBy('hotel_name')->values()->all(),
-            default => $collection->sortBy('price')->values()->all(),
+        if ($this->searchName !== '') {
+            $needle = strtolower($this->searchName);
+            $collection = $collection->filter(
+                fn (array $hotel) => str_contains(strtolower((string) ($hotel['hotel_name'] ?? '')), $needle)
+            );
+        }
+
+        $collection = match ($this->sortBy) {
+            'price_desc' => $collection->sortByDesc('price'),
+            'name_asc' => $collection->sortBy('hotel_name'),
+            'name_desc' => $collection->sortByDesc('hotel_name'),
+            default => $collection->sortBy('price'),
         };
+
+        return $collection->values()->all();
+    }
+
+    protected function buildPaginator(): LengthAwarePaginator
+    {
+        $items = $this->filteredHotels();
+        $perPage = 6;
+        $page = Paginator::resolveCurrentPage('page');
+
+        $slice = collect($items)->forPage($page, $perPage)->values();
+        $codes = $slice->pluck('hotel_code')->filter()->all();
+        $images = app(HotelbedsContentService::class)->imagesForHotels($codes);
+
+        $enriched = $slice->map(function (array $hotel) use ($images) {
+            $code = (string) ($hotel['hotel_code'] ?? '');
+            $currency = strtoupper((string) ($hotel['currency'] ?? 'USD'));
+            $price = (float) ($hotel['price'] ?? 0);
+
+            $hotel['image_url'] = $images[$code] ?? HotelOfferMapper::defaultHotelImage();
+            $hotel['star_rating'] = HotelOfferMapper::categoryStars($hotel['category_code'] ?? null) ?? 4;
+            $hotel['view_route'] = route('hotels.global.show', ['hotelCode' => $code]);
+            $hotel['display_price'] = $currency . ' ' . FlightOfferMapper::formatPrice($price);
+            $hotel['title'] = (string) ($hotel['hotel_name'] ?? 'Hotel');
+            $hotel['location'] = (string) ($hotel['destination_name'] ?? $this->destination);
+            $hotel['lat'] = $hotel['latitude'] ?? null;
+            $hotel['long'] = $hotel['longitude'] ?? null;
+            $hotel['id'] = $code;
+
+            return $hotel;
+        });
+
+        return new LengthAwarePaginator(
+            $enriched,
+            count($items),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'pageName' => 'page']
+        );
     }
 
     public function render()
     {
         return view('livewire.global-hotel-search-page', [
             'destinationOptions' => config('hotels.destination_options', []),
+            'hotels' => $this->searched && ! $this->loading ? $this->buildPaginator() : new LengthAwarePaginator([], 0, 6),
         ]);
     }
 }

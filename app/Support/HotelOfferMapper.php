@@ -76,4 +76,64 @@ class HotelOfferMapper
 
         return null;
     }
+
+    public static function defaultHotelImage(): string
+    {
+        return 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=360&h=240&fit=crop&crop=center';
+    }
+
+    public static function hotelbedsImageUrl(?string $path, string $size = 'bigger'): ?string
+    {
+        if (! $path) {
+            return null;
+        }
+
+        $path = ltrim($path, '/');
+        $base = rtrim(config('hotels.hotelbeds.image_base_url', 'https://photos.hotelbeds.com/giata/bigger/'), '/');
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        if (str_contains($base, '/giata/')) {
+            return $base . '/' . $path;
+        }
+
+        return 'https://photos.hotelbeds.com/giata/' . $size . '/' . $path;
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $images
+     */
+    public static function pickHotelbedsImage(array $images): ?string
+    {
+        if ($images === []) {
+            return null;
+        }
+
+        usort($images, function (array $a, array $b) {
+            $orderA = (int) ($a['visualOrder'] ?? $a['order'] ?? 999);
+            $orderB = (int) ($b['visualOrder'] ?? $b['order'] ?? 999);
+
+            return $orderA <=> $orderB;
+        });
+
+        $preferredTypes = ['GEN', 'HAB', 'COM'];
+
+        foreach ($preferredTypes as $type) {
+            foreach ($images as $image) {
+                if (($image['imageTypeCode'] ?? '') === $type && ! empty($image['path'])) {
+                    return self::hotelbedsImageUrl((string) $image['path']);
+                }
+            }
+        }
+
+        foreach ($images as $image) {
+            if (! empty($image['path'])) {
+                return self::hotelbedsImageUrl((string) $image['path']);
+            }
+        }
+
+        return null;
+    }
 }
