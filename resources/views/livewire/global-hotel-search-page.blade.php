@@ -64,6 +64,10 @@
         .hb-filter-toolbar { position: relative; z-index: 30; }
         .hb-filter-toolbar .dropdown-menu { z-index: 1060; }
         .hb-filter-toolbar .sort-item label { cursor: pointer; }
+        @keyframes hbShimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
         @media (max-width: 767.98px) {
             .hb-filter-toolbar { flex-wrap: wrap; gap: 12px; }
             .hb-filter-toolbar > .d-flex { width: 100%; justify-content: space-between; }
@@ -237,9 +241,17 @@
                                                     Hotelbeds
                                                 </span>
                                                 <a href="{{ $hotel['view_route'] }}" style="display:block;">
-                                                    <img src="{{ $hotel['image_url'] }}" alt="{{ $hotel['title'] }}"
-                                                        loading="lazy" width="360" height="200"
-                                                        style="width:100%;height:200px;object-fit:cover;border-radius:8px;" />
+                                                    @php
+                                                        $fallbackImage = \App\Support\HotelOfferMapper::defaultHotelImage();
+                                                        $hotelImage = $hotel['image_url'] ?? null;
+                                                    @endphp
+                                                    @if($imagesLoading && empty($hotelImage))
+                                                        <div style="width:100%;height:200px;background:linear-gradient(90deg,#eef2f5 25%,#f8f9fa 50%,#eef2f5 75%);background-size:200% 100%;animation:hbShimmer 1.2s infinite;border-radius:8px;"></div>
+                                                    @else
+                                                        <img src="{{ $hotelImage ?: $fallbackImage }}" alt="{{ $hotel['title'] }}"
+                                                            loading="lazy" width="360" height="200" wire:key="hotel-img-{{ $hotel['id'] }}-{{ md5($hotelImage ?? '') }}"
+                                                            style="width:100%;height:200px;object-fit:cover;border-radius:8px;" />
+                                                    @endif
                                                 </a>
                                                 @if(!empty($hotel['board_name']))
                                                     <span style="position:absolute;left:12px;bottom:12px;z-index:2;background:#2e8b57;color:#fff;padding:4px 10px;border-radius:5px;font-size:13px;">
@@ -374,6 +386,7 @@
             hbInfoWindows = [];
 
             const hotels = @json($hotels->items());
+            const fallbackImage = @json(\App\Support\HotelOfferMapper::defaultHotelImage());
 
             hotels.filter(h => h.lat && h.long && parseFloat(h.lat) !== 0).forEach(hotel => {
                 const marker = new google.maps.Marker({
@@ -386,7 +399,7 @@
 
                 const infoWindow = new google.maps.InfoWindow({
                     content: `<div style="padding:8px;max-width:220px;">
-                        <a href="${hotel.view_route}"><img src="${hotel.image_url}" style="width:100%;height:80px;object-fit:cover;border-radius:4px;margin-bottom:6px;" alt=""></a>
+                        <a href="${hotel.view_route}"><img src="${hotel.image_url || fallbackImage}" style="width:100%;height:80px;object-fit:cover;border-radius:4px;margin-bottom:6px;" alt=""></a>
                         <strong>${hotel.title}</strong><br>
                         <span style="color:#2e8b57;font-weight:600;">${hotel.display_price}</span>
                     </div>`,

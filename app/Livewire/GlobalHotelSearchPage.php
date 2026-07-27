@@ -44,6 +44,10 @@ class GlobalHotelSearchPage extends Component
 
     public bool $browseMode = false;
 
+    public bool $imagesLoading = false;
+
+    public bool $imagesLoaded = false;
+
     public ?string $error = null;
 
     /**
@@ -134,6 +138,8 @@ class GlobalHotelSearchPage extends Component
         $this->loading = true;
         $this->error = null;
         $this->searched = true;
+        $this->imagesLoaded = false;
+        $this->imagesLoading = false;
         $this->resetPage();
 
         $this->ensureSearchDefaults();
@@ -145,6 +151,10 @@ class GlobalHotelSearchPage extends Component
         }
 
         $this->searchAvailability();
+
+        if ($this->allHotels !== [] && $this->error === null) {
+            $this->loadHotelImages();
+        }
     }
 
     protected function searchBrowse(): void
@@ -160,7 +170,6 @@ class GlobalHotelSearchPage extends Component
                 $destination,
                 (int) config('hotels.defaults.max_results', 200)
             );
-            app(HotelbedsContentService::class)->attachImagesToHotels($this->allHotels);
         } catch (\Throwable $e) {
             $this->error = $e->getMessage();
             $this->allHotels = [];
@@ -216,7 +225,6 @@ class GlobalHotelSearchPage extends Component
             $searchService = app(HotelSearchService::class);
             $offers = $searchService->search($criteria);
             $this->allHotels = $searchService->groupByHotel($offers);
-            app(HotelbedsContentService::class)->attachImagesToHotels($this->allHotels);
 
             if ($this->sortBy === 'name_asc' || $this->sortBy === 'name_desc') {
                 $this->sortBy = 'price_asc';
@@ -227,6 +235,26 @@ class GlobalHotelSearchPage extends Component
         }
 
         $this->loading = false;
+    }
+
+    public function loadHotelImages(): void
+    {
+        if ($this->imagesLoading || $this->imagesLoaded || $this->allHotels === []) {
+            return;
+        }
+
+        $this->imagesLoading = true;
+
+        $destination = $this->destination !== '' ? $this->destination : (string) config('hotels.defaults.destination', 'ZNZ');
+
+        app(HotelbedsContentService::class)->attachImagesToHotels(
+            $this->allHotels,
+            $destination,
+            true
+        );
+
+        $this->imagesLoading = false;
+        $this->imagesLoaded = true;
     }
 
     public function resetFilters(): void
@@ -294,15 +322,14 @@ class GlobalHotelSearchPage extends Component
         $page = $this->getPage();
 
         $slice = collect($items)->forPage($page, $perPage)->values();
-        $defaultImage = HotelOfferMapper::defaultHotelImage();
 
-        $enriched = $slice->map(function (array $hotel) use ($defaultImage) {
+        $enriched = $slice->map(function (array $hotel) {
             $code = (string) ($hotel['hotel_code'] ?? '');
             $currency = strtoupper((string) ($hotel['currency'] ?? 'USD'));
             $price = (float) ($hotel['price'] ?? 0);
             $isBrowse = (bool) ($hotel['browse_only'] ?? $this->browseMode);
 
-            $hotel['image_url'] = $hotel['image_url'] ?? $defaultImage;
+            $hotel['image_url'] = ! empty($hotel['image_url']) ? (string) $hotel['image_url'] : null;
             $hotel['star_rating'] = HotelOfferMapper::categoryStars($hotel['category_code'] ?? null) ?? 4;
             $hotel['view_route'] = route('hotels.global.show', ['hotelCode' => $code]);
             $hotel['display_price'] = $isBrowse || $price <= 0
