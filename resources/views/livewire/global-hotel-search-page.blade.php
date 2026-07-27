@@ -104,10 +104,10 @@
                                     </select>
                                 </div>
                                 <div class="col-6 col-md-2 d-flex flex-column" style="min-width: 0;">
-                                    <input type="date" wire:model="checkIn" class="form-control flex-grow-1" min="{{ date('Y-m-d') }}" title="Check-in (optional)">
+                                    <input type="date" wire:model="checkIn" class="form-control flex-grow-1" min="{{ date('Y-m-d') }}" title="Check-in">
                                 </div>
                                 <div class="col-6 col-md-2 d-flex flex-column" style="min-width: 0;">
-                                    <input type="date" wire:model="checkOut" class="form-control flex-grow-1" min="{{ date('Y-m-d') }}" title="Check-out (optional)">
+                                    <input type="date" wire:model="checkOut" class="form-control flex-grow-1" min="{{ date('Y-m-d') }}" title="Check-out">
                                 </div>
                                 <div class="col-4 col-md-1 d-flex flex-column" style="min-width: 0;">
                                     <select wire:model="rooms" class="form-control flex-grow-1" title="Rooms">

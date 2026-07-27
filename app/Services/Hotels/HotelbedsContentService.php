@@ -34,15 +34,115 @@ class HotelbedsContentService
             fn (string $code) => ! isset($images[$code])
         ));
 
-        if ($missing !== []) {
-            $batch = $this->batchImagesForCodes($missing);
+        foreach ($missing as $index => $code) {
+            $cached = $this->getCachedHotelImage($code);
 
-            foreach ($missing as $code) {
-                $images[$code] = $batch[$code] ?? $this->imageForHotel($code);
+            if ($cached !== null) {
+                $images[$code] = $cached;
+                unset($missing[$index]);
             }
         }
 
+        $missing = array_values($missing);
+
+        foreach (array_chunk($missing, 50) as $chunk) {
+            $batch = $this->batchImagesForCodes($chunk);
+
+            foreach ($chunk as $code) {
+                if (isset($batch[$code])) {
+                    $images[$code] = $batch[$code];
+                }
+            }
+        }
+
+        foreach ($missing as $code) {
+            if (isset($images[$code])) {
+                continue;
+            }
+
+            $images[$code] = $this->fetchSingleHotelImage($code);
+        }
+
         return $images;
+    }
+
+    /**
+     * Attach thumbnail URLs to search/browse hotel rows (call once after search).
+     *
+     * @param  array<int, array<string, mixed>>  $hotels
+     */
+    public function attachImagesToHotels(array &$hotels): void
+    {
+        if ($hotels === []) {
+            return;
+        }
+
+        $default = HotelOfferMapper::defaultHotelImage();
+        $prefilled = [];
+
+        foreach ($hotels as $hotel) {
+            $code = (string) ($hotel['hotel_code'] ?? '');
+            $url = $hotel['image_url'] ?? null;
+
+            if ($code !== '' && is_string($url) && $url !== '' && $url !== $default) {
+                $prefilled[$code] = $url;
+            }
+        }
+
+        $codes = collect($hotels)->pluck('hotel_code')->filter()->map(fn ($c) => (string) $c)->unique()->values()->all();
+        $map = $this->imagesForHotels($codes, $prefilled);
+
+        foreach ($hotels as &$hotel) {
+            $code = (string) ($hotel['hotel_code'] ?? '');
+
+            if ($code === '') {
+                continue;
+            }
+
+            $hotel['image_url'] = $map[$code] ?? $hotel['image_url'] ?? $default;
+        }
+
+        unset($hotel);
+    }
+
+    protected function hotelImageCacheKey(string $code): string
+    {
+        return 'hotelbeds.image.single.v2.' . $code;
+    }
+
+    protected function getCachedHotelImage(string $code): ?string
+    {
+        $url = Cache::get($this->hotelImageCacheKey($code));
+
+        if (! is_string($url) || $url === '' || $url === HotelOfferMapper::defaultHotelImage()) {
+            return null;
+        }
+
+        return $url;
+    }
+
+    protected function cacheHotelImage(string $code, string $url): void
+    {
+        if ($url === '' || $url === HotelOfferMapper::defaultHotelImage()) {
+            return;
+        }
+
+        $cacheTtl = (int) config('hotels.hotelbeds.content_cache_ttl', 86400);
+        Cache::put($this->hotelImageCacheKey($code), $url, $cacheTtl);
+    }
+
+    protected function fetchSingleHotelImage(string $code): string
+    {
+        $cached = $this->getCachedHotelImage($code);
+
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        $url = $this->imageFromProfile($this->profileForHotel($code));
+        $this->cacheHotelImage($code, $url);
+
+        return $url;
     }
 
     /**
@@ -60,12 +160,12 @@ class HotelbedsContentService
         }
 
         sort($codes, SORT_STRING);
-        $cacheKey = 'hotelbeds.images.v1.' . md5(implode(',', $codes));
+        $cacheKey = 'hotelbeds.images.batch.v2.' . md5(implode(',', $codes));
         $cacheTtl = (int) config('hotels.hotelbeds.content_cache_ttl', 86400);
 
         $cached = Cache::get($cacheKey);
 
-        if (is_array($cached)) {
+        if (is_array($cached) && $cached !== []) {
             return $cached;
         }
 
@@ -84,10 +184,13 @@ class HotelbedsContentService
 
                 if ($code !== '' && $url) {
                     $map[$code] = $url;
+                    $this->cacheHotelImage($code, $url);
                 }
             }
 
-            Cache::put($cacheKey, $map, $cacheTtl);
+            if ($map !== []) {
+                Cache::put($cacheKey, $map, $cacheTtl);
+            }
 
             return $map;
         } catch (\Throwable $e) {
@@ -358,6 +461,10 @@ class HotelbedsContentService
             $longitude = $hotel['coordinates']['longitude'] ?? $hotel['longitude'] ?? null;
             $rawImages = is_array($hotel['images'] ?? null) ? $hotel['images'] : [];
             $imageUrl = HotelOfferMapper::pickHotelbedsImage($rawImages);
+
+            if ($imageUrl) {
+                $this->cacheHotelImage($code, $imageUrl);
+            }
 
             $mapped[] = [
                 'hotel_code' => $code,

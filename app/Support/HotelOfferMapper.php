@@ -344,10 +344,6 @@ class HotelOfferMapper
         $configured = rtrim((string) config('hotels.hotelbeds.image_base_url', ''), '/');
 
         if ($configured !== '') {
-            if (str_ends_with($configured, '/giata') || str_contains($configured, '/giata/')) {
-                return $configured . '/' . $path;
-            }
-
             return $configured . '/' . $path;
         }
 
@@ -366,7 +362,7 @@ class HotelOfferMapper
     }
 
     /**
-     * @param  array<int, array<string, mixed>>  $images
+     * Best-effort card thumbnail URL (tries larger sizes first).
      */
     public static function pickHotelbedsImage(array $images): ?string
     {
@@ -382,18 +378,31 @@ class HotelOfferMapper
         });
 
         $preferredTypes = ['GEN', 'HAB', 'COM', 'DEP', 'RES', 'BAR', 'PIS', 'TER'];
+        $candidates = [];
 
         foreach ($preferredTypes as $type) {
             foreach ($images as $image) {
                 if (self::imageTypeCode($image) === $type && ! empty($image['path'])) {
-                    return self::hotelbedsImageUrl((string) $image['path']);
+                    $candidates[] = (string) $image['path'];
                 }
             }
         }
 
         foreach ($images as $image) {
             if (! empty($image['path'])) {
-                return self::hotelbedsImageUrl((string) $image['path']);
+                $candidates[] = (string) $image['path'];
+            }
+        }
+
+        $candidates = array_values(array_unique($candidates));
+
+        foreach ($candidates as $path) {
+            foreach (['bigger', 'standard', 'medium'] as $size) {
+                $url = self::hotelbedsImageUrl($path, $size);
+
+                if ($url) {
+                    return $url;
+                }
             }
         }
 

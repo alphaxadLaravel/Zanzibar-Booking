@@ -8,6 +8,7 @@ use App\Services\Hotels\HotelSearchService;
 use App\Support\FlightOfferMapper;
 use App\Support\HotelOfferMapper;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -32,7 +33,7 @@ class GlobalHotelSearchPage extends Component
 
     public string $searchName = '';
 
-    public string $sortBy = 'name_asc';
+    public string $sortBy = 'price_asc';
 
     /** @var array<int, array<string, mixed>> */
     public array $allHotels = [];
@@ -44,6 +45,53 @@ class GlobalHotelSearchPage extends Component
     public bool $browseMode = false;
 
     public ?string $error = null;
+
+    /**
+     * @return array{destination: string, checkIn: string, checkOut: string, rooms: string, adults: string, children: string}
+     */
+    protected function defaultFilters(): array
+    {
+        $leadDays = (int) config('hotels.defaults.lead_days', 7);
+        $stayDays = (int) config('hotels.defaults.stay_days', 30);
+
+        $checkIn = Carbon::today()->addDays(max(0, $leadDays));
+        $checkOut = $checkIn->copy()->addDays(max(1, $stayDays));
+
+        return [
+            'destination' => (string) config('hotels.defaults.destination', 'ZNZ'),
+            'checkIn' => $checkIn->format('Y-m-d'),
+            'checkOut' => $checkOut->format('Y-m-d'),
+            'rooms' => (string) config('hotels.defaults.rooms', 1),
+            'adults' => (string) config('hotels.defaults.adults', 2),
+            'children' => (string) config('hotels.defaults.children', 0),
+        ];
+    }
+
+    protected function ensureSearchDefaults(): void
+    {
+        $defaults = $this->defaultFilters();
+
+        if ($this->destination === '') {
+            $this->destination = $defaults['destination'];
+        }
+
+        if ($this->checkIn === '' || $this->checkOut === '') {
+            $this->checkIn = $defaults['checkIn'];
+            $this->checkOut = $defaults['checkOut'];
+        }
+
+        if ($this->rooms === '') {
+            $this->rooms = $defaults['rooms'];
+        }
+
+        if ($this->adults === '') {
+            $this->adults = $defaults['adults'];
+        }
+
+        if ($this->children === '') {
+            $this->children = $defaults['children'];
+        }
+    }
 
     public function mount(): void
     {
@@ -71,11 +119,9 @@ class GlobalHotelSearchPage extends Component
             $this->children = (string) request('children');
         }
 
-        if ($this->checkIn !== '' && $this->checkOut !== '') {
-            $this->searchHotels();
-        } else {
-            $this->searchBrowse();
-        }
+        $this->ensureSearchDefaults();
+        $this->sortBy = 'price_asc';
+        $this->searchHotels();
     }
 
     public function updatingSearchName(): void
@@ -90,20 +136,12 @@ class GlobalHotelSearchPage extends Component
         $this->searched = true;
         $this->resetPage();
 
-        $hasDates = $this->checkIn !== '' || $this->checkOut !== '';
+        $this->ensureSearchDefaults();
 
-        if ($hasDates && ($this->checkIn === '' || $this->checkOut === '')) {
-            $this->error = 'Please select both check-in and check-out dates, or leave both empty to browse hotels.';
-            $this->loading = false;
-            $this->allHotels = [];
-
-            return;
-        }
-
-        if ($this->checkIn === '' && $this->checkOut === '') {
-            $this->searchBrowse();
-
-            return;
+        if ($this->checkIn === '' || $this->checkOut === '') {
+            $defaults = $this->defaultFilters();
+            $this->checkIn = $defaults['checkIn'];
+            $this->checkOut = $defaults['checkOut'];
         }
 
         $this->searchAvailability();
@@ -122,6 +160,7 @@ class GlobalHotelSearchPage extends Component
                 $destination,
                 (int) config('hotels.defaults.max_results', 200)
             );
+            app(HotelbedsContentService::class)->attachImagesToHotels($this->allHotels);
         } catch (\Throwable $e) {
             $this->error = $e->getMessage();
             $this->allHotels = [];
@@ -177,6 +216,7 @@ class GlobalHotelSearchPage extends Component
             $searchService = app(HotelSearchService::class);
             $offers = $searchService->search($criteria);
             $this->allHotels = $searchService->groupByHotel($offers);
+            app(HotelbedsContentService::class)->attachImagesToHotels($this->allHotels);
 
             if ($this->sortBy === 'name_asc' || $this->sortBy === 'name_desc') {
                 $this->sortBy = 'price_asc';
@@ -191,17 +231,18 @@ class GlobalHotelSearchPage extends Component
 
     public function resetFilters(): void
     {
-        $this->destination = '';
-        $this->checkIn = '';
-        $this->checkOut = '';
-        $this->rooms = '';
-        $this->adults = '';
-        $this->children = '';
+        $defaults = $this->defaultFilters();
+        $this->destination = $defaults['destination'];
+        $this->checkIn = $defaults['checkIn'];
+        $this->checkOut = $defaults['checkOut'];
+        $this->rooms = $defaults['rooms'];
+        $this->adults = $defaults['adults'];
+        $this->children = $defaults['children'];
         $this->searchName = '';
-        $this->sortBy = 'name_asc';
+        $this->sortBy = 'price_asc';
         $this->error = null;
         $this->resetPage();
-        $this->searchBrowse();
+        $this->searchHotels();
     }
 
     public function updateSort(string $sortValue): void
@@ -253,22 +294,15 @@ class GlobalHotelSearchPage extends Component
         $page = $this->getPage();
 
         $slice = collect($items)->forPage($page, $perPage)->values();
-        $codes = $slice->pluck('hotel_code')->filter()->all();
+        $defaultImage = HotelOfferMapper::defaultHotelImage();
 
-        $prefilled = $slice
-            ->filter(fn (array $hotel) => ! empty($hotel['image_url']))
-            ->mapWithKeys(fn (array $hotel) => [(string) $hotel['hotel_code'] => (string) $hotel['image_url']])
-            ->all();
-
-        $images = app(HotelbedsContentService::class)->imagesForHotels($codes, $prefilled);
-
-        $enriched = $slice->map(function (array $hotel) use ($images) {
+        $enriched = $slice->map(function (array $hotel) use ($defaultImage) {
             $code = (string) ($hotel['hotel_code'] ?? '');
             $currency = strtoupper((string) ($hotel['currency'] ?? 'USD'));
             $price = (float) ($hotel['price'] ?? 0);
             $isBrowse = (bool) ($hotel['browse_only'] ?? $this->browseMode);
 
-            $hotel['image_url'] = $images[$code] ?? HotelOfferMapper::defaultHotelImage();
+            $hotel['image_url'] = $hotel['image_url'] ?? $defaultImage;
             $hotel['star_rating'] = HotelOfferMapper::categoryStars($hotel['category_code'] ?? null) ?? 4;
             $hotel['view_route'] = route('hotels.global.show', ['hotelCode' => $code]);
             $hotel['display_price'] = $isBrowse || $price <= 0

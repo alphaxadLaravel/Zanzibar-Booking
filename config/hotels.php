@@ -11,6 +11,9 @@ return [
     'defaults' => [
         'max_results' => (int) env('HOTEL_SEARCH_MAX_RESULTS', 200),
         'currency' => env('HOTEL_DEFAULT_CURRENCY', 'USD'),
+        'destination' => env('HOTEL_DEFAULT_DESTINATION', 'ZNZ'),
+        'lead_days' => (int) env('HOTEL_DEFAULT_LEAD_DAYS', 7),
+        'stay_days' => (int) env('HOTEL_DEFAULT_STAY_DAYS', 30),
         'rooms' => 1,
         'adults' => 2,
         'children' => 0,
@@ -25,7 +28,7 @@ return [
         'environment' => env('HOTELBEDS_ENV', 'test'),
         'timeout' => (int) env('HOTELBEDS_TIMEOUT', 30),
         'create_bookings' => filter_var(env('HOTELBEDS_CREATE_BOOKINGS', true), FILTER_VALIDATE_BOOL),
-        'image_base_url' => rtrim(env('HOTELBEDS_IMAGE_BASE_URL', 'https://photos.hotelbeds.com/giata'), '/') . '/',
+        'image_base_url' => rtrim(env('HOTELBEDS_IMAGE_BASE_URL', 'https://photos.hotelbeds.com/giata/bigger'), '/') . '/',
         'content_cache_ttl' => (int) env('HOTELBEDS_CONTENT_CACHE_TTL', 86400),
     ],
 
