@@ -25,7 +25,7 @@ return [
         'environment' => env('HOTELBEDS_ENV', 'test'),
         'timeout' => (int) env('HOTELBEDS_TIMEOUT', 30),
         'create_bookings' => filter_var(env('HOTELBEDS_CREATE_BOOKINGS', true), FILTER_VALIDATE_BOOL),
-        'image_base_url' => rtrim(env('HOTELBEDS_IMAGE_BASE_URL', 'https://photos.hotelbeds.com/giata/bigger'), '/') . '/',
+        'image_base_url' => rtrim(env('HOTELBEDS_IMAGE_BASE_URL', 'https://photos.hotelbeds.com/giata'), '/') . '/',
         'content_cache_ttl' => (int) env('HOTELBEDS_CONTENT_CACHE_TTL', 86400),
     ],
 

@@ -73,6 +73,8 @@ class GlobalHotelSearchPage extends Component
 
         if ($this->checkIn !== '' && $this->checkOut !== '') {
             $this->searchHotels();
+        } else {
+            $this->searchBrowse();
         }
     }
 
@@ -109,7 +111,9 @@ class GlobalHotelSearchPage extends Component
 
     protected function searchBrowse(): void
     {
+        $this->loading = true;
         $this->browseMode = true;
+        $this->searched = true;
         $this->sortBy = $this->sortBy === 'price_asc' || $this->sortBy === 'price_desc' ? 'name_asc' : $this->sortBy;
 
         try {
@@ -195,11 +199,9 @@ class GlobalHotelSearchPage extends Component
         $this->children = '';
         $this->searchName = '';
         $this->sortBy = 'name_asc';
-        $this->allHotels = [];
-        $this->searched = false;
-        $this->browseMode = false;
         $this->error = null;
         $this->resetPage();
+        $this->searchBrowse();
     }
 
     public function updateSort(string $sortValue): void
@@ -252,7 +254,13 @@ class GlobalHotelSearchPage extends Component
 
         $slice = collect($items)->forPage($page, $perPage)->values();
         $codes = $slice->pluck('hotel_code')->filter()->all();
-        $images = app(HotelbedsContentService::class)->imagesForHotels($codes);
+
+        $prefilled = $slice
+            ->filter(fn (array $hotel) => ! empty($hotel['image_url']))
+            ->mapWithKeys(fn (array $hotel) => [(string) $hotel['hotel_code'] => (string) $hotel['image_url']])
+            ->all();
+
+        $images = app(HotelbedsContentService::class)->imagesForHotels($codes, $prefilled);
 
         $enriched = $slice->map(function (array $hotel) use ($images) {
             $code = (string) ($hotel['hotel_code'] ?? '');

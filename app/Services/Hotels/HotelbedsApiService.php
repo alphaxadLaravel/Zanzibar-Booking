@@ -133,6 +133,26 @@ class HotelbedsApiService
     }
 
     /**
+     * @param  array<int, int|string>  $codes
+     * @return array<string, mixed>
+     */
+    public function listHotelsByCodes(array $codes, string $fields = 'code,images'): array
+    {
+        $codes = array_values(array_unique(array_filter(array_map('strval', $codes))));
+
+        if ($codes === []) {
+            return ['hotels' => []];
+        }
+
+        return $this->listHotels([
+            'codes' => implode(',', $codes),
+            'fields' => $fields,
+            'from' => 1,
+            'to' => min(count($codes), 1000),
+        ]);
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function getDestinations(string $countryCode = 'TZ', int $from = 1, int $to = 1000): array

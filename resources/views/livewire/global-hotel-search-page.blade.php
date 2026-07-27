@@ -61,6 +61,9 @@
         .hb-filter-toolbar .input-group { min-width: 200px; max-width: 260px; }
         .hb-filter-toolbar .input-group .form-control { height: 38px; font-size: 14px; border-left: 0; }
         .hb-filter-toolbar .input-group-text { height: 38px; font-size: 14px; background: #fff; }
+        .hb-filter-toolbar { position: relative; z-index: 30; }
+        .hb-filter-toolbar .dropdown-menu { z-index: 1060; }
+        .hb-filter-toolbar .sort-item label { cursor: pointer; }
         @media (max-width: 767.98px) {
             .hb-filter-toolbar { flex-wrap: wrap; gap: 12px; }
             .hb-filter-toolbar > .d-flex { width: 100%; justify-content: space-between; }
@@ -130,13 +133,10 @@
                                         @endfor
                                     </select>
                                 </div>
-                                <div class="col-12 col-md-2 d-flex gap-2 align-items-stretch" style="min-width: 0;">
+                                <div class="col-12 col-md-2 d-flex align-items-stretch" style="min-width: 0;">
                                     <button type="submit" class="btn btn-primary flex-grow-1 w-100" style="background: #003580; border: none; font-weight: 600;" wire:loading.attr="disabled" wire:target="searchHotels">
                                         <span wire:loading.remove wire:target="searchHotels"><i class="fas fa-search me-1"></i> Search</span>
                                         <span wire:loading wire:target="searchHotels">Searching…</span>
-                                    </button>
-                                    <button type="button" class="btn btn-outline-secondary px-3" wire:click="resetFilters" title="Reset filters">
-                                        <i class="fas fa-refresh"></i>
                                     </button>
                                 </div>
                             </div>
@@ -188,39 +188,35 @@
                                     </div>
                                     <div class="sort">
                                         <div class="dropdown">
-                                            <button class="btn btn-link dropdown" type="button" id="dropdownMenuSortGlobal"
-                                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <button class="btn btn-link dropdown-toggle" type="button" id="dropdownMenuSortGlobal"
+                                                data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
                                                 Sort <i class="fal fa-angle-down arrow"></i>
                                             </button>
-                                            <div class="dropdown-menu sort-menu dropdown-menu-right" aria-labelledby="dropdownMenuSortGlobal">
+                                            <div class="dropdown-menu sort-menu dropdown-menu-end" aria-labelledby="dropdownMenuSortGlobal" onclick="event.stopPropagation()">
                                                 <div class="sort-title">
                                                     <h3>SORT BY</h3>
                                                 </div>
                                                 @if(! $browseMode)
                                                     <div class="sort-item">
                                                         <span class="title">Price</span>
-                                                        <label>
-                                                            <input class="service-sort" type="radio" name="sort"
-                                                                wire:click="updateSort('price_asc')" value="price_asc" {{ $sortBy === 'price_asc' ? 'checked' : '' }}>
+                                                        <label wire:click.prevent="updateSort('price_asc')">
+                                                            <input class="service-sort" type="radio" name="sortGlobal" value="price_asc" {{ $sortBy === 'price_asc' ? 'checked' : '' }} tabindex="-1">
                                                             Low to High
                                                         </label>
-                                                        <label>
-                                                            <input class="service-sort" type="radio" name="sort"
-                                                                wire:click="updateSort('price_desc')" value="price_desc" {{ $sortBy === 'price_desc' ? 'checked' : '' }}>
+                                                        <label wire:click.prevent="updateSort('price_desc')">
+                                                            <input class="service-sort" type="radio" name="sortGlobal" value="price_desc" {{ $sortBy === 'price_desc' ? 'checked' : '' }} tabindex="-1">
                                                             High to Low
                                                         </label>
                                                     </div>
                                                 @endif
                                                 <div class="sort-item">
                                                     <span class="title">Name</span>
-                                                    <label>
-                                                        <input class="service-sort" type="radio" name="sort"
-                                                            wire:click="updateSort('name_asc')" value="name_asc" {{ $sortBy === 'name_asc' ? 'checked' : '' }}>
+                                                    <label wire:click.prevent="updateSort('name_asc')">
+                                                        <input class="service-sort" type="radio" name="sortGlobal" value="name_asc" {{ $sortBy === 'name_asc' ? 'checked' : '' }} tabindex="-1">
                                                         A - Z
                                                     </label>
-                                                    <label>
-                                                        <input class="service-sort" type="radio" name="sort"
-                                                            wire:click="updateSort('name_desc')" value="name_desc" {{ $sortBy === 'name_desc' ? 'checked' : '' }}>
+                                                    <label wire:click.prevent="updateSort('name_desc')">
+                                                        <input class="service-sort" type="radio" name="sortGlobal" value="name_desc" {{ $sortBy === 'name_desc' ? 'checked' : '' }} tabindex="-1">
                                                         Z - A
                                                     </label>
                                                 </div>

@@ -244,11 +244,17 @@ class HotelOfferMapper
      */
     protected static function imageTypeCode(array $image): string
     {
-        return strtoupper(trim((string) (
-            $image['imageTypeCode']
-            ?? $image['type']['code']
-            ?? ''
-        )));
+        $type = $image['imageTypeCode'] ?? $image['type'] ?? null;
+
+        if (is_string($type)) {
+            return strtoupper(trim($type));
+        }
+
+        if (is_array($type)) {
+            return strtoupper(trim((string) ($type['code'] ?? $type['content'] ?? '')));
+        }
+
+        return '';
     }
 
     /**
@@ -319,24 +325,44 @@ class HotelOfferMapper
         return 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=360&h=240&fit=crop&crop=center';
     }
 
-    public static function hotelbedsImageUrl(?string $path, string $size = 'bigger'): ?string
+    public static function hotelbedsImageUrl(?string $path, string $size = 'standard'): ?string
     {
         if (! $path) {
             return null;
         }
 
-        $path = ltrim($path, '/');
-        $base = rtrim(config('hotels.hotelbeds.image_base_url', 'https://photos.hotelbeds.com/giata/bigger/'), '/');
+        $path = ltrim(trim($path), '/');
+
+        if ($path === '') {
+            return null;
+        }
 
         if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
             return $path;
         }
 
-        if (str_contains($base, '/giata/')) {
-            return $base . '/' . $path;
+        $configured = rtrim((string) config('hotels.hotelbeds.image_base_url', ''), '/');
+
+        if ($configured !== '') {
+            if (str_ends_with($configured, '/giata') || str_contains($configured, '/giata/')) {
+                return $configured . '/' . $path;
+            }
+
+            return $configured . '/' . $path;
         }
 
-        return 'https://photos.hotelbeds.com/giata/' . $size . '/' . $path;
+        $sizeFolder = match ($size) {
+            'bigger' => 'bigger',
+            'small' => 'small',
+            'medium' => 'medium',
+            default => '',
+        };
+
+        if ($sizeFolder !== '') {
+            return 'https://photos.hotelbeds.com/giata/' . $sizeFolder . '/' . $path;
+        }
+
+        return 'https://photos.hotelbeds.com/giata/' . $path;
     }
 
     /**
@@ -355,7 +381,7 @@ class HotelOfferMapper
             return $orderA <=> $orderB;
         });
 
-        $preferredTypes = ['GEN', 'HAB', 'COM'];
+        $preferredTypes = ['GEN', 'HAB', 'COM', 'DEP', 'RES', 'BAR', 'PIS', 'TER'];
 
         foreach ($preferredTypes as $type) {
             foreach ($images as $image) {
