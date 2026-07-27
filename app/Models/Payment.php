@@ -11,6 +11,7 @@ class Payment extends Model
     protected $fillable = [
         'booking_id',
         'flight_booking_id',
+        'supplier_hotel_booking_id',
         'amount',
         'reference',
         'payment_method',
@@ -33,6 +34,11 @@ class Payment extends Model
     public function flightBooking(): BelongsTo
     {
         return $this->belongsTo(FlightBooking::class);
+    }
+
+    public function supplierHotelBooking(): BelongsTo
+    {
+        return $this->belongsTo(SupplierHotelBooking::class);
     }
 
     // Boot method to generate reference

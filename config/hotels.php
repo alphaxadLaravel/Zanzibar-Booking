@@ -1,0 +1,79 @@
+<?php
+
+return [
+
+    'enabled' => filter_var(env('HOTEL_WHOLESALER_ENABLED', true), FILTER_VALIDATE_BOOL),
+
+    'cache_ttl' => (int) env('HOTEL_SEARCH_CACHE_TTL', 300),
+
+    'checkout_ttl' => (int) env('HOTEL_CHECKOUT_CACHE_TTL', 1800),
+
+    'defaults' => [
+        'max_results' => (int) env('HOTEL_SEARCH_MAX_RESULTS', 50),
+        'currency' => env('HOTEL_DEFAULT_CURRENCY', 'USD'),
+        'rooms' => 1,
+        'adults' => 2,
+        'children' => 0,
+    ],
+
+    'provider' => env('HOTEL_PROVIDER', 'hotelbeds'),
+
+    'hotelbeds' => [
+        'api_key' => env('HOTELBEDS_API_KEY'),
+        'secret' => env('HOTELBEDS_SECRET'),
+        'api_url' => rtrim(env('HOTELBEDS_API_URL', 'https://api.test.hotelbeds.com'), '/'),
+        'environment' => env('HOTELBEDS_ENV', 'test'),
+        'timeout' => (int) env('HOTELBEDS_TIMEOUT', 30),
+        'create_bookings' => filter_var(env('HOTELBEDS_CREATE_BOOKINGS', true), FILTER_VALIDATE_BOOL),
+    ],
+
+    /*
+    | Markup added on top of wholesaler net rate (customer pays supplier + markup).
+    */
+    'markup' => [
+        'percent' => (float) env('HOTEL_MARKUP_PERCENT', 10),
+        'fixed' => (float) env('HOTEL_MARKUP_FIXED', 0),
+    ],
+
+    /*
+    | Hotelbeds destination codes (from Content API). Override via env if needed.
+    */
+    'destinations' => [
+        'ZNZ' => [
+            'code' => env('HOTELBEDS_DEST_ZNZ', 'ZNZ'),
+            'name' => 'Zanzibar',
+            'country' => 'Tanzania',
+        ],
+        'DAR' => [
+            'code' => env('HOTELBEDS_DEST_DAR', 'DAR'),
+            'name' => 'Dar es Salaam',
+            'country' => 'Tanzania',
+        ],
+        'JRO' => [
+            'code' => env('HOTELBEDS_DEST_JRO', 'JRO'),
+            'name' => 'Kilimanjaro / Arusha',
+            'country' => 'Tanzania',
+        ],
+        'MWZ' => [
+            'code' => env('HOTELBEDS_DEST_MWZ', 'MWZ'),
+            'name' => 'Mwanza',
+            'country' => 'Tanzania',
+        ],
+        'DOD' => [
+            'code' => env('HOTELBEDS_DEST_DOD', 'DOD'),
+            'name' => 'Dodoma',
+            'country' => 'Tanzania',
+        ],
+    ],
+
+    'destination_options' => [
+        'Tanzania' => [
+            'ZNZ' => 'Zanzibar',
+            'DAR' => 'Dar es Salaam',
+            'JRO' => 'Kilimanjaro / Arusha',
+            'MWZ' => 'Mwanza',
+            'DOD' => 'Dodoma',
+        ],
+    ],
+
+];

@@ -66,6 +66,16 @@ Route::get('/view/blog/{id}', [WebsiteController::class, 'viewBlog'])->name('vie
 
 ##### DEALS
 Route::get('/hotels', [WebsiteController::class, 'hotels'])->name('hotels');
+Route::get('/hotels/global', [App\Http\Controllers\GlobalHotelController::class, 'index'])->name('hotels.global.index');
+Route::get('/hotels/global/hotel/{hotelCode}', [App\Http\Controllers\GlobalHotelController::class, 'show'])->name('hotels.global.show');
+Route::get('/hotels/global/confirmation/{bookingReference}', [App\Http\Controllers\GlobalHotelController::class, 'confirmation'])->name('hotels.global.confirmation');
+
+Route::middleware('auth')->group(function () {
+    Route::post('/hotels/global/select-rate', [App\Http\Controllers\GlobalHotelController::class, 'selectRate'])->name('hotels.global.select-rate');
+    Route::get('/hotels/global/checkout/{token}', [App\Http\Controllers\GlobalHotelController::class, 'checkout'])->name('hotels.global.checkout');
+    Route::post('/hotels/global/checkout/{token}/book', [App\Http\Controllers\GlobalHotelController::class, 'processBooking'])->name('hotels.global.book');
+    Route::get('/hotels/global/payment/{bookingReference}', [App\Http\Controllers\GlobalHotelController::class, 'payment'])->name('hotels.global.payment');
+});
 Route::get('/apartments', [WebsiteController::class, 'apartments'])->name('apartments');
 Route::get('/view/hotel/{id}', [WebsiteController::class, 'viewHotel'])->name('view-hotel');
 Route::get('/view/apartment/{id}', [WebsiteController::class, 'viewApartment'])->name('view-apartment');

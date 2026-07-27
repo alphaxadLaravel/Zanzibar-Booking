@@ -214,6 +214,7 @@ class PaymentController extends Controller
                 'tracking_id' => $trackingid,
                 'booking_id' => $payment->booking_id,
                 'flight_booking_id' => $payment->flight_booking_id,
+                'supplier_hotel_booking_id' => $payment->supplier_hotel_booking_id,
             ]);
 
             if ($payment->flight_booking_id) {
@@ -230,6 +231,22 @@ class PaymentController extends Controller
                     return redirect()
                         ->route('flights.confirmation', ['bookingReference' => $flightBooking->booking_reference])
                         ->with($flightBooking->status === 'confirmed' ? 'success' : 'info', $message);
+                }
+            }
+
+            if ($payment->supplier_hotel_booking_id) {
+                $this->checkPaymentStatus($trackingid, $ref, 'CHANGE');
+
+                $hotelBooking = \App\Models\SupplierHotelBooking::find($payment->supplier_hotel_booking_id);
+
+                if ($hotelBooking) {
+                    $message = $hotelBooking->status === 'confirmed'
+                        ? 'Payment received. Your hotel booking is confirmed.'
+                        : 'Payment received. We are confirming your hotel booking.';
+
+                    return redirect()
+                        ->route('hotels.global.confirmation', ['bookingReference' => $hotelBooking->booking_reference])
+                        ->with($hotelBooking->status === 'confirmed' ? 'success' : 'info', $message);
                 }
             }
 
@@ -355,6 +372,23 @@ class PaymentController extends Controller
                         } catch (\Throwable $e) {
                             Log::error('Duffel order failed after flight payment', [
                                 'flight_booking_id' => $flightBooking->id,
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
+                    }
+
+                    return 'success';
+                }
+
+                if ($payment->supplier_hotel_booking_id) {
+                    $hotelBooking = \App\Models\SupplierHotelBooking::find($payment->supplier_hotel_booking_id);
+
+                    if ($hotelBooking && $hotelBooking->status !== 'confirmed') {
+                        try {
+                            app(\App\Services\Hotels\HotelBookingService::class)->fulfillAfterPayment($hotelBooking);
+                        } catch (\Throwable $e) {
+                            Log::error('Hotelbeds booking failed after hotel payment', [
+                                'supplier_hotel_booking_id' => $hotelBooking->id,
                                 'error' => $e->getMessage(),
                             ]);
                         }
