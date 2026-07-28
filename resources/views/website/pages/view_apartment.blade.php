@@ -187,31 +187,7 @@ use Illuminate\Support\Str;
                                         style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%; background: #000; border-radius: 8px; overflow: hidden;">
                                         @php
                                         $videoUrl = $apartment->video_link;
-                                        $embedUrl = '';
-
-                                        // YouTube
-                                        if (strpos($videoUrl, 'youtube.com') !== false || strpos($videoUrl, 'youtu.be')
-                                        !==
-                                        false) {
-                                        if (strpos($videoUrl, 'youtu.be') !== false) {
-                                        $videoId = substr($videoUrl, strrpos($videoUrl, '/') + 1);
-                                        } else {
-                                        parse_str(parse_url($videoUrl, PHP_URL_QUERY), $query);
-                                        $videoId = $query['v'] ?? '';
-                                        }
-                                        $embedUrl = 'https://www.youtube.com/embed/' . $videoId .
-                                        '?rel=0&modestbranding=1';
-                                        }
-                                        // Vimeo
-                                        elseif (strpos($videoUrl, 'vimeo.com') !== false) {
-                                        $videoId = substr($videoUrl, strrpos($videoUrl, '/') + 1);
-                                        $embedUrl = 'https://player.vimeo.com/video/' . $videoId .
-                                        '?title=0&byline=0&portrait=0';
-                                        }
-                                        // Direct video file or other platforms
-                                        else {
-                                        $embedUrl = $videoUrl;
-                                        }
+                                        $embedUrl = \App\Support\VideoEmbedHelper::embedUrl($videoUrl);
                                         @endphp
 
                                         @if($embedUrl)
