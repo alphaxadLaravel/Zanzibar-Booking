@@ -27,10 +27,6 @@ class GlobalHotelSearchPage extends Component
 
     public string $rooms = '';
 
-    public string $adults = '';
-
-    public string $children = '';
-
     public string $searchName = '';
 
     public string $sortBy = 'price_asc';
@@ -51,7 +47,7 @@ class GlobalHotelSearchPage extends Component
     public ?string $error = null;
 
     /**
-     * @return array{destination: string, checkIn: string, checkOut: string, rooms: string, adults: string, children: string}
+     * @return array{destination: string, checkIn: string, checkOut: string, rooms: string}
      */
     protected function defaultFilters(): array
     {
@@ -66,8 +62,17 @@ class GlobalHotelSearchPage extends Component
             'checkIn' => $checkIn->format('Y-m-d'),
             'checkOut' => $checkOut->format('Y-m-d'),
             'rooms' => (string) config('hotels.defaults.rooms', 1),
-            'adults' => (string) config('hotels.defaults.adults', 2),
-            'children' => (string) config('hotels.defaults.children', 0),
+        ];
+    }
+
+    /**
+     * @return array{adults: int, children: int}
+     */
+    protected function defaultOccupancy(): array
+    {
+        return [
+            'adults' => max(1, (int) config('hotels.defaults.adults', 2)),
+            'children' => max(0, (int) config('hotels.defaults.children', 0)),
         ];
     }
 
@@ -87,14 +92,6 @@ class GlobalHotelSearchPage extends Component
         if ($this->rooms === '') {
             $this->rooms = $defaults['rooms'];
         }
-
-        if ($this->adults === '') {
-            $this->adults = $defaults['adults'];
-        }
-
-        if ($this->children === '') {
-            $this->children = $defaults['children'];
-        }
     }
 
     public function mount(): void
@@ -113,14 +110,6 @@ class GlobalHotelSearchPage extends Component
 
         if (request()->filled('rooms')) {
             $this->rooms = (string) request('rooms');
-        }
-
-        if (request()->filled('adults')) {
-            $this->adults = (string) request('adults');
-        }
-
-        if (request()->filled('children')) {
-            $this->children = (string) request('children');
         }
 
         $this->ensureSearchDefaults();
@@ -183,8 +172,9 @@ class GlobalHotelSearchPage extends Component
         $this->browseMode = false;
 
         $rooms = max(1, (int) ($this->rooms !== '' ? $this->rooms : 1));
-        $adults = max(1, (int) ($this->adults !== '' ? $this->adults : 2));
-        $children = max(0, (int) ($this->children !== '' ? $this->children : 0));
+        $occupancy = $this->defaultOccupancy();
+        $adults = $occupancy['adults'];
+        $children = $occupancy['children'];
         $destination = $this->destination !== '' ? $this->destination : 'TZ_ALL';
 
         $validator = Validator::make([
@@ -264,8 +254,6 @@ class GlobalHotelSearchPage extends Component
         $this->checkIn = $defaults['checkIn'];
         $this->checkOut = $defaults['checkOut'];
         $this->rooms = $defaults['rooms'];
-        $this->adults = $defaults['adults'];
-        $this->children = $defaults['children'];
         $this->searchName = '';
         $this->sortBy = 'price_asc';
         $this->error = null;

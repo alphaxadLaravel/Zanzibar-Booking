@@ -123,6 +123,9 @@ class GlobalHotelController extends Controller
 
         $validated = $request->validate([
             'rate_key' => ['required', 'string', 'max:2000'],
+            'rooms' => ['required', 'integer', 'min:1', 'max:5'],
+            'adults' => ['required', 'integer', 'min:1', 'max:9'],
+            'children' => ['required', 'integer', 'min:0', 'max:6'],
         ]);
 
         $results = session('hotel_search_results', []);
@@ -133,6 +136,16 @@ class GlobalHotelController extends Controller
         if (! $offer) {
             return back()->with('error', 'Selected rate is no longer available. Please search again.');
         }
+
+        $offer['rooms'] = (int) $validated['rooms'];
+        $offer['adults'] = (int) $validated['adults'];
+        $offer['children'] = (int) $validated['children'];
+
+        $criteria = session('hotel_search_criteria', []);
+        $criteria['rooms'] = (int) $validated['rooms'];
+        $criteria['adults'] = (int) $validated['adults'];
+        $criteria['children'] = (int) $validated['children'];
+        session(['hotel_search_criteria' => $criteria]);
 
         try {
             $offer = $this->bookingService->refreshOfferRate($offer);

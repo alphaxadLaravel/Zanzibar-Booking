@@ -113,7 +113,7 @@
                                 <div class="col-6 col-md-2 d-flex flex-column" style="min-width: 0;">
                                     <input type="date" wire:model="checkOut" class="form-control flex-grow-1" min="{{ date('Y-m-d') }}" title="Check-out">
                                 </div>
-                                <div class="col-4 col-md-1 d-flex flex-column" style="min-width: 0;">
+                                <div class="col-6 col-md-2 d-flex flex-column" style="min-width: 0;">
                                     <select wire:model="rooms" class="form-control flex-grow-1" title="Rooms">
                                         <option value="">Rooms</option>
                                         @for($i = 1; $i <= 5; $i++)
@@ -121,23 +121,7 @@
                                         @endfor
                                     </select>
                                 </div>
-                                <div class="col-4 col-md-1 d-flex flex-column" style="min-width: 0;">
-                                    <select wire:model="adults" class="form-control flex-grow-1" title="Adults">
-                                        <option value="">Adults</option>
-                                        @for($i = 1; $i <= 9; $i++)
-                                            <option value="{{ $i }}">{{ $i }} Adult{{ $i > 1 ? 's' : '' }}</option>
-                                        @endfor
-                                    </select>
-                                </div>
-                                <div class="col-4 col-md-1 d-flex flex-column" style="min-width: 0;">
-                                    <select wire:model="children" class="form-control flex-grow-1" title="Children">
-                                        <option value="">Children</option>
-                                        @for($i = 0; $i <= 6; $i++)
-                                            <option value="{{ $i }}">{{ $i === 0 ? 'No children' : $i . ' Child' . ($i > 1 ? 'ren' : '') }}</option>
-                                        @endfor
-                                    </select>
-                                </div>
-                                <div class="col-12 col-md-2 d-flex align-items-stretch" style="min-width: 0;">
+                                <div class="col-12 col-md-3 d-flex align-items-stretch" style="min-width: 0;">
                                     <button type="submit" class="btn btn-primary flex-grow-1 w-100" style="background: #003580; border: none; font-weight: 600;" wire:loading.attr="disabled" wire:target="searchHotels">
                                         <span wire:loading.remove wire:target="searchHotels"><i class="fas fa-search me-1"></i> Search</span>
                                         <span wire:loading wire:target="searchHotels">Searching…</span>

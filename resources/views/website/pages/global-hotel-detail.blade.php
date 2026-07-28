@@ -26,8 +26,8 @@
     $checkIn = $criteria['checkIn'] ?? $hotel['check_in'] ?? '';
     $checkOut = $criteria['checkOut'] ?? $hotel['check_out'] ?? '';
     $rooms = (int) ($criteria['rooms'] ?? 1);
-    $adults = (int) ($criteria['adults'] ?? 2);
-    $children = (int) ($criteria['children'] ?? 0);
+    $defaultAdults = max(1, (int) config('hotels.defaults.adults', 2));
+    $defaultChildren = max(0, (int) config('hotels.defaults.children', 0));
     $location = $profile['address'] ?: ($profile['destination'] ?: ($hotel['destination_name'] ?? ''));
     $galleryImages = ! empty($profile['images']) ? $profile['images'] : [\App\Support\HotelOfferMapper::defaultHotelImage()];
     $mapLat = $profile['latitude'] ?? $hotel['latitude'] ?? null;
@@ -114,7 +114,7 @@
                                             <div class="fw-bold text-dark" style="font-size: 0.95rem;">
                                                 {{ \Carbon\Carbon::parse($checkIn)->format('M j') }} – {{ \Carbon\Carbon::parse($checkOut)->format('M j, Y') }}
                                             </div>
-                                            <div class="text-muted small">{{ $rooms }} room · {{ $adults }} adult(s)</div>
+                                            <div class="text-muted small">{{ $rooms }} room{{ $rooms === 1 ? '' : 's' }}</div>
                                         @else
                                             <div class="fw-bold text-dark" style="font-size: 0.95rem;">Dates not selected</div>
                                             <div class="text-muted small">Search with dates on listing</div>
@@ -191,7 +191,7 @@
                 @else
                 <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
                     <h4 class="post-title bold mb-0">Hotel Rooms To Book</h4>
-                    <a href="{{ route('hotels.global.index', ['destination' => $criteria['destination'] ?? 'TZ_ALL', 'checkIn' => $checkIn, 'checkOut' => $checkOut, 'rooms' => $rooms, 'adults' => $adults, 'children' => $children]) }}"
+                    <a href="{{ route('hotels.global.index', ['destination' => $criteria['destination'] ?? 'TZ_ALL', 'checkIn' => $checkIn, 'checkOut' => $checkOut, 'rooms' => $rooms]) }}"
                         class="small text-primary">Change dates</a>
                 </div>
                 <p class="text-muted small mb-3">
@@ -227,11 +227,7 @@
                                         </div>
                                     @endif
                                     <div class="mb-2" style="font-size: 13px; color: #666;">
-                                        <i class="fa fa-user"></i> {{ $adults }} Adult(s)
-                                        @if($children > 0)
-                                            &nbsp;|&nbsp; <i class="fa fa-child"></i> {{ $children }} Child(ren)
-                                        @endif
-                                        &nbsp;|&nbsp; <i class="fa fa-door-open"></i> {{ $rooms }} Room(s)
+                                        <i class="fa fa-door-open"></i> {{ $rooms }} Room(s)
                                     </div>
                                     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
                                         <div>
@@ -405,32 +401,6 @@
                             </div>
 
                             <div class="d-flex flex-wrap my-3" style="gap: 12px;">
-                                <div class="flex-fill" style="min-width: 140px;">
-                                    <div class="d-flex align-items-center border rounded bg-white px-3 py-2 h-100"
-                                        style="min-height:70px; border-color: #218080;">
-                                        <span class="d-flex align-items-center justify-content-center rounded flex-shrink-0"
-                                            style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 16px;">
-                                            <i class="mdi mdi-account" style="color: #218080; font-size: 1.2rem;"></i>
-                                        </span>
-                                        <div>
-                                            <div class="fw-bolder text-dark" style="font-size: 1.1rem;">{{ $adults }}</div>
-                                            <div class="text-muted small">Adult(s)</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="flex-fill" style="min-width: 140px;">
-                                    <div class="d-flex align-items-center border rounded bg-white px-3 py-2 h-100"
-                                        style="min-height:70px; border-color: #218080;">
-                                        <span class="d-flex align-items-center justify-content-center rounded flex-shrink-0"
-                                            style="width:32px; height:32px; background: #e6f4f1 !important; margin-right: 16px;">
-                                            <i class="mdi mdi-door-open" style="color: #218080; font-size: 1.2rem;"></i>
-                                        </span>
-                                        <div>
-                                            <div class="fw-bolder text-dark" style="font-size: 1.1rem;">{{ $rooms }}</div>
-                                            <div class="text-muted small">Room(s)</div>
-                                        </div>
-                                    </div>
-                                </div>
                                 @if(!empty($rate['board_name']))
                                     <div class="flex-fill" style="min-width: 140px;">
                                         <div class="d-flex align-items-center border rounded bg-white px-3 py-2 h-100"
@@ -460,7 +430,7 @@
                                     {{ \Carbon\Carbon::parse($checkIn)->format('M j, Y') }} –
                                     {{ \Carbon\Carbon::parse($checkOut)->format('M j, Y') }}
                                     ({{ $nights }} night{{ $nights === 1 ? '' : 's' }})
-                                    <a href="{{ route('hotels.global.index', ['destination' => $criteria['destination'] ?? 'TZ_ALL', 'checkIn' => $checkIn, 'checkOut' => $checkOut, 'rooms' => $rooms, 'adults' => $adults, 'children' => $children]) }}"
+                                    <a href="{{ route('hotels.global.index', ['destination' => $criteria['destination'] ?? 'TZ_ALL', 'checkIn' => $checkIn, 'checkOut' => $checkOut, 'rooms' => $rooms]) }}"
                                         class="ms-1">Change dates</a>
                                 </div>
 
@@ -516,7 +486,45 @@
                                     </div>
                                 @endif
 
-                                <div class="booking-summary mt-4 p-3"
+                                <form method="POST" action="{{ route('hotels.global.select-rate') }}"
+                                    class="partner-room-booking-form" data-require-login="1">
+                                    @csrf
+                                    <input type="hidden" name="rate_key" value="{{ $rate['rate_key'] }}">
+
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label for="rooms{{ $rateIndex }}" class="form-label">Rooms</label>
+                                        <select class="form-control" id="rooms{{ $rateIndex }}" name="rooms" required>
+                                            @for($i = 1; $i <= 5; $i++)
+                                                <option value="{{ $i }}" {{ $rooms === $i ? 'selected' : '' }}>
+                                                    {{ $i }} Room{{ $i > 1 ? 's' : '' }}
+                                                </option>
+                                            @endfor
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="adults{{ $rateIndex }}" class="form-label">Adults</label>
+                                        <select class="form-control" id="adults{{ $rateIndex }}" name="adults" required>
+                                            @for($i = 1; $i <= 9; $i++)
+                                                <option value="{{ $i }}" {{ $defaultAdults === $i ? 'selected' : '' }}>
+                                                    {{ $i }} Adult{{ $i > 1 ? 's' : '' }}
+                                                </option>
+                                            @endfor
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="children{{ $rateIndex }}" class="form-label">Children</label>
+                                        <select class="form-control" id="children{{ $rateIndex }}" name="children" required>
+                                            @for($i = 0; $i <= 6; $i++)
+                                                <option value="{{ $i }}" {{ $defaultChildren === $i ? 'selected' : '' }}>
+                                                    {{ $i === 0 ? 'No children' : $i . ' Child' . ($i > 1 ? 'ren' : '') }}
+                                                </option>
+                                            @endfor
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="booking-summary mt-2 p-3"
                                     style="background: #f8f9fa; border-radius: 8px; border-left: 4px solid #ff5722;">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
@@ -534,11 +542,7 @@
                                     </div>
                                 </div>
 
-                                <form method="POST" action="{{ route('hotels.global.select-rate') }}"
-                                    class="partner-room-booking-form mt-4" data-require-login="1">
-                                    @csrf
-                                    <input type="hidden" name="rate_key" value="{{ $rate['rate_key'] }}">
-                                    <button type="submit" class="btn btn-primary w-100">
+                                    <button type="submit" class="btn btn-primary w-100 mt-4">
                                         <i class="fas fa-calendar-check me-2"></i>
                                         PROCEED TO BOOK
                                     </button>
